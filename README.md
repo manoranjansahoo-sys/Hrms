@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Company HRMS – Enterprise Human Resource Management System
 
 A modern, secure, responsive, full-stack enterprise Human Resource Management System (HRMS) built with **Python, Django, Bootstrap 5, Chart.js, and ReportLab**.
@@ -146,3 +147,6 @@ Open your browser and navigate to:
 - **Typography:** `Inter` for clean corporate text, `Roboto Mono` for numbers and timestamps.
 - **Visuals:** Responsive sidebar, breadcrumbs, Chart.js interactive charts, live real-time clock.
 
+=======
+# Hrms
+>>>>>>> 4728e6e58c83747f04605fe48a8a8a10d267ea18
