@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Company Policies & Governance{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="mb-4">
+        <h3 class="fw-bold mb-1">Corporate Policies & Governance</h3>
+        <p class="text-muted small mb-0">Official guidelines, ethics framework, and employee workplace compliance documentation.</p>
+    </div>
+
+    <div class="row g-4">
+        {% for policy in policies %}
+            <div class="col-md-6 col-lg-4">
+                <div class="hrms-card h-100 d-flex flex-column">
+                    <div class="hrms-card-header">
+                        <span class="badge bg-light text-success border">{{ policy.category }}</span>
+                        <small class="text-muted">Effective: {{ policy.effective_date|date:"d M Y" }}</small>
+                    </div>
+                    <div class="hrms-card-body flex-grow-1">
+                        <h5 class="fw-bold text-dark mb-2">{{ policy.title }}</h5>
+                        <p class="text-muted small">{{ policy.summary }}</p>
+                    </div>
+                    <div class="p-3 bg-light border-top d-flex justify-content-between align-items-center">
+                        {% if policy.requires_acknowledgement %}
+                            {% if policy.id in acknowledged_ids %}
+                                <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i> Acknowledged</span>
+                            {% else %}
+                                <a href="{% url 'portal:acknowledge_policy' policy_id=policy.id %}" class="btn btn-sm btn-outline-success">
+                                    <i class="bi bi-pen"></i> Acknowledge Policy
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <span class="small text-muted"><i class="bi bi-info-circle me-1"></i> Reference Only</span>
+                        {% endif %}
+                        <span class="text-success small fw-semibold"><i class="bi bi-shield-check"></i> Compliant</span>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12 text-center py-5 text-muted">No policies published yet.</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+

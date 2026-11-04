@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% block title %}{{ employee.full_name }} | Profile{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <!-- BREADCRUMBS -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'portal:smart_dashboard' %}" class="text-success text-decoration-none">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'employees:employee_list' %}" class="text-success text-decoration-none">Employees</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ employee.emp_id }}</li>
+        </ol>
+    </nav>
+
+    <!-- HEADER PROFILE CARD -->
+    <div class="hrms-card mb-4">
+        <div class="p-4 p-md-5 bg-light border-bottom">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-4">
+                <div class="d-flex align-items-center gap-4">
+                    <img src="{{ employee.user.get_avatar_url }}" alt="{{ employee.full_name }}" class="rounded-circle border border-4 border-white shadow" width="100" height="100" style="object-fit: cover;">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <h3 class="fw-bold mb-0 text-dark">{{ employee.full_name }}</h3>
+                            <span class="badge bg-success font-monospace">{{ employee.emp_id }}</span>
+                            <span class="badge 
+                                {% if employee.user.is_head_role %}role-head
+                                {% elif employee.user.is_hr_role %}role-hr
+                                {% elif employee.user.is_site_manager_role %}role-manager
+                                {% else %}role-employee{% endif %} badge-role">
+                                {{ employee.user.get_role_display }}
+                            </span>
+                        </div>
+                        <div class="text-muted mb-2">
+                            <b>{{ employee.designation.title|default:"Staff" }}</b> &bull; {{ employee.department.name|default:"General" }} &bull; {{ employee.site.name|default:"Bengaluru HQ" }}
+                        </div>
+                        <div class="d-flex flex-wrap gap-3 small text-secondary">
+                            <span><i class="bi bi-envelope text-success me-1"></i> {{ employee.email }}</span>
+                            <span><i class="bi bi-telephone text-success me-1"></i> {{ employee.phone|default:"N/A" }}</span>
+                            <span><i class="bi bi-calendar3 text-success me-1"></i> Joined: {{ employee.joining_date|date:"d M Y" }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    {% if is_self %}
+                        <a href="{% url 'employees:profile_correction_request' %}" class="btn btn-outline-warning btn-sm">
+                            <i class="bi bi-pencil-square"></i> Request Profile Correction
+                        </a>
+                    {% endif %}
+                    {% if request.user.is_hr_role or request.user.is_head_role %}
+                        <span class="badge bg-success bg-opacity-25 text-success p-2">HR Management Enabled</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- TABS CONTENT -->
+        <div class="p-4">
+            <div class="row g-4">
+                <!-- LEFT: PERSONAL & PROFESSIONAL INFO -->
+                <div class="col-lg-6">
+                    <!-- PERSONAL PARTICULARS -->
+                    <div class="border rounded p-3 mb-4 bg-body">
+                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="bi bi-person-lines-fill text-success me-2"></i>Personal Particulars</h6>
+                        <div class="row g-2 small">
+                            <div class="col-sm-6"><span class="text-muted">Date of Birth:</span> <span class="fw-semibold text-dark">{{ employee.date_of_birth|date:"d M Y"|default:"Not disclosed" }}</span></div>
+                            <div class="col-sm-6"><span class="text-muted">Gender:</span> <span class="fw-semibold text-dark">{{ employee.get_gender_display }}</span></div>
+                            <div class="col-sm-6"><span class="text-muted">Marital Status:</span> <span class="fw-semibold text-dark">{{ employee.get_marital_status_display }}</span></div>
+                            <div class="col-sm-6"><span class="text-muted">Blood Group:</span> <span class="fw-semibold text-dark">{{ employee.blood_group|default:"--" }}</span></div>
+                            <div class="col-12"><span class="text-muted">Residential Address:</span> <span class="fw-semibold text-dark">{{ employee.address|default:"--" }}, {{ employee.city }} {{ employee.postal_code }}</span></div>
+                        </div>
+                    </div>
+
+                    <!-- EMERGENCY CONTACT -->
+                    <div class="border rounded p-3 mb-4 bg-body">
+                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="bi bi-shield-plus text-danger me-2"></i>Emergency Contact</h6>
+                        <div class="row g-2 small">
+                            <div class="col-sm-6"><span class="text-muted">Contact Name:</span> <span class="fw-semibold text-dark">{{ employee.emergency_contact_name|default:"Not provided" }}</span></div>
+                            <div class="col-sm-6"><span class="text-muted">Relationship:</span> <span class="fw-semibold text-dark">{{ employee.emergency_contact_relation|default:"--" }}</span></div>
+                            <div class="col-sm-6"><span class="text-muted">Emergency Phone:</span> <span class="fw-semibold text-dark">{{ employee.emergency_contact_phone|default:"--" }}</span></div>
+                        </div>
+                    </div>
+
+                    <!-- EDUCATION & PRIOR EXPERIENCE -->
+                    <div class="border rounded p-3 bg-body">
+                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="bi bi-mortarboard-fill text-primary me-2"></i>Education & Experience</h6>
+                        <div class="small mb-3">
+                            <span class="text-muted d-block">Educational Qualifications:</span>
+                            <div class="text-dark">{{ employee.education_details|default:"Not specified" }}</div>
+                        </div>
+                        <div class="small">
+                            <span class="text-muted d-block">Career Background:</span>
+                            <div class="text-dark">{{ employee.experience_summary|default:"Not specified" }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT: BANKING, SALARY, AND LEAVES -->
+                <div class="col-lg-6">
+                    <!-- RESTRICTED BANK DETAILS (STRICT RBAC) -->
+                    <div class="border rounded p-3 mb-4 bg-body">
+                        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                            <h6 class="fw-bold text-dark mb-0"><i class="bi bi-bank2 text-warning me-2"></i>Confidential Banking & Statutory Details</h6>
+                            <span class="badge bg-warning bg-opacity-25 text-warning"><i class="bi bi-lock-fill"></i> Restricted</span>
+                        </div>
+
+                        {% if can_view_confidential %}
+                            <div class="row g-2 small">
+                                <div class="col-sm-6"><span class="text-muted">Bank Name:</span> <span class="fw-semibold text-dark">{{ employee.bank_name|default:"--" }}</span></div>
+                                <div class="col-sm-6"><span class="text-muted">Account Number:</span> <span class="fw-semibold font-monospace text-dark">{{ employee.bank_account_number|default:"--" }}</span></div>
+                                <div class="col-sm-6"><span class="text-muted">IFSC Code:</span> <span class="fw-semibold font-monospace text-dark">{{ employee.ifsc_code|default:"--" }}</span></div>
+                                <div class="col-sm-6"><span class="text-muted">PAN Card:</span> <span class="fw-semibold font-monospace text-dark">{{ employee.pan_number|default:"--" }}</span></div>
+                                <div class="col-sm-6"><span class="text-muted">PF UAN Number:</span> <span class="fw-semibold font-monospace text-dark">{{ employee.uan_number|default:"--" }}</span></div>
+                            </div>
+                        {% else %}
+                            <div class="p-3 text-center text-muted bg-light rounded small">
+                                <i class="bi bi-shield-slash fs-4 text-secondary d-block mb-1"></i>
+                                Bank and financial details are protected and confidential. Only authorized HR/Head or the employee can view this record.
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- SALARY STRUCTURE PREVIEW (CONFIDENTIAL) -->
+                    {% if can_view_confidential and salary_structure %}
+                        <div class="border rounded p-3 mb-4 bg-light">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="fw-bold text-dark mb-0"><i class="bi bi-cash-stack text-success me-2"></i>Active Salary Compensation</h6>
+                                <span class="badge bg-success">Net: ₹{{ salary_structure.net_salary|floatformat:2 }}</span>
+                            </div>
+                            <div class="row g-2 small">
+                                <div class="col-6"><span class="text-muted">Basic Salary:</span> <span class="fw-semibold">₹{{ salary_structure.basic_salary|floatformat:2 }}</span></div>
+                                <div class="col-6"><span class="text-muted">HRA:</span> <span class="fw-semibold">₹{{ salary_structure.hra|floatformat:2 }}</span></div>
+                                <div class="col-6"><span class="text-muted">Allowances:</span> <span class="fw-semibold">₹{{ salary_structure.conveyance_allowance|add:salary_structure.medical_allowance|add:salary_structure.special_allowance|floatformat:2 }}</span></div>
+                                <div class="col-6"><span class="text-muted">Total Deductions:</span> <span class="fw-semibold text-danger">₹{{ salary_structure.total_deductions|floatformat:2 }}</span></div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- LEAVE BALANCES SUMMARY -->
+                    <div class="border rounded p-3 mb-4 bg-body">
+                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="bi bi-calendar2-range text-info me-2"></i>Annual Leave Quotas</h6>
+                        <div class="row g-2 text-center">
+                            {% for b in leave_balances %}
+                                <div class="col-4">
+                                    <div class="p-2 border rounded bg-light">
+                                        <div class="small text-muted">{{ b.leave_type.code }}</div>
+                                        <div class="fw-bold text-dark fs-5">{{ b.available_days }}</div>
+                                        <small class="text-muted" style="font-size: 0.7rem;">of {{ b.allocated_days }} days</small>
+                                    </div>
+                                </div>
+                            {% empty %}
+                                <div class="col-12 text-muted small py-2">No leave allocations set.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- VERIFIED DOCUMENTS -->
+                    <div class="border rounded p-3 bg-body">
+                        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                            <h6 class="fw-bold text-dark mb-0"><i class="bi bi-folder-check text-success me-2"></i>Document Vault</h6>
+                        </div>
+                        <ul class="list-unstyled mb-0 small">
+                            {% for doc in documents %}
+                                <li class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                    <div>
+                                        <i class="bi bi-file-earmark-check text-success me-1"></i>
+                                        <span class="fw-semibold text-dark">{{ doc.title }}</span>
+                                        <span class="badge bg-light text-secondary ms-1">{{ doc.get_doc_type_display }}</span>
+                                    </div>
+                                    <a href="{{ doc.file.url }}" target="_blank" class="btn btn-xs btn-outline-secondary py-0 px-2">Download</a>
+                                </li>
+                            {% empty %}
+                                <li class="text-muted py-2">No uploaded documents on file.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

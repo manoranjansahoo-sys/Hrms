@@ -1,0 +1,35 @@
+{% extends 'recruitment/public/base_public.html' %}
+{% block title %}Onboarding Not Eligible Yet | Company HRMS{% endblock %}
+
+{% block content %}
+<div class="container text-center" style="max-width: 600px;">
+    <div class="card-custom p-4 p-md-5 my-4">
+        <div class="mb-3">
+            <div class="d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 75px; height: 75px; background-color: #EFF6FF; border: 3px solid #BFDBFE;">
+                <i class="bi bi-clock-history fs-2 text-primary"></i>
+            </div>
+        </div>
+
+        <h4 class="fw-bold text-dark mb-1">Interview In Progress</h4>
+        <p class="text-muted small mb-4">
+            Hello <b>{{ candidate.full_name }}</b>, your application for <b>{{ application.job.title }}</b> (ID: <code>{{ application.application_id }}</code>) is currently in the interview & evaluation stage.
+        </p>
+
+        <div class="border rounded p-3 bg-light text-start small mb-4">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="badge bg-primary px-2 py-1">Current Status: {{ application.get_status_display }}</span>
+            </div>
+            <p class="text-muted mb-0">
+                The comprehensive Employee Onboarding & Verification form will be automatically unlocked for you once you successfully qualify the interview rounds.
+            </p>
+        </div>
+
+        <div class="d-flex justify-content-center gap-2">
+            <a href="{% url 'recruitment:candidate_track_id' application_id=application.application_id %}" class="btn btn-brand">
+                <i class="bi bi-search me-1"></i> View Live Application Tracker
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

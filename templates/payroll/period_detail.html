@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Payroll Roster - {{ period.get_month_display }} {{ period.year }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h3 class="fw-bold mb-1">Payroll Roster: {{ period.get_month_display }} {{ period.year }}</h3>
+            <p class="text-muted small mb-0">Total Net Outflow: <b>₹{{ period.total_net|floatformat:2 }}</b> &bull; Status: <span class="badge bg-success">{{ period.get_status_display }}</span></p>
+        </div>
+        <a href="{% url 'payroll:dashboard' %}" class="btn btn-outline-secondary btn-sm">
+            &larr; Back to Dashboard
+        </a>
+    </div>
+
+    <div class="hrms-card">
+        <div class="table-responsive">
+            <table class="table hrms-table">
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Payable Days</th>
+                        <th>Basic</th>
+                        <th>HRA</th>
+                        <th>Allowances</th>
+                        <th>Gross Earnings</th>
+                        <th>Total Deductions</th>
+                        <th>Net Payable</th>
+                        <th class="text-end">Official PDF</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ps in payslips %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold text-dark">{{ ps.employee.full_name }}</div>
+                                <small class="text-muted">{{ ps.employee.emp_id }} &bull; {{ ps.employee.department.code }}</small>
+                            </td>
+                            <td>{{ ps.payable_days }} / {{ ps.total_working_days }}</td>
+                            <td class="font-monospace">₹{{ ps.basic_salary|floatformat:0 }}</td>
+                            <td class="font-monospace">₹{{ ps.hra|floatformat:0 }}</td>
+                            <td class="font-monospace">₹{{ ps.conveyance_allowance|add:ps.medical_allowance|add:ps.special_allowance|floatformat:0 }}</td>
+                            <td class="font-monospace fw-semibold text-dark">₹{{ ps.gross_earnings|floatformat:0 }}</td>
+                            <td class="font-monospace text-danger">₹{{ ps.total_deductions|floatformat:0 }}</td>
+                            <td class="font-monospace fw-bold text-success fs-6">₹{{ ps.net_payable|floatformat:2 }}</td>
+                            <td class="text-end">
+                                <a href="{% url 'payroll:download_pdf' payslip_id=ps.id %}" class="btn btn-sm btn-outline-danger py-1 px-2">
+                                    <i class="bi bi-file-earmark-pdf-fill"></i> PDF
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="9" class="text-center py-4 text-muted">No payslips recorded for this run.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

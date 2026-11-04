@@ -1,0 +1,73 @@
+{% extends 'recruitment/public/base_public.html' %}
+{% block title %}Onboarding Complete & HRMS Account Ready | {{ candidate.full_name }} | Company HRMS{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 800px;">
+    <!-- SUCCESS CONFIRMATION CARD -->
+    <div class="card-custom p-4 p-md-5 border-0 shadow-lg text-center" style="border-radius: 16px; background: #FFFFFF;">
+        <!-- Top Celebration Badge -->
+        <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 80px; height: 80px; background-color: #E8F5E9; color: #1B5E20;">
+            <i class="bi bi-patch-check-fill" style="font-size: 3rem;"></i>
+        </div>
+
+        <h2 class="fw-bold text-dark mb-2">Onboarding Completed Successfully!</h2>
+        <p class="text-muted fs-6 mb-4">
+            Welcome to the team, <b>{{ candidate.full_name }}</b>! Your full employee onboarding particulars, academic marksheets, and statutory banking details have been recorded.
+        </p>
+
+        <!-- ACCOUNT CREDENTIALS BOX -->
+        <div class="p-4 rounded-3 text-start mb-4" style="background: linear-gradient(135deg, #F0FDF4 0%, #EFF6FF 100%); border: 1px solid #BBF7D0;">
+            <div class="d-flex align-items-center gap-2 mb-3 border-bottom pb-2" style="border-color: #BBF7D0 !important;">
+                <i class="bi bi-shield-lock-fill text-success fs-5"></i>
+                <h5 class="fw-bold mb-0 text-dark">Your Official HRMS Login Credentials</h5>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-sm-6">
+                    <div class="small text-muted text-uppercase fw-semibold" style="font-size: 0.72rem; letter-spacing: 0.05em;">Login User ID / Username</div>
+                    <div class="fw-bold text-dark fs-5 font-monospace mt-1">{{ user.username }}</div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="small text-muted text-uppercase fw-semibold" style="font-size: 0.72rem; letter-spacing: 0.05em;">Registered Login Email</div>
+                    <div class="fw-bold text-dark fs-6 mt-1">{{ user.email }}</div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="small text-muted text-uppercase fw-semibold" style="font-size: 0.72rem; letter-spacing: 0.05em;">Assigned Employee ID</div>
+                    <div class="fw-bold text-success fs-5 font-monospace mt-1">{{ employee_profile.emp_id }}</div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="small text-muted text-uppercase fw-semibold" style="font-size: 0.72rem; letter-spacing: 0.05em;">Designation & Role</div>
+                    <div class="fw-bold text-dark fs-6 mt-1">{{ job.title }}</div>
+                </div>
+                <div class="col-12 border-top pt-2" style="border-color: #E2E8F0 !important;">
+                    <div class="small text-muted">
+                        <i class="bi bi-key-fill text-primary me-1"></i>
+                        <b>Password:</b> Use the secure password you created during onboarding. (You can also log in using your registered email address).
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mb-4">
+            <a href="{% url 'accounts:login' %}" class="btn btn-success btn-lg px-4 py-2.5 fw-bold shadow-sm" style="background: #1B5E20; border-color: #1B5E20;">
+                <i class="bi bi-box-arrow-in-right me-2"></i> Proceed to Login & Open HRMS Profile
+            </a>
+            <a href="{% url 'recruitment:candidate_track_id' application_id=application.application_id %}" class="btn btn-outline-secondary btn-lg px-4 py-2.5">
+                <i class="bi bi-clipboard-check me-2"></i> View Application Tracker
+            </a>
+        </div>
+
+        <!-- QUICK HOW-TO GUIDE -->
+        <div class="text-start p-3.5 rounded-3 bg-light border small text-muted">
+            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-info-circle text-primary me-1"></i> How to Access Your Employee Portal & Profile:</h6>
+            <ol class="mb-0 ps-3">
+                <li class="mb-1">Click the <b>"Proceed to Login"</b> button above or visit <span class="font-monospace text-dark">/accounts/login/</span>.</li>
+                <li class="mb-1">Enter your User ID (<b class="text-dark">{{ user.username }}</b>) or Email (<b class="text-dark">{{ user.email }}</b>) and your password.</li>
+                <li>Once logged in, click <b>"My Profile"</b> in the left sidebar to inspect your official profile, attendance clock, leave balances, and payroll information.</li>
+            </ol>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

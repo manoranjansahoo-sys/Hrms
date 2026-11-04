@@ -1,0 +1,1043 @@
+{% extends 'base.html' %}
+{% block title %}Candidate Registration Portal & Positions{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+<style>
+    .job-table-row {
+        transition: background-color 0.15s ease-in-out;
+        cursor: pointer;
+    }
+    .job-table-row:hover {
+        background-color: #F8FAFC !important;
+    }
+    .job-table-row:active {
+        background-color: #F1F5F9 !important;
+    }
+    .detail-attr-card {
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        border-radius: 10px;
+        padding: 14px 16px;
+        height: 100%;
+        transition: all 0.15s ease;
+    }
+    .detail-attr-card:hover {
+        background: #FFFFFF;
+        border-color: #CBD5E1;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    .offcanvas-backdrop.show {
+        backdrop-filter: blur(4px);
+        background-color: rgba(15, 23, 42, 0.45);
+    }
+</style>
+    <!-- PAGE HEADER -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge px-2.5 py-1 text-primary-emphasis bg-primary-subtle border border-primary-subtle rounded-pill small">Recruitment Suite</span>
+                <h3 class="fw-bold text-dark mb-0">Candidate Registration Portal & Positions</h3>
+            </div>
+            <p class="text-muted small mb-0">
+                Share one universal application link with all candidates. Applicants select their desired position from your open roles.
+            </p>
+        </div>
+        <div>
+            <button type="button" class="btn btn-primary btn-sm shadow-sm px-3" data-bs-toggle="modal" data-bs-target="#quickJobModal" style="background: #2563EB; border-color: #2563EB; font-weight: 500;">
+                <i class="bi bi-plus-circle-fill me-1"></i> Add Position
+            </button>
+        </div>
+    </div>
+
+    <!-- FLASH MESSAGES -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm mb-4" role="alert">
+                <i class="bi bi-info-circle-fill me-2"></i> {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- ========================================================= -->
+    <!-- 1. HERO CARDS: PUBLIC APPLICATION & CAMPAIGN MASTER LINKS -->
+    <!-- ========================================================= -->
+    <div class="row g-4 mb-4">
+        <!-- 1A. UNIVERSAL CANDIDATE REGISTRATION PORTAL -->
+        <div class="col-lg-6">
+            <div class="card h-100 border-0 shadow-sm" style="border-radius: 14px; overflow: hidden; border-top: 3px solid #60A5FA !important;">
+                <div class="p-3 px-4 text-white d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #1E40AF 0%, #2563EB 55%, #1D4ED8 100%);">
+                    <div>
+                        <h5 class="fw-bold mb-0 text-white">
+                            <i class="bi bi-link-45deg me-1"></i> Universal Candidate Registration
+                        </h5>
+                        <small class="text-white-75">Standard application across all active positions</small>
+                    </div>
+                    <span class="badge rounded-pill px-2.5 py-1 text-white" style="background: rgba(255, 255, 255, 0.2); font-size: 0.75rem;">
+                        <i class="bi bi-check-circle-fill text-warning me-1"></i> {{ active_jobs_count }} Roles
+                    </span>
+                </div>
+                <div class="p-3 px-4 bg-white d-flex flex-column justify-content-between flex-grow-1">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark mb-1">
+                            <i class="bi bi-globe2 text-primary me-1"></i> Public Registration Link:
+                        </label>
+                        <div class="input-group">
+                            <input type="text" class="form-control font-monospace bg-white fw-semibold small" id="universalLinkInput" value="{{ universal_apply_url }}" readonly style="border: 1px solid #CBD5E1; color: #0F172A; font-size: 0.86rem;">
+                            <button class="btn btn-dark px-3 fw-semibold shadow-sm" type="button" onclick="copyUniversalLink(this)" title="Copy Universal Link" style="background: #0F172A; border-color: #0F172A;">
+                                <i class="bi bi-clipboard-check me-1"></i> Copy
+                            </button>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center gap-2 pt-1 border-top">
+                        <a href="https://api.whatsapp.com/send?text=We%20are%20hiring!%20Apply%20here:%20{{ universal_apply_url|urlencode }}" target="_blank" class="btn btn-xs btn-sm shadow-sm" style="background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0; font-size: 0.8rem;">
+                            <i class="bi bi-whatsapp text-success me-1"></i> WhatsApp
+                        </a>
+                        <a href="mailto:?subject=Career%20Opportunities&body=Apply%20here:%20{{ universal_apply_url|urlencode }}" class="btn btn-xs btn-sm shadow-sm" style="background: #EFF6FF; color: #1E40AF; border: 1px solid #BFDBFE; font-size: 0.8rem;">
+                            <i class="bi bi-envelope text-primary me-1"></i> Email
+                        </a>
+                        <a href="{{ universal_apply_url }}" target="_blank" class="btn btn-xs btn-sm shadow-sm ms-auto" style="background: #F8FAFC; color: #334155; border: 1px solid #CBD5E1; font-size: 0.8rem;">
+                            <i class="bi bi-box-arrow-up-right text-secondary me-1"></i> Preview
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 1B. LINKEDIN & WEBSITE DIRECT FAST-APPLY LINK (GOOGLE SIGN-IN) -->
+        <div class="col-lg-6">
+            <div class="card h-100 border-0 shadow-sm" style="border-radius: 14px; overflow: hidden; border-top: 3px solid #10B981 !important;">
+                <div class="p-3 px-4 text-white d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #0F766E 0%, #0D9488 55%, #059669 100%);">
+                    <div>
+                        <h5 class="fw-bold mb-0 text-white">
+                            <i class="bi bi-linkedin me-1.5"></i> LinkedIn & Website Fast-Apply
+                        </h5>
+                        <small class="text-white-75">1-Minute application with Google Sign-In verification</small>
+                    </div>
+                    <span class="badge rounded-pill px-2.5 py-1 text-white" style="background: rgba(255, 255, 255, 0.2); font-size: 0.75rem;">
+                        <i class="bi bi-google me-1"></i> Google Sign-In
+                    </span>
+                </div>
+                <div class="p-3 px-4 bg-white d-flex flex-column justify-content-between flex-grow-1">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark mb-1">
+                            <i class="bi bi-share text-success me-1"></i> LinkedIn & Direct Campaign Link:
+                        </label>
+                        <div class="input-group">
+                            <input type="text" class="form-control font-monospace bg-white fw-semibold small" id="fastApplyLinkInput" value="{{ fast_apply_url }}" readonly style="border: 1px solid #CBD5E1; color: #0F172A; font-size: 0.86rem;">
+                            <button class="btn btn-success px-3 fw-semibold shadow-sm text-white" type="button" onclick="copyFastApplyLink(this)" title="Copy Fast Apply Link" style="background: #0F766E; border-color: #0F766E;">
+                                <i class="bi bi-clipboard-check me-1"></i> Copy
+                            </button>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center gap-2 pt-1 border-top">
+                        <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ fast_apply_url|urlencode }}" target="_blank" class="btn btn-xs btn-sm shadow-sm" style="background: #EFF6FF; color: #1E40AF; border: 1px solid #BFDBFE; font-size: 0.8rem;">
+                            <i class="bi bi-linkedin text-primary me-1"></i> Post on LinkedIn
+                        </a>
+                        <a href="https://api.whatsapp.com/send?text=We%20are%20hiring!%20Quick%20apply%20with%20Google:%20{{ fast_apply_url|urlencode }}" target="_blank" class="btn btn-xs btn-sm shadow-sm" style="background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0; font-size: 0.8rem;">
+                            <i class="bi bi-whatsapp text-success me-1"></i> WhatsApp
+                        </a>
+                        <a href="{{ fast_apply_url }}" target="_blank" class="btn btn-xs btn-sm shadow-sm ms-auto" style="background: #F8FAFC; color: #334155; border: 1px solid #CBD5E1; font-size: 0.8rem;">
+                            <i class="bi bi-box-arrow-up-right text-secondary me-1"></i> Preview Form
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- 2. JOB POSITIONS TABLE                                     -->
+    <!-- ========================================================= -->
+    <div class="card mb-4 border shadow-sm" style="border-radius: 12px; border-color: #E2E8F0 !important; overflow: hidden;">
+        <!-- Clean Compact Header: Job Positions on Left, Small Box Search Bar on Right -->
+        <div class="p-3 px-4 bg-white border-bottom d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <h5 class="fw-bold text-dark mb-0 d-flex align-items-center">
+                <i class="bi bi-briefcase-fill text-primary me-2"></i>Job Positions
+            </h5>
+            <div class="position-relative" style="width: 280px; max-width: 100%;">
+                <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted small"></i>
+                <input type="text" id="jobSearchInput" class="form-control form-control-sm ps-5 bg-light shadow-none" placeholder="Search positions..." style="border-radius: 8px; border: 1px solid #CBD5E1; height: 36px; font-size: 0.86rem;">
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" style="border-collapse: separate; border-spacing: 0;">
+                <thead style="background: #F8FAFC;">
+                    <tr class="text-muted small text-uppercase" style="font-size: 0.76rem; letter-spacing: 0.05em; font-weight: 600; border-bottom: 1px solid #E2E8F0;">
+                        <th class="ps-4 py-3" style="width: 38%;">Position Title</th>
+                        <th class="py-3" style="width: 22%;">Location</th>
+                        <th class="py-3 text-center" style="width: 16%;">Experience</th>
+                        <th class="py-3 text-center" style="width: 12%;">Application</th>
+                        <th class="pe-4 py-3 text-end" style="width: 12%; min-width: 110px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for j in jobs %}
+                        <tr class="job-table-row" 
+                            data-id="{{ j.id }}" 
+                            data-title="{{ j.title|escape }}" 
+                            data-dept="{{ j.department.name|default:'General'|escape }}" 
+                            data-dept-id="{{ j.department.id|default:'' }}" 
+                            data-location="{{ j.location|default:'Bengaluru HQ'|escape }}" 
+                            data-type="{{ j.get_employment_type_display|escape }}" 
+                            data-type-code="{{ j.employment_type }}" 
+                            data-vacancies="{{ j.vacancies }}" 
+                            data-exp="{{ j.experience_required|default:'Not specified'|escape }}" 
+                            data-salary="{{ j.salary_range|default:'Not disclosed'|escape }}" 
+                            data-status="{{ j.get_status_display|escape }}" 
+                            data-status-code="{{ j.status }}" 
+                            data-created="{{ j.created_at|date:'d M Y' }}" 
+                            data-applications="{{ j.app_count }}" 
+                            data-apply-url="{% url 'recruitment:candidate_apply' %}?job={{ j.id }}" 
+                            data-fast-apply-url="{% url 'recruitment:candidate_fast_apply' %}?job={{ j.id }}" 
+                            data-candidates-url="{% url 'recruitment:candidates_list' %}?job={{ j.id }}" 
+                            data-desc="{{ j.description|escape }}" 
+                            data-req="{{ j.requirements|escape }}" 
+                            style="border-bottom: 1px solid #F1F5F9; cursor: pointer;">
+                            <!-- 1. POSITION TITLE & POSTED DATE WITH TICK SIGN FIRST IF ACTIVE -->
+                            <td class="ps-4 py-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if j.status == 'OPEN' %}
+                                        <i class="bi bi-check-circle-fill text-success fs-6" title="Active Position"></i>
+                                    {% endif %}
+                                    <span class="fw-bold text-dark fs-6">{{ j.title }}</span>
+                                </div>
+                                <div class="text-muted small mt-0.5" style="{% if j.status == 'OPEN' %}margin-left: 1.45rem;{% endif %} font-size: 0.8rem;">
+                                    <i class="bi bi-calendar3 me-1"></i>Posted on {{ j.created_at|date:"d M Y" }}
+                                </div>
+                            </td>
+
+                            <!-- 2. LOCATION (NO BOX, CLEAN TEXT & GAP) -->
+                            <td class="py-3">
+                                <div class="d-flex align-items-center gap-1.5 text-secondary small">
+                                    <i class="bi bi-geo-alt-fill text-danger"></i>
+                                    <span>{{ j.location|default:"Bengaluru HQ" }}</span>
+                                </div>
+                            </td>
+
+                            <!-- 3. EXPERIENCE (REPLACED VACANCY) -->
+                            <td class="py-3 text-center">
+                                <span class="text-secondary small fw-medium">{{ j.experience_required|default:"2-5 Years" }}</span>
+                            </td>
+
+                            <!-- 4. APPLICATION: ONLY NUMBER (NO 'APPLIED' TEXT, CLICKABLE) -->
+                            <td class="py-3 text-center">
+                                <a href="{% url 'recruitment:candidates_list' %}?job={{ j.id }}" class="fw-bold text-primary text-decoration-none fs-6 stop-row-click" title="View {{ j.app_count }} applications">
+                                    {{ j.app_count }}
+                                </a>
+                            </td>
+
+                            <!-- 5. ACTIONS: ONLY PENCIL ICON & BOX CORNER ARROW ICON (NO EYE ICON, MAINTAIN GAP) -->
+                            <td class="pe-4 py-3 text-end text-nowrap">
+                                <div class="d-inline-flex align-items-center gap-3 stop-row-click">
+                                    <!-- PENCIL ICON (EDIT) -->
+                                    <button type="button" 
+                                            class="btn btn-link text-secondary p-0 shadow-none edit-job-trigger" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#editJobModal" 
+                                            data-id="{{ j.id }}" 
+                                            data-title="{{ j.title|escape }}" 
+                                            data-dept="{{ j.department.id|default:'' }}" 
+                                            data-location="{{ j.location|escape }}" 
+                                            data-type="{{ j.employment_type }}" 
+                                            data-vacancies="{{ j.vacancies }}" 
+                                            data-exp="{{ j.experience_required|escape }}" 
+                                            data-salary="{{ j.salary_range|default:''|escape }}" 
+                                            data-status="{{ j.status }}" 
+                                            data-desc="{{ j.description|escape }}" 
+                                            data-req="{{ j.requirements|escape }}" 
+                                            title="Edit Position"
+                                            style="font-size: 1.1rem; text-decoration: none;">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+
+                                    <!-- BOX CORNER ARROW ICON (PREVIEW REGISTRATION FORM) -->
+                                    <a href="{% url 'recruitment:candidate_apply' %}?job={{ j.id }}" 
+                                       target="_blank" 
+                                       class="btn btn-link text-primary p-0 shadow-none" 
+                                       title="Preview Registration Form"
+                                       style="font-size: 1.1rem; text-decoration: none;">
+                                        <i class="bi bi-box-arrow-up-right"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <div class="py-4">
+                                    <i class="bi bi-briefcase fs-1 text-muted d-block mb-2 opacity-50"></i>
+                                    <h6 class="fw-bold text-dark">No job positions found</h6>
+                                    <p class="small text-muted mb-3">Add open positions to make them selectable in the universal registration portal.</p>
+                                    <button type="button" class="btn btn-sm btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#quickJobModal" style="background: #2563EB; border-color: #2563EB;">
+                                        <i class="bi bi-plus-circle me-1"></i> Add First Position
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- TABLE FOOTER: PAGINATION & PAGE SIZE (5, 10, 20, 50, 100) -->
+        <div class="p-3 px-4 bg-white border-top d-flex flex-wrap justify-content-between align-items-center gap-3" id="tablePaginationFooter">
+            <!-- Left Side: Show 5, 10, 20, 50, 100 & Showing X to Y of Z -->
+            <div class="d-flex align-items-center gap-2">
+                <span class="small text-muted">Show</span>
+                <select id="pageSizeSelect" class="form-select form-select-sm" style="width: auto; font-weight: 600; border-radius: 6px; border: 1px solid #CBD5E1; cursor: pointer;">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                <span class="small text-muted">entries per page</span>
+                <span class="text-muted mx-2 d-none d-sm-inline">|</span>
+                <span class="small text-muted" id="pageInfoText">Showing 1 to 10 of {{ jobs|length }} entries</span>
+            </div>
+
+            <!-- Right Side: Page Next Left and Right Arrow -->
+            <div class="d-flex align-items-center gap-1" id="paginationControls">
+                <button type="button" class="btn btn-sm btn-outline-secondary px-2.5 py-1" id="prevPageBtn" title="Previous Page" style="border-radius: 6px;" disabled>
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <div id="pageNumbersContainer" class="d-flex align-items-center gap-1">
+                    <!-- Dynamic page numbers -->
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-secondary px-2.5 py-1" id="nextPageBtn" title="Next Page" style="border-radius: 6px;">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- MANAGE LOCATIONS MODAL (ADMIN ONLY)                       -->
+<!-- ========================================================= -->
+{% if request.user.is_head_role %}
+<div class="modal fade" id="manageLocationsModal" tabindex="-1" aria-labelledby="manageLocationsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header text-white" style="background: #0F172A;">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-geo-alt-fill text-danger fs-5"></i>
+                    <h5 class="modal-title fw-bold mb-0 text-white" id="manageLocationsModalLabel">Manage Company Hiring Locations (Admin)</h5>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                <!-- 1. ADD NEW LOCATION FORM -->
+                <div class="card p-3 mb-4 bg-light border">
+                    <h6 class="fw-bold text-dark mb-2">
+                        <i class="bi bi-plus-circle-fill text-primary me-1"></i> Add New Location
+                    </h6>
+                    <form method="POST" action="{% url 'recruitment:add_location' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{% url 'recruitment:links_list' %}">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-5">
+                                <label class="form-label small fw-bold mb-1">Location / Office Name *</label>
+                                <input type="text" name="name" class="form-control form-control-sm" placeholder="e.g. Hyderabad SEZ Campus" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold mb-1">City / Region *</label>
+                                <input type="text" name="city" class="form-control form-control-sm" placeholder="e.g. Hyderabad" required>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-sm btn-primary w-100 fw-semibold">
+                                    <i class="bi bi-plus-circle me-1"></i> Add Location
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 2. CURRENT LOCATIONS LIST & DELETE BUTTON -->
+                <h6 class="fw-bold text-dark mb-2">
+                    <i class="bi bi-list-check text-success me-1"></i> Current Configured Locations ({{ sites|length }})
+                </h6>
+                <div class="table-responsive border rounded-2" style="max-height: 280px; overflow-y: auto;">
+                    <table class="table table-sm table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3 py-2">Location Name</th>
+                                <th class="py-2">City</th>
+                                <th class="pe-3 py-2 text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in sites %}
+                                <tr>
+                                    <td class="ps-3 py-2 fw-semibold text-dark">{{ s.name }}</td>
+                                    <td class="py-2 text-muted">{{ s.city }}</td>
+                                    <td class="pe-3 py-2 text-end">
+                                        <form method="POST" action="{% url 'recruitment:delete_location' site_id=s.id %}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete location \'{{ s.name }}\'?');">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="next" value="{% url 'recruitment:links_list' %}">
+                                            <button type="submit" class="btn btn-xs btn-outline-danger py-0.5 px-2" title="Delete Location">
+                                                <i class="bi bi-trash3 me-1"></i> Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-3 text-muted">
+                                        No locations setup yet. Add your first location above.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="modal-footer bg-light py-2 px-4 border-top">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ========================================================= -->
+<!-- QUICK ADD POSITION MODAL                                  -->
+<!-- ========================================================= -->
+<div class="modal fade" id="quickJobModal" tabindex="-1" aria-labelledby="quickJobModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow" style="border-radius: 12px; overflow: hidden;">
+            <form method="POST" action="{% url 'recruitment:create_job' %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{% url 'recruitment:links_list' %}">
+                <input type="hidden" name="status" value="OPEN">
+
+                <div class="modal-header text-white" style="background: #0F172A;">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-plus-circle-fill text-primary fs-5"></i>
+                        <h5 class="modal-title fw-bold mb-0 text-white" id="quickJobModalLabel">Add New Job Position</h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-4">
+                    <div class="p-2.5 px-3 rounded-2 mb-3 small text-muted" style="background: #F8FAFC; border: 1px solid #E2E8F0;">
+                        <i class="bi bi-info-circle text-primary me-1"></i>
+                        Adding a position immediately saves it and <b>makes it available</b> for applicant selection in the universal registration portal.
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label small fw-bold">Position Title <span class="text-danger">*</span></label>
+                            <input type="text" name="title" class="form-control" placeholder="e.g. Senior Full-Stack Django Developer" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Department <span class="text-danger">*</span></label>
+                            {{ quick_job_form.department }}
+                        </div>
+
+                        <!-- LOCATION SELECT FROM ADMIN SITES -->
+                        <div class="col-md-4">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label small fw-bold mb-0">Location <span class="text-danger">*</span></label>
+                                {% if request.user.is_head_role %}
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#manageLocationsModal" class="small text-primary text-decoration-none" style="font-size: 0.78rem;">
+                                    <i class="bi bi-plus-circle me-0.5"></i> Add Location
+                                </a>
+                                {% endif %}
+                            </div>
+                            <select name="location" class="form-select" required>
+                                {% for s in sites %}
+                                    <option value="{{ s.name }} ({{ s.city }})">{{ s.name }} - {{ s.city }}</option>
+                                {% empty %}
+                                    <option value="Bengaluru HQ & Hybrid">Bengaluru HQ & Hybrid</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Employment Type</label>
+                            {{ quick_job_form.employment_type }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Number of Vacancies</label>
+                            <input type="number" name="vacancies" class="form-control" value="1" min="1" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Experience Required</label>
+                            <input type="text" name="experience_required" class="form-control" placeholder="e.g. 2-5 Years" value="2-5 Years">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Salary Range (Optional)</label>
+                            <input type="text" name="salary_range" class="form-control" placeholder="e.g. ₹12,00,000 - ₹18,00,000 PA">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Job Description & Role Summary <span class="text-danger">*</span></label>
+                            <textarea name="description" class="form-control" rows="3" placeholder="Overview of key deliverables and role objectives..." required></textarea>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Key Requirements & Technical Qualifications <span class="text-danger">*</span></label>
+                            <textarea name="requirements" class="form-control" rows="3" placeholder="Key programming languages, frameworks, and qualifications required..." required></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light py-2.5 px-4 border-top">
+                    <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-primary px-3 fw-semibold shadow-sm" style="background: #2563EB; border-color: #2563EB;">
+                        <i class="bi bi-check-circle me-1"></i> Save & Publish Position
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- QUICK EDIT POSITION MODAL                                 -->
+<!-- ========================================================= -->
+<div class="modal fade" id="editJobModal" tabindex="-1" aria-labelledby="editJobModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow" style="border-radius: 12px; overflow: hidden;">
+            <form method="POST" id="editJobForm" action="">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{% url 'recruitment:links_list' %}">
+
+                <div class="modal-header text-white" style="background: #0F172A;">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-pencil-square text-warning fs-5"></i>
+                        <h5 class="modal-title fw-bold mb-0 text-white" id="editJobModalLabel">Edit Job Position</h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label small fw-bold">Position Title <span class="text-danger">*</span></label>
+                            <input type="text" name="title" id="edit_title" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Department <span class="text-danger">*</span></label>
+                            {{ quick_job_form.department }}
+                        </div>
+
+                        <!-- LOCATION SELECT FROM ADMIN SITES -->
+                        <div class="col-md-4">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label small fw-bold mb-0">Location <span class="text-danger">*</span></label>
+                                {% if request.user.is_head_role %}
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#manageLocationsModal" class="small text-primary text-decoration-none" style="font-size: 0.78rem;">
+                                    <i class="bi bi-plus-circle me-0.5"></i> Add Location
+                                </a>
+                                {% endif %}
+                            </div>
+                            <select name="location" id="edit_location" class="form-select" required>
+                                {% for s in sites %}
+                                    <option value="{{ s.name }} ({{ s.city }})">{{ s.name }} - {{ s.city }}</option>
+                                {% empty %}
+                                    <option value="Bengaluru HQ & Hybrid">Bengaluru HQ & Hybrid</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Employment Type</label>
+                            {{ quick_job_form.employment_type }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Number of Vacancies</label>
+                            <input type="number" name="vacancies" id="edit_vacancies" class="form-control" min="1" required>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Experience Required</label>
+                            <input type="text" name="experience_required" id="edit_experience" class="form-control">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Salary Range</label>
+                            <input type="text" name="salary_range" id="edit_salary" class="form-control">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Status</label>
+                            <select name="status" id="edit_status" class="form-select">
+                                <option value="OPEN">Open / Active in Form</option>
+                                <option value="ON_HOLD">On Hold</option>
+                                <option value="CLOSED">Closed</option>
+                                <option value="DRAFT">Draft</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Job Description & Role Summary <span class="text-danger">*</span></label>
+                            <textarea name="description" id="edit_description" class="form-control" rows="3" required></textarea>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">Key Requirements & Technical Qualifications <span class="text-danger">*</span></label>
+                            <textarea name="requirements" id="edit_requirements" class="form-control" rows="3" required></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light py-2.5 px-4 border-top">
+                    <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-primary px-3 fw-semibold shadow-sm" style="background: #2563EB; border-color: #2563EB;">
+                        <i class="bi bi-check-circle me-1"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- JOB POSITION DETAILS RIGHT SIDEBAR (OFFCANVAS)            -->
+<!-- ========================================================= -->
+<div class="offcanvas offcanvas-end border-start shadow-lg" tabindex="-1" id="jobDetailsOffcanvas" aria-labelledby="jobDetailsOffcanvasLabel" style="width: 520px; max-width: 95vw; border-color: #E2E8F0;">
+    <!-- Drawer Header -->
+    <div class="offcanvas-header text-white p-3 px-4" style="background: #0F172A; border-bottom: 1px solid #1E293B;">
+        <div class="d-flex align-items-center gap-2.5 flex-grow-1 me-3 overflow-hidden">
+            <div class="rounded-3 p-2 d-flex align-items-center justify-content-center flex-shrink-0" style="background: rgba(37, 99, 235, 0.2); color: #60A5FA; width: 38px; height: 38px;">
+                <i class="bi bi-briefcase-fill fs-5"></i>
+            </div>
+            <div class="overflow-hidden">
+                <h5 class="offcanvas-title fw-bold text-white mb-0 text-truncate fs-6" id="drawer_title">Position Details</h5>
+                <small class="text-white-50" id="drawer_created_sub"></small>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-shrink-0">
+            <span id="drawer_status_badge" class="badge"></span>
+            <!-- PENCIL ICON BUTTON IN HEADER -->
+            <button type="button" class="btn btn-sm btn-outline-light p-1.5 px-2 shadow-none" id="drawer_header_edit_btn" title="Edit Position">
+                <i class="bi bi-pencil"></i>
+            </button>
+            <button type="button" class="btn-close btn-close-white ms-1" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+    </div>
+
+    <!-- Drawer Body -->
+    <div class="offcanvas-body p-4 bg-white" style="overflow-y: auto;">
+        <!-- KEY ATTRIBUTES GRID (NO OVERLAP, SPACIOUS) -->
+        <div class="row g-3 mb-4">
+            <div class="col-sm-6">
+                <div class="detail-attr-card">
+                    <div class="text-muted text-uppercase fw-semibold mb-1 d-flex align-items-center gap-1.5" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                        <i class="bi bi-diagram-3 text-secondary"></i> Department
+                    </div>
+                    <div class="fw-bold text-dark fs-6 text-break" id="drawer_dept">-</div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="detail-attr-card">
+                    <div class="text-muted text-uppercase fw-semibold mb-1 d-flex align-items-center gap-1.5" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                        <i class="bi bi-briefcase text-secondary"></i> Employment Type
+                    </div>
+                    <div class="fw-bold text-dark fs-6 text-break" id="drawer_type">-</div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="detail-attr-card">
+                    <div class="text-muted text-uppercase fw-semibold mb-1 d-flex align-items-center gap-1.5" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                        <i class="bi bi-clock-history text-secondary"></i> Experience
+                    </div>
+                    <div class="fw-bold text-dark fs-6 text-break" id="drawer_exp">-</div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="detail-attr-card">
+                    <div class="text-muted text-uppercase fw-semibold mb-1 d-flex align-items-center gap-1.5" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                        <i class="bi bi-geo-alt-fill text-danger"></i> Location
+                    </div>
+                    <div class="fw-bold text-dark fs-6 text-break" id="drawer_location">-</div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="detail-attr-card">
+                    <div class="text-muted text-uppercase fw-semibold mb-1 d-flex align-items-center gap-1.5" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                        <i class="bi bi-cash-stack text-success"></i> Salary Range
+                    </div>
+                    <div class="fw-bold text-dark fs-6 text-break" id="drawer_salary">-</div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="detail-attr-card">
+                    <div class="text-muted text-uppercase fw-semibold mb-1 d-flex align-items-center gap-1.5" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                        <i class="bi bi-people-fill text-primary"></i> Total Applications
+                    </div>
+                    <div class="fw-bold text-primary fs-6 text-break" id="drawer_applications">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- JOB DESCRIPTION & ROLE SUMMARY (NO OVERLAP) -->
+        <div class="mb-3">
+            <div class="text-muted text-uppercase fw-semibold mb-2 d-flex align-items-center gap-1.5" style="font-size: 0.75rem; letter-spacing: 0.05em;">
+                <i class="bi bi-card-text text-primary fs-6"></i> Job Description & Role Summary
+            </div>
+            <div id="drawer_desc" class="p-3 rounded-3 text-secondary" style="background: #F8FAFC; border: 1px solid #E2E8F0; white-space: pre-wrap; font-size: 0.92rem; line-height: 1.65; word-break: break-word;"></div>
+        </div>
+    </div>
+
+    <!-- Drawer Footer -->
+    <div class="p-3 px-4 bg-light border-top d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <button type="button" class="btn btn-sm btn-outline-secondary px-3 py-1.5 fw-semibold" id="drawer_footer_edit_btn">
+            <i class="bi bi-pencil me-1.5"></i> Edit Position
+        </button>
+        <div class="d-flex align-items-center gap-2">
+            <a id="drawer_fast_apply_link" href="#" target="_blank" class="btn btn-sm btn-outline-success px-2.5 py-1.5 fw-semibold" title="LinkedIn / Fast-Apply Link for this Role">
+                <i class="bi bi-google me-1"></i> Fast Apply
+            </a>
+            <a id="drawer_candidates_link" href="#" class="btn btn-sm btn-outline-primary px-2.5 py-1.5 fw-semibold">
+                <i class="bi bi-people me-1"></i> Candidates
+            </a>
+            <a id="drawer_apply_link" href="#" target="_blank" class="btn btn-sm btn-primary px-2.5 py-1.5 fw-semibold shadow-sm" style="background: #2563EB; border-color: #2563EB;">
+                <i class="bi bi-box-arrow-up-right me-1"></i> Preview
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function copyUniversalLink(btn) {
+        const input = document.getElementById('universalLinkInput');
+        input.select();
+        input.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(input.value).then(() => {
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-check2"></i> Copied!';
+            btn.classList.remove('btn-dark');
+            btn.classList.add('btn-success');
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-dark');
+            }, 2500);
+        });
+    }
+
+    function copyFastApplyLink(btn) {
+        const input = document.getElementById('fastApplyLinkInput');
+        input.select();
+        input.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(input.value).then(() => {
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-check2"></i> Copied!';
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-dark');
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.classList.remove('btn-dark');
+                btn.classList.add('btn-success');
+            }, 2500);
+        });
+    }
+
+    // Modal Dynamic Population & Table Search + Pagination
+    document.addEventListener('DOMContentLoaded', function() {
+        // -------------------------------------------------------------
+        // A. TABLE SEARCH & PAGINATION (5, 10, 20, 50, 100)
+        // -------------------------------------------------------------
+        const searchInput = document.getElementById('jobSearchInput');
+        const pageSizeSelect = document.getElementById('pageSizeSelect');
+        const pageInfoText = document.getElementById('pageInfoText');
+        const prevPageBtn = document.getElementById('prevPageBtn');
+        const nextPageBtn = document.getElementById('nextPageBtn');
+        const pageNumbersContainer = document.getElementById('pageNumbersContainer');
+        const visibleJobsCount = document.getElementById('visibleJobsCount');
+        const allJobRows = Array.from(document.querySelectorAll('.job-table-row'));
+
+        let currentPage = 1;
+        let pageSize = parseInt(pageSizeSelect ? pageSizeSelect.value : 10, 10);
+        let currentFilteredRows = [...allJobRows];
+
+        function renderPagination() {
+            const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
+
+            // Filter rows
+            currentFilteredRows = allJobRows.filter(row => {
+                if (!query) return true;
+                const title = (row.getAttribute('data-title') || '').toLowerCase();
+                const location = (row.getAttribute('data-location') || '').toLowerCase();
+                const dept = (row.getAttribute('data-dept') || '').toLowerCase();
+                const exp = (row.getAttribute('data-exp') || '').toLowerCase();
+                return title.includes(query) || location.includes(query) || dept.includes(query) || exp.includes(query);
+            });
+
+            const total = currentFilteredRows.length;
+            const totalPages = Math.ceil(total / pageSize) || 1;
+
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            // Hide all, then show page slice
+            allJobRows.forEach(row => row.style.display = 'none');
+
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = Math.min(startIndex + pageSize, total);
+
+            for (let i = startIndex; i < endIndex; i++) {
+                currentFilteredRows[i].style.display = '';
+            }
+
+            // Update badge & info text
+            if (visibleJobsCount) visibleJobsCount.textContent = total;
+            if (pageInfoText) {
+                if (total === 0) {
+                    pageInfoText.textContent = 'Showing 0 to 0 of 0 positions';
+                } else {
+                    pageInfoText.textContent = `Showing ${startIndex + 1} to ${endIndex} of ${total} positions`;
+                }
+            }
+
+            // Prev & Next arrows
+            if (prevPageBtn) prevPageBtn.disabled = (currentPage <= 1);
+            if (nextPageBtn) nextPageBtn.disabled = (currentPage >= totalPages);
+
+            // Page numbers
+            if (pageNumbersContainer) {
+                pageNumbersContainer.innerHTML = '';
+                for (let p = 1; p <= totalPages; p++) {
+                    if (totalPages > 7) {
+                        if (p !== 1 && p !== totalPages && Math.abs(p - currentPage) > 1) {
+                            if (p === 2 || p === totalPages - 1) {
+                                const dots = document.createElement('span');
+                                dots.className = 'px-1 text-muted small';
+                                dots.textContent = '...';
+                                pageNumbersContainer.appendChild(dots);
+                            }
+                            continue;
+                        }
+                    }
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = `btn btn-sm px-2.5 py-1 ${p === currentPage ? 'btn-primary fw-bold text-white' : 'btn-outline-secondary'}`;
+                    btn.style.borderRadius = '6px';
+                    btn.style.minWidth = '32px';
+                    btn.textContent = p;
+                    btn.addEventListener('click', () => {
+                        currentPage = p;
+                        renderPagination();
+                    });
+                    pageNumbersContainer.appendChild(btn);
+                }
+            }
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', () => {
+                currentPage = 1;
+                renderPagination();
+            });
+        }
+
+        if (pageSizeSelect) {
+            pageSizeSelect.addEventListener('change', () => {
+                pageSize = parseInt(pageSizeSelect.value, 10);
+                currentPage = 1;
+                renderPagination();
+            });
+        }
+
+        if (prevPageBtn) {
+            prevPageBtn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderPagination();
+                }
+            });
+        }
+
+        if (nextPageBtn) {
+            nextPageBtn.addEventListener('click', () => {
+                const totalPages = Math.ceil(currentFilteredRows.length / pageSize) || 1;
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderPagination();
+                }
+            });
+        }
+
+        // Run initial pagination
+        renderPagination();
+        // 1. Quick Edit Job Modal Dynamic Population
+        const editTriggers = document.querySelectorAll('.edit-job-trigger');
+        const editForm = document.getElementById('editJobForm');
+        const editTitle = document.getElementById('edit_title');
+        const editLocation = document.getElementById('edit_location');
+        const editVacancies = document.getElementById('edit_vacancies');
+        const editExperience = document.getElementById('edit_experience');
+        const editSalary = document.getElementById('edit_salary');
+        const editStatus = document.getElementById('edit_status');
+        const editDescription = document.getElementById('edit_description');
+        const editRequirements = document.getElementById('edit_requirements');
+
+        function populateEditModal(data) {
+            editForm.action = '/hr/jobs/' + data.id + '/edit/';
+            editTitle.value = data.title || '';
+            editVacancies.value = data.vacancies || '1';
+            editExperience.value = data.exp || '';
+            editSalary.value = data.salary || '';
+            editStatus.value = data.status || 'OPEN';
+            editDescription.value = data.desc || '';
+            editRequirements.value = data.req || '';
+
+            const locVal = data.location || '';
+            if (locVal && editLocation) {
+                let matched = false;
+                for (let i = 0; i < editLocation.options.length; i++) {
+                    if (editLocation.options[i].value === locVal || editLocation.options[i].text.includes(locVal)) {
+                        editLocation.selectedIndex = i;
+                        matched = true;
+                        break;
+                    }
+                }
+                if (!matched) {
+                    const opt = new Option(locVal, locVal, true, true);
+                    editLocation.add(opt);
+                }
+            }
+        }
+
+        editTriggers.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                populateEditModal({
+                    id: this.getAttribute('data-id'),
+                    title: this.getAttribute('data-title'),
+                    vacancies: this.getAttribute('data-vacancies'),
+                    exp: this.getAttribute('data-exp'),
+                    salary: this.getAttribute('data-salary'),
+                    status: this.getAttribute('data-status'),
+                    desc: this.getAttribute('data-desc'),
+                    req: this.getAttribute('data-req'),
+                    location: this.getAttribute('data-location')
+                });
+            });
+        });
+
+        // 2. Job Table Row Click -> Left Sidebar Offcanvas
+        const jobRows = document.querySelectorAll('.job-table-row');
+        const drawerEl = document.getElementById('jobDetailsOffcanvas');
+        const drawerTitle = document.getElementById('drawer_title');
+        const drawerCreatedSub = document.getElementById('drawer_created_sub');
+        const drawerStatusBadge = document.getElementById('drawer_status_badge');
+        const drawerDept = document.getElementById('drawer_dept');
+        const drawerType = document.getElementById('drawer_type');
+        const drawerExp = document.getElementById('drawer_exp');
+        const drawerLocation = document.getElementById('drawer_location');
+        const drawerSalary = document.getElementById('drawer_salary');
+        const drawerApplications = document.getElementById('drawer_applications');
+        const drawerDesc = document.getElementById('drawer_desc');
+        const drawerApplyLink = document.getElementById('drawer_apply_link');
+        const drawerFastApplyLink = document.getElementById('drawer_fast_apply_link');
+        const drawerCandidatesLink = document.getElementById('drawer_candidates_link');
+        const drawerHeaderEditBtn = document.getElementById('drawer_header_edit_btn');
+        const drawerFooterEditBtn = document.getElementById('drawer_footer_edit_btn');
+
+        let currentDrawerJobData = null;
+
+        jobRows.forEach(row => {
+            row.addEventListener('click', function(e) {
+                // Ignore if clicked on an action button or stop-row-click element
+                if (e.target.closest('.stop-row-click') || e.target.closest('button') || e.target.closest('a')) {
+                    return;
+                }
+
+                currentDrawerJobData = {
+                    id: this.getAttribute('data-id'),
+                    title: this.getAttribute('data-title') || 'Position Details',
+                    created: this.getAttribute('data-created') || '',
+                    dept: this.getAttribute('data-dept') || 'General',
+                    type: this.getAttribute('data-type') || 'Full-time',
+                    exp: this.getAttribute('data-exp') || 'Not specified',
+                    vacancies: this.getAttribute('data-vacancies') || '1',
+                    location: this.getAttribute('data-location') || 'Bengaluru HQ',
+                    salary: this.getAttribute('data-salary') || 'Not disclosed',
+                    status: this.getAttribute('data-status') || 'Open',
+                    statusCode: this.getAttribute('data-status-code') || 'OPEN',
+                    apps: this.getAttribute('data-applications') || '0',
+                    desc: this.getAttribute('data-desc') || 'No description provided.',
+                    req: this.getAttribute('data-req') || 'No requirements specified.',
+                    applyUrl: this.getAttribute('data-apply-url') || '#',
+                    fastApplyUrl: this.getAttribute('data-fast-apply-url') || '#',
+                    candidatesUrl: this.getAttribute('data-candidates-url') || '#'
+                };
+
+                if (drawerTitle) drawerTitle.textContent = currentDrawerJobData.title;
+                if (drawerCreatedSub) drawerCreatedSub.textContent = currentDrawerJobData.created ? 'Posted on ' + currentDrawerJobData.created : '';
+                if (drawerDept) drawerDept.textContent = currentDrawerJobData.dept;
+                if (drawerType) drawerType.textContent = currentDrawerJobData.type;
+                if (drawerExp) drawerExp.textContent = currentDrawerJobData.exp;
+                if (drawerLocation) drawerLocation.textContent = currentDrawerJobData.location;
+                if (drawerSalary) drawerSalary.textContent = currentDrawerJobData.salary;
+                if (drawerApplications) drawerApplications.textContent = currentDrawerJobData.apps + ' Candidates';
+                if (drawerDesc) drawerDesc.textContent = currentDrawerJobData.desc;
+                if (drawerApplyLink) drawerApplyLink.href = currentDrawerJobData.applyUrl;
+                if (drawerFastApplyLink) drawerFastApplyLink.href = currentDrawerJobData.fastApplyUrl;
+                if (drawerCandidatesLink) drawerCandidatesLink.href = currentDrawerJobData.candidatesUrl;
+
+                if (drawerStatusBadge) {
+                    drawerStatusBadge.className = 'badge px-2.5 py-1';
+                    if (currentDrawerJobData.statusCode === 'OPEN') {
+                        drawerStatusBadge.classList.add('bg-success');
+                        drawerStatusBadge.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Active / Open';
+                    } else if (currentDrawerJobData.statusCode === 'ON_HOLD') {
+                        drawerStatusBadge.classList.add('bg-warning', 'text-dark');
+                        drawerStatusBadge.textContent = 'On Hold';
+                    } else {
+                        drawerStatusBadge.classList.add('bg-secondary');
+                        drawerStatusBadge.textContent = currentDrawerJobData.status;
+                    }
+                }
+
+                if (drawerEl) {
+                    const offcanvasInstance = bootstrap.Offcanvas.getOrCreateInstance(drawerEl);
+                    offcanvasInstance.show();
+                }
+            });
+        });
+
+        // Drawer edit buttons open edit modal
+        function handleDrawerEdit() {
+            if (!currentDrawerJobData) return;
+            if (drawerEl) {
+                const offcanvasInstance = bootstrap.Offcanvas.getInstance(drawerEl);
+                if (offcanvasInstance) offcanvasInstance.hide();
+            }
+
+            populateEditModal({
+                id: currentDrawerJobData.id,
+                title: currentDrawerJobData.title,
+                vacancies: currentDrawerJobData.vacancies,
+                exp: currentDrawerJobData.exp,
+                salary: currentDrawerJobData.salary,
+                status: currentDrawerJobData.statusCode,
+                desc: currentDrawerJobData.desc,
+                req: currentDrawerJobData.req,
+                location: currentDrawerJobData.location
+            });
+
+            const editModalEl = document.getElementById('editJobModal');
+            if (editModalEl) {
+                bootstrap.Modal.getOrCreateInstance(editModalEl).show();
+            }
+        }
+
+        if (drawerHeaderEditBtn) drawerHeaderEditBtn.addEventListener('click', handleDrawerEdit);
+        if (drawerFooterEditBtn) drawerFooterEditBtn.addEventListener('click', handleDrawerEdit);
+    });
+</script>
+{% endblock %}

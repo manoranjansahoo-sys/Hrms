@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Events & Celebrations{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Company Events & Celebrations</h3>
+            <p class="text-muted small mb-0">Official celebrations, hackathons, town halls, cultural festivals, and training sessions.</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for event in events %}
+            <div class="col-md-6 col-lg-4">
+                <div class="hrms-card h-100">
+                    <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+                        <span class="badge bg-success bg-opacity-10 text-success fw-bold">{{ event.get_event_type_display }}</span>
+                        <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ event.start_datetime|date:"h:i A" }}</small>
+                    </div>
+                    <div class="hrms-card-body d-flex flex-column">
+                        <h5 class="fw-bold text-dark mb-2">{{ event.title }}</h5>
+                        <div class="text-muted small mb-2">
+                            <i class="bi bi-calendar-event text-success me-1"></i> {{ event.start_datetime|date:"l, d M Y" }}
+                        </div>
+                        <div class="text-muted small mb-3">
+                            <i class="bi bi-geo-alt-fill text-danger me-1"></i> {{ event.venue }}
+                        </div>
+                        <p class="text-secondary small flex-grow-1">{{ event.description }}</p>
+
+                        <div class="pt-3 border-top d-flex justify-content-between align-items-center">
+                            <span class="small text-muted"><i class="bi bi-people me-1"></i> {{ event.participants.count }} Attending</span>
+                            {% if event.id in registered_ids %}
+                                <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i> Registered</span>
+                            {% else %}
+                                <a href="{% url 'portal:register_event' event_id=event.id %}" class="btn btn-sm btn-hrms">
+                                    Register Now
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12 text-center py-5 text-muted">No scheduled events found.</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+

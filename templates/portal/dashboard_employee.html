@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+{% block title %}Employee Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <!-- PAGE HEADER -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h3 class="fw-bold text-dark mb-1">Employee Self-Service Workspace</h3>
+            <p class="text-muted small mb-0">Overview of your attendance, leave balances, compensation, and performance goals.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'attendance:punch_in' %}" class="btn btn-hrms btn-sm shadow-sm">
+                <i class="bi bi-box-arrow-in-right"></i> Punch In
+            </a>
+            <a href="{% url 'attendance:punch_out' %}" class="btn btn-outline-danger btn-sm shadow-sm">
+                <i class="bi bi-box-arrow-right"></i> Punch Out
+            </a>
+            <a href="{% url 'leave_management:apply_leave' %}" class="btn btn-warning btn-sm text-dark fw-bold shadow-sm">
+                <i class="bi bi-calendar-plus"></i> Apply Leave
+            </a>
+        </div>
+    </div>
+
+    <!-- STATS ROW: LEAVE BALANCES & ATTENDANCE -->
+    <div class="row g-3 mb-4">
+        <!-- PUNCH STATUS CARD -->
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-green">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <div>
+                    <div class="stat-label">Today's Attendance</div>
+                    <div class="fw-bold fs-5 text-dark">
+                        {% if today_attendance and today_attendance.punch_in %}
+                            <span class="text-success">Present</span>
+                            <div class="small text-muted font-monospace" style="font-size: 0.78rem;">In: {{ today_attendance.punch_in|time:"h:i A" }}</div>
+                        {% else %}
+                            <span class="text-secondary">Not Checked In</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% for bal in leave_balances %}
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon 
+                        {% if bal.leave_type.code == 'CL' %}stat-icon-amber
+                        {% elif bal.leave_type.code == 'SL' %}stat-icon-blue
+                        {% else %}stat-icon-purple{% endif %}">
+                        <i class="bi bi-calendar-check"></i>
+                    </div>
+                    <div>
+                        <div class="stat-label">{{ bal.leave_type.name }}</div>
+                        <div class="stat-value text-dark">{{ bal.available_days }} <span class="fs-6 fw-normal text-muted">days left</span></div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- MAIN BODY GRID -->
+    <div class="row g-4 mb-4">
+        <!-- LEFT COLUMN: ATTENDANCE & LEAVES -->
+        <div class="col-lg-8">
+            <!-- RECENT ATTENDANCE -->
+            <div class="hrms-card mb-4">
+                <div class="hrms-card-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-calendar-week text-success fs-5"></i>
+                        <h5 class="fw-bold mb-0">Recent Attendance Records</h5>
+                    </div>
+                    <a href="{% url 'attendance:my_attendance' %}" class="small text-success text-decoration-none fw-semibold">View Full History</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table hrms-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Punch In</th>
+                                <th>Punch Out</th>
+                                <th>Working Hours</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for att in recent_attendance %}
+                                <tr>
+                                    <td class="fw-semibold">{{ att.date|date:"D, d M Y" }}</td>
+                                    <td>{{ att.punch_in|time:"h:i A"|default:"--" }}</td>
+                                    <td>{{ att.punch_out|time:"h:i A"|default:"--" }}</td>
+                                    <td>{{ att.working_hours }} hrs</td>
+                                    <td>
+                                        {% if att.status == 'PRESENT' %}
+                                            <span class="badge bg-success">Present</span>
+                                        {% elif att.status == 'HALF_DAY' %}
+                                            <span class="badge bg-warning text-dark">Half Day</span>
+                                        {% elif att.status == 'ON_LEAVE' %}
+                                            <span class="badge bg-info text-dark">On Leave</span>
+                                        {% elif att.status == 'WEEK_OFF' %}
+                                            <span class="badge bg-light text-secondary border">Weekly Off</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Absent</span>
+                                        {% endif %}
+                                        {% if att.is_late %}
+                                            <span class="badge bg-danger ms-1">Late</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="5" class="text-center py-3 text-muted">No attendance logs found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- MY LEAVE APPLICATIONS -->
+            <div class="hrms-card mb-4">
+                <div class="hrms-card-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-airplane-fill text-info fs-5"></i>
+                        <h5 class="fw-bold mb-0">My Recent Leave Requests</h5>
+                    </div>
+                    <a href="{% url 'leave_management:my_leaves' %}" class="small text-success text-decoration-none fw-semibold">Manage Leaves</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table hrms-table">
+                        <thead>
+                            <tr>
+                                <th>Leave Type</th>
+                                <th>Duration</th>
+                                <th>Days</th>
+                                <th>Reason</th>
+                                <th>Approval Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in my_leaves %}
+                                <tr>
+                                    <td class="fw-bold">{{ req.leave_type.name }}</td>
+                                    <td>{{ req.start_date|date:"d M" }} &rarr; {{ req.end_date|date:"d M Y" }}</td>
+                                    <td>{{ req.total_days }}</td>
+                                    <td class="text-truncate" style="max-width: 180px;">{{ req.reason }}</td>
+                                    <td>
+                                        {% if req.status == 'APPROVED' %}
+                                            <span class="badge bg-success">Approved</span>
+                                        {% elif req.status == 'PENDING_MANAGER' %}
+                                            <span class="badge bg-warning text-dark">Pending Manager</span>
+                                        {% elif req.status == 'PENDING_HR' %}
+                                            <span class="badge bg-info text-dark">Pending HR</span>
+                                        {% elif req.status == 'REJECTED' %}
+                                            <span class="badge bg-danger">Rejected</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ req.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="5" class="text-center py-3 text-muted">No recent leave requests.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ASSIGNED GOALS & PERFORMANCE -->
+            <div class="hrms-card">
+                <div class="hrms-card-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-bullseye text-danger fs-5"></i>
+                        <h5 class="fw-bold mb-0">Assigned Goals & Key Results</h5>
+                    </div>
+                    <a href="{% url 'performance:goals_list' %}" class="small text-success text-decoration-none fw-semibold">View All</a>
+                </div>
+                <div class="hrms-card-body">
+                    {% for goal in my_goals %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-semibold text-dark">{{ goal.title }}</span>
+                                <span class="badge bg-secondary font-monospace">{{ goal.progress_percentage }}%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ goal.progress_percentage }}%;"></div>
+                            </div>
+                            <small class="text-muted">Target: {{ goal.target_date|date:"d M Y" }} &bull; Status: {{ goal.get_status_display }}</small>
+                        </div>
+                    {% empty %}
+                        <div class="text-center py-3 text-muted">No goals currently assigned.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: PROFILE & PAYSLIP HIGHLIGHT -->
+        <div class="col-lg-4">
+            <!-- EMPLOYEE PROFILE SNAPSHOT -->
+            <div class="hrms-card mb-4 text-center">
+                <div class="hrms-card-body p-4">
+                    <img src="{{ request.user.get_avatar_url }}" class="rounded-circle border border-3 border-success mb-3 shadow-sm" width="85" height="85" style="object-fit: cover;">
+                    <h5 class="fw-bold mb-0">{{ profile.full_name }}</h5>
+                    <div class="badge bg-success bg-opacity-10 text-success mb-2">{{ profile.emp_id }}</div>
+                    <p class="text-muted small mb-3">
+                        {{ profile.designation.title }}<br>
+                        {{ profile.department.name }} &bull; {{ profile.site.name }}
+                    </p>
+
+                    <div class="d-flex justify-content-around text-center border-top border-bottom py-2 my-3">
+                        <div>
+                            <small class="text-muted d-block">Joining Date</small>
+                            <span class="fw-bold text-dark small">{{ profile.joining_date|date:"d M Y" }}</span>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block">Reporting Manager</small>
+                            <span class="fw-bold text-dark small">{{ profile.reporting_manager.get_full_name|default:"Executive" }}</span>
+                        </div>
+                    </div>
+
+                    <a href="{% url 'employees:employee_detail' emp_id=profile.emp_id %}" class="btn btn-outline-success btn-sm w-100">
+                        <i class="bi bi-person-lines-fill me-1"></i> View Full Profile & Documents
+                    </a>
+                </div>
+            </div>
+
+            <!-- LATEST PAYSLIP WIDGET -->
+            <div class="hrms-card mb-4" style="background: linear-gradient(135deg, #F0FDF4, #DCFCE7); border-color: #86EFAC;">
+                <div class="hrms-card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge bg-success text-white">Latest Payslip</span>
+                        <i class="bi bi-file-earmark-pdf-fill text-danger fs-4"></i>
+                    </div>
+                    {% if latest_payslip %}
+                        <h4 class="fw-bold text-success mb-0">₹{{ latest_payslip.net_payable|floatformat:2 }}</h4>
+                        <small class="text-muted d-block mb-3">Net Disbursed &bull; {{ latest_payslip.payroll_period.get_month_display }} {{ latest_payslip.year }}</small>
+
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'payroll:download_pdf' payslip_id=latest_payslip.id %}" class="btn btn-success btn-sm fw-semibold shadow-sm">
+                                <i class="bi bi-download me-1"></i> Download PDF Payslip
+                            </a>
+                            <a href="{% url 'payroll:my_payslips' %}" class="btn btn-outline-success btn-sm">
+                                View Salary History
+                            </a>
+                        </div>
+                    {% else %}
+                        <p class="text-muted small mb-0">No payslips generated yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- OPEN SUPPORT TICKETS -->
+            <div class="hrms-card">
+                <div class="hrms-card-header">
+                    <h6 class="fw-bold mb-0">My Support Tickets</h6>
+                    <a href="{% url 'support:create_ticket' %}" class="small text-success text-decoration-none">+ New</a>
+                </div>
+                <div class="hrms-card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for t in open_tickets %}
+                            <li class="list-group-item p-3 border-0 border-bottom">
+                                <div class="d-flex justify-content-between">
+                                    <span class="badge bg-secondary small mb-1">{{ t.get_category_display }}</span>
+                                    <span class="badge 
+                                        {% if t.status == 'OPEN' %}bg-primary
+                                        {% elif t.status == 'IN_PROGRESS' %}bg-warning text-dark
+                                        {% else %}bg-success{% endif %}">
+                                        {{ t.get_status_display }}
+                                    </span>
+                                </div>
+                                <a href="{% url 'support:ticket_detail' ticket_id=t.id %}" class="fw-semibold text-dark text-decoration-none small d-block">
+                                    {{ t.subject }}
+                                </a>
+                                <small class="text-muted">{{ t.created_at|date:"d M Y" }}</small>
+                            </li>
+                        {% empty %}
+                            <li class="p-3 text-center text-muted small">No active support tickets.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

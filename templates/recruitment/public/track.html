@@ -1,0 +1,208 @@
+{% extends 'recruitment/public/base_public.html' %}
+{% block title %}Track Application Status{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 780px;">
+    <!-- SEARCH FORM -->
+    <div class="card-custom p-4 mb-4 text-center">
+        <h4 class="fw-bold text-dark mb-1">Track Candidate Application</h4>
+        <p class="text-muted small mb-3">Enter your unique Application ID (e.g. <code>APP-10369</code>) to view real-time recruitment updates.</p>
+
+        <form method="GET" action="{% url 'recruitment:candidate_track' %}" class="d-flex justify-content-center gap-2" style="max-width: 500px; margin: 0 auto;">
+            <input type="text" name="application_id" class="form-control text-center font-monospace fw-bold" placeholder="APP-XXXXX" value="{{ search_id }}" required>
+            <button type="submit" class="btn btn-brand text-nowrap">
+                <i class="bi bi-search me-1"></i> Track
+            </button>
+        </form>
+
+        {% if search_error %}
+            <div class="alert alert-danger mt-3 mb-0 small text-start">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ search_error }}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- APPLICATION DETAILS & STATUS TIMELINE -->
+    {% if application %}
+        <div class="card-custom p-4 p-md-5 mb-5">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 border-bottom pb-3 mb-4">
+                <div>
+                    <div class="d-inline-flex align-items-center rounded-2 overflow-hidden border shadow-sm mb-2" style="border-color: #BFDBFE;">
+                        <span class="bg-primary-subtle text-primary font-monospace fw-bold px-2.5 py-0.5 small">{% if application.application_id|slice:":4" == "APP-" %}{{ application.application_id|slice:"4:" }}{% else %}{{ application.application_id }}{% endif %}</span>
+                    </div>
+                    <h4 class="fw-bold text-dark mb-0">{{ application.candidate.full_name }}</h4>
+                    <small class="text-muted">Applied for <b>{{ application.job.title }}</b> ({{ application.job.department.name|default:"General" }})</small>
+                </div>
+                <div class="text-md-end">
+                    <span class="badge 
+                        {% if application.status == 'SELECTED' %}bg-success
+                        {% elif application.status == 'SHORTLISTED' %}bg-info text-dark
+                        {% elif application.status == 'INTERVIEW_SCHEDULED' %}bg-warning text-dark
+                        {% elif application.status == 'REJECTED' %}bg-danger
+                        {% else %}bg-primary{% endif %} fs-6 px-3 py-2">
+                        {{ application.get_status_display }}
+                    </span>
+                    <small class="text-muted d-block mt-1">Submitted: {{ application.applied_at|date:"d M Y" }}</small>
+                </div>
+            </div>
+
+            <!-- ONBOARDING CALL TO ACTION FOR QUALIFIED CANDIDATES -->
+            {% if application.is_qualified or application.status == 'SELECTED' %}
+                <div class="card border-0 mb-4 shadow-sm" style="background: linear-gradient(135deg, #E8F5E9, #C8E6C9); border: 2px solid #81C784 !important; border-radius: 12px;">
+                    <div class="p-4">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 50px; height: 50px; font-size: 1.5rem;">
+                                <i class="bi bi-award-fill"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h5 class="fw-bold text-success mb-1">
+                                    Congratulations! You Have Qualified the Interview Rounds!
+                                </h5>
+                                <p class="text-dark small mb-3">
+                                    The technical & hiring committee has approved your candidacy for <b>{{ application.job.title }}</b>.
+                                    {% if application.is_onboarding_completed %}
+                                        <br><span class="badge bg-success mt-1"><i class="bi bi-check2-all me-1"></i> Onboarding Details Submitted on {{ application.onboarding_completed_at|date:"d M Y" }}</span>
+                                        <span class="text-muted d-block mt-1">Our HR Operations team is currently verifying your submitted certificates and preparing your formal employment contract.</span>
+                                    {% else %}
+                                        Please complete your official <b>Employee Onboarding & Verification Dossier</b> (Permanent address, 10th & 12th marks, Degree certificates, Bank account, and Tax identification) to issue your appointment letter.
+                                    {% endif %}
+                                </p>
+                                {% if not application.is_onboarding_completed %}
+                                    <a href="{% url 'recruitment:candidate_onboarding' application_id=application.application_id %}" class="btn btn-success btn-lg px-4 shadow-sm">
+                                        <i class="bi bi-pencil-square me-2"></i> Fill Full Onboarding & Verification Details &rarr;
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'recruitment:candidate_onboarding' application_id=application.application_id %}" class="btn btn-outline-success btn-sm">
+                                        <i class="bi bi-eye me-1"></i> View / Update Submitted Onboarding Details
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- TIMELINE PROGRESSION -->
+            <div class="mb-4">
+                <h6 class="fw-bold text-dark mb-3"><i class="bi bi-clock-history text-success me-2"></i>Recruitment Status Milestones</h6>
+
+                <div class="position-relative py-2">
+                    <!-- MILESTONE 1: SUBMITTED -->
+                    <div class="d-flex gap-3 mb-4">
+                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark">Application Submitted</div>
+                            <small class="text-muted">Your online profile and resume were logged on {{ application.applied_at|date:"d M Y, h:i A" }}.</small>
+                        </div>
+                    </div>
+
+                    <!-- MILESTONE 2: UNDER REVIEW -->
+                    <div class="d-flex gap-3 mb-4">
+                        <div class="rounded-circle 
+                            {% if application.status != 'SUBMITTED' %}bg-success text-white{% else %}bg-light text-muted border{% endif %} 
+                            d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
+                            {% if application.status != 'SUBMITTED' %}<i class="bi bi-check-lg"></i>{% else %}2{% endif %}
+                        </div>
+                        <div>
+                            <div class="fw-bold {% if application.status != 'SUBMITTED' %}text-dark{% else %}text-muted{% endif %}">
+                                HR & Technical Screening
+                            </div>
+                            <small class="text-muted">Assessment of candidate credentials, experience, and skill set alignment.</small>
+                        </div>
+                    </div>
+
+                    <!-- MILESTONE 3: SHORTLISTED -->
+                    <div class="d-flex gap-3 mb-4">
+                        <div class="rounded-circle 
+                            {% if application.status in 'SHORTLISTED,INTERVIEW_SCHEDULED,SELECTED' %}bg-success text-white{% else %}bg-light text-muted border{% endif %} 
+                            d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
+                            {% if application.status in 'SHORTLISTED,INTERVIEW_SCHEDULED,SELECTED' %}<i class="bi bi-check-lg"></i>{% else %}3{% endif %}
+                        </div>
+                        <div>
+                            <div class="fw-bold {% if application.status in 'SHORTLISTED,INTERVIEW_SCHEDULED,SELECTED' %}text-dark{% else %}text-muted{% endif %}">
+                                Candidate Shortlisted
+                            </div>
+                            <small class="text-muted">Candidate profile selected for round evaluations.</small>
+                        </div>
+                    </div>
+
+                    <!-- MILESTONE 4: INTERVIEW SCHEDULED -->
+                    <div class="d-flex gap-3 mb-4">
+                        <div class="rounded-circle 
+                            {% if application.status in 'INTERVIEW_SCHEDULED,SELECTED' %}bg-success text-white{% else %}bg-light text-muted border{% endif %} 
+                            d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
+                            {% if application.status in 'INTERVIEW_SCHEDULED,SELECTED' %}<i class="bi bi-check-lg"></i>{% else %}4{% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold {% if application.status in 'INTERVIEW_SCHEDULED,SELECTED' %}text-dark{% else %}text-muted{% endif %}">
+                                Interview Round
+                            </div>
+                            {% if application.interview_date %}
+                                <!-- INTERVIEW INVITE CARD -->
+                                <div class="p-3 border rounded-3 bg-light mt-2">
+                                    <div class="fw-bold text-success mb-1"><i class="bi bi-calendar-check me-1"></i> Interview Confirmed</div>
+                                    <div class="small text-dark mb-1">
+                                        <b>Date & Time:</b> {{ application.interview_date|date:"l, d M Y" }} at {{ application.interview_time|time:"h:i A" }}
+                                    </div>
+                                    <div class="small text-dark mb-1">
+                                        <b>Format / Mode:</b> {{ application.get_interview_mode_display }}
+                                    </div>
+                                    {% if application.interview_location_link %}
+                                        <div class="small text-dark mb-1">
+                                            <b>Meeting Venue / Link:</b>
+                                            {% if 'http' in application.interview_location_link %}
+                                                <a href="{{ application.interview_location_link }}" target="_blank" class="text-primary text-decoration-none fw-semibold">
+                                                    {{ application.interview_location_link }} &rarr;
+                                                </a>
+                                            {% else %}
+                                                <span>{{ application.interview_location_link }}</span>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                    {% if application.interview_notes %}
+                                        <div class="small text-muted mt-2 border-top pt-1">
+                                            <b>Candidate Guidelines:</b> {{ application.interview_notes }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <small class="text-muted">Technical and managerial interview rounds.</small>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- MILESTONE 5: FINAL DECISION -->
+                    <div class="d-flex gap-3">
+                        <div class="rounded-circle 
+                            {% if application.status == 'SELECTED' %}bg-success text-white
+                            {% elif application.status == 'REJECTED' %}bg-danger text-white
+                            {% else %}bg-light text-muted border{% endif %} 
+                            d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
+                            {% if application.status == 'SELECTED' %}<i class="bi bi-check-lg"></i>
+                            {% elif application.status == 'REJECTED' %}<i class="bi bi-x-lg"></i>
+                            {% else %}5{% endif %}
+                        </div>
+                        <div>
+                            <div class="fw-bold {% if application.status in 'SELECTED,REJECTED' %}text-dark{% else %}text-muted{% endif %}">
+                                Final Selection / Offer Stage
+                            </div>
+                            <small class="text-muted">
+                                {% if application.status == 'SELECTED' %}
+                                    <b class="text-success">Congratulations! You have been selected for this position. The HR team will contact you regarding your formal offer letter.</b>
+                                {% elif application.status == 'REJECTED' %}
+                                    Thank you for your interest. While your profile was impressive, we have decided to proceed with other candidates whose experience more closely matched this specific role.
+                                {% else %}
+                                    Post-interview assessment and formal offer roll-out.
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+

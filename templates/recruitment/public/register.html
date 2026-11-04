@@ -1,0 +1,813 @@
+{% extends 'recruitment/public/base_public.html' %}
+{% block title %}Candidate Job Application | Company HRMS Careers{% endblock %}
+
+{% block content %}
+<style>
+    /* ========================================================= */
+    /* ULTRA-PROFESSIONAL CANDIDATE REGISTRATION STYLING        */
+    /* ========================================================= */
+    :root {
+        --ink: #0F172A;
+        --muted: #64748B;
+        --line: #E2E8F0;
+        --accent: #0F766E;
+        --accent-hover: #115E59;
+        --accent-light: #F0FDF4;
+        --paper: #FFFFFF;
+        --bg: #F8FAFC;
+    }
+
+    body {
+        background-color: var(--bg) !important;
+        color: var(--ink);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .reg-main {
+        max-width: 860px;
+        margin: 28px auto 52px auto;
+        padding: 0 16px;
+    }
+
+    /* Intro Hero */
+    .intro {
+        margin-bottom: 24px;
+    }
+
+    .intro-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        background: #F0FDF4;
+        border: 1px solid #BBF7D0;
+        color: #166534;
+        font-size: 0.8rem;
+        font-weight: 600;
+        border-radius: 9999px;
+        margin-bottom: 10px;
+    }
+
+    .intro h1 {
+        font-size: 30px;
+        letter-spacing: -0.025em;
+        line-height: 1.25;
+        margin: 0 0 8px 0;
+        font-weight: 750;
+        color: var(--ink);
+    }
+
+    .intro p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14.5px;
+    }
+
+    /* Master Sheet */
+    .sheet {
+        background: var(--paper);
+        border-radius: 16px;
+        box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+        border: 1px solid var(--line);
+        border-top: 4px solid var(--accent);
+        overflow: hidden;
+    }
+
+    /* Position Applied For Section */
+    .position-box {
+        padding: 26px 36px;
+        background: linear-gradient(180deg, #F0FDF4 0%, #ECFDF5 100%);
+        border-bottom: 1px solid #D1FAE5;
+    }
+
+    .position-box label {
+        font-size: 14.5px;
+        font-weight: 600;
+        color: var(--ink);
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .position-box label b {
+        color: #DC2626;
+        font-weight: 600;
+    }
+
+    .position-hint {
+        font-size: 12.5px;
+        color: var(--muted);
+        margin-top: 7px;
+        margin-bottom: 0;
+    }
+
+    /* Form Section Block */
+    section.reg-section {
+        padding: 28px 36px;
+        border-bottom: 1px solid #F1F5F9;
+    }
+
+    .section-icon-box {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: #F0FDF4;
+        border: 1px solid #BBF7D0;
+        color: #166534;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.95rem;
+        flex-shrink: 0;
+    }
+
+    section.reg-section h2 {
+        font-size: 16.5px;
+        font-weight: 700;
+        letter-spacing: -0.2px;
+        margin: 0;
+        color: var(--ink);
+    }
+
+    section.reg-section p.description {
+        font-size: 13px;
+        color: var(--muted);
+        margin: 4px 0 20px 0;
+    }
+
+    /* Responsive Grid */
+    .reg-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px 24px;
+    }
+
+    .reg-full {
+        grid-column: 1 / -1;
+    }
+
+    /* Form Labels & Controls */
+    .reg-label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--ink);
+        margin-bottom: 6px;
+    }
+
+    .reg-label b {
+        color: #DC2626;
+        font-weight: 600;
+        margin-left: 2px;
+    }
+
+    .optional {
+        font-weight: 400;
+        color: var(--muted);
+        font-size: 12px;
+    }
+
+    .form-control, .form-select {
+        font: inherit;
+        width: 100%;
+        border: 1.5px solid #CBD5E1 !important;
+        border-radius: 8px !important;
+        background: white !important;
+        color: var(--ink) !important;
+        padding: 9px 13px !important;
+        min-height: 42px;
+        font-size: 14px !important;
+        box-shadow: none !important;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .form-control:hover, .form-select:hover {
+        border-color: #94A3B8 !important;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--accent) !important;
+        box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14) !important;
+        outline: none !important;
+    }
+
+    ::placeholder {
+        color: #94A3B8 !important;
+        font-size: 13.5px !important;
+        font-weight: 400 !important;
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 86px;
+    }
+
+    .help-text {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 5px;
+        margin-bottom: 0;
+    }
+
+    .error-msg {
+        color: #DC2626;
+        font-size: 12.5px;
+        margin-top: 5px;
+        font-weight: 500;
+    }
+
+    /* Radio Experience Toggle Pills */
+    .radio-pills {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .radio-pill {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 10px 18px;
+        border-radius: 8px;
+        border: 1.5px solid #CBD5E1;
+        background: white;
+        cursor: pointer;
+        font-size: 13.5px;
+        color: var(--ink);
+        transition: all 0.15s ease;
+        user-select: none;
+    }
+
+    .radio-pill:hover {
+        background: #F8FAFC;
+        border-color: #94A3B8;
+    }
+
+    .radio-pill.active {
+        border-color: var(--accent);
+        background: #F0FDF4;
+        font-weight: 600;
+        color: var(--accent);
+        box-shadow: 0 0 0 1px var(--accent);
+    }
+
+    /* Live Role Preview Pill */
+    .role-preview-card {
+        background: #FFFFFF;
+        border: 1px solid #D1FAE5;
+        border-radius: 10px;
+        padding: 14px 18px;
+        margin-top: 14px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+    }
+
+    /* PREVIOUS TYPE RESUME UPLOAD BOX (USER PREFERRED) */
+    .resume-upload-box {
+        background-color: #F8FAF7;
+        border: 2px dashed #86EFAC !important;
+        border-radius: 12px;
+        padding: 24px 28px;
+        transition: border-color 0.2s ease, background-color 0.2s ease;
+    }
+
+    .resume-upload-box:hover {
+        border-color: #16A34A !important;
+        background-color: #F0FDF4;
+    }
+
+    .resume-badge {
+        background: #ECFDF5;
+        color: #065F46;
+        border: 1px solid #A7F3D0;
+        font-weight: 600;
+        font-size: 0.78rem;
+        padding: 4px 12px;
+        border-radius: 20px;
+    }
+
+    input[type=file].form-control {
+        padding: 8px 12px !important;
+        font-size: 13px !important;
+        background: #FFFFFF !important;
+        border: 1px solid #CBD5E1 !important;
+        border-radius: 8px !important;
+    }
+
+    input[type=file]::file-selector-button {
+        border: 0;
+        border-radius: 6px;
+        padding: 7px 16px;
+        margin-right: 14px;
+        background: var(--accent);
+        color: #FFFFFF;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 13px;
+        transition: background-color 0.15s ease;
+    }
+
+    input[type=file]::file-selector-button:hover {
+        background: var(--accent-hover);
+    }
+
+    /* Action Footer */
+    .reg-actions {
+        padding: 22px 36px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        background: #FAFBFB;
+        border-top: 1px solid var(--line);
+    }
+
+    .btn-submit {
+        font-family: inherit;
+        font-weight: 600;
+        font-size: 14.5px;
+        cursor: pointer;
+        border: 0;
+        border-radius: 8px;
+        padding: 12px 34px;
+        background: var(--accent);
+        color: white;
+        box-shadow: 0 4px 14px rgba(15, 118, 110, 0.28);
+        transition: background-color 0.15s, transform 0.1s, box-shadow 0.15s;
+    }
+
+    .btn-submit:hover {
+        background: var(--accent-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(15, 118, 110, 0.35);
+    }
+
+    .btn-clear {
+        background: transparent;
+        border: 0;
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        padding: 6px 12px;
+        border-radius: 6px;
+        text-decoration: none;
+        transition: color 0.15s, background-color 0.15s;
+    }
+
+    .btn-clear:hover {
+        color: var(--ink);
+        background-color: #F1F5F9;
+    }
+
+    @media (max-width: 640px) {
+        .reg-main {
+            margin-top: 18px;
+            padding: 0 12px 36px 12px;
+        }
+
+        .intro h1 {
+            font-size: 24px;
+        }
+
+        .position-box, section.reg-section, .reg-actions {
+            padding: 20px 18px;
+        }
+
+        .reg-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        .reg-actions {
+            flex-direction: column-reverse;
+            align-items: stretch;
+            gap: 12px;
+        }
+
+        .btn-submit {
+            width: 100%;
+        }
+
+        .btn-clear {
+            text-align: center;
+        }
+    }
+</style>
+
+<div class="reg-main">
+    <!-- FLASH MESSAGES -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm mb-3" role="alert">
+                <i class="bi bi-info-circle-fill me-2"></i> {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- VALIDATION ERRORS BANNER -->
+    {% if form.errors %}
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm mb-3" role="alert">
+            <div class="d-flex align-items-start gap-2">
+                <i class="bi bi-exclamation-octagon-fill fs-5 text-danger mt-1"></i>
+                <div class="flex-grow-1">
+                    <h6 class="fw-bold mb-1">Please correct the highlighted fields before submitting:</h6>
+                    <ul class="mb-0 small ps-3">
+                        {% for field in form %}
+                            {% for error in field.errors %}
+                                <li><b>{{ field.label }}:</b> {{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                        {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- INTRO HEADER -->
+    <div class="intro">
+        <div class="intro-badge">
+            <i class="bi bi-patch-check-fill text-success"></i> Official Careers & Talent Application
+        </div>
+        <h1>Candidate Registration & Job Application</h1>
+        <p>Register for your interview and evaluation. Please enter accurate and up-to-date details.</p>
+    </div>
+
+    <!-- MAIN FORM SHEET -->
+    <div class="sheet">
+        <form method="POST" enctype="multipart/form-data" id="candidateForm" novalidate>
+            {% csrf_token %}
+
+            <!-- 1. POSITION SECTION -->
+            <div class="position-box">
+                <label for="positionSelect">Position / Job Role You Are Applying For <b>*</b></label>
+                <select name="job" id="positionSelect" class="form-select" required>
+                    <option value="">Select a position</option>
+                    {% for j in open_jobs %}
+                        <option value="{{ j.id }}" 
+                            {% if form.job.value|stringformat:"s" == j.id|stringformat:"s" or job.id == j.id %}selected{% endif %}>
+                            {{ j.title }} &mdash; {{ j.department.name|default:"General" }} ({{ j.location }} &bull; {{ j.get_employment_type_display }})
+                        </option>
+                    {% endfor %}
+                </select>
+                <p class="position-hint" id="positionHint">Select your position to begin filling in your details.</p>
+                {% if form.job.errors %}
+                    <div class="error-msg">{{ form.job.errors.0 }}</div>
+                {% endif %}
+
+                <!-- Dynamic Position Preview -->
+                <div id="positionPreview" class="role-preview-card" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                        <div>
+                            <div class="fw-bold text-dark fs-6 mb-1.5" id="previewTitle">--</div>
+                            <div class="d-flex flex-wrap gap-2 small">
+                                <span class="badge" style="background: #DCFCE7; color: #166534; border: 1px solid #BBF7D0; font-weight: 600;" id="previewDept">--</span>
+                                <span class="badge" style="background: #EFF6FF; color: #1E40AF; border: 1px solid #BFDBFE; font-weight: 500;">
+                                    <i class="bi bi-geo-alt-fill text-danger me-1"></i> <span id="previewLocation">--</span>
+                                </span>
+                                <span class="badge" style="background: #F1F5F9; color: #334155; border: 1px solid #E2E8F0; font-weight: 500;">
+                                    <i class="bi bi-briefcase me-1 text-secondary"></i> <span id="previewType">--</span>
+                                </span>
+                                <span class="badge" style="background: #F1F5F9; color: #334155; border: 1px solid #E2E8F0; font-weight: 500;">
+                                    <i class="bi bi-clock-history me-1 text-secondary"></i> <span id="previewExp">--</span> Exp
+                                </span>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm py-1 px-2.5" id="toggleRoleDetailsBtn" style="font-size: 0.78rem; border: 1px solid #CBD5E1; background: white; color: var(--ink); border-radius: 6px;">
+                            <i class="bi bi-info-circle me-1"></i> Overview
+                        </button>
+                    </div>
+                    <div id="previewDetailsCollapse" style="display: none;" class="mt-2.5 pt-2.5 border-top small text-secondary">
+                        <div><strong>Role Overview:</strong> <span id="previewDesc">--</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. PERSONAL DETAILS SECTION -->
+            <section class="reg-section">
+                <div class="d-flex align-items-center gap-2.5">
+                    <div class="section-icon-box"><i class="bi bi-person-fill"></i></div>
+                    <div>
+                        <h2>Personal details</h2>
+                    </div>
+                </div>
+                <p class="description">Your name and preferred contact details.</p>
+                <div class="reg-grid">
+                    <div class="reg-full">
+                        <label class="reg-label" for="id_full_name">Full name <b>*</b></label>
+                        {{ form.full_name }}
+                        {% if form.full_name.errors %}
+                            <div class="error-msg">{{ form.full_name.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="reg-label" for="id_phone">Mobile number <b>*</b></label>
+                        {{ form.phone }}
+                        {% if form.phone.errors %}
+                            <div class="error-msg">{{ form.phone.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="reg-label" for="id_email">Email address <b>*</b></label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <div class="error-msg">{{ form.email.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="reg-full">
+                        <label class="reg-label" for="id_city">Current city / locality <b>*</b></label>
+                        {{ form.city }}
+                        {% if form.city.errors %}
+                            <div class="error-msg">{{ form.city.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. EDUCATION & EXPERIENCE SECTION -->
+            <section class="reg-section">
+                <div class="d-flex align-items-center gap-2.5">
+                    <div class="section-icon-box"><i class="bi bi-mortarboard-fill"></i></div>
+                    <div>
+                        <h2>Education & experience</h2>
+                    </div>
+                </div>
+                <p class="description">A brief overview of your qualifications and work experience.</p>
+                <div class="reg-grid">
+                    <div>
+                        <label class="reg-label" for="id_highest_qualification">Highest qualification <b>*</b></label>
+                        {{ form.highest_qualification }}
+                        {% if form.highest_qualification.errors %}
+                            <div class="error-msg">{{ form.highest_qualification.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="reg-label" for="id_institution">College / university <span class="optional">(optional)</span></label>
+                        {{ form.institution }}
+                        {% if form.institution.errors %}
+                            <div class="error-msg">{{ form.institution.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="reg-full">
+                        <label class="reg-label">Professional experience level <b>*</b></label>
+                        <div class="radio-pills">
+                            <label class="radio-pill" id="radioLabelExp">
+                                <input type="radio" name="experience_type" value="EXPERIENCED" id="expRadioExperienced" 
+                                    {% if form.experience_type.value != 'FRESHER' %}checked{% endif %}>
+                                <span><i class="bi bi-briefcase-fill text-success me-1"></i> Experienced Professional</span>
+                            </label>
+                            <label class="radio-pill" id="radioLabelFresher">
+                                <input type="radio" name="experience_type" value="FRESHER" id="expRadioFresher"
+                                    {% if form.experience_type.value == 'FRESHER' %}checked{% endif %}>
+                                <span><i class="bi bi-stars text-warning me-1"></i> Fresher / Entry Level Graduate</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Conditional Experienced Fields -->
+                    <div id="experiencedFieldsSection" class="reg-full" style="{% if form.experience_type.value == 'FRESHER' %}display: none;{% endif %}">
+                        <div class="reg-grid p-3.5 rounded-3" style="background: #F8FAFC; border: 1px solid #E2E8F0;">
+                            <div>
+                                <label class="reg-label" for="id_total_experience_years">Total experience (years)</label>
+                                {{ form.total_experience_years }}
+                                {% if form.total_experience_years.errors %}
+                                    <div class="error-msg">{{ form.total_experience_years.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <label class="reg-label" for="id_notice_period_days">Notice period (days)</label>
+                                {{ form.notice_period_days }}
+                                {% if form.notice_period_days.errors %}
+                                    <div class="error-msg">{{ form.notice_period_days.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <label class="reg-label" for="id_current_company">Current / most recent employer <span class="optional">(optional)</span></label>
+                                {{ form.current_company }}
+                                {% if form.current_company.errors %}
+                                    <div class="error-msg">{{ form.current_company.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <label class="reg-label" for="id_current_designation">Current / most recent designation <span class="optional">(optional)</span></label>
+                                {{ form.current_designation }}
+                                {% if form.current_designation.errors %}
+                                    <div class="error-msg">{{ form.current_designation.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="reg-full">
+                                <label class="reg-label" for="id_expected_ctc">Expected annual CTC (₹) <span class="optional">(optional)</span></label>
+                                {{ form.expected_ctc }}
+                                {% if form.expected_ctc.errors %}
+                                    <div class="error-msg">{{ form.expected_ctc.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. KEY SKILLS & ONLINE PROFILES -->
+            <section class="reg-section">
+                <div class="d-flex align-items-center gap-2.5">
+                    <div class="section-icon-box"><i class="bi bi-code-slash"></i></div>
+                    <div>
+                        <h2>Skills & online profiles</h2>
+                    </div>
+                </div>
+                <p class="description">Mention skills relevant to the position and your professional links.</p>
+                <div class="reg-grid">
+                    <div class="reg-full">
+                        <label class="reg-label" for="id_technical_skills">Key skills <b>*</b></label>
+                        {{ form.technical_skills }}
+                        <p class="help-text">e.g. Python, Django, SQL, JavaScript, React, REST APIs</p>
+                        {% if form.technical_skills.errors %}
+                            <div class="error-msg">{{ form.technical_skills.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="reg-label" for="id_linkedin_url">LinkedIn profile URL <span class="optional">(optional)</span></label>
+                        {{ form.linkedin_url }}
+                        {% if form.linkedin_url.errors %}
+                            <div class="error-msg">{{ form.linkedin_url.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="reg-label" for="id_portfolio_url">Portfolio / GitHub website <span class="optional">(optional)</span></label>
+                        {{ form.portfolio_url }}
+                        {% if form.portfolio_url.errors %}
+                            <div class="error-msg">{{ form.portfolio_url.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5. PREVIOUS TYPE RESUME UPLOAD SECTION (USER PREFERRED WITH WOW EFFECT) -->
+            <section class="reg-section">
+                <div class="d-flex align-items-center gap-2.5">
+                    <div class="section-icon-box"><i class="bi bi-file-earmark-arrow-up-fill"></i></div>
+                    <div>
+                        <h2>Résumé upload</h2>
+                    </div>
+                </div>
+                <p class="description">Attach your latest résumé for technical evaluation and interview screening.</p>
+                
+                <div class="resume-upload-box">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                        <label class="reg-label fw-bold mb-0 fs-6 text-dark" for="id_resume">
+                            <i class="bi bi-file-earmark-pdf-fill text-danger me-2 fs-5"></i>Upload Resume / Curriculum Vitae <b>*</b>
+                        </label>
+                        <span class="resume-badge">
+                            <i class="bi bi-check2-circle me-1"></i> PDF, DOCX, DOC (Up to 10MB)
+                        </span>
+                    </div>
+                    <p class="text-muted small mb-3" style="font-size: 13px; line-height: 1.55;">
+                        Please upload your updated résumé. Our recruitment team will review your qualifications and contact you for interview scheduling.
+                    </p>
+
+                    {{ form.resume }}
+
+                    <!-- Instant Selected File Feedback -->
+                    <div id="fileSelectedBadge" class="mt-2.5 p-2 px-3 rounded-2 small text-success bg-white border border-success-subtle align-items-center gap-2" style="display: none;">
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        <span>Attached: <strong id="fileNameDisplay"></strong> <span id="fileSizeDisplay" class="text-muted"></span></span>
+                    </div>
+
+                    {% if form.resume.errors %}
+                        <div class="error-msg mt-2">{{ form.resume.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- 6. ACTIONS (CLEAR FORM ON LEFT, SUBMIT APPLICATION ON RIGHT) -->
+            <div class="reg-actions">
+                <button type="reset" class="btn-clear" onclick="setTimeout(updateFormState, 100);">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Clear form
+                </button>
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    <i class="bi bi-send-fill me-1.5"></i> Submit Application
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- CLIENT JAVASCRIPT: DYNAMIC MASTER DATA PREVIEW & FORM INTERACTIONS -->
+<script>
+    const jobsData = {{ jobs_json|safe }};
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const positionSelect = document.getElementById('positionSelect');
+        const previewBox = document.getElementById('positionPreview');
+        const previewTitle = document.getElementById('previewTitle');
+        const previewDept = document.getElementById('previewDept');
+        const previewLocation = document.getElementById('previewLocation');
+        const previewType = document.getElementById('previewType');
+        const previewExp = document.getElementById('previewExp');
+        const previewDesc = document.getElementById('previewDesc');
+        const toggleDetailsBtn = document.getElementById('toggleRoleDetailsBtn');
+        const detailsCollapse = document.getElementById('previewDetailsCollapse');
+
+        function updatePositionPreview() {
+            const selectedId = positionSelect.value;
+            if (selectedId && jobsData[selectedId]) {
+                const j = jobsData[selectedId];
+                previewTitle.textContent = j.title;
+                previewDept.textContent = j.department;
+                previewLocation.textContent = j.location;
+                previewType.textContent = j.employment_type;
+                previewExp.textContent = j.experience;
+                previewDesc.textContent = j.description || 'No description provided.';
+                previewBox.style.display = 'block';
+            } else {
+                previewBox.style.display = 'none';
+            }
+        }
+
+        if (positionSelect) {
+            positionSelect.addEventListener('change', updatePositionPreview);
+            updatePositionPreview();
+        }
+
+        if (toggleDetailsBtn && detailsCollapse) {
+            toggleDetailsBtn.addEventListener('click', function () {
+                const isHidden = detailsCollapse.style.display === 'none';
+                detailsCollapse.style.display = isHidden ? 'block' : 'none';
+                toggleDetailsBtn.innerHTML = isHidden ? '<i class="bi bi-chevron-up me-1"></i> Hide' : '<i class="bi bi-info-circle me-1"></i> Overview';
+            });
+        }
+
+        // Experience Level toggle
+        const expRadioExperienced = document.getElementById('expRadioExperienced');
+        const expRadioFresher = document.getElementById('expRadioFresher');
+        const expSection = document.getElementById('experiencedFieldsSection');
+        const radioLabelExp = document.getElementById('radioLabelExp');
+        const radioLabelFresher = document.getElementById('radioLabelFresher');
+
+        function updateExperienceState() {
+            const isFresher = expRadioFresher && expRadioFresher.checked;
+            if (expSection) {
+                expSection.style.display = isFresher ? 'none' : 'block';
+            }
+            if (radioLabelExp && radioLabelFresher) {
+                if (isFresher) {
+                    radioLabelFresher.classList.add('active');
+                    radioLabelExp.classList.remove('active');
+                } else {
+                    radioLabelExp.classList.add('active');
+                    radioLabelFresher.classList.remove('active');
+                }
+            }
+        }
+
+        if (expRadioExperienced) expRadioExperienced.addEventListener('change', updateExperienceState);
+        if (expRadioFresher) expRadioFresher.addEventListener('change', updateExperienceState);
+        updateExperienceState();
+
+        // Resume file upload feedback
+        const resumeInput = document.getElementById('id_resume');
+        const fileSelectedBadge = document.getElementById('fileSelectedBadge');
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
+        const fileSizeDisplay = document.getElementById('fileSizeDisplay');
+
+        if (resumeInput && fileSelectedBadge) {
+            resumeInput.addEventListener('change', function () {
+                if (this.files && this.files[0]) {
+                    const f = this.files[0];
+                    const sizeKB = (f.size / 1024).toFixed(1);
+                    const sizeStr = sizeKB > 1024 ? (sizeKB / 1024).toFixed(2) + ' MB' : sizeKB + ' KB';
+                    fileNameDisplay.textContent = f.name;
+                    fileSizeDisplay.textContent = '(' + sizeStr + ')';
+                    fileSelectedBadge.style.display = 'inline-flex';
+                } else {
+                    fileSelectedBadge.style.display = 'none';
+                }
+            });
+        }
+
+        window.updateFormState = function () {
+            updatePositionPreview();
+            updateExperienceState();
+            if (fileSelectedBadge) fileSelectedBadge.style.display = 'none';
+        };
+
+        // Submit button loading animation
+        const form = document.getElementById('candidateForm');
+        const submitBtn = document.getElementById('submitBtn');
+        if (form && submitBtn) {
+            form.addEventListener('submit', function () {
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Submitting...';
+                submitBtn.disabled = true;
+                setTimeout(function () {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="bi bi-send-fill me-1.5"></i> Submit Application';
+                }, 8000);
+            });
+        }
+    });
+</script>
+{% endblock %}

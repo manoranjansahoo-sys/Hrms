@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}My Salary & Payslips{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h3 class="fw-bold mb-1">My Salary & Monthly Payslips</h3>
+            <p class="text-muted small mb-0">Confidential personal compensation overview, allowance breakdowns, and downloadable PDF payslips.</p>
+        </div>
+    </div>
+
+    <!-- SALARY BREAKDOWN CARD -->
+    {% if salary_struct %}
+        <div class="hrms-card mb-4 border-success border-opacity-25" style="background: linear-gradient(135deg, #F0FDF4, #DCFCE7);">
+            <div class="hrms-card-body p-4">
+                <div class="row align-items-center g-3">
+                    <div class="col-md-4">
+                        <small class="text-success text-uppercase fw-bold letter-spacing-1">Monthly Net Payable</small>
+                        <h2 class="fw-bold text-success mb-0">₹{{ salary_struct.net_salary|floatformat:2 }}</h2>
+                        <small class="text-muted">Gross: ₹{{ salary_struct.gross_salary|floatformat:2 }} &bull; Deductions: ₹{{ salary_struct.total_deductions|floatformat:2 }}</small>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="row g-2 small text-dark">
+                            <div class="col-sm-4"><span class="text-muted">Basic Salary:</span> <span class="fw-bold">₹{{ salary_struct.basic_salary|floatformat:2 }}</span></div>
+                            <div class="col-sm-4"><span class="text-muted">HRA Allowance:</span> <span class="fw-bold">₹{{ salary_struct.hra|floatformat:2 }}</span></div>
+                            <div class="col-sm-4"><span class="text-muted">Conveyance:</span> <span class="fw-bold">₹{{ salary_struct.conveyance_allowance|floatformat:2 }}</span></div>
+                            <div class="col-sm-4"><span class="text-muted">Medical:</span> <span class="fw-bold">₹{{ salary_struct.medical_allowance|floatformat:2 }}</span></div>
+                            <div class="col-sm-4"><span class="text-muted">Special Allowance:</span> <span class="fw-bold">₹{{ salary_struct.special_allowance|floatformat:2 }}</span></div>
+                            <div class="col-sm-4"><span class="text-muted">PF Deduction:</span> <span class="fw-bold text-danger">₹{{ salary_struct.provident_fund|floatformat:2 }}</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- PAYSLIP ROSTER TABLE -->
+    <div class="hrms-card">
+        <div class="hrms-card-header">
+            <h6 class="fw-bold mb-0">Issued Monthly Payslips</h6>
+        </div>
+        <div class="table-responsive">
+            <table class="table hrms-table">
+                <thead>
+                    <tr>
+                        <th>Cycle Period</th>
+                        <th>Payable Days</th>
+                        <th>Gross Earnings</th>
+                        <th>Total Deductions</th>
+                        <th>Net Paid Amount</th>
+                        <th>Payment Status</th>
+                        <th>Disbursement Date</th>
+                        <th class="text-end">Download Document</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ps in payslips %}
+                        <tr>
+                            <td class="fw-bold text-dark fs-6">{{ ps.payroll_period.get_month_display }} {{ ps.year }}</td>
+                            <td>{{ ps.payable_days }} / {{ ps.total_working_days }} days</td>
+                            <td class="font-monospace text-dark">₹{{ ps.gross_earnings|floatformat:2 }}</td>
+                            <td class="font-monospace text-danger">₹{{ ps.total_deductions|floatformat:2 }}</td>
+                            <td class="font-monospace text-success fw-bold fs-6">₹{{ ps.net_payable|floatformat:2 }}</td>
+                            <td><span class="badge bg-success">{{ ps.get_status_display }}</span></td>
+                            <td><small class="text-muted">{{ ps.payment_date|date:"d M Y"|default:"Disbursed" }}</small></td>
+                            <td class="text-end">
+                                <a href="{% url 'payroll:download_pdf' payslip_id=ps.id %}" class="btn btn-sm btn-outline-danger shadow-sm">
+                                    <i class="bi bi-file-earmark-pdf-fill me-1"></i> Download PDF
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="8" class="text-center py-5 text-muted">No payslips generated for your profile yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

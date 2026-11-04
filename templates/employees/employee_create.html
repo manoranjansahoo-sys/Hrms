@@ -1,0 +1,507 @@
+{% extends 'base.html' %}
+{% block title %}Onboard New Employee{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Onboard New Employee</h3>
+            <p class="text-muted small mb-0">Create corporate user account, set login credentials, and assign departmental role & payroll details.</p>
+        </div>
+        <a href="{% url 'employees:employee_list' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Back to Employee Directory
+        </a>
+    </div>
+
+    <!-- CLIENT-SIDE VALIDATION SUMMARY BANNER (HIDDEN INITIALLY) -->
+    <div id="validationSummaryBanner" class="alert alert-danger shadow-sm mb-4" style="display: none;">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-triangle-fill fs-5 text-danger"></i>
+            <div>
+                <strong>Cannot Complete Onboarding:</strong> Please fill in all required fields correctly before submitting.
+            </div>
+        </div>
+    </div>
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger shadow-sm mb-4">
+            {% for error in form.non_field_errors %}
+                <div><i class="bi bi-x-circle-fill me-1"></i> {{ error }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="hrms-card p-4">
+        <form method="POST" id="employeeCreateForm" novalidate>
+            {% csrf_token %}
+
+            <!-- SECTION 1: ACCOUNT CREDENTIALS & LOGIN -->
+            <div class="border-bottom pb-2 mb-3">
+                <h5 class="fw-bold text-success mb-0">
+                    <i class="bi bi-shield-lock-fill me-2"></i>1. Account & Login Credentials
+                </h5>
+            </div>
+
+            <div class="p-3 mb-3 rounded-2 small text-dark" style="background: #F0FDF4; border: 1px solid #BBF7D0;">
+                <i class="bi bi-info-circle-fill text-success me-1"></i>
+                <strong>Employee Login Access:</strong> The employee can immediately log in to Company HRMS using their <strong>Username</strong>, registered <strong>Work Email</strong>, or <strong>Mobile Phone Number</strong>, and the <strong>Password</strong> set below.
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold">First Name <span class="text-danger">*</span></label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.first_name.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold">Last Name <span class="text-danger">*</span></label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.last_name.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold">Username / User ID <span class="text-danger">*</span></label>
+                    {{ form.username }}
+                    {% if form.username.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.username.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold">Work Email <span class="text-danger">*</span></label>
+                    {{ form.email }}
+                    {% if form.email.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.email.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold">Mobile Phone Number <span class="text-danger">*</span></label>
+                    {{ form.phone }}
+                    {% if form.phone.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.phone.errors.0 }}</div>{% endif %}
+                </div>
+                <!-- PASSWORD SHELLS WITH SHOW/HIDE EYE ICONS -->
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold">Create Password <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        {{ form.password }}
+                        <button class="btn btn-outline-secondary" type="button" id="togglePasswordBtn" title="Show/Hide Password">
+                            <i class="bi bi-eye" id="togglePasswordIcon"></i>
+                        </button>
+                    </div>
+                    {% if form.password.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.password.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold">Retype Password <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        {{ form.confirm_password }}
+                        <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPasswordBtn" title="Show/Hide Password">
+                            <i class="bi bi-eye" id="toggleConfirmPasswordIcon"></i>
+                        </button>
+                    </div>
+                    {% if form.confirm_password.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.confirm_password.errors.0 }}</div>{% endif %}
+                    <div id="passwordMatchMsg" class="small mt-1 fw-semibold" style="display: none; font-size: 0.75rem;"></div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold">System Authority / Role <span class="text-danger">*</span></label>
+                    {{ form.role }}
+                    {% if form.role.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.role.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">Employment Type <span class="text-danger">*</span></label>
+                    {{ form.employment_type }}
+                    {% if form.employment_type.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.employment_type.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">Date of Joining <span class="text-danger">*</span></label>
+                    {{ form.joining_date }}
+                    {% if form.joining_date.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.joining_date.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">Date of Birth <span class="text-danger">*</span></label>
+                    {{ form.date_of_birth }}
+                    {% if form.date_of_birth.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.date_of_birth.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
+            <!-- SECTION 2: ORGANIZATIONAL PLACEMENT -->
+            <div class="border-bottom pb-2 mb-3">
+                <h5 class="fw-bold text-success mb-0">
+                    <i class="bi bi-diagram-3 me-2"></i>2. Organizational Assignment
+                </h5>
+            </div>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">Department <span class="text-danger">*</span></label>
+                    {{ form.department }}
+                    {% if form.department.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.department.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">Designation <span class="text-danger">*</span></label>
+                    {{ form.designation }}
+                    {% if form.designation.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.designation.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">Site / Campus Location <span class="text-danger">*</span></label>
+                    {{ form.site }}
+                    {% if form.site.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.site.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">Reporting Manager</label>
+                    {{ form.reporting_manager }}
+                    {% if form.reporting_manager.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.reporting_manager.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">Gender <span class="text-danger">*</span></label>
+                    {{ form.gender }}
+                    {% if form.gender.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.gender.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">Blood Group</label>
+                    {{ form.blood_group }}
+                    {% if form.blood_group.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.blood_group.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
+            <!-- SECTION 3: BANKING & STATUTORY DETAILS -->
+            <div class="border-bottom pb-2 mb-3">
+                <h5 class="fw-bold text-success mb-0">
+                    <i class="bi bi-bank me-2"></i>3. Banking & Statutory Details
+                </h5>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">Salary Bank Name <span class="text-danger">*</span></label>
+                    {{ form.bank_name }}
+                    {% if form.bank_name.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.bank_name.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">Bank Account Number <span class="text-danger">*</span></label>
+                    {{ form.bank_account_number }}
+                    {% if form.bank_account_number.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.bank_account_number.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">Bank IFSC Code <span class="text-danger">*</span></label>
+                    {{ form.ifsc_code }}
+                    {% if form.ifsc_code.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.ifsc_code.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">PAN Card Number <span class="text-danger">*</span></label>
+                    {{ form.pan_number }}
+                    {% if form.pan_number.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.pan_number.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">
+                        PF UAN Number <span class="text-muted fw-normal">(Optional)</span>
+                    </label>
+                    {{ form.uan_number }}
+                    {% if form.uan_number.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.uan_number.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">Emergency Phone <span class="text-danger">*</span></label>
+                    {{ form.emergency_contact_phone }}
+                    {% if form.emergency_contact_phone.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.emergency_contact_phone.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold">Emergency Contact Person</label>
+                    {{ form.emergency_contact_name }}
+                    {% if form.emergency_contact_name.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.emergency_contact_name.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold">Emergency Contact Relation</label>
+                    {{ form.emergency_contact_relation }}
+                    {% if form.emergency_contact_relation.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.emergency_contact_relation.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
+            <!-- SECTION 4: ADDRESS & BACKGROUND -->
+            <div class="border-bottom pb-2 mb-3">
+                <h5 class="fw-bold text-success mb-0">
+                    <i class="bi bi-geo-alt me-2"></i>4. Address & Background Summary
+                </h5>
+            </div>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">City</label>
+                    {{ form.city }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">Postal / PIN Code</label>
+                    {{ form.postal_code }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">Residential Address</label>
+                    {{ form.address }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold">Educational Details</label>
+                    {{ form.education_details }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold">Prior Experience Overview</label>
+                    {{ form.experience_summary }}
+                </div>
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                <div class="text-muted small">
+                    <i class="bi bi-shield-check text-success me-1"></i>
+                    All required fields must be filled before onboarding completion.
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'employees:employee_list' %}" class="btn btn-outline-secondary px-3">Cancel</a>
+                    <button type="submit" id="submitOnboardingBtn" class="btn btn-hrms px-4 py-2 fw-semibold">
+                        <i class="bi bi-person-check-fill me-1"></i> Complete Onboarding
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('employeeCreateForm');
+    const banner = document.getElementById('validationSummaryBanner');
+
+    // 1. Password Eye Toggle Handlers
+    const passInput = document.getElementById('id_password');
+    const confirmInput = document.getElementById('id_confirm_password');
+    const togglePassBtn = document.getElementById('togglePasswordBtn');
+    const togglePassIcon = document.getElementById('togglePasswordIcon');
+    const toggleConfirmBtn = document.getElementById('toggleConfirmPasswordBtn');
+    const toggleConfirmIcon = document.getElementById('toggleConfirmPasswordIcon');
+    const matchMsg = document.getElementById('passwordMatchMsg');
+
+    if (togglePassBtn && passInput) {
+        togglePassBtn.addEventListener('click', function() {
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                togglePassIcon.classList.replace('bi-eye', 'bi-eye-slash');
+            } else {
+                passInput.type = 'password';
+                togglePassIcon.classList.replace('bi-eye-slash', 'bi-eye');
+            }
+        });
+    }
+
+    if (toggleConfirmBtn && confirmInput) {
+        toggleConfirmBtn.addEventListener('click', function() {
+            if (confirmInput.type === 'password') {
+                confirmInput.type = 'text';
+                toggleConfirmIcon.classList.replace('bi-eye', 'bi-eye-slash');
+            } else {
+                confirmInput.type = 'password';
+                toggleConfirmIcon.classList.replace('bi-eye-slash', 'bi-eye');
+            }
+        });
+    }
+
+    // Real-time password matching feedback
+    function checkPasswordMatch() {
+        if (!matchMsg || !passInput || !confirmInput) return;
+        const p1 = passInput.value;
+        const p2 = confirmInput.value;
+        if (!p2) {
+            matchMsg.style.display = 'none';
+            return;
+        }
+        matchMsg.style.display = 'block';
+        if (p1 === p2) {
+            matchMsg.className = 'small mt-1 text-success fw-bold';
+            matchMsg.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Passwords match';
+        } else {
+            matchMsg.className = 'small mt-1 text-danger fw-bold';
+            matchMsg.innerHTML = '<i class="bi bi-x-circle-fill me-1"></i> Passwords do not match';
+        }
+    }
+    if (passInput) passInput.addEventListener('input', checkPasswordMatch);
+    if (confirmInput) confirmInput.addEventListener('input', checkPasswordMatch);
+
+    // 2. Real-time sanitization & numeric masking
+    const mainPhoneInput = document.getElementById('id_phone');
+    if (mainPhoneInput) {
+        mainPhoneInput.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
+        });
+    }
+
+    const emergencyPhoneInput = document.getElementById('id_emergency_contact_phone');
+    if (emergencyPhoneInput) {
+        emergencyPhoneInput.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
+        });
+    }
+
+    const bankAccInput = document.getElementById('id_bank_account_number');
+    if (bankAccInput) {
+        bankAccInput.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '').slice(0, 18);
+        });
+    }
+
+    const ifscInput = document.getElementById('id_ifsc_code');
+    if (ifscInput) {
+        ifscInput.addEventListener('input', function() {
+            this.value = this.value.toUpperCase().slice(0, 11);
+        });
+    }
+
+    const panInput = document.getElementById('id_pan_number');
+    if (panInput) {
+        panInput.addEventListener('input', function() {
+            this.value = this.value.toUpperCase().slice(0, 10);
+        });
+    }
+
+    const uanInput = document.getElementById('id_uan_number');
+    if (uanInput) {
+        uanInput.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '').slice(0, 12);
+        });
+    }
+
+    // 3. Client-side form submission validation
+    function setFieldError(field, errorMsg) {
+        field.classList.add('is-invalid');
+        let fb = field.parentElement.querySelector('.client-feedback-msg');
+        if (!fb) {
+            fb = document.createElement('div');
+            fb.className = 'client-feedback-msg text-danger small mt-1 fw-bold';
+            if (field.parentElement.classList.contains('input-group')) {
+                field.parentElement.parentElement.appendChild(fb);
+            } else {
+                field.parentElement.appendChild(fb);
+            }
+        }
+        fb.textContent = errorMsg;
+    }
+
+    function removeFieldError(field) {
+        field.classList.remove('is-invalid');
+        const container = field.parentElement.classList.contains('input-group') ? field.parentElement.parentElement : field.parentElement;
+        const fb = container.querySelector('.client-feedback-msg');
+        if (fb) fb.remove();
+    }
+
+    form.addEventListener('submit', function(e) {
+        let hasErrors = false;
+        let firstInvalidField = null;
+
+        // Clear existing errors
+        form.querySelectorAll('.is-invalid').forEach(removeFieldError);
+
+        // Required fields array
+        const requiredSelectors = [
+            '#id_first_name', '#id_last_name', '#id_username', '#id_email', '#id_phone',
+            '#id_password', '#id_confirm_password', '#id_role', '#id_employment_type',
+            '#id_joining_date', '#id_date_of_birth', '#id_department', '#id_designation',
+            '#id_site', '#id_gender', '#id_bank_name', '#id_bank_account_number',
+            '#id_ifsc_code', '#id_pan_number', '#id_emergency_contact_phone'
+        ];
+
+        requiredSelectors.forEach(sel => {
+            const el = document.querySelector(sel);
+            if (el && !el.value.trim()) {
+                setFieldError(el, 'This field is required.');
+                hasErrors = true;
+                if (!firstInvalidField) firstInvalidField = el;
+            }
+        });
+
+        // Mobile Phone validation (10 digits starting with 6-9)
+        if (mainPhoneInput && mainPhoneInput.value.trim()) {
+            const val = mainPhoneInput.value.trim();
+            if (!/^[6-9]\d{9}$/.test(val)) {
+                setFieldError(mainPhoneInput, 'Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.');
+                hasErrors = true;
+                if (!firstInvalidField) firstInvalidField = mainPhoneInput;
+            }
+        }
+
+        // Emergency Phone validation (10 digits starting with 6-9)
+        if (emergencyPhoneInput && emergencyPhoneInput.value.trim()) {
+            const phoneVal = emergencyPhoneInput.value.trim();
+            if (!/^[6-9]\d{9}$/.test(phoneVal)) {
+                setFieldError(emergencyPhoneInput, 'Please enter a valid 10-digit emergency phone number.');
+                hasErrors = true;
+                if (!firstInvalidField) firstInvalidField = emergencyPhoneInput;
+            }
+        }
+
+        // Bank account validation (9-18 digits)
+        if (bankAccInput && bankAccInput.value.trim()) {
+            const accVal = bankAccInput.value.trim();
+            if (!/^\d{9,18}$/.test(accVal)) {
+                setFieldError(bankAccInput, 'Please enter a valid account number (9 to 18 digits).');
+                hasErrors = true;
+                if (!firstInvalidField) firstInvalidField = bankAccInput;
+            }
+        }
+
+        // IFSC validation (11 characters uppercase)
+        if (ifscInput && ifscInput.value.trim()) {
+            const ifscVal = ifscInput.value.trim().toUpperCase();
+            if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifscVal)) {
+                setFieldError(ifscInput, 'Please enter a valid 11-character IFSC code (e.g. HDFC0001234).');
+                hasErrors = true;
+                if (!firstInvalidField) firstInvalidField = ifscInput;
+            }
+        }
+
+        // PAN validation (10 characters uppercase)
+        if (panInput && panInput.value.trim()) {
+            const panVal = panInput.value.trim().toUpperCase();
+            if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panVal)) {
+                setFieldError(panInput, 'Please enter a valid 10-character PAN (e.g. ABCDE1234F).');
+                hasErrors = true;
+                if (!firstInvalidField) firstInvalidField = panInput;
+            }
+        }
+
+        // Optional UAN validation
+        if (uanInput && uanInput.value.trim()) {
+            const uanVal = uanInput.value.trim();
+            if (!/^\d{12}$/.test(uanVal)) {
+                setFieldError(uanInput, 'UAN must be 12 digits.');
+                hasErrors = true;
+                if (!firstInvalidField) firstInvalidField = uanInput;
+            }
+        }
+
+        // Password matching & length
+        if (passInput && passInput.value) {
+            if (passInput.value.length < 6) {
+                setFieldError(passInput, 'Password must be at least 6 characters.');
+                hasErrors = true;
+                if (!firstInvalidField) firstInvalidField = passInput;
+            }
+            if (confirmInput && passInput.value !== confirmInput.value) {
+                setFieldError(confirmInput, 'Passwords do not match.');
+                hasErrors = true;
+                if (!firstInvalidField) firstInvalidField = confirmInput;
+            }
+        }
+
+        if (hasErrors) {
+            e.preventDefault();
+            banner.style.display = 'block';
+            if (firstInvalidField) {
+                firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstInvalidField.focus();
+            }
+        } else {
+            banner.style.display = 'none';
+        }
+    });
+
+    // Real-time error clearance on typing
+    form.querySelectorAll('input, select, textarea').forEach(input => {
+        input.addEventListener('input', function() {
+            if (this.classList.contains('is-invalid')) {
+                removeFieldError(this);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}Daily Attendance Register{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h3 class="fw-bold mb-1">Daily Attendance Register</h3>
+            <p class="text-muted small mb-0">Master check-in records, working hours, biometric/web sources, and status tracking.</p>
+        </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="hrms-card mb-4 p-3">
+        <form method="GET" class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold text-muted mb-1">Selected Date</label>
+                <input type="date" name="date" class="form-control form-control-sm" value="{{ selected_date|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold text-muted mb-1">Department</label>
+                <select name="department" class="form-select form-select-sm">
+                    <option value="">All Departments</option>
+                    {% for d in departments %}
+                        <option value="{{ d.id }}" {% if selected_dept == d.id|stringformat:"i" %}selected{% endif %}>{{ d.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold text-muted mb-1">Campus / Site</label>
+                <select name="site" class="form-select form-select-sm">
+                    <option value="">All Sites</option>
+                    {% for s in sites %}
+                        <option value="{{ s.id }}" {% if selected_site == s.id|stringformat:"i" %}selected{% endif %}>{{ s.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-sm btn-hrms w-100">Load Register</button>
+                <a href="{% url 'attendance:admin_register' %}" class="btn btn-sm btn-light border">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- STATS STRIP -->
+    <div class="d-flex gap-3 mb-3">
+        <span class="badge bg-success py-2 px-3 fs-6">Present: {{ present_cnt }}</span>
+        <span class="badge bg-danger py-2 px-3 fs-6">Absent: {{ absent_cnt }}</span>
+        <span class="badge bg-info text-dark py-2 px-3 fs-6">On Leave: {{ leave_cnt }}</span>
+        <span class="badge bg-warning text-dark py-2 px-3 fs-6">Late Arrivals: {{ late_cnt }}</span>
+    </div>
+
+    <!-- ROSTER TABLE -->
+    <div class="hrms-card">
+        <div class="table-responsive">
+            <table class="table hrms-table">
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Emp ID</th>
+                        <th>Department</th>
+                        <th>Site</th>
+                        <th>Punch In</th>
+                        <th>Punch Out</th>
+                        <th>Working Hours</th>
+                        <th>Status</th>
+                        <th>Source</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in roster %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold text-dark">{{ item.employee.full_name }}</div>
+                                <small class="text-muted">{{ item.employee.designation.title }}</small>
+                            </td>
+                            <td><span class="font-monospace text-success fw-bold">{{ item.employee.emp_id }}</span></td>
+                            <td>{{ item.employee.department.name|default:"--" }}</td>
+                            <td>{{ item.employee.site.city|default:"--" }}</td>
+                            <td class="font-monospace">{{ item.attendance.punch_in|time:"h:i A"|default:"--" }}</td>
+                            <td class="font-monospace">{{ item.attendance.punch_out|time:"h:i A"|default:"--" }}</td>
+                            <td>{{ item.attendance.working_hours|default:"0.00" }} hrs</td>
+                            <td>
+                                {% if item.attendance %}
+                                    {% if item.attendance.status == 'PRESENT' %}
+                                        <span class="badge bg-success">Present</span>
+                                    {% elif item.attendance.status == 'HALF_DAY' %}
+                                        <span class="badge bg-warning text-dark">Half Day</span>
+                                    {% elif item.attendance.status == 'ON_LEAVE' %}
+                                        <span class="badge bg-info text-dark">On Leave</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Absent</span>
+                                    {% endif %}
+                                    {% if item.attendance.is_late %}
+                                        <span class="badge bg-danger ms-1">Late</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-danger">Absent</span>
+                                {% endif %}
+                            </td>
+                            <td><small class="text-muted">{{ item.attendance.get_device_source_display|default:"--" }}</small></td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="9" class="text-center py-4 text-muted">No employees recorded.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

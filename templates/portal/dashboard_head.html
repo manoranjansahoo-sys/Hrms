@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+{% block title %}Executive Head Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <!-- PAGE HEADER -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge role-head">Authority 4</span>
+                <h3 class="fw-bold text-dark mb-0">Executive Head of Company Dashboard</h3>
+            </div>
+            <p class="text-muted small mb-0">Strategic organizational metrics, global payroll authorization, approval workflows, and audit oversight.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'payroll:dashboard' %}" class="btn btn-hrms btn-sm shadow-sm">
+                <i class="bi bi-shield-check"></i> Authorize Payroll
+            </a>
+            <a href="{% url 'accounts:audit_logs' %}" class="btn btn-outline-secondary btn-sm shadow-sm">
+                <i class="bi bi-clock-history"></i> System Audit Log
+            </a>
+        </div>
+    </div>
+
+    <!-- STRATEGIC STAT CARDS -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-purple">
+                    <i class="bi bi-diagram-3-fill"></i>
+                </div>
+                <div>
+                    <div class="stat-label">Total Organization Workforce</div>
+                    <div class="stat-value">{{ total_workforce }}</div>
+                    <small class="text-muted">{{ departments_count }} Depts &bull; {{ sites_count }} Campuses</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-green">
+                    <i class="bi bi-currency-rupee"></i>
+                </div>
+                <div>
+                    <div class="stat-label">Monthly Payroll Expenditure</div>
+                    <div class="stat-value text-success" style="font-size: 1.4rem;">₹{{ payroll_payout_total|floatformat:0 }}</div>
+                    <small class="text-muted">Net Disbursed This Cycle</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-blue">
+                    <i class="bi bi-person-check-fill"></i>
+                </div>
+                <div>
+                    <div class="stat-label">Today's Global Present</div>
+                    <div class="stat-value text-primary">{{ present_today }}</div>
+                    <small class="text-info">{{ on_leave_today }} on sanctioned leave</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-amber">
+                    <i class="bi bi-shield-exclamation"></i>
+                </div>
+                <div>
+                    <div class="stat-label">Pending Exec Approvals</div>
+                    <div class="stat-value text-warning">{{ pending_payroll_approvals.count|add:high_level_leaves.count }}</div>
+                    <small class="text-danger">Action required</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PENDING EXECUTIVE SIGN-OFF ALERT IF PAYROLL SUBMITTED -->
+    {% if pending_payroll_approvals %}
+        <div class="alert alert-warning border-warning border-2 shadow-sm d-flex justify-content-between align-items-center mb-4 p-3 rounded-3">
+            <div class="d-flex align-items-center gap-3">
+                <i class="bi bi-cash-coin fs-2 text-warning"></i>
+                <div>
+                    <h5 class="fw-bold mb-0 text-dark">Action Required: Monthly Payroll Awaiting Head Sign-Off</h5>
+                    <p class="mb-0 small text-muted">
+                        {% for p in pending_payroll_approvals %}
+                            Payroll for <b>{{ p.get_month_display }} {{ p.year }}</b> (Total Net: ₹{{ p.total_net|floatformat:2 }}) submitted by HR.
+                        {% endfor %}
+                    </p>
+                </div>
+            </div>
+            {% for p in pending_payroll_approvals %}
+                <form method="POST" action="{% url 'payroll:approve_payroll' period_id=p.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success fw-bold px-4 shadow-sm">
+                        <i class="bi bi-check2-all me-1"></i> Sign & Authorize Payout
+                    </button>
+                </form>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- CHARTS ROW: WORKFORCE DISTRIBUTION & SITES -->
+    <div class="row g-4 mb-4">
+        <!-- DEPARTMENT DISTRIBUTION -->
+        <div class="col-lg-6">
+            <div class="hrms-card h-100">
+                <div class="hrms-card-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-pie-chart-fill text-success"></i>
+                        <h6 class="fw-bold mb-0">Workforce Distribution by Department</h6>
+                    </div>
+                </div>
+                <div class="hrms-card-body">
+                    <div style="height: 250px; width: 100%;">
+                        <canvas id="headDeptChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SITE DISTRIBUTION -->
+        <div class="col-lg-6">
+            <div class="hrms-card h-100">
+                <div class="hrms-card-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-geo-alt-fill text-primary"></i>
+                        <h6 class="fw-bold mb-0">Campuses & Site Headcounts</h6>
+                    </div>
+                </div>
+                <div class="hrms-card-body">
+                    <div style="height: 250px; width: 100%;">
+                        <canvas id="headSiteChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EXECUTIVE ACTIONS & AUDIT LOG -->
+    <div class="row g-4 mb-4">
+        <!-- HIGH LEVEL LEAVE APPROVALS -->
+        <div class="col-lg-6">
+            <div class="hrms-card">
+                <div class="hrms-card-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-file-earmark-check-fill text-warning fs-5"></i>
+                        <h6 class="fw-bold mb-0">Executive Leave Approvals Queue</h6>
+                    </div>
+                    <a href="{% url 'leave_management:admin_queue' %}" class="small text-success text-decoration-none">Full Queue</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table hrms-table">
+                        <thead>
+                            <tr>
+                                <th>Applicant</th>
+                                <th>Type</th>
+                                <th>Days</th>
+                                <th>Status</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in high_level_leaves %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold text-dark">{{ req.employee.full_name }}</div>
+                                        <small class="text-muted">{{ req.employee.department.name }}</small>
+                                    </td>
+                                    <td><span class="badge bg-light text-dark border">{{ req.leave_type.code }}</span></td>
+                                    <td>{{ req.total_days }}</td>
+                                    <td><span class="badge bg-warning text-dark">{{ req.get_status_display }}</span></td>
+                                    <td class="text-end">
+                                        <form method="POST" action="{% url 'leave_management:process_leave' request_id=req.id %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="APPROVE">
+                                            <button type="submit" class="btn btn-sm btn-success py-1 px-2" title="Executive Approve">
+                                                <i class="bi bi-check-lg"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="5" class="text-center py-3 text-muted">No pending executive leave reviews.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- RECENT SYSTEM SECURITY & AUDIT LOGS -->
+        <div class="col-lg-6">
+            <div class="hrms-card">
+                <div class="hrms-card-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-shield-shaded text-danger fs-5"></i>
+                        <h6 class="fw-bold mb-0">System Security & Activity Audit Log</h6>
+                    </div>
+                    <a href="{% url 'accounts:audit_logs' %}" class="small text-success text-decoration-none">Complete Audit Log</a>
+                </div>
+                <div class="p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for log in recent_audit_logs %}
+                            <li class="list-group-item p-3 border-0 border-bottom">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="badge 
+                                        {% if log.action == 'LOGIN' %}bg-primary
+                                        {% elif log.action == 'APPROVAL' %}bg-success
+                                        {% elif log.action == 'PAYROLL' %}bg-warning text-dark
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ log.get_action_display }}
+                                    </span>
+                                    <small class="text-muted font-monospace">{{ log.created_at|date:"d M, H:i" }}</small>
+                                </div>
+                                <div class="small text-dark fw-semibold">{{ log.description }}</div>
+                                <small class="text-muted">User: <b>{{ log.user.username|default:"System" }}</b> &bull; Module: {{ log.module }}</small>
+                            </li>
+                        {% empty %}
+                            <li class="p-3 text-center text-muted small">No audit logs recorded yet.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // 1. Dept Pie Chart
+    const deptCtx = document.getElementById('headDeptChart').getContext('2d');
+    const deptData = {{ dept_distribution|safe }};
+    new Chart(deptCtx, {
+        type: 'doughnut',
+        data: {
+            labels: deptData.map(d => d.name),
+            datasets: [{
+                data: deptData.map(d => d.total),
+                backgroundColor: ['#1B5E20', '#2E7D32', '#0284C7', '#F59E0B', '#7E22CE'],
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'right' } }
+        }
+    });
+
+    // 2. Site Bar Chart
+    const siteCtx = document.getElementById('headSiteChart').getContext('2d');
+    const siteData = {{ site_distribution|safe }};
+    new Chart(siteCtx, {
+        type: 'bar',
+        data: {
+            labels: siteData.map(s => s.name),
+            datasets: [{
+                label: 'Employees Assigned',
+                data: siteData.map(s => s.total),
+                backgroundColor: '#2E7D32',
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+            plugins: { legend: { display: false } }
+        }
+    });
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}My Leave Applications{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h3 class="fw-bold mb-1">My Leave Applications & Balances</h3>
+            <p class="text-muted small mb-0">Track application status across Site Manager and HR review stages.</p>
+        </div>
+        <a href="{% url 'leave_management:apply_leave' %}" class="btn btn-hrms btn-sm">
+            <i class="bi bi-calendar-plus"></i> Apply for Leave
+        </a>
+    </div>
+
+    <!-- BALANCES STRIP -->
+    <div class="row g-3 mb-4">
+        {% for b in balances %}
+            <div class="col-sm-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-green"><i class="bi bi-calendar2-check"></i></div>
+                    <div>
+                        <div class="stat-label">{{ b.leave_type.name }}</div>
+                        <div class="stat-value text-dark">{{ b.available_days }} <span class="fs-6 text-muted">days left</span></div>
+                        <small class="text-muted">Used: {{ b.used_days }} &bull; Allocated: {{ b.allocated_days }}</small>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- LEAVE HISTORY TABLE -->
+    <div class="hrms-card">
+        <div class="hrms-card-header">
+            <h6 class="fw-bold mb-0">Leave History</h6>
+        </div>
+        <div class="table-responsive">
+            <table class="table hrms-table">
+                <thead>
+                    <tr>
+                        <th>Leave Type</th>
+                        <th>Dates</th>
+                        <th>Days</th>
+                        <th>Reason</th>
+                        <th>Site Manager Status</th>
+                        <th>HR Approval</th>
+                        <th>Overall Status</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in leave_requests %}
+                        <tr>
+                            <td class="fw-bold">{{ req.leave_type.name }}</td>
+                            <td class="font-monospace text-dark">{{ req.start_date|date:"d M Y" }} &rarr; {{ req.end_date|date:"d M Y" }}</td>
+                            <td><b>{{ req.total_days }}</b></td>
+                            <td class="text-truncate" style="max-width: 200px;">{{ req.reason }}</td>
+                            <td>
+                                {% if req.manager_decision == 'RECOMMENDED' %}
+                                    <span class="badge bg-success">Recommended</span>
+                                {% elif req.manager_decision == 'REJECTED' %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if req.hr_decision == 'APPROVED' %}
+                                    <span class="badge bg-success">Approved</span>
+                                {% elif req.hr_decision == 'REJECTED' %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if req.status == 'APPROVED' %}
+                                    <span class="badge bg-success">Approved</span>
+                                {% elif req.status == 'PENDING_MANAGER' %}
+                                    <span class="badge bg-warning text-dark">Pending Manager</span>
+                                {% elif req.status == 'PENDING_HR' %}
+                                    <span class="badge bg-info text-dark">Pending HR</span>
+                                {% elif req.status == 'REJECTED' %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                {% elif req.status == 'CANCELLED' %}
+                                    <span class="badge bg-light text-muted border">Cancelled</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ req.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                {% if req.status == 'PENDING_MANAGER' or req.status == 'PENDING_HR' %}
+                                    <a href="{% url 'leave_management:cancel_leave' request_id=req.id %}" class="btn btn-sm btn-outline-danger py-0 px-2" onclick="return confirm('Cancel this leave application?');">
+                                        Cancel
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="8" class="text-center py-5 text-muted">No leave requests recorded.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

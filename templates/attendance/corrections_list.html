@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Attendance Corrections Queue{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="mb-4">
+        <h3 class="fw-bold mb-1">Attendance Correction & Missing Punch Queue</h3>
+        <p class="text-muted small mb-0">Approve or reject employee attendance adjustment requests with server-side audit logs.</p>
+    </div>
+
+    <div class="hrms-card">
+        <div class="table-responsive">
+            <table class="table hrms-table">
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Target Date</th>
+                        <th>Requested Timing</th>
+                        <th>Reason</th>
+                        <th>Submitted At</th>
+                        <th>Status</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for corr in corrections %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold text-dark">{{ corr.employee.full_name }}</div>
+                                <small class="text-muted">{{ corr.employee.emp_id }} &bull; {{ corr.employee.site.city }}</small>
+                            </td>
+                            <td class="fw-semibold text-dark">{{ corr.date|date:"d M Y" }}</td>
+                            <td>
+                                <div class="small font-monospace">In: {{ corr.requested_punch_in|time:"h:i A"|default:"--" }}</div>
+                                <div class="small font-monospace">Out: {{ corr.requested_punch_out|time:"h:i A"|default:"--" }}</div>
+                            </td>
+                            <td class="small">{{ corr.reason }}</td>
+                            <td class="text-muted small">{{ corr.created_at|date:"d M, H:i" }}</td>
+                            <td>
+                                {% if corr.status == 'APPROVED' %}
+                                    <span class="badge bg-success">Approved</span>
+                                {% elif corr.status == 'REJECTED' %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">Pending Review</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                {% if corr.status == 'PENDING' %}
+                                    <form method="POST" action="{% url 'attendance:approve_correction' request_id=corr.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="APPROVE">
+                                        <button type="submit" class="btn btn-sm btn-success py-1 px-2" title="Approve Correction">
+                                            <i class="bi bi-check-lg"></i> Approve
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{% url 'attendance:approve_correction' request_id=corr.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="REJECT">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Reject Correction">
+                                            <i class="bi bi-x-lg"></i> Reject
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <small class="text-muted">Reviewed</small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="7" class="text-center py-4 text-muted">No attendance corrections in the queue.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

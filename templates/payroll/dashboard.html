@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}Payroll & Compensation Operations{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h3 class="fw-bold mb-1">Payroll & Compensation Management</h3>
+            <p class="text-muted small mb-0">Automated monthly payroll generation based on verified attendance, loss-of-pay deductions, and executive authorization.</p>
+        </div>
+        {% if request.user.is_hr_role or request.user.is_head_role %}
+            <a href="{% url 'payroll:generate_payroll' %}" class="btn btn-hrms btn-sm shadow-sm">
+                <i class="bi bi-calculator-fill me-1"></i> Generate Monthly Payroll
+            </a>
+        {% endif %}
+    </div>
+
+    <!-- STRIP STATS -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-green"><i class="bi bi-currency-rupee"></i></div>
+                <div>
+                    <div class="stat-label">Total Authorized Expenditure</div>
+                    <div class="stat-value text-success">₹{{ total_expenditure|floatformat:0 }}</div>
+                    <small class="text-muted">Total Net Salary Outflow</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-blue"><i class="bi bi-calendar2-month"></i></div>
+                <div>
+                    <div class="stat-label">Processed Cycles</div>
+                    <div class="stat-value text-primary">{{ payroll_periods.count }}</div>
+                    <small class="text-muted">Historical payroll runs</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-amber"><i class="bi bi-shield-check"></i></div>
+                <div>
+                    <div class="stat-label">Latest Cycle Status</div>
+                    <div class="fw-bold fs-5 text-dark mt-1">
+                        {% if recent_period %}
+                            <span class="badge {% if recent_period.status == 'APPROVED' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                                {{ recent_period.get_month_display }} {{ recent_period.year }} ({{ recent_period.get_status_display }})
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary">No runs</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAYROLL CYCLES TABLE -->
+    <div class="hrms-card">
+        <div class="hrms-card-header">
+            <h6 class="fw-bold mb-0">Monthly Payroll Cycles</h6>
+        </div>
+        <div class="table-responsive">
+            <table class="table hrms-table">
+                <thead>
+                    <tr>
+                        <th>Cycle Period</th>
+                        <th>Working Days</th>
+                        <th>Total Gross Payout</th>
+                        <th>Total Deductions (PF/Tax)</th>
+                        <th>Total Net Payable</th>
+                        <th>Processed By</th>
+                        <th>Approval Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in payroll_periods %}
+                        <tr>
+                            <td class="fw-bold text-dark fs-6">{{ p.get_month_display }} {{ p.year }}</td>
+                            <td>{{ p.working_days }} days</td>
+                            <td class="font-monospace text-dark">₹{{ p.total_gross|floatformat:2 }}</td>
+                            <td class="font-monospace text-danger">₹{{ p.total_deductions|floatformat:2 }}</td>
+                            <td class="font-monospace text-success fw-bold fs-6">₹{{ p.total_net|floatformat:2 }}</td>
+                            <td><small class="text-muted">{{ p.processed_by.get_full_name|default:p.processed_by.username }}</small></td>
+                            <td>
+                                {% if p.status == 'APPROVED' %}
+                                    <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i> Approved by Head</span>
+                                {% elif p.status == 'SUBMITTED' %}
+                                    <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i> Awaiting Head Approval</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ p.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'payroll:period_detail' period_id=p.id %}" class="btn btn-sm btn-outline-success py-1 px-2">
+                                    <i class="bi bi-eye"></i> View Payslips
+                                </a>
+                                {% if p.status == 'SUBMITTED' and request.user.is_head_role %}
+                                    <form method="POST" action="{% url 'payroll:approve_payroll' period_id=p.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-success py-1 px-2 ms-1">
+                                            <i class="bi bi-check-lg"></i> Sign & Authorize
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="8" class="text-center py-5 text-muted">No payroll cycles created yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

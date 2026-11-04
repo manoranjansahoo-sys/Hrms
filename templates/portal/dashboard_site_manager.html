@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+{% block title %}Site Operations Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <!-- PAGE HEADER -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge role-manager">Authority 3</span>
+                <h3 class="fw-bold text-dark mb-0">Site Manager Operations Panel</h3>
+            </div>
+            <p class="text-muted small mb-0">
+                Active Site: <b class="text-dark">{{ current_site.name }}</b> ({{ current_site.city }}) &bull; Location: {{ current_site.address }}
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'attendance:admin_register' %}?site={{ current_site.id }}" class="btn btn-outline-success btn-sm shadow-sm">
+                <i class="bi bi-clock"></i> Daily Team Register
+            </a>
+            <a href="{% url 'leave_management:admin_queue' %}" class="btn btn-warning btn-sm text-dark fw-bold shadow-sm">
+                <i class="bi bi-calendar2-check"></i> Team Leaves
+            </a>
+        </div>
+    </div>
+
+    <!-- SITE METRIC CARDS -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-green">
+                    <i class="bi bi-buildings-fill"></i>
+                </div>
+                <div>
+                    <div class="stat-label">Site Team Members</div>
+                    <div class="stat-value">{{ total_site_employees }}</div>
+                    <small class="text-muted">Assigned to this campus</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-blue">
+                    <i class="bi bi-person-check-fill"></i>
+                </div>
+                <div>
+                    <div class="stat-label">Present Today</div>
+                    <div class="stat-value text-success">{{ present_today }}</div>
+                    <small class="text-success fw-semibold">{{ attendance_pct }}% Attendance rate</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-amber">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <div>
+                    <div class="stat-label">Late Arrivals</div>
+                    <div class="stat-value text-warning">{{ late_today }}</div>
+                    <small class="text-muted">Past shift grace window</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-red">
+                    <i class="bi bi-person-dash"></i>
+                </div>
+                <div>
+                    <div class="stat-label">Absent / Leave</div>
+                    <div class="stat-value text-danger">{{ absent_today }}</div>
+                    <small class="text-info">{{ on_leave_today }} on sanctioned leave</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN GRID SECTION -->
+    <div class="row g-4 mb-4">
+        <!-- LEFT: TEAM LEAVE APPROVALS & ATTENDANCE CORRECTIONS -->
+        <div class="col-lg-7">
+            <!-- PENDING TEAM LEAVES -->
+            <div class="hrms-card mb-4">
+                <div class="hrms-card-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-check2-circle text-danger fs-5"></i>
+                        <h6 class="fw-bold mb-0">Team Leave Requests Awaiting Review</h6>
+                    </div>
+                    <span class="badge bg-danger bg-opacity-10 text-danger">{{ team_leave_requests|length }} Pending</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table hrms-table">
+                        <thead>
+                            <tr>
+                                <th>Team Member</th>
+                                <th>Type</th>
+                                <th>Period</th>
+                                <th>Days</th>
+                                <th class="text-end">Site Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in team_leave_requests %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold text-dark">{{ req.employee.full_name }}</div>
+                                        <small class="text-muted">{{ req.employee.emp_id }}</small>
+                                    </td>
+                                    <td><span class="badge bg-light text-dark border">{{ req.leave_type.code }}</span></td>
+                                    <td>{{ req.start_date|date:"d M" }} - {{ req.end_date|date:"d M" }}</td>
+                                    <td>{{ req.total_days }}</td>
+                                    <td class="text-end">
+                                        <form method="POST" action="{% url 'leave_management:process_leave' request_id=req.id %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="RECOMMEND">
+                                            <button type="submit" class="btn btn-sm btn-success py-1 px-2" title="Recommend & Forward to HR">
+                                                <i class="bi bi-check-circle me-1"></i> Recommend
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="{% url 'leave_management:process_leave' request_id=req.id %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="REJECT">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Reject Leave">
+                                                <i class="bi bi-x-circle"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="5" class="text-center py-3 text-muted">No pending team leave requests.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SITE ATTENDANCE CORRECTIONS -->
+            <div class="hrms-card">
+                <div class="hrms-card-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-hourglass-split text-warning fs-5"></i>
+                        <h6 class="fw-bold mb-0">Missing Punch & Correction Requests</h6>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table hrms-table">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Date</th>
+                                <th>Reason</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for corr in team_corrections %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold text-dark">{{ corr.employee.full_name }}</div>
+                                        <small class="text-muted">{{ corr.employee.emp_id }}</small>
+                                    </td>
+                                    <td>{{ corr.date|date:"d M Y" }}</td>
+                                    <td class="text-truncate" style="max-width: 200px;">{{ corr.reason }}</td>
+                                    <td class="text-end">
+                                        <form method="POST" action="{% url 'attendance:approve_correction' request_id=corr.id %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="APPROVE">
+                                            <button type="submit" class="btn btn-sm btn-outline-success">Approve</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="4" class="text-center py-3 text-muted">No pending corrections.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: ASSIGNED TEAM ROSTER & SITE ANNOUNCEMENTS -->
+        <div class="col-lg-5">
+            <!-- ASSIGNED SITE TEAM MEMBERS -->
+            <div class="hrms-card mb-4">
+                <div class="hrms-card-header">
+                    <h6 class="fw-bold mb-0">Assigned Team Members</h6>
+                    <a href="{% url 'employees:employee_list' %}?site={{ current_site.id }}" class="small text-success text-decoration-none">Full List</a>
+                </div>
+                <div class="p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for emp in site_employees %}
+                            <li class="list-group-item p-3 d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center gap-2">
+                                    <img src="{{ emp.user.get_avatar_url }}" class="rounded-circle" width="34" height="34" style="object-fit: cover;">
+                                    <div>
+                                        <a href="{% url 'employees:employee_detail' emp_id=emp.emp_id %}" class="fw-semibold text-dark text-decoration-none small d-block">
+                                            {{ emp.full_name }}
+                                        </a>
+                                        <small class="text-muted">{{ emp.designation.title }}</small>
+                                    </div>
+                                </div>
+                                <span class="badge bg-light text-secondary border">{{ emp.department.code }}</span>
+                            </li>
+                        {% empty %}
+                            <li class="p-3 text-center text-muted small">No employees assigned to this site yet.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- SITE SPECIFIC ANNOUNCEMENTS -->
+            <div class="hrms-card">
+                <div class="hrms-card-header">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-broadcast text-success me-2"></i>Site Bulletins</h6>
+                </div>
+                <div class="p-3">
+                    {% for a in site_announcements %}
+                        <div class="border-bottom pb-2 mb-2">
+                            <span class="badge bg-secondary small mb-1">{{ a.get_priority_display }}</span>
+                            <div class="fw-bold text-dark small">{{ a.title }}</div>
+                            <small class="text-muted d-block">{{ a.content|truncatewords:20 }}</small>
+                        </div>
+                    {% empty %}
+                        <div class="text-center text-muted small py-2">No site notices currently.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

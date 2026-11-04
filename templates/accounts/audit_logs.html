@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}System Security & Audit Trail{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h3 class="fw-bold mb-1">System Security & Activity Audit Log</h3>
+            <p class="text-muted small mb-0">Immutable compliance logs recording system logins, data updates, approvals, and payroll runs.</p>
+        </div>
+        <div>
+            <form method="GET" class="d-flex gap-2">
+                <select name="action" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">All Action Types</option>
+                    {% for code, label in action_choices %}
+                        <option value="{{ code }}" {% if selected_action == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                {% if selected_action %}
+                    <a href="{% url 'accounts:audit_logs' %}" class="btn btn-sm btn-light border">Reset</a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <div class="hrms-card">
+        <div class="table-responsive">
+            <table class="table hrms-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>User</th>
+                        <th>Action Type</th>
+                        <th>Module</th>
+                        <th>Event Description</th>
+                        <th>IP Address</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in page_obj %}
+                        <tr>
+                            <td class="font-monospace text-muted small">{{ log.created_at|date:"Y-m-d H:i:s" }}</td>
+                            <td>
+                                {% if log.user %}
+                                    <div class="fw-bold text-dark">{{ log.user.get_full_name|default:log.user.username }}</div>
+                                    <small class="text-muted">{{ log.user.get_role_display }}</small>
+                                {% else %}
+                                    <span class="text-muted font-monospace">System / Automated</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge 
+                                    {% if log.action == 'LOGIN' %}bg-primary
+                                    {% elif log.action == 'APPROVAL' %}bg-success
+                                    {% elif log.action == 'PAYROLL' %}bg-warning text-dark
+                                    {% elif log.action == 'DELETE' %}bg-danger
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ log.get_action_display }}
+                                </span>
+                            </td>
+                            <td><span class="badge bg-light text-dark border">{{ log.module }}</span></td>
+                            <td class="small text-dark">{{ log.description }}</td>
+                            <td class="font-monospace text-muted small">{{ log.ip_address|default:"127.0.0.1" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="6" class="text-center py-5 text-muted">No audit logs matching selection.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if page_obj.has_other_pages %}
+            <div class="p-3 border-top d-flex justify-content-between align-items-center">
+                <span class="small text-muted">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&action={{ selected_action }}">Previous</a></li>
+                        {% endif %}
+                        <li class="page-item active"><span class="page-link bg-success border-success">{{ page_obj.number }}</span></li>
+                        {% if page_obj.has_next %}
+                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&action={{ selected_action }}">Next</a></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Leave Calendar{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Company-Wide Leave Calendar</h3>
+            <p class="text-muted small mb-0">Scheduled absences and planned team leaves to avoid project overlap.</p>
+        </div>
+        <div class="btn-group">
+            <a href="?month=10&year=2026" class="btn btn-sm {% if selected_month == 10 %}btn-success{% else %}btn-outline-secondary{% endif %}">Oct 2026</a>
+            <a href="?month=11&year=2026" class="btn btn-sm {% if selected_month == 11 %}btn-success{% else %}btn-outline-secondary{% endif %}">Nov 2026</a>
+            <a href="?month=12&year=2026" class="btn btn-sm {% if selected_month == 12 %}btn-success{% else %}btn-outline-secondary{% endif %}">Dec 2026</a>
+        </div>
+    </div>
+
+    <div class="hrms-card">
+        <div class="table-responsive">
+            <table class="table hrms-table">
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Department</th>
+                        <th>Leave Type</th>
+                        <th>Duration</th>
+                        <th>Days</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for l in approved_leaves %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold text-dark">{{ l.employee.full_name }}</div>
+                                <small class="text-muted">{{ l.employee.emp_id }}</small>
+                            </td>
+                            <td>{{ l.employee.department.name }}</td>
+                            <td><span class="badge bg-light text-dark border">{{ l.leave_type.name }}</span></td>
+                            <td class="font-monospace text-dark">{{ l.start_date|date:"d M Y" }} &rarr; {{ l.end_date|date:"d M Y" }}</td>
+                            <td><b>{{ l.total_days }}</b></td>
+                            <td><span class="badge bg-success">Approved</span></td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="6" class="text-center py-5 text-muted">No approved leaves scheduled in this month.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

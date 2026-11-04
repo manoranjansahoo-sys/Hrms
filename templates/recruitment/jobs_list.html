@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Corporate Job Openings{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h3 class="fw-bold mb-1">Company Job Openings</h3>
+            <p class="text-muted small mb-0">Manage active role vacancies, job descriptions, requirements, and candidate registration links.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'recruitment:create_job' %}" class="btn btn-hrms btn-sm shadow-sm">
+                <i class="bi bi-plus-circle me-1"></i> Post New Job Opening
+            </a>
+            <a href="{% url 'recruitment:links_list' %}" class="btn btn-outline-success btn-sm shadow-sm">
+                <i class="bi bi-link-45deg me-1"></i> Shareable Links
+            </a>
+        </div>
+    </div>
+
+    <div class="hrms-card">
+        <div class="table-responsive">
+            <table class="table hrms-table">
+                <thead>
+                    <tr>
+                        <th>Job Title</th>
+                        <th>Department</th>
+                        <th>Location</th>
+                        <th>Type</th>
+                        <th>Vacancies</th>
+                        <th>Experience</th>
+                        <th>Applications</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in jobs %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold text-dark">{{ job.title }}</div>
+                                <small class="text-muted">Deadline: {{ job.application_deadline|date:"d M Y"|default:"Open until filled" }}</small>
+                            </td>
+                            <td><span class="badge bg-light text-dark border">{{ job.department.name|default:"General" }}</span></td>
+                            <td>{{ job.location }}</td>
+                            <td><small class="text-secondary">{{ job.get_employment_type_display }}</small></td>
+                            <td><b>{{ job.vacancies }}</b></td>
+                            <td><small class="text-muted">{{ job.experience_required }}</small></td>
+                            <td>
+                                <a href="{% url 'recruitment:candidates_list' %}?job={{ job.id }}" class="fw-bold text-success text-decoration-none">
+                                    {{ job.app_count }} Candidates
+                                </a>
+                            </td>
+                            <td>
+                                {% if job.status == 'OPEN' %}
+                                    <span class="badge bg-success">Active / Open</span>
+                                {% elif job.status == 'ON_HOLD' %}
+                                    <span class="badge bg-warning text-dark">On Hold</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ job.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'recruitment:create_link' %}?job_id={{ job.id }}" class="btn btn-sm btn-outline-success py-1 px-2" title="Generate Shareable Link">
+                                    <i class="bi bi-link-45deg"></i> Link
+                                </a>
+                                <a href="{% url 'recruitment:edit_job' job_id=job.id %}" class="btn btn-sm btn-outline-secondary py-1 px-2" title="Edit Job Opening">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="9" class="text-center py-5 text-muted">No job openings created yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

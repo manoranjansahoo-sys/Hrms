@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Company Holidays Calendar{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Company Declared Holidays ({{ selected_year }})</h3>
+            <p class="text-muted small mb-0">Official annual public, festival, and corporate holidays recognized across all branches.</p>
+        </div>
+        <div class="btn-group">
+            <a href="?year=2026" class="btn btn-sm {% if selected_year == 2026 %}btn-success{% else %}btn-outline-secondary{% endif %}">2026</a>
+            <a href="?year=2027" class="btn btn-sm {% if selected_year == 2027 %}btn-success{% else %}btn-outline-secondary{% endif %}">2027</a>
+        </div>
+    </div>
+
+    <div class="hrms-card">
+        <div class="table-responsive">
+            <table class="table hrms-table">
+                <thead>
+                    <tr>
+                        <th style="width: 120px;">Date</th>
+                        <th>Day</th>
+                        <th>Holiday Name</th>
+                        <th>Classification</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in holidays %}
+                        <tr>
+                            <td class="font-monospace fw-bold text-success">{{ h.date|date:"d M Y" }}</td>
+                            <td class="fw-semibold text-secondary">{{ h.date|date:"l" }}</td>
+                            <td class="fw-bold text-dark">{{ h.title }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if h.holiday_type == 'PUBLIC' %}bg-primary
+                                    {% elif h.holiday_type == 'FESTIVAL' %}bg-warning text-dark
+                                    {% elif h.holiday_type == 'COMPANY' %}bg-success
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ h.get_holiday_type_display }}
+                                </span>
+                            </td>
+                            <td class="text-muted small">{{ h.description|default:"Annual holiday" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5" class="text-center py-4 text-muted">No holidays recorded for this year.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

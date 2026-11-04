@@ -1,0 +1,38 @@
+{% extends 'recruitment/public/base_public.html' %}
+{% block title %}Application Link Unavailable{% endblock %}
+
+{% block content %}
+<div class="container text-center" style="max-width: 600px;">
+    <div class="card-custom p-4 p-md-5 my-4">
+        <div class="mb-3">
+            <div class="d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 70px; height: 70px; background-color: #FEF3C7; border: 3px solid #FCD34D;">
+                <i class="bi bi-exclamation-triangle-fill fs-2 text-warning"></i>
+            </div>
+        </div>
+
+        <h4 class="fw-bold text-dark mb-1">Registration Link No Longer Active</h4>
+        <p class="text-muted small mb-4">
+            {% if reason == 'expired' %}
+                This recruitment link for <b>{{ job.title }}</b> reached its scheduled expiration date and is no longer accepting new applications.
+            {% elif reason == 'limit_reached' %}
+                The maximum application quota for <b>{{ job.title }}</b> under this campaign has been reached.
+            {% else %}
+                This candidate registration link for <b>{{ job.title }}</b> has been deactivated or closed by the HR team.
+            {% endif %}
+        </p>
+
+        <div class="border rounded p-3 bg-light text-start small mb-4">
+            <div class="fw-semibold text-dark mb-1">{{ job.title }}</div>
+            <div class="text-muted mb-1">{{ job.department.name|default:"General" }} &bull; {{ job.location }}</div>
+            <div class="text-muted">If you believe this is in error, please contact the HR Talent Acquisition team or check for other open vacancies.</div>
+        </div>
+
+        <div class="d-flex justify-content-center gap-2">
+            <a href="{% url 'recruitment:candidate_track' %}" class="btn btn-outline-success">
+                <i class="bi bi-search me-1"></i> Track Existing Application
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Corporate Asset Allocation{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="mb-4">
+        <h3 class="fw-bold mb-1">Corporate Assets & Inventory</h3>
+        <p class="text-muted small mb-0">Track company equipment, serial barcodes, assigned hardware, and warranty status.</p>
+    </div>
+
+    <div class="hrms-card">
+        <div class="table-responsive">
+            <table class="table hrms-table">
+                <thead>
+                    <tr>
+                        <th>Asset Tag</th>
+                        <th>Device Name</th>
+                        <th>Classification</th>
+                        <th>Serial Number</th>
+                        <th>Assigned To</th>
+                        <th>Date Assigned</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for asset in assets %}
+                        <tr>
+                            <td><span class="font-monospace fw-bold text-success">{{ asset.asset_tag }}</span></td>
+                            <td class="fw-bold text-dark">{{ asset.name }}</td>
+                            <td><span class="badge bg-light text-dark border">{{ asset.get_asset_type_display }}</span></td>
+                            <td class="font-monospace small text-muted">{{ asset.serial_number|default:"--" }}</td>
+                            <td>
+                                {% if asset.assigned_to %}
+                                    <div class="fw-semibold text-dark">{{ asset.assigned_to.full_name }}</div>
+                                    <small class="text-muted">{{ asset.assigned_to.emp_id }}</small>
+                                {% else %}
+                                    <span class="text-muted">Unassigned (In Inventory)</span>
+                                {% endif %}
+                            </td>
+                            <td><small class="text-muted">{{ asset.assigned_date|date:"d M Y"|default:"--" }}</small></td>
+                            <td>
+                                {% if asset.status == 'ASSIGNED' %}
+                                    <span class="badge bg-success">Assigned</span>
+                                {% elif asset.status == 'AVAILABLE' %}
+                                    <span class="badge bg-primary">In Stock</span>
+                                {% elif asset.status == 'MAINTENANCE' %}
+                                    <span class="badge bg-warning text-dark">In Maintenance</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ asset.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="7" class="text-center py-5 text-muted">No corporate assets recorded.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

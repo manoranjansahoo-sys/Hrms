@@ -1,0 +1,80 @@
+{% extends 'recruitment/public/base_public.html' %}
+{% block title %}Application Submitted Successfully{% endblock %}
+
+{% block content %}
+<div class="container text-center" style="max-width: 680px;">
+    <div class="card-custom p-4 p-md-5 my-3">
+        <!-- SUCCESS ICON -->
+        <div class="mb-4">
+            <div class="d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 80px; height: 80px; background-color: #E8F5E9; border: 3px solid #81C784;">
+                <i class="bi bi-check-lg fs-1 text-success"></i>
+            </div>
+        </div>
+
+        <h3 class="fw-bold text-dark mb-1">Application Submitted Successfully!</h3>
+        <p class="text-muted small mb-4">
+            Thank you, <b>{{ candidate.full_name }}</b>. Your application for <b>{{ job.title }}</b> has been received and logged in the recruitment portal.
+        </p>
+
+        <!-- APPLICATION ID BADGE CARD -->
+        <div class="p-3.5 rounded-3 border shadow-sm text-center mb-4" style="background: linear-gradient(180deg, #F0F7FF 0%, #FFFFFF 100%); border-color: #BFDBFE !important;">
+            <small class="text-primary text-uppercase fw-bold letter-spacing-1 d-block mb-2" style="font-size: 0.72rem;">Official Application Reference Number</small>
+            <div class="d-inline-flex align-items-center rounded-3 overflow-hidden border shadow-sm mb-2" style="border-color: #0D6EFD !important;">
+                <span class="bg-white px-3 py-2 fs-4 fw-bold font-monospace text-primary">{% if application.application_id|slice:":4" == "APP-" %}{{ application.application_id|slice:"4:" }}{% else %}{{ application.application_id }}{% endif %}</span>
+                <button type="button" class="btn btn-primary rounded-0 px-3 py-2 border-0" onclick="navigator.clipboard.writeText('{{ application.application_id }}'); const btn = this; btn.innerHTML = '<i class=\'bi bi-check2\'></i> Copied!'; setTimeout(() => btn.innerHTML = '<i class=\'bi bi-copy\'></i> Copy', 2000);" title="Copy Application ID">
+                    <i class="bi bi-copy"></i> Copy
+                </button>
+            </div>
+            <small class="text-muted d-block" style="font-size: 0.78rem;">
+                <i class="bi bi-envelope-check text-success me-1"></i> A confirmation email containing ID <b>{{ application.application_id }}</b> has been dispatched to <b>{{ candidate.email }}</b>.
+            </small>
+        </div>
+
+        <!-- DETAILS SUMMARY -->
+        <div class="border rounded p-3 text-start small mb-4 bg-body">
+            <div class="row g-2">
+                <div class="col-sm-6"><span class="text-muted">Applied Position:</span> <span class="fw-semibold text-dark">{{ job.title }}</span></div>
+                <div class="col-sm-6"><span class="text-muted">Department:</span> <span class="fw-semibold text-dark">{{ job.department.name|default:"General" }}</span></div>
+                <div class="col-sm-6"><span class="text-muted">Submission Date:</span> <span class="fw-semibold text-dark">{{ application.applied_at|date:"d M Y, h:i A" }}</span></div>
+                <div class="col-sm-6"><span class="text-muted">Current Status:</span> <span class="badge bg-primary">Submitted</span></div>
+            </div>
+        </div>
+
+        <!-- NEXT STEPS TIMELINE -->
+        <div class="text-start mb-4">
+            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-signpost-split-fill text-success me-2"></i>What Happens Next?</h6>
+            <div class="d-flex gap-3 mb-3">
+                <div class="rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center flex-shrink-0" style="width: 32px; height: 32px;">1</div>
+                <div>
+                    <div class="fw-bold text-dark small">Profile & Resume Screening</div>
+                    <small class="text-muted">Our Talent Acquisition team assesses your experience and technical alignment.</small>
+                </div>
+            </div>
+            <div class="d-flex gap-3 mb-3">
+                <div class="rounded-circle bg-secondary bg-opacity-10 text-secondary d-flex align-items-center justify-content-center flex-shrink-0" style="width: 32px; height: 32px;">2</div>
+                <div>
+                    <div class="fw-bold text-dark small">Shortlisting & Interview Schedule</div>
+                    <small class="text-muted">Shortlisted candidates receive interview invitations with meeting links or campus details.</small>
+                </div>
+            </div>
+            <div class="d-flex gap-3">
+                <div class="rounded-circle bg-secondary bg-opacity-10 text-secondary d-flex align-items-center justify-content-center flex-shrink-0" style="width: 32px; height: 32px;">3</div>
+                <div>
+                    <div class="fw-bold text-dark small">Real-Time Application Tracking</div>
+                    <small class="text-muted">You can monitor your application status online anytime using your Application ID.</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-center gap-3 pt-3 border-top">
+            <a href="{% url 'recruitment:candidate_track_id' application_id=application.application_id %}" class="btn btn-brand">
+                <i class="bi bi-clock-history me-1"></i> Track Application Status
+            </a>
+            <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
+                <i class="bi bi-printer me-1"></i> Print Confirmation
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

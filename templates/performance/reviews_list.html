@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% block title %}Appraisals & Recognitions{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h3 class="fw-bold mb-1">Performance Reviews & Recognitions</h3>
+            <p class="text-muted small mb-0">Manager feedback, annual ratings, promotion recommendations, and employee awards.</p>
+        </div>
+        {% if employees %}
+            <button class="btn btn-hrms btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#createReviewModal">
+                <i class="bi bi-star-fill me-1"></i> Conduct Performance Review
+            </button>
+        {% endif %}
+    </div>
+
+    <!-- REVIEWS LIST -->
+    <div class="hrms-card mb-4">
+        <div class="hrms-card-header">
+            <h6 class="fw-bold mb-0">Performance Evaluation Records</h6>
+        </div>
+        <div class="table-responsive">
+            <table class="table hrms-table">
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Cycle</th>
+                        <th>Rating</th>
+                        <th>Core Strengths</th>
+                        <th>Improvement Areas</th>
+                        <th>Recommendation</th>
+                        <th>Reviewer</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rev in reviews %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold text-dark">{{ rev.employee.full_name }}</div>
+                                <small class="text-muted">{{ rev.employee.emp_id }}</small>
+                            </td>
+                            <td><span class="badge bg-light text-dark border">{{ rev.review_cycle }}</span></td>
+                            <td>
+                                <span class="badge bg-warning text-dark fs-6">
+                                    ★ {{ rev.rating }} / 5
+                                </span>
+                            </td>
+                            <td class="small" style="max-width: 180px;">{{ rev.strengths }}</td>
+                            <td class="small" style="max-width: 180px;">{{ rev.areas_for_improvement }}</td>
+                            <td>
+                                {% if rev.recommendation == 'PROMOTION' %}
+                                    <span class="badge bg-success">Promotion</span>
+                                {% elif rev.recommendation == 'SALARY_HIKE' %}
+                                    <span class="badge bg-primary">Salary Hike</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ rev.get_recommendation_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td><small class="text-muted">{{ rev.reviewer.get_full_name|default:"Manager" }}</small></td>
+                            <td><span class="badge bg-success">{{ rev.get_status_display }}</span></td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="8" class="text-center py-5 text-muted">No performance reviews recorded.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- CORPORATE HONORS & AWARDS -->
+    <div class="hrms-card">
+        <div class="hrms-card-header">
+            <h6 class="fw-bold mb-0"><i class="bi bi-award-fill text-warning me-2"></i>Corporate Honors & Recognitions</h6>
+        </div>
+        <div class="hrms-card-body">
+            <div class="row g-3">
+                {% for a in awards %}
+                    <div class="col-md-6">
+                        <div class="p-3 border rounded bg-light d-flex gap-3 align-items-center">
+                            <img src="{{ a.employee.user.get_avatar_url }}" class="rounded-circle border border-2 border-warning" width="55" height="55" style="object-fit: cover;">
+                            <div>
+                                <span class="badge bg-warning text-dark mb-1">{{ a.award_title }}</span>
+                                <h6 class="fw-bold mb-0 text-dark">{{ a.employee.full_name }}</h6>
+                                <small class="text-muted">{{ a.month_year }} &bull; Conferred by {{ a.awarded_by.get_full_name|default:"Company" }}</small>
+                                <p class="small text-secondary mb-0 mt-1 fst-italic">"{{ a.citation }}"</p>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="col-12 text-center py-3 text-muted">No corporate awards recorded.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CONDUCT REVIEW MODAL -->
+{% if employees %}
+<div class="modal fade" id="createReviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Conduct Performance Review</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{% url 'performance:create_review' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Employee *</label>
+                            <select name="employee_id" class="form-select" required>
+                                {% for e in employees %}
+                                    <option value="{{ e.id }}">{{ e.full_name }} ({{ e.emp_id }} - {{ e.department.name }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Review Cycle *</label>
+                            <input type="text" name="review_cycle" class="form-control" value="Q4 2026" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Performance Rating *</label>
+                            <select name="rating" class="form-select">
+                                <option value="5">5 - Outstanding</option>
+                                <option value="4" selected>4 - Exceeds Expectations</option>
+                                <option value="3">3 - Meets Expectations</option>
+                                <option value="2">2 - Needs Improvement</option>
+                                <option value="1">1 - Unsatisfactory</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Key Strengths & Accomplishments *</label>
+                        <textarea name="strengths" rows="2" class="form-control" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Areas for Development & Improvement *</label>
+                        <textarea name="areas_for_improvement" rows="2" class="form-control" required></textarea>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Manager Feedback & Appraisal Summary *</label>
+                            <textarea name="manager_remarks" rows="2" class="form-control" required></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Progression Recommendation</label>
+                            <select name="recommendation" class="form-select">
+                                <option value="NONE">Standard Progression</option>
+                                <option value="PROMOTION">Recommend for Promotion</option>
+                                <option value="SALARY_HIKE">Recommend for Salary Revision</option>
+                                <option value="TRAINING">Specialized Training</option>
+                                <option value="PIP">Performance Improvement Plan</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-hrms">Submit Evaluation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+

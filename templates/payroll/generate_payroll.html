@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Generate Monthly Payroll{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="mb-4">
+        <h3 class="fw-bold mb-1">Generate Monthly Payroll Run</h3>
+        <p class="text-muted small mb-0">Calculates working days, verified attendance, and Loss of Pay (LOP) deductions for all employees.</p>
+    </div>
+
+    <div class="hrms-card p-4" style="max-width: 600px;">
+        <form method="POST">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label small fw-semibold">Payroll Month *</label>
+                <select name="month" class="form-select">
+                    {% for m_num, m_name in months %}
+                        <option value="{{ m_num }}" {% if m_num == current_month %}selected{% endif %}>{{ m_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small fw-semibold">Year *</label>
+                <input type="number" name="year" class="form-control" value="{{ current_year }}">
+            </div>
+            <div class="mb-4">
+                <label class="form-label small fw-semibold">Total Working Days in Month *</label>
+                <input type="number" name="working_days" class="form-control" value="26">
+                <small class="text-muted">Standard working calendar days excluding Sundays & company holidays.</small>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                <a href="{% url 'payroll:dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+                <button type="submit" class="btn btn-hrms px-4">
+                    <i class="bi bi-gear-fill me-1"></i> Compute & Generate Payroll
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
