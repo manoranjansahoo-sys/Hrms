@@ -218,13 +218,79 @@ class EmployeeCreateForm(forms.ModelForm):
         return cleaned_data
 
 
+CORRECTION_FIELD_CHOICES = [
+    ('', '-- Select Field to Update --'),
+    ('Mobile Phone Number', 'Mobile Phone Number'),
+    ('Personal Email', 'Personal / Alternate Email'),
+    ('Salary Bank Name', 'Salary Bank Name'),
+    ('Bank Account Number', 'Bank Account Number'),
+    ('Bank IFSC Code', 'Bank IFSC Code'),
+    ('PAN Card Number', 'PAN Card Number'),
+    ('PF UAN Number', 'PF UAN Number'),
+    ('Emergency Contact Phone', 'Emergency Contact Phone'),
+    ('Emergency Contact Name', 'Emergency Contact Person'),
+    ('Emergency Contact Relation', 'Emergency Contact Relation'),
+    ('Residential Address', 'Residential Address'),
+    ('City', 'City'),
+    ('State', 'State'),
+    ('Postal / PIN Code', 'Postal / PIN Code'),
+    ('Blood Group', 'Blood Group'),
+    ('Marital Status', 'Marital Status'),
+    ('Educational Details', 'Educational Qualifications'),
+    ('Prior Experience Overview', 'Prior Experience Overview'),
+    ('Other', 'Other Field (Specify)'),
+]
+
+
 class ProfileCorrectionForm(forms.ModelForm):
+    field_select = forms.ChoiceField(
+        choices=CORRECTION_FIELD_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select', 'id': 'id_field_select'})
+    )
+    custom_field = forms.CharField(
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'id': 'id_custom_field', 'placeholder': 'Specify custom field name'})
+    )
+
     class Meta:
         model = ProfileCorrectionRequest
         fields = ['field_name', 'current_value', 'proposed_value', 'reason']
         widgets = {
-            'field_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Bank Account Number, Emergency Contact'}),
-            'current_value': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Existing value on record'}),
-            'proposed_value': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Requested new value'}),
-            'reason': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Reason for modification'}),
+            'field_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Field name',
+                'id': 'id_field_name',
+                'required': True
+            }),
+            'current_value': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Existing value on record',
+                'id': 'id_current_value'
+            }),
+            'proposed_value': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Proposed new value',
+                'id': 'id_proposed_value',
+                'required': True
+            }),
+            'reason': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Reason for correction / supporting context',
+                'required': True
+            }),
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        f_name = cleaned_data.get('field_name')
+        f_select = cleaned_data.get('field_select')
+        c_field = cleaned_data.get('custom_field')
+
+        if f_select == 'Other' and c_field:
+            cleaned_data['field_name'] = c_field
+        elif f_select and not f_name:
+            cleaned_data['field_name'] = f_select
+        return cleaned_data

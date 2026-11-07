@@ -141,15 +141,19 @@ class Command(BaseCommand):
         admin_user, _ = CustomUser.objects.get_or_create(
             username='admin',
             defaults={
-                'first_name': 'Vikramaditya',
-                'last_name': 'Singhania',
+                'first_name': 'Debasish',
+                'last_name': 'Mohapatra',
                 'email': 'head.admin@company.com',
                 'role': CustomUser.Role.HEAD,
-                'phone': '+91 98201 11223',
+                'phone': '+91 98610 11223',
                 'is_staff': True,
                 'is_superuser': True,
             }
         )
+        admin_user.first_name = 'Debasish'
+        admin_user.last_name = 'Mohapatra'
+        admin_user.email = 'head.admin@company.com'
+        admin_user.phone = '+91 98610 11223'
         admin_user.set_password('admin123')
         admin_user.role = CustomUser.Role.HEAD
         admin_user.is_staff = True
@@ -160,14 +164,18 @@ class Command(BaseCommand):
         hr_user, _ = CustomUser.objects.get_or_create(
             username='hr_admin',
             defaults={
-                'first_name': 'Pooja',
-                'last_name': 'Menon',
-                'email': 'pooja.menon@company.com',
+                'first_name': 'Smruti Rekha',
+                'last_name': 'Swain',
+                'email': 'smruti.swain@company.com',
                 'role': CustomUser.Role.HR,
-                'phone': '+91 98450 44556',
+                'phone': '+91 94370 44556',
                 'is_staff': True,
             }
         )
+        hr_user.first_name = 'Smruti Rekha'
+        hr_user.last_name = 'Swain'
+        hr_user.email = 'smruti.swain@company.com'
+        hr_user.phone = '+91 94370 44556'
         hr_user.set_password('hr123')
         hr_user.role = CustomUser.Role.HR
         hr_user.is_staff = True
@@ -177,14 +185,18 @@ class Command(BaseCommand):
         manager_user, _ = CustomUser.objects.get_or_create(
             username='site_manager',
             defaults={
-                'first_name': 'Rajesh',
-                'last_name': 'Verma',
-                'email': 'rajesh.verma@company.com',
+                'first_name': 'Rajesh Kumar',
+                'last_name': 'Jena',
+                'email': 'rajesh.jena@company.com',
                 'role': CustomUser.Role.SITE_MANAGER,
-                'phone': '+91 98765 67890',
+                'phone': '+91 97780 67890',
                 'is_staff': False,
             }
         )
+        manager_user.first_name = 'Rajesh Kumar'
+        manager_user.last_name = 'Jena'
+        manager_user.email = 'rajesh.jena@company.com'
+        manager_user.phone = '+91 97780 67890'
         manager_user.set_password('mgr123')
         manager_user.role = CustomUser.Role.SITE_MANAGER
         manager_user.save()
@@ -193,17 +205,21 @@ class Command(BaseCommand):
         site_blr.site_manager = manager_user
         site_blr.save()
 
-        # Authority 1: Employee (John Doe - Senior Software Engineer)
+        # Authority 1: Employee (Soumya Ranjan Sahoo - Senior Software Engineer)
         emp_user, _ = CustomUser.objects.get_or_create(
             username='john_doe',
             defaults={
-                'first_name': 'John',
-                'last_name': 'Doe',
-                'email': 'john.doe@company.com',
+                'first_name': 'Soumya Ranjan',
+                'last_name': 'Sahoo',
+                'email': 'soumya.sahoo@company.com',
                 'role': CustomUser.Role.EMPLOYEE,
-                'phone': '+91 99001 23456',
+                'phone': '+91 99370 23456',
             }
         )
+        emp_user.first_name = 'Soumya Ranjan'
+        emp_user.last_name = 'Sahoo'
+        emp_user.email = 'soumya.sahoo@company.com'
+        emp_user.phone = '+91 99370 23456'
         emp_user.set_password('emp123')
         emp_user.role = CustomUser.Role.EMPLOYEE
         emp_user.save()
@@ -212,13 +228,17 @@ class Command(BaseCommand):
         emp2_user, _ = CustomUser.objects.get_or_create(
             username='sarah_connor',
             defaults={
-                'first_name': 'Sarah',
-                'last_name': 'Connor',
-                'email': 'sarah.connor@company.com',
+                'first_name': 'Ananya',
+                'last_name': 'Mishra',
+                'email': 'ananya.mishra@company.com',
                 'role': CustomUser.Role.EMPLOYEE,
-                'phone': '+91 98111 88990',
+                'phone': '+91 98530 88990',
             }
         )
+        emp2_user.first_name = 'Ananya'
+        emp2_user.last_name = 'Mishra'
+        emp2_user.email = 'ananya.mishra@company.com'
+        emp2_user.phone = '+91 98530 88990'
         emp2_user.set_password('emp123')
         emp2_user.role = CustomUser.Role.EMPLOYEE
         emp2_user.save()
@@ -226,13 +246,17 @@ class Command(BaseCommand):
         emp3_user, _ = CustomUser.objects.get_or_create(
             username='priya_patel',
             defaults={
-                'first_name': 'Priya',
-                'last_name': 'Patel',
-                'email': 'priya.patel@company.com',
+                'first_name': 'Swagatika',
+                'last_name': 'Behera',
+                'email': 'swagatika.behera@company.com',
                 'role': CustomUser.Role.EMPLOYEE,
-                'phone': '+91 97234 56789',
+                'phone': '+91 96920 56789',
             }
         )
+        emp3_user.first_name = 'Swagatika'
+        emp3_user.last_name = 'Behera'
+        emp3_user.email = 'swagatika.behera@company.com'
+        emp3_user.phone = '+91 96920 56789'
         emp3_user.set_password('emp123')
         emp3_user.role = CustomUser.Role.EMPLOYEE
         emp3_user.save()
@@ -240,19 +264,23 @@ class Command(BaseCommand):
         emp4_user, _ = CustomUser.objects.get_or_create(
             username='david_miller',
             defaults={
-                'first_name': 'David',
-                'last_name': 'Miller',
-                'email': 'david.miller@company.com',
+                'first_name': 'Biswajit',
+                'last_name': 'Rout',
+                'email': 'biswajit.rout@company.com',
                 'role': CustomUser.Role.EMPLOYEE,
-                'phone': '+91 98401 55667',
+                'phone': '+91 94380 55667',
             }
         )
+        emp4_user.first_name = 'Biswajit'
+        emp4_user.last_name = 'Rout'
+        emp4_user.email = 'biswajit.rout@company.com'
+        emp4_user.phone = '+91 94380 55667'
         emp4_user.set_password('emp123')
         emp4_user.role = CustomUser.Role.EMPLOYEE
         emp4_user.save()
 
         # 6. Employee Profiles
-        # Profile 1: Head Admin
+        # Profile 1: Head Admin (Debasish Mohapatra)
         profile_admin, _ = EmployeeProfile.objects.get_or_create(
             user=admin_user,
             defaults={
@@ -271,15 +299,19 @@ class Command(BaseCommand):
                 'ifsc_code': 'HDFC0001234',
                 'pan_number': 'ABCPS1234F',
                 'uan_number': '100902837482',
-                'city': 'Bengaluru',
-                'address': 'Plot 42, Palm Meadows, Whitefield, Bengaluru',
-                'emergency_contact_name': 'Ananya Singhania',
+                'city': 'Bhubaneswar',
+                'address': 'Plot 42, Infocity Avenue, Chandrasekharpur, Bhubaneswar, Odisha 751024',
+                'emergency_contact_name': 'Subhashree Mohapatra',
                 'emergency_contact_relation': 'Spouse',
-                'emergency_contact_phone': '+91 98201 99999',
+                'emergency_contact_phone': '+91 98610 99999',
             }
         )
+        profile_admin.city = 'Bhubaneswar'
+        profile_admin.address = 'Plot 42, Infocity Avenue, Chandrasekharpur, Bhubaneswar, Odisha 751024'
+        profile_admin.emergency_contact_name = 'Subhashree Mohapatra'
+        profile_admin.save()
 
-        # Profile 2: HR Admin
+        # Profile 2: HR Admin (Smruti Rekha Swain)
         profile_hr, _ = EmployeeProfile.objects.get_or_create(
             user=hr_user,
             defaults={
@@ -299,15 +331,19 @@ class Command(BaseCommand):
                 'ifsc_code': 'ICIC0000012',
                 'pan_number': 'BNMPP8877K',
                 'uan_number': '101239847291',
-                'city': 'Bengaluru',
-                'address': 'Flat 302, Green Glen Layout, Bellandur, Bengaluru',
-                'emergency_contact_name': 'Karthik Menon',
+                'city': 'Bhubaneswar',
+                'address': 'Flat 302, Royal Palms, Saheed Nagar, Bhubaneswar, Odisha 751007',
+                'emergency_contact_name': 'Satyajit Swain',
                 'emergency_contact_relation': 'Spouse',
-                'emergency_contact_phone': '+91 98450 11223',
+                'emergency_contact_phone': '+91 94370 11223',
             }
         )
+        profile_hr.city = 'Bhubaneswar'
+        profile_hr.address = 'Flat 302, Royal Palms, Saheed Nagar, Bhubaneswar, Odisha 751007'
+        profile_hr.emergency_contact_name = 'Satyajit Swain'
+        profile_hr.save()
 
-        # Profile 3: Site Manager
+        # Profile 3: Site Manager (Rajesh Kumar Jena)
         profile_mgr, _ = EmployeeProfile.objects.get_or_create(
             user=manager_user,
             defaults={
@@ -327,15 +363,19 @@ class Command(BaseCommand):
                 'ifsc_code': 'SBIN0004567',
                 'pan_number': 'ASDPV3344J',
                 'uan_number': '100847291834',
-                'city': 'Bengaluru',
-                'address': 'B-704, Prestige Lakeside Habitat, Varthur, Bengaluru',
-                'emergency_contact_name': 'Sunita Verma',
+                'city': 'Cuttack',
+                'address': 'B-704, Mahanadi Vihar, Cuttack, Odisha 753004',
+                'emergency_contact_name': 'Sunita Jena',
                 'emergency_contact_relation': 'Spouse',
-                'emergency_contact_phone': '+91 98765 11111',
+                'emergency_contact_phone': '+91 97780 11111',
             }
         )
+        profile_mgr.city = 'Cuttack'
+        profile_mgr.address = 'B-704, Mahanadi Vihar, Cuttack, Odisha 753004'
+        profile_mgr.emergency_contact_name = 'Sunita Jena'
+        profile_mgr.save()
 
-        # Profile 4: John Doe (Senior Software Engineer)
+        # Profile 4: Soumya Ranjan Sahoo (Senior Software Engineer)
         profile_emp, _ = EmployeeProfile.objects.get_or_create(
             user=emp_user,
             defaults={
@@ -346,26 +386,30 @@ class Command(BaseCommand):
                 'reporting_manager': manager_user,
                 'employment_type': EmployeeProfile.EmploymentType.FULL_TIME,
                 'joining_date': date(2022, 4, 10),
-                'date_of_birth': date(1994, today.month, today.day), # TODAY IS JOHN'S BIRTHDAY!
+                'date_of_birth': date(1994, today.month, today.day), # TODAY IS SOUMYA'S BIRTHDAY!
                 'gender': 'MALE',
                 'marital_status': 'SINGLE',
                 'blood_group': 'O+',
                 'bank_name': 'HDFC Bank',
                 'bank_account_number': '50100492817349',
                 'ifsc_code': 'HDFC0001827',
-                'pan_number': 'DOEPJ1234Q',
+                'pan_number': 'SAHOPJ1234Q',
                 'uan_number': '101928374655',
-                'city': 'Bengaluru',
-                'address': '124, 5th Main, Indiranagar 1st Stage, Bengaluru, Karnataka 560038',
-                'emergency_contact_name': 'Robert Doe',
+                'city': 'Bhubaneswar',
+                'address': '124, Kalinga Nagar Sector 2, Ghatikia, Bhubaneswar, Odisha 751003',
+                'emergency_contact_name': 'Pradeep Kumar Sahoo',
                 'emergency_contact_relation': 'Father',
-                'emergency_contact_phone': '+91 99001 99999',
+                'emergency_contact_phone': '+91 99370 99999',
                 'education_details': 'B.Tech in Computer Science & Engineering (2012-2016)',
                 'experience_summary': '8+ years in full-stack architecture, Django, Python, PostgreSQL, and cloud deployments.',
             }
         )
+        profile_emp.city = 'Bhubaneswar'
+        profile_emp.address = '124, Kalinga Nagar Sector 2, Ghatikia, Bhubaneswar, Odisha 751003'
+        profile_emp.emergency_contact_name = 'Pradeep Kumar Sahoo'
+        profile_emp.save()
 
-        # Profile 5: Sarah Connor (Lead UI/UX Designer)
+        # Profile 5: Ananya Mishra (Lead UI/UX Designer)
         profile_emp2, _ = EmployeeProfile.objects.get_or_create(
             user=emp2_user,
             defaults={
@@ -383,17 +427,21 @@ class Command(BaseCommand):
                 'bank_name': 'Axis Bank',
                 'bank_account_number': '918020038472918',
                 'ifsc_code': 'UTIB0000213',
-                'pan_number': 'CNRPJ9988X',
+                'pan_number': 'MSHRA9988X',
                 'uan_number': '101827364512',
-                'city': 'Bengaluru',
-                'address': '45, Koramangala 4th Block, Bengaluru',
-                'emergency_contact_name': 'Elena Connor',
+                'city': 'Bhubaneswar',
+                'address': '45, Master Canteen Square, Station Area, Bhubaneswar, Odisha 751001',
+                'emergency_contact_name': 'Gitanjali Mishra',
                 'emergency_contact_relation': 'Mother',
-                'emergency_contact_phone': '+91 98111 11223',
+                'emergency_contact_phone': '+91 98530 11223',
             }
         )
+        profile_emp2.city = 'Bhubaneswar'
+        profile_emp2.address = '45, Master Canteen Square, Station Area, Bhubaneswar, Odisha 751001'
+        profile_emp2.emergency_contact_name = 'Gitanjali Mishra'
+        profile_emp2.save()
 
-        # Profile 6: Priya Patel (QA Automation Engineer)
+        # Profile 6: Swagatika Behera (QA Automation Engineer)
         profile_emp3, _ = EmployeeProfile.objects.get_or_create(
             user=emp3_user,
             defaults={
@@ -411,17 +459,21 @@ class Command(BaseCommand):
                 'bank_name': 'HDFC Bank',
                 'bank_account_number': '50100772211990',
                 'ifsc_code': 'HDFC0000456',
-                'pan_number': 'PTLPK6655M',
+                'pan_number': 'BEHRA6655M',
                 'uan_number': '101928471625',
-                'city': 'Hyderabad',
-                'address': 'Road No 36, Jubilee Hills, Hyderabad',
-                'emergency_contact_name': 'Ramesh Patel',
+                'city': 'Rourkela',
+                'address': 'Sector 5, Rourkela Steel City, Odisha 769002',
+                'emergency_contact_name': 'Ramesh Chandra Behera',
                 'emergency_contact_relation': 'Father',
-                'emergency_contact_phone': '+91 97234 11122',
+                'emergency_contact_phone': '+91 96920 11122',
             }
         )
+        profile_emp3.city = 'Rourkela'
+        profile_emp3.address = 'Sector 5, Rourkela Steel City, Odisha 769002'
+        profile_emp3.emergency_contact_name = 'Ramesh Chandra Behera'
+        profile_emp3.save()
 
-        # Profile 7: David Miller (Backend Python Engineer)
+        # Profile 7: Biswajit Rout (Backend Python Engineer)
         profile_emp4, _ = EmployeeProfile.objects.get_or_create(
             user=emp4_user,
             defaults={
@@ -439,15 +491,19 @@ class Command(BaseCommand):
                 'bank_name': 'Kotak Mahindra Bank',
                 'bank_account_number': '411002938472',
                 'ifsc_code': 'KKBK0000123',
-                'pan_number': 'MLRDK3322L',
+                'pan_number': 'ROUTB3322L',
                 'uan_number': '102938475612',
-                'city': 'Pune',
-                'address': 'Magarpatta Cybercity, Hadapsar, Pune',
-                'emergency_contact_name': 'Susan Miller',
+                'city': 'Berhampur',
+                'address': 'Engineering School Road, Berhampur, Ganjam, Odisha 760010',
+                'emergency_contact_name': 'Priyadarshini Rout',
                 'emergency_contact_relation': 'Sister',
-                'emergency_contact_phone': '+91 98401 22334',
+                'emergency_contact_phone': '+91 94380 22334',
             }
         )
+        profile_emp4.city = 'Berhampur'
+        profile_emp4.address = 'Engineering School Road, Berhampur, Ganjam, Odisha 760010'
+        profile_emp4.emergency_contact_name = 'Priyadarshini Rout'
+        profile_emp4.save()
 
         # 7. Leave Types & Balances
         lt_cl, _ = LeaveType.objects.get_or_create(
@@ -921,19 +977,24 @@ class Command(BaseCommand):
                 }
             )
 
-        # Attendance Correction Request (David Miller requested correction for missing punch out)
+        # Attendance Correction Request (Biswajit Rout requested correction for missing punch out)
         missing_punch_date = today - timedelta(days=4)
+        base_punch_in = timezone.now().replace(year=missing_punch_date.year, month=missing_punch_date.month, day=missing_punch_date.day, hour=9, minute=5, second=0, microsecond=0)
         att_david, _ = Attendance.objects.get_or_create(
             employee=profile_emp4,
             date=missing_punch_date,
             defaults={
                 'shift': shift_gen,
-                'punch_in': timezone.now().replace(year=missing_punch_date.year, month=missing_punch_date.month, day=missing_punch_date.day, hour=9, minute=5),
+                'punch_in': base_punch_in,
                 'punch_out': None,
                 'status': 'HALF_DAY',
                 'working_hours': Decimal('4.00')
             }
         )
+        if not att_david.punch_in:
+            att_david.punch_in = base_punch_in
+            att_david.save()
+
         AttendanceCorrectionRequest.objects.get_or_create(
             employee=profile_emp4,
             date=missing_punch_date,
@@ -1050,10 +1111,10 @@ class Command(BaseCommand):
             }
         )
 
-        # 19. Notifications for John Doe
+        # 19. Notifications for Soumya Ranjan Sahoo
         Notification.objects.get_or_create(
             recipient=emp_user,
-            title='🎉 Happy Birthday, John!',
+            title='🎉 Happy Birthday, Soumya!',
             defaults={
                 'message': 'The entire company family wishes you a fabulous birthday and a stellar year of success, health, and happiness!',
                 'notification_type': 'BIRTHDAY',
@@ -1082,12 +1143,12 @@ class Command(BaseCommand):
             }
         )
 
-        # Notifications for Site Manager
+        # Notifications for Site Manager (Rajesh Kumar Jena)
         Notification.objects.get_or_create(
             recipient=manager_user,
             title='Action Required: 1 New Leave Request',
             defaults={
-                'message': 'John Doe (EMP101) has applied for 2 days Casual Leave starting next week.',
+                'message': 'Soumya Ranjan Sahoo (EMP101) has applied for 2 days Casual Leave starting next week.',
                 'notification_type': 'LEAVE',
                 'target_url': '/dashboard/site-manager/leave-approvals/',
                 'is_read': False
@@ -1097,19 +1158,19 @@ class Command(BaseCommand):
             recipient=manager_user,
             title='Attendance Correction Request',
             defaults={
-                'message': 'David Miller has submitted a missing punch out correction for your review.',
+                'message': 'Biswajit Rout has submitted a missing punch out correction for your review.',
                 'notification_type': 'ATTENDANCE',
                 'target_url': '/dashboard/site-manager/attendance-corrections/',
                 'is_read': False
             }
         )
 
-        # Notifications for HR
+        # Notifications for HR (Smruti Rekha Swain)
         Notification.objects.get_or_create(
             recipient=hr_user,
             title='Leave Request Forwarded by Site Manager',
             defaults={
-                'message': 'Sarah Connor (EMP102) Earned Leave request recommended by Site Manager Rajesh Verma. Awaiting HR approval.',
+                'message': 'Ananya Mishra (EMP102) Earned Leave request recommended by Site Manager Rajesh Kumar Jena. Awaiting HR approval.',
                 'notification_type': 'LEAVE',
                 'target_url': '/dashboard/hr/leave-requests/',
                 'is_read': False
@@ -1120,13 +1181,13 @@ class Command(BaseCommand):
         AuditLog.objects.get_or_create(
             action='PAYROLL',
             module='Payroll Management',
-            description='October 2026 monthly company-wide payroll processed by HR Admin Pooja Menon.',
+            description='October 2026 monthly company-wide payroll processed by HR Admin Smruti Rekha Swain.',
             defaults={'user': hr_user, 'ip_address': '192.168.1.10'}
         )
         AuditLog.objects.get_or_create(
             action='APPROVAL',
             module='Executive Approvals',
-            description='October 2026 monthly payroll approved by Head of Company Vikramaditya Singhania.',
+            description='October 2026 monthly payroll approved by Head of Company Debasish Mohapatra.',
             defaults={'user': admin_user, 'ip_address': '192.168.1.2'}
         )
 

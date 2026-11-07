@@ -1,11 +1,16 @@
 {% extends 'base.html' %}
-{% block title %}Profile Corrections Queue{% endblock %}
+{% block title %}Profile Corrections Queue | Company HRMS{% endblock %}
 
 {% block content %}
 <div class="container-fluid p-0">
-    <div class="mb-4">
-        <h3 class="fw-bold mb-1">Employee Profile Correction Requests</h3>
-        <p class="text-muted small mb-0">Review employee submitted amendments for banking details, personal information, and residential records.</p>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Employee Profile Correction Requests</h3>
+            <p class="text-muted small mb-0">Review employee submitted amendments for banking details, personal information, and residential records.</p>
+        </div>
+        <a href="{% url 'employees:employee_list' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-people me-1"></i> Workforce Directory
+        </a>
     </div>
 
     <div class="hrms-card">
@@ -14,57 +19,74 @@
                 <thead>
                     <tr>
                         <th>Employee</th>
-                        <th>Field Name</th>
-                        <th>Current Value</th>
-                        <th>Proposed Value</th>
-                        <th>Reason</th>
+                        <th>Field to Correct</th>
+                        <th>Current Value on Record</th>
+                        <th>Requested Value</th>
+                        <th>Reason for Amendment</th>
+                        <th>Submitted</th>
                         <th>Status</th>
-                        <th class="text-end">HR Review</th>
+                        <th class="text-end">HR Review Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for corr in corrections %}
                         <tr>
                             <td>
-                                <div class="fw-bold text-dark">{{ corr.employee.full_name }}</div>
-                                <small class="text-muted">{{ corr.employee.emp_id }}</small>
+                                <div>
+                                    <a href="{% url 'employees:employee_detail' emp_id=corr.employee.emp_id %}" class="fw-bold text-dark text-decoration-none">
+                                        {{ corr.employee.full_name }}
+                                    </a>
+                                </div>
+                                <span class="font-monospace text-success small fw-semibold">{{ corr.employee.emp_id }}</span>
                             </td>
-                            <td><span class="badge bg-light text-dark border">{{ corr.field_name }}</span></td>
-                            <td class="text-muted small">{{ corr.current_value }}</td>
+                            <td><span class="badge bg-light text-dark border fw-bold">{{ corr.field_name }}</span></td>
+                            <td class="text-muted small">{{ corr.current_value|default:"--" }}</td>
                             <td class="fw-bold text-success small">{{ corr.proposed_value }}</td>
-                            <td class="small">{{ corr.reason }}</td>
+                            <td class="small text-secondary">{{ corr.reason }}</td>
+                            <td class="small text-muted">{{ corr.created_at|date:"d M Y, h:i A" }}</td>
                             <td>
                                 {% if corr.status == 'APPROVED' %}
-                                    <span class="badge bg-success">Approved</span>
+                                    <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i> Approved & Applied</span>
+                                    {% if corr.review_notes %}
+                                        <div class="text-muted mt-1" style="font-size: 0.72rem;">{{ corr.review_notes }}</div>
+                                    {% endif %}
                                 {% elif corr.status == 'REJECTED' %}
-                                    <span class="badge bg-danger">Rejected</span>
+                                    <span class="badge bg-danger"><i class="bi bi-x-circle-fill me-1"></i> Rejected</span>
+                                    {% if corr.review_notes %}
+                                        <div class="text-muted mt-1" style="font-size: 0.72rem;">{{ corr.review_notes }}</div>
+                                    {% endif %}
                                 {% else %}
-                                    <span class="badge bg-warning text-dark">Pending Review</span>
+                                    <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i> Pending Review</span>
                                 {% endif %}
                             </td>
                             <td class="text-end">
                                 {% if corr.status == 'PENDING' %}
-                                    <form method="POST" action="{% url 'employees:review_profile_correction' request_id=corr.id %}" class="d-inline">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="APPROVE">
-                                        <button type="submit" class="btn btn-sm btn-success py-1 px-2" title="Approve & Apply">
-                                            <i class="bi bi-check-lg"></i> Approve
-                                        </button>
-                                    </form>
-                                    <form method="POST" action="{% url 'employees:review_profile_correction' request_id=corr.id %}" class="d-inline">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="REJECT">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Reject">
-                                            <i class="bi bi-x-lg"></i> Reject
-                                        </button>
-                                    </form>
+                                    <div class="d-flex justify-content-end gap-1">
+                                        <form method="POST" action="{% url 'employees:review_profile_correction' request_id=corr.id %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="APPROVE">
+                                            <button type="submit" class="btn btn-sm btn-success py-1 px-2.5 fw-semibold" title="Approve and apply change directly to employee profile">
+                                                <i class="bi bi-check-lg me-1"></i> Approve
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="{% url 'employees:review_profile_correction' request_id=corr.id %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="REJECT">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2.5 fw-semibold" title="Reject request">
+                                                <i class="bi bi-x-lg me-1"></i> Reject
+                                            </button>
+                                        </form>
+                                    </div>
                                 {% else %}
-                                    <small class="text-muted">Reviewed by {{ corr.reviewed_by.username|default:"HR" }}</small>
+                                    <small class="text-muted">
+                                        By {{ corr.reviewed_by.get_full_name|default:corr.reviewed_by.username|default:"HR Admin" }}
+                                        <div style="font-size: 0.7rem;">{{ corr.reviewed_at|date:"d M Y, h:i A" }}</div>
+                                    </small>
                                 {% endif %}
                             </td>
                         </tr>
                     {% empty %}
-                        <tr><td colspan="7" class="text-center py-4 text-muted">No profile correction requests pending.</td></tr>
+                        <tr><td colspan="8" class="text-center py-5 text-muted">No profile correction requests in queue.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -72,4 +94,3 @@
     </div>
 </div>
 {% endblock %}
-

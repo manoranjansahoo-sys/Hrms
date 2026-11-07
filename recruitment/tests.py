@@ -465,7 +465,11 @@ class RecruitmentTests(TestCase):
             'email': 'aarav.patel@gmail.com',
             'phone': '+91 98765 43210',
             'alt_phone': '+91 98765 43211',
-            'current_address': 'Flat 402, Sunrise Towers, Indiranagar, Bengaluru, Karnataka 560038',
+            'current_address': 'Flat 402, Sunrise Towers, Indiranagar',
+            'city': 'Bengaluru',
+            'state': 'Karnataka',
+            'postal_code': '560038',
+            'country': 'India',
             'resume': dummy_resume,
         }
         resp_post = self.client.post(fast_apply_url, post_data)

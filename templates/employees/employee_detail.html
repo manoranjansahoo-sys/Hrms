@@ -176,6 +176,67 @@
                     </div>
                 </div>
             </div>
+
+            <!-- PROFILE CORRECTION REQUESTS HISTORY (VISIBLE TO EMPLOYEE & HR) -->
+            {% if is_self or can_view_confidential %}
+                <div class="border rounded p-3 mt-4 bg-body">
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                        <h6 class="fw-bold text-dark mb-0">
+                            <i class="bi bi-pencil-square text-warning me-2"></i>Profile Correction Requests & Status
+                        </h6>
+                        {% if is_self %}
+                            <a href="{% url 'employees:profile_correction_request' %}" class="btn btn-sm btn-outline-warning py-1 px-2.5">
+                                <i class="bi bi-plus-circle me-1"></i> New Correction Request
+                            </a>
+                        {% endif %}
+                    </div>
+                    {% if correction_requests %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Field Name</th>
+                                        <th>Previous Value</th>
+                                        <th>Requested New Value</th>
+                                        <th>Submitted On</th>
+                                        <th>Status</th>
+                                        <th>HR Review Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for req in correction_requests %}
+                                        <tr>
+                                            <td><span class="fw-bold text-dark">{{ req.field_name }}</span></td>
+                                            <td class="text-muted small">{{ req.current_value|default:"--" }}</td>
+                                            <td class="fw-bold text-success small">{{ req.proposed_value }}</td>
+                                            <td class="small text-muted">{{ req.created_at|date:"d M Y, h:i A" }}</td>
+                                            <td>
+                                                {% if req.status == 'APPROVED' %}
+                                                    <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i> Approved & Applied</span>
+                                                {% elif req.status == 'REJECTED' %}
+                                                    <span class="badge bg-danger"><i class="bi bi-x-circle-fill me-1"></i> Rejected</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i> Pending HR Review</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="small text-muted">
+                                                {{ req.review_notes|default:"Awaiting HR review" }}
+                                                {% if req.reviewed_by %}
+                                                    <span class="d-block text-secondary" style="font-size: 0.72rem;">By {{ req.reviewed_by.get_full_name|default:req.reviewed_by.username }}</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-muted small py-2">
+                            No profile correction requests on file.
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>

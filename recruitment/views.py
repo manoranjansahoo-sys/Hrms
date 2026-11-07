@@ -843,7 +843,10 @@ def candidate_fast_apply(request, job_id=None):
             try:
                 with transaction.atomic():
                     addr = cd['current_address'].strip()
-                    city = addr.split(',')[-1].strip() if ',' in addr else addr[:100]
+                    city = cd.get('city', '').strip() or 'Not Specified'
+                    state = cd.get('state', '').strip()
+                    postal_code = cd.get('postal_code', '').strip()
+                    country = cd.get('country', '').strip() or 'India'
 
                     candidate, _ = Candidate.objects.get_or_create(
                         email=email,
@@ -852,16 +855,20 @@ def candidate_fast_apply(request, job_id=None):
                             'phone': cd['phone'],
                             'alt_phone': cd.get('alt_phone', ''),
                             'current_address': addr,
-                            'city': city or 'Not Specified',
-                            'country': 'India',
+                            'city': city,
+                            'state': state,
+                            'postal_code': postal_code,
+                            'country': country,
                         }
                     )
                     candidate.full_name = cd['full_name']
                     candidate.phone = cd['phone']
                     candidate.alt_phone = cd.get('alt_phone', '')
                     candidate.current_address = addr
-                    if city:
-                        candidate.city = city
+                    candidate.city = city
+                    candidate.state = state
+                    candidate.postal_code = postal_code
+                    candidate.country = country
                     candidate.save()
 
                     application = JobApplication.objects.create(

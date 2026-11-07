@@ -1,88 +1,338 @@
 {% extends 'base.html' %}
-{% block title %}Employee Directory{% endblock %}
+{% block title %}Company Workforce Directory | Company HRMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ========================================================= */
+    /* UNIFIED WORKFORCE TABLE & DIRECTORY STYLES                */
+    /* ========================================================= */
+    .workforce-table-card {
+        background: var(--hrms-card-bg);
+        border: 1px solid var(--hrms-border);
+        border-radius: 12px;
+        box-shadow: var(--hrms-shadow);
+        overflow: hidden;
+    }
+
+    .table-scroll-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+    }
+
+    .table-scroll-wrapper::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .table-scroll-wrapper::-webkit-scrollbar-track {
+        background: var(--hrms-card-subsurface);
+        border-radius: 4px;
+    }
+
+    .table-scroll-wrapper::-webkit-scrollbar-thumb {
+        background: var(--hrms-border);
+        border-radius: 4px;
+    }
+
+    .workforce-table {
+        width: 100%;
+        table-layout: auto;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin-bottom: 0;
+    }
+
+    .workforce-table thead th {
+        background-color: var(--hrms-card-header-bg);
+        color: var(--hrms-text-muted);
+        font-size: 0.74rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 0.75rem 0.85rem;
+        border-bottom: 1px solid var(--hrms-border);
+        border-top: none;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    .workforce-table tbody tr.clickable-employee-row {
+        cursor: pointer;
+        transition: background-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    .workforce-table tbody tr.clickable-employee-row:hover {
+        background-color: var(--hrms-card-subsurface) !important;
+        box-shadow: inset 3px 0 0 var(--hrms-accent);
+    }
+
+    .workforce-table tbody td {
+        padding: 0.75rem 0.85rem;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--hrms-border);
+        font-size: 0.84rem;
+    }
+
+    .workforce-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* EMP ID PILL */
+    .emp-id-pill {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 6px;
+        overflow: hidden;
+        background: #F0FDF4;
+        border: 1px solid #BBF7D0;
+        box-shadow: 0 1px 2px rgba(16, 185, 129, 0.06);
+        transition: all 0.15s ease-in-out;
+        white-space: nowrap;
+        vertical-align: middle;
+        line-height: 1;
+    }
+
+    .emp-id-pill:hover {
+        border-color: #10B981;
+        background: #FFFFFF;
+        box-shadow: 0 2px 5px rgba(16, 185, 129, 0.16);
+    }
+
+    .emp-id-code {
+        font-family: var(--bs-font-monospace, monospace);
+        font-weight: 700;
+        font-size: 0.80rem;
+        color: #166534;
+        padding: 4px 7px;
+        letter-spacing: 0.03em;
+    }
+
+    .copy-id-btn {
+        background: transparent;
+        border: none;
+        border-left: 1px solid #BBF7D0;
+        color: #16A34A;
+        padding: 4px 6px;
+        font-size: 0.72rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.15s, color 0.15s;
+    }
+
+    .copy-id-btn:hover {
+        background-color: #DCFCE7;
+        color: #15803D;
+    }
+
+    /* STAT CARD MINI STRIP */
+    .stat-card-mini {
+        background: #FFFFFF;
+        border: 1px solid #E5E7EB;
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    }
+
+    .stat-card-mini .stat-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.05rem;
+        flex-shrink: 0;
+    }
+
+    .copy-toast {
+        position: fixed;
+        bottom: 25px;
+        right: 25px;
+        background-color: #0F172A;
+        color: #FFFFFF;
+        padding: 0.6rem 1.1rem;
+        border-radius: 8px;
+        font-size: 0.82rem;
+        font-weight: 500;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        z-index: 1090;
+        display: none;
+        animation: fadeInToast 0.25s ease;
+        border: 1px solid #334155;
+    }
+
+    @keyframes fadeInToast {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container-fluid p-0">
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <!-- PAGE HEADER -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <div>
-            <h3 class="fw-bold mb-1">Company Workforce Directory</h3>
-            <p class="text-muted small mb-0">Search, filter, and inspect verified profiles, roles, and campus assignments across the organization.</p>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-success-subtle text-success border border-success-subtle">Workforce Hub</span>
+                <h4 class="fw-bold text-dark mb-0">Company Workforce Directory</h4>
+            </div>
+            <p class="text-muted small mb-0">Search, filter, and inspect verified employee profiles, assigned roles, and campus allocations across the organization.</p>
         </div>
-        <div class="d-flex gap-2">
-            <a href="{% url 'employees:export_csv' %}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-file-earmark-spreadsheet"></i> Export CSV
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <a href="{% url 'employees:export_csv' %}" class="btn btn-outline-secondary btn-sm shadow-sm" title="Export Directory to CSV Spreadsheet">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV
             </a>
             {% if request.user.is_hr_role or request.user.is_head_role %}
-                <a href="{% url 'employees:employee_create' %}" class="btn btn-hrms btn-sm">
-                    <i class="bi bi-person-plus-fill"></i> Add Employee
+                <a href="{% url 'employees:employee_create' %}" class="btn btn-hrms btn-sm shadow-sm">
+                    <i class="bi bi-person-plus-fill me-1"></i> Add Employee
                 </a>
             {% endif %}
         </div>
     </div>
 
-    <!-- SEARCH & FILTER BAR -->
-    <div class="hrms-card mb-4 p-3">
-        <form method="GET" class="row g-2 align-items-center">
-            <div class="col-md-4">
-                <div class="input-group input-group-sm">
-                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
-                    <input type="text" name="search" class="form-control form-control-sm border-start-0" placeholder="Search by name, ID, email..." value="{{ search_query }}">
+    <!-- METRICS STRIP -->
+    <div class="row g-2 mb-3">
+        <div class="col-6 col-md-3">
+            <div class="stat-card-mini">
+                <div class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-people-fill"></i></div>
+                <div>
+                    <div class="text-muted small" style="font-size: 0.75rem;">Total Employees</div>
+                    <div class="fw-bold text-dark fs-5">{{ total_employees }}</div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <select name="department" class="form-select form-select-sm">
-                    <option value="">All Departments</option>
-                    {% for d in departments %}
-                        <option value="{{ d.id }}" {% if selected_dept == d.id|stringformat:"i" %}selected{% endif %}>{{ d.name }}</option>
-                    {% endfor %}
-                </select>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card-mini">
+                <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-person-check-fill"></i></div>
+                <div>
+                    <div class="text-muted small" style="font-size: 0.75rem;">Active Staff</div>
+                    <div class="fw-bold text-success fs-5">{{ active_employees }}</div>
+                </div>
             </div>
-            <div class="col-md-3">
-                <select name="site" class="form-select form-select-sm">
-                    <option value="">All Campuses / Sites</option>
-                    {% for s in sites %}
-                        <option value="{{ s.id }}" {% if selected_site == s.id|stringformat:"i" %}selected{% endif %}>{{ s.name }}</option>
-                    {% endfor %}
-                </select>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card-mini">
+                <div class="stat-icon bg-warning-subtle text-warning-emphasis"><i class="bi bi-hourglass-split"></i></div>
+                <div>
+                    <div class="text-muted small" style="font-size: 0.75rem;">On Notice</div>
+                    <div class="fw-bold text-warning-emphasis fs-5">{{ on_notice_employees }}</div>
+                </div>
             </div>
-            <div class="col-md-2 d-flex gap-2">
-                <button type="submit" class="btn btn-sm btn-hrms w-100">Filter</button>
-                <a href="{% url 'employees:employee_list' %}" class="btn btn-sm btn-light border">Reset</a>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card-mini">
+                <div class="stat-icon bg-info-subtle text-info"><i class="bi bi-building"></i></div>
+                <div>
+                    <div class="text-muted small" style="font-size: 0.75rem;">Active Campuses</div>
+                    <div class="fw-bold text-info fs-5">{{ sites.count }}</div>
+                </div>
             </div>
-        </form>
+        </div>
     </div>
 
-    <!-- EMPLOYEE TABLE -->
-    <div class="hrms-card">
-        <div class="table-responsive">
-            <table class="table hrms-table">
+    <!-- UNIFIED WORKFORCE TABLE CARD (INTEGRATED FILTER HEADER + FLUID TABLE + DYNAMIC PAGINATION FOOTER) -->
+    <div class="workforce-table-card">
+        <!-- Integrated Search & Filter Header (NO separate Filter button; Auto-applies on change) -->
+        <div class="p-3 px-4 border-bottom" style="background-color: var(--hrms-card-bg); border-color: var(--hrms-border) !important;">
+            <form id="employeeFilterForm" method="GET" class="row g-2 align-items-center mb-0">
+                <input type="hidden" name="per_page" id="perPageHiddenInput" value="{{ selected_per_page }}">
+
+                <div class="col-xl-3 col-lg-3 col-md-6">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" class="form-control form-control-sm border-start-0" placeholder="Search name, ID, email, role..." value="{{ search_query }}">
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-3 col-md-6">
+                    <select name="department" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">All Departments</option>
+                        {% for d in departments %}
+                            <option value="{{ d.id }}" {% if selected_dept == d.id|stringformat:"i" %}selected{% endif %}>{{ d.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-xl-2 col-lg-2 col-md-4">
+                    <select name="site" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">All Campuses / Sites</option>
+                        {% for s in sites %}
+                            <option value="{{ s.id }}" {% if selected_site == s.id|stringformat:"i" %}selected{% endif %}>{{ s.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-xl-2 col-lg-2 col-md-4">
+                    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">All Statuses</option>
+                        {% for code, label in status_choices %}
+                            <option value="{{ code }}" {% if selected_status == code %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-xl-2 col-lg-2 col-md-4 d-flex align-items-center gap-1">
+                    <select name="sort" class="form-select form-select-sm" onchange="this.form.submit()" title="Sort Directory">
+                        <option value="latest" {% if selected_sort == 'latest' %}selected{% endif %}>Latest</option>
+                        <option value="oldest" {% if selected_sort == 'oldest' %}selected{% endif %}>Oldest</option>
+                        <option value="name_asc" {% if selected_sort == 'name_asc' %}selected{% endif %}>Name (A-Z)</option>
+                        <option value="name_desc" {% if selected_sort == 'name_desc' %}selected{% endif %}>Name (Z-A)</option>
+                        <option value="emp_id_asc" {% if selected_sort == 'emp_id_asc' %}selected{% endif %}>Emp ID (Asc)</option>
+                        <option value="emp_id_desc" {% if selected_sort == 'emp_id_desc' %}selected{% endif %}>Emp ID (Desc)</option>
+                    </select>
+                    {% if search_query or selected_dept or selected_site or selected_status or selected_sort != 'latest' %}
+                        <a href="{% url 'employees:employee_list' %}" class="btn btn-sm btn-outline-danger px-2 py-1" title="Clear All Filters">
+                            <i class="bi bi-x-circle"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+
+        <!-- TABLE SECTION -->
+        <div class="table-scroll-wrapper">
+            <table class="workforce-table table table-hover">
                 <thead>
                     <tr>
-                        <th>Employee</th>
+                        <th class="ps-4">Employee</th>
                         <th>Emp ID</th>
                         <th>Role / Authority</th>
                         <th>Department</th>
                         <th>Site / Campus</th>
                         <th>Employment</th>
                         <th>Status</th>
-                        <th class="text-end">Action</th>
+                        <th class="text-end pe-4">Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for emp in page_obj %}
-                        <tr>
-                            <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    <img src="{{ emp.user.get_avatar_url }}" class="rounded-circle" width="38" height="38" style="object-fit: cover;">
+                        <tr class="clickable-employee-row" data-url="{% url 'employees:employee_detail' emp_id=emp.emp_id %}">
+                            <td class="ps-4 py-2.5">
+                                <div class="d-flex align-items-center gap-2.5">
+                                    <img src="{{ emp.user.get_avatar_url }}" class="rounded-circle shadow-sm" width="38" height="38" style="object-fit: cover;">
                                     <div>
-                                        <a href="{% url 'employees:employee_detail' emp_id=emp.emp_id %}" class="fw-bold text-dark text-decoration-none d-block">
+                                        <a href="{% url 'employees:employee_detail' emp_id=emp.emp_id %}" class="fw-bold text-dark text-decoration-none d-block stop-row-click" style="font-size: 0.88rem;">
                                             {{ emp.full_name }}
                                         </a>
-                                        <small class="text-muted">{{ emp.designation.title|default:"Staff" }}</small>
+                                        <div class="d-flex align-items-center gap-2 text-muted" style="font-size: 0.74rem;">
+                                            <span>{{ emp.designation.title|default:"Staff" }}</span>
+                                            <span>•</span>
+                                            <span>{{ emp.email }}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </td>
-                            <td><span class="font-monospace fw-bold text-success">{{ emp.emp_id }}</span></td>
+                            <td>
+                                <span class="emp-id-pill" title="Employee ID: {{ emp.emp_id }}">
+                                    <span class="emp-id-code">{{ emp.emp_id }}</span>
+                                    <button type="button" class="copy-id-btn stop-row-click" onclick="copyEmpId('{{ emp.emp_id }}', this); event.stopPropagation();" title="Copy Employee ID">
+                                        <i class="bi bi-copy"></i>
+                                    </button>
+                                </span>
+                            </td>
                             <td>
                                 <span class="badge 
                                     {% if emp.user.is_head_role %}role-head
@@ -92,49 +342,169 @@
                                     {{ emp.user.get_role_display }}
                                 </span>
                             </td>
-                            <td>{{ emp.department.name|default:"--" }}</td>
-                            <td>{{ emp.site.city|default:"--" }}</td>
-                            <td><small class="text-secondary">{{ emp.get_employment_type_display }}</small></td>
+                            <td>
+                                <span class="fw-semibold text-dark">{{ emp.department.name|default:"--" }}</span>
+                            </td>
+                            <td>
+                                <span class="text-muted"><i class="bi bi-geo-alt-fill text-danger-subtle me-1"></i>{{ emp.site.city|default:emp.site.name|default:"--" }}</span>
+                            </td>
+                            <td>
+                                <span class="small text-secondary">{{ emp.get_employment_type_display }}</span>
+                            </td>
                             <td>
                                 {% if emp.status == 'ACTIVE' %}
-                                    <span class="badge bg-success">Active</span>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1">
+                                        <i class="bi bi-check-circle-fill me-1"></i>Active
+                                    </span>
                                 {% elif emp.status == 'ON_NOTICE' %}
-                                    <span class="badge bg-warning text-dark">On Notice</span>
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1">
+                                        <i class="bi bi-hourglass-split me-1"></i>On Notice
+                                    </span>
+                                {% elif emp.status == 'RESIGNED' %}
+                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-2.5 py-1">
+                                        Resigned
+                                    </span>
                                 {% else %}
-                                    <span class="badge bg-danger">{{ emp.status }}</span>
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2.5 py-1">
+                                        {{ emp.get_status_display|default:emp.status }}
+                                    </span>
                                 {% endif %}
                             </td>
-                            <td class="text-end">
-                                <a href="{% url 'employees:employee_detail' emp_id=emp.emp_id %}" class="btn btn-sm btn-outline-success py-1 px-2" title="View Profile">
-                                    <i class="bi bi-eye"></i> View
+                            <td class="text-end pe-4">
+                                <a href="{% url 'employees:employee_detail' emp_id=emp.emp_id %}" class="btn btn-sm btn-outline-success py-1 px-2.5 stop-row-click fw-semibold" title="View Full Employee Profile">
+                                    <i class="bi bi-eye me-1"></i> View
                                 </a>
                             </td>
                         </tr>
                     {% empty %}
-                        <tr><td colspan="8" class="text-center py-5 text-muted">No employees found matching criteria.</td></tr>
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <div class="py-4">
+                                    <i class="bi bi-people text-secondary fs-1 d-block mb-2"></i>
+                                    <h6 class="fw-bold text-dark">No employees found</h6>
+                                    <p class="small text-muted mb-3">No workforce records match your active search and filter criteria.</p>
+                                    <a href="{% url 'employees:employee_list' %}" class="btn btn-sm btn-outline-secondary">Reset Filters</a>
+                                </div>
+                            </td>
+                        </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
 
-        <!-- PAGINATION -->
-        {% if page_obj.has_other_pages %}
-            <div class="p-3 border-top d-flex justify-content-between align-items-center">
-                <span class="small text-muted">Showing {{ page_obj.start_index }} - {{ page_obj.end_index }} of {{ page_obj.paginator.count }}</span>
-                <nav>
-                    <ul class="pagination pagination-sm mb-0">
-                        {% if page_obj.has_previous %}
-                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&department={{ selected_dept }}&site={{ selected_site }}">Previous</a></li>
-                        {% endif %}
-                        <li class="page-item active"><span class="page-link bg-success border-success">{{ page_obj.number }}</span></li>
-                        {% if page_obj.has_next %}
-                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&department={{ selected_dept }}&site={{ selected_site }}">Next</a></li>
-                        {% endif %}
-                    </ul>
-                </nav>
+        <!-- TABLE FOOTER: PAGINATION & PAGE SIZE (5, 10, 20, 50, 100) -->
+        <div class="p-3 px-4 border-top d-flex flex-wrap justify-content-between align-items-center gap-3" id="tablePaginationFooter" style="background-color: var(--hrms-card-bg); border-color: var(--hrms-border) !important;">
+            <!-- Left Side: Show 5, 10, 20, 50, 100 & Showing X to Y of Z -->
+            <div class="d-flex align-items-center gap-2">
+                <span class="small text-muted">Show</span>
+                <select id="pageSizeSelect" class="form-select form-select-sm" style="width: auto; font-weight: 600; border-radius: 6px; border: 1px solid #CBD5E1; cursor: pointer;" onchange="changePageSize(this.value)">
+                    <option value="5" {% if selected_per_page == 5 %}selected{% endif %}>5</option>
+                    <option value="10" {% if selected_per_page == 10 %}selected{% endif %}>10</option>
+                    <option value="20" {% if selected_per_page == 20 %}selected{% endif %}>20</option>
+                    <option value="50" {% if selected_per_page == 50 %}selected{% endif %}>50</option>
+                    <option value="100" {% if selected_per_page == 100 %}selected{% endif %}>100</option>
+                </select>
+                <span class="small text-muted">entries per page</span>
+                <span class="text-muted mx-2 d-none d-sm-inline">|</span>
+                <span class="small text-muted" id="pageInfoText">
+                    Showing <b>{{ page_obj.start_index|default:0 }}</b> to <b>{{ page_obj.end_index|default:0 }}</b> of <b>{{ page_obj.paginator.count }}</b> employees
+                </span>
             </div>
-        {% endif %}
+
+            <!-- Right Side: Page Left and Right Chevron & Page Numbers -->
+            <div class="d-flex align-items-center gap-1" id="paginationControls">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}&per_page={{ selected_per_page }}&search={{ search_query }}&department={{ selected_dept }}&site={{ selected_site }}&status={{ selected_status }}&sort={{ selected_sort }}" class="btn btn-sm btn-outline-secondary px-2.5 py-1" title="Previous Page" style="border-radius: 6px;">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                {% else %}
+                    <button type="button" class="btn btn-sm btn-outline-secondary px-2.5 py-1" disabled style="border-radius: 6px;">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                {% endif %}
+
+                <div class="d-flex align-items-center gap-1">
+                    {% for p in page_obj.paginator.page_range %}
+                        {% if p == page_obj.number %}
+                            <span class="btn btn-sm btn-success px-2.5 py-1 fw-bold" style="border-radius: 6px;">{{ p }}</span>
+                        {% elif p >= page_obj.number|add:'-2' and p <= page_obj.number|add:'2' %}
+                            <a href="?page={{ p }}&per_page={{ selected_per_page }}&search={{ search_query }}&department={{ selected_dept }}&site={{ selected_site }}&status={{ selected_status }}&sort={{ selected_sort }}" class="btn btn-sm btn-outline-secondary px-2.5 py-1" style="border-radius: 6px;">
+                                {{ p }}
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}&per_page={{ selected_per_page }}&search={{ search_query }}&department={{ selected_dept }}&site={{ selected_site }}&status={{ selected_status }}&sort={{ selected_sort }}" class="btn btn-sm btn-outline-secondary px-2.5 py-1" title="Next Page" style="border-radius: 6px;">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                {% else %}
+                    <button type="button" class="btn btn-sm btn-outline-secondary px-2.5 py-1" disabled style="border-radius: 6px;">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
-{% endblock %}
 
+<!-- COPY TOAST NOTIFICATION -->
+<div class="copy-toast" id="copyToast">
+    <i class="bi bi-check-circle-fill text-success me-2"></i> Employee ID copied to clipboard!
+</div>
+
+<script>
+    // Row click handler: opens employee details when clicking any part of the row
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('tr.clickable-employee-row').forEach(function(row) {
+            row.addEventListener('click', function(e) {
+                if (e.target.closest('.stop-row-click') || e.target.closest('button') || e.target.closest('a')) {
+                    return;
+                }
+                if (this.dataset.url) {
+                    window.location.href = this.dataset.url;
+                }
+            });
+        });
+    });
+
+    function changePageSize(size) {
+        const form = document.getElementById('employeeFilterForm');
+        const hiddenInput = document.getElementById('perPageHiddenInput');
+        if (hiddenInput) {
+            hiddenInput.value = size;
+        }
+        form.submit();
+    }
+
+    function copyEmpId(empId, btn) {
+        if (!navigator.clipboard) {
+            const tempInput = document.createElement("input");
+            tempInput.value = empId;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempInput);
+        } else {
+            navigator.clipboard.writeText(empId);
+        }
+
+        if (btn) {
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-check text-success"></i>';
+            setTimeout(function() {
+                btn.innerHTML = originalHtml;
+            }, 1200);
+        }
+
+        const toast = document.getElementById('copyToast');
+        if (toast) {
+            toast.style.display = 'block';
+            setTimeout(function() {
+                toast.style.display = 'none';
+            }, 2000);
+        }
+    }
+</script>
+{% endblock %}

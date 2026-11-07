@@ -1,60 +1,138 @@
-:root {
-  --hrms-primary: #1B5E20;
-  --hrms-primary-hover: #144818;
-  --hrms-primary-light: #E8F5E9;
-  --hrms-secondary: #2E7D32;
-  --hrms-accent: #F59E0B;
-  --hrms-accent-hover: #D97706;
-  --hrms-bg: #F6FAF5;
+/* ==========================================================================
+   COMPANY ENTERPRISE HRMS - DESIGN SYSTEM & THEME TOKENS
+   Palettes:
+     Day Background:   #F5F5FC
+     Night Background: #0F0C29
+     Night Card:       #171338
+     Night Border:     #24205B
+     Night Highlight:  #8F82F0
+   ========================================================================== */
+
+:root, [data-bs-theme="light"] {
+  /* Day Theme Palette */
+  --hrms-bg: #F5F5FC;
   --hrms-card-bg: #FFFFFF;
-  --hrms-sidebar-bg: #0E3813;
-  --hrms-sidebar-text: #E2E8F0;
-  --hrms-sidebar-hover: #1A4D20;
-  --hrms-sidebar-active: #2E7D32;
-  --hrms-text: #1F2937;
-  --hrms-text-muted: #6B7280;
-  --hrms-border: #E5E7EB;
+  --hrms-card-subsurface: #FAF9FE;
+  --hrms-card-header-bg: #F8F7FD;
+  --hrms-border: #E4E3F2;
+  --hrms-border-subtle: #ECEBF7;
+  
+  --hrms-primary: #5B4DDF;
+  --hrms-primary-hover: #4838D0;
+  --hrms-primary-light: #EEECFC;
+  --hrms-secondary: #7968EC;
+  --hrms-accent: #8F82F0;
+  --hrms-accent-hover: #7968EC;
+
+  --hrms-text: #191635;
+  --hrms-text-muted: #6B6888;
+  --hrms-text-dim: #9491B3;
+
+  /* Executive Sidebar (Day - Rich Luxury Dark Indigo) */
+  --hrms-sidebar-bg: linear-gradient(180deg, #100C30 0%, #15103E 50%, #19144A 100%);
+  --hrms-sidebar-border: rgba(143, 130, 240, 0.12);
+  --hrms-sidebar-text: #C3C7E8;
+  --hrms-sidebar-text-muted: #8286AB;
+  --hrms-sidebar-hover: rgba(143, 130, 240, 0.12);
+  --hrms-sidebar-active-bg: linear-gradient(90deg, rgba(143, 130, 240, 0.22) 0%, rgba(91, 77, 223, 0.12) 100%);
+  --hrms-sidebar-active-border: #8F82F0;
+  --hrms-sidebar-active-text: #FFFFFF;
+
+  /* Topbar */
+  --hrms-topbar-bg: rgba(255, 255, 255, 0.94);
+  --hrms-topbar-border: #E4E3F2;
+
+  /* Global Dimensions & Shadows */
   --hrms-header-height: 68px;
   --hrms-sidebar-width: 260px;
   --hrms-radius: 12px;
-  --hrms-shadow: 0 4px 12px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
-  --hrms-shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+  --hrms-radius-sm: 8px;
+  --hrms-radius-lg: 16px;
+  --hrms-shadow: 0 2px 8px rgba(25, 22, 53, 0.04), 0 1px 2px rgba(25, 22, 53, 0.02);
+  --hrms-shadow-lg: 0 12px 28px -4px rgba(25, 22, 53, 0.08), 0 6px 12px -3px rgba(25, 22, 53, 0.03);
+  --hrms-hero-gradient: linear-gradient(135deg, #181347 0%, #2A216E 50%, #4338CA 100%);
+
+  /* Bootstrap 5 Theme Overrides */
+  --bs-body-bg: var(--hrms-bg);
+  --bs-body-color: var(--hrms-text);
+  --bs-card-bg: var(--hrms-card-bg);
+  --bs-card-border-color: var(--hrms-border);
+  --bs-border-color: var(--hrms-border);
+  --bs-tertiary-bg: var(--hrms-card-subsurface);
+  --bs-secondary-bg: var(--hrms-card-subsurface);
 }
 
 [data-bs-theme="dark"] {
-  --hrms-primary: #2E7D32;
-  --hrms-primary-hover: #388E3C;
-  --hrms-primary-light: #1A3820;
-  --hrms-secondary: #43A047;
-  --hrms-accent: #FBBF24;
-  --hrms-bg: #0F1713;
-  --hrms-card-bg: #18221C;
-  --hrms-sidebar-bg: #09120B;
-  --hrms-sidebar-text: #CBD5E1;
-  --hrms-sidebar-hover: #16291B;
-  --hrms-sidebar-active: #1E3D25;
-  --hrms-text: #F3F4F6;
-  --hrms-text-muted: #9CA3AF;
-  --hrms-border: #28382D;
-  --hrms-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-  --hrms-shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.35);
+  /* Night Theme Palette (Exact User Specifications) */
+  --hrms-bg: #0F0C29;
+  --hrms-card-bg: #171338;
+  --hrms-card-subsurface: #1E1949;
+  --hrms-card-header-bg: #1C1744;
+  --hrms-border: #24205B;
+  --hrms-border-subtle: #2C276D;
+
+  --hrms-primary: #8F82F0;
+  --hrms-primary-hover: #A499FA;
+  --hrms-primary-light: rgba(143, 130, 240, 0.16);
+  --hrms-secondary: #A499FA;
+  --hrms-accent: #8F82F0;
+  --hrms-accent-hover: #A499FA;
+
+  --hrms-text: #F3F4FD;
+  --hrms-text-muted: #9E9BC4;
+  --hrms-text-dim: #7773A1;
+
+  /* Executive Sidebar (Night - Deep Cosmic Midnight Indigo) */
+  --hrms-sidebar-bg: linear-gradient(180deg, #0A0822 0%, #120D35 50%, #0F0C29 100%);
+  --hrms-sidebar-border: #24205B;
+  --hrms-sidebar-text: #D2D0F5;
+  --hrms-sidebar-text-muted: #837FA8;
+  --hrms-sidebar-hover: rgba(143, 130, 240, 0.12);
+  --hrms-sidebar-active-bg: linear-gradient(90deg, rgba(143, 130, 240, 0.25) 0%, rgba(36, 32, 91, 0.45) 100%);
+  --hrms-sidebar-active-border: #8F82F0;
+  --hrms-sidebar-active-text: #FFFFFF;
+
+  /* Topbar */
+  --hrms-topbar-bg: rgba(23, 19, 56, 0.94);
+  --hrms-topbar-border: #24205B;
+
+  --hrms-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), 0 0 1px rgba(143, 130, 240, 0.2);
+  --hrms-shadow-lg: 0 14px 34px rgba(0, 0, 0, 0.6), 0 0 18px rgba(143, 130, 240, 0.22);
+  --hrms-hero-gradient: linear-gradient(135deg, #171338 0%, #24205B 50%, #352F7A 100%);
+
+  /* Bootstrap 5 Theme Overrides */
+  --bs-body-bg: var(--hrms-bg);
+  --bs-body-color: var(--hrms-text);
+  --bs-card-bg: var(--hrms-card-bg);
+  --bs-card-border-color: var(--hrms-border);
+  --bs-border-color: var(--hrms-border);
+  --bs-tertiary-bg: var(--hrms-card-subsurface);
+  --bs-secondary-bg: var(--hrms-card-subsurface);
+  --bs-emphasis-color: #FFFFFF;
 }
 
-body {
+/* ==========================================================================
+   GLOBAL BASE STYLING
+   ========================================================================== */
+html, body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background-color: var(--hrms-bg);
-  color: var(--hrms-text);
+  background-color: var(--hrms-bg) !important;
+  color: var(--hrms-text) !important;
   margin: 0;
   padding: 0;
-  overflow-x: hidden;
+  min-height: 100vh;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* App Layout */
 .app-wrapper {
   display: flex;
   min-height: 100vh;
+  background-color: var(--hrms-bg);
 }
 
+/* ==========================================================================
+   SIDEBAR NAVIGATION - LUXURY ENTERPRISE COSMIC INDIGO
+   ========================================================================== */
 .sidebar {
   width: var(--hrms-sidebar-width);
   background: var(--hrms-sidebar-bg);
@@ -69,28 +147,48 @@ body {
   z-index: 1040;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow-y: auto;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  border-right: 1px solid var(--hrms-sidebar-border);
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
 }
 
 .sidebar-header {
   height: var(--hrms-header-height);
   display: flex;
   align-items: center;
-  padding: 0 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0 1.4rem;
+  border-bottom: 1px solid var(--hrms-sidebar-border);
+  background: rgba(0, 0, 0, 0.12);
 }
 
 .brand-logo-icon {
   width: 38px;
   height: 38px;
-  background: linear-gradient(135deg, #4CAF50, #1B5E20);
-  color: #fff;
+  background: linear-gradient(135deg, #8F82F0 0%, #5B4DDF 100%);
+  color: #FFFFFF;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.25rem;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 14px rgba(143, 130, 240, 0.35);
+  flex-shrink: 0;
+}
+
+/* Pulsing live status indicator */
+.status-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #10B981;
+  box-shadow: 0 0 8px #10B981;
+  display: inline-block;
+  animation: pulseDot 2.2s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0%   { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70%  { transform: scale(1.15); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 }
 
 .sidebar-menu {
@@ -101,12 +199,12 @@ body {
 }
 
 .menu-category {
-  font-size: 0.75rem;
+  font-size: 0.71rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.45);
-  padding: 1rem 0.75rem 0.35rem 0.75rem;
-  font-weight: 600;
+  letter-spacing: 0.09em;
+  color: var(--hrms-sidebar-text-muted);
+  padding: 1.1rem 0.85rem 0.4rem 0.85rem;
+  font-weight: 700;
 }
 
 .menu-item {
@@ -117,39 +215,58 @@ body {
   display: flex;
   align-items: center;
   gap: 0.85rem;
-  padding: 0.7rem 0.9rem;
+  padding: 0.65rem 0.9rem;
   color: var(--hrms-sidebar-text);
   text-decoration: none;
   border-radius: 8px;
-  font-size: 0.92rem;
+  font-size: 0.90rem;
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
 }
 
 .menu-link:hover {
   background: var(--hrms-sidebar-hover);
-  color: #fff;
+  color: #FFFFFF;
+  transform: translateX(3px);
 }
 
 .menu-link.active {
-  background: var(--hrms-sidebar-active);
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  background: var(--hrms-sidebar-active-bg);
+  color: var(--hrms-sidebar-active-text);
+  border-left: 3px solid var(--hrms-sidebar-active-border);
+  box-shadow: 0 2px 10px rgba(15, 12, 41, 0.35);
 }
 
 .menu-link i {
-  font-size: 1.15rem;
+  font-size: 1.12rem;
   width: 22px;
   text-align: center;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.menu-link.active i {
+  color: var(--hrms-accent) !important;
+  text-shadow: 0 0 10px rgba(143, 130, 240, 0.5);
 }
 
 .menu-badge {
   margin-left: auto;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   padding: 0.2rem 0.55rem;
   border-radius: 10px;
 }
 
+/* Sidebar Footer */
+.sidebar-footer {
+  padding: 0.9rem 1.2rem;
+  border-top: 1px solid var(--hrms-sidebar-border);
+  background: rgba(0, 0, 0, 0.16);
+}
+
+/* ==========================================================================
+   TOPBAR & MAIN CONTENT WRAPPER
+   ========================================================================== */
 .main-content {
   margin-left: var(--hrms-sidebar-width);
   flex-grow: 1;
@@ -162,8 +279,10 @@ body {
 
 .topbar {
   height: var(--hrms-header-height);
-  background: var(--hrms-card-bg);
-  border-bottom: 1px solid var(--hrms-border);
+  background: var(--hrms-topbar-bg);
+  border-bottom: 1px solid var(--hrms-topbar-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -171,7 +290,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 1030;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
 }
 
 .page-container {
@@ -179,14 +298,20 @@ body {
   flex-grow: 1;
 }
 
-/* Cards */
-.hrms-card {
-  background-color: var(--hrms-card-bg);
-  border: 1px solid var(--hrms-border);
+/* ==========================================================================
+   CARDS & CONTAINERS (#171338 / #24205B in night, #FFFFFF in day)
+   ========================================================================== */
+.hrms-card,
+.recruitment-table-card,
+.workforce-table-card,
+.card {
+  background-color: var(--hrms-card-bg) !important;
+  border: 1px solid var(--hrms-border) !important;
   border-radius: var(--hrms-radius);
   box-shadow: var(--hrms-shadow);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   overflow: hidden;
+  color: var(--hrms-text);
 }
 
 .hrms-card-header {
@@ -195,54 +320,67 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: transparent;
+  background-color: var(--hrms-card-header-bg);
 }
 
 .hrms-card-body {
   padding: 1.4rem;
 }
 
-/* Stat Cards */
-.stat-card {
+/* ==========================================================================
+   STAT CARDS & METRIC WIDGETS
+   ========================================================================== */
+.stat-card,
+.stat-card-mini {
   display: flex;
   align-items: center;
-  padding: 1.3rem;
+  padding: 1.25rem;
   border-radius: var(--hrms-radius);
-  background: var(--hrms-card-bg);
-  border: 1px solid var(--hrms-border);
+  background: var(--hrms-card-bg) !important;
+  border: 1px solid var(--hrms-border) !important;
   box-shadow: var(--hrms-shadow);
   transition: all 0.2s ease;
 }
 
-.stat-card:hover {
+.stat-card:hover,
+.stat-card-mini:hover {
   transform: translateY(-2px);
   box-shadow: var(--hrms-shadow-lg);
+  border-color: var(--hrms-accent) !important;
 }
 
 .stat-icon {
-  width: 52px;
-  height: 52px;
+  width: 50px;
+  height: 50px;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1.45rem;
   margin-right: 1.1rem;
   flex-shrink: 0;
 }
 
-.stat-icon-green { background: #E8F5E9; color: #2E7D32; }
-.stat-icon-amber { background: #FEF3C7; color: #D97706; }
-.stat-icon-blue  { background: #E0F2FE; color: #0284C7; }
-.stat-icon-purple{ background: #F3E8FF; color: #7E22CE; }
-.stat-icon-red   { background: #FEE2E2; color: #DC2626; }
+/* Light Mode Stat Icons */
+.stat-icon-green { background: #EEFBF2; color: #16A34A; }
+.stat-icon-amber { background: #FEF8E8; color: #D97706; }
+.stat-icon-blue  { background: #EFF6FF; color: #2563EB; }
+.stat-icon-purple{ background: #F5F3FF; color: #7C3AED; }
+.stat-icon-red   { background: #FEF2F2; color: #DC2626; }
+
+/* Dark Mode Stat Icons */
+[data-bs-theme="dark"] .stat-icon-green { background: rgba(16, 185, 129, 0.16); color: #34D399; }
+[data-bs-theme="dark"] .stat-icon-amber { background: rgba(245, 158, 11, 0.16); color: #FBBF24; }
+[data-bs-theme="dark"] .stat-icon-blue  { background: rgba(59, 130, 246, 0.16); color: #60A5FA; }
+[data-bs-theme="dark"] .stat-icon-purple{ background: rgba(143, 130, 240, 0.18); color: #8F82F0; }
+[data-bs-theme="dark"] .stat-icon-red   { background: rgba(239, 68, 68, 0.16); color: #F87171; }
 
 .stat-label {
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   color: var(--hrms-text-muted);
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
   margin-bottom: 0.2rem;
 }
 
@@ -253,44 +391,124 @@ body {
   line-height: 1.2;
 }
 
-/* Badges */
-.badge-role {
-  padding: 0.35rem 0.65rem;
-  font-weight: 600;
+/* ==========================================================================
+   TABLES (Enterprise Fluid Tables with Dark Mode Harmony)
+   ========================================================================== */
+.hrms-table,
+.candidate-table,
+.workforce-table {
+  color: var(--hrms-text) !important;
+  margin-bottom: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+.hrms-table th,
+.candidate-table thead th,
+.workforce-table thead th {
+  background-color: var(--hrms-card-header-bg) !important;
+  color: var(--hrms-text-muted) !important;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--hrms-border) !important;
+  border-top: none;
+  white-space: nowrap;
+}
+
+.hrms-table td,
+.candidate-table tbody td,
+.workforce-table tbody td {
+  padding: 0.85rem 1rem;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--hrms-border) !important;
+  font-size: 0.86rem;
+  color: var(--hrms-text);
+}
+
+.hrms-table tbody tr:hover,
+.candidate-table tbody tr.clickable-candidate-row:hover,
+.workforce-table tbody tr.clickable-employee-row:hover {
+  background-color: var(--hrms-card-subsurface) !important;
+  box-shadow: inset 3px 0 0 var(--hrms-accent);
+}
+
+/* Tech Pills (App ID / Emp ID) */
+.app-id-pill,
+.emp-id-pill {
+  display: inline-flex;
+  align-items: center;
   border-radius: 6px;
-  font-size: 0.78rem;
+  overflow: hidden;
+  background: var(--hrms-primary-light) !important;
+  border: 1px solid var(--hrms-border) !important;
+  color: var(--hrms-primary) !important;
+  font-weight: 600;
+  font-family: var(--bs-font-monospace, monospace);
+  font-size: 0.82rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-.role-head { background: #F3E8FF; color: #6B21A8; border: 1px solid #D8B4FE; }
-.role-hr { background: #E0F2FE; color: #0369A1; border: 1px solid #BAE6FD; }
-.role-manager { background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; }
-.role-employee { background: #E8F5E9; color: #15803D; border: 1px solid #BBF7D0; }
+.app-id-code,
+.emp-id-code {
+  padding: 3px 7px;
+  color: var(--hrms-primary) !important;
+}
 
-/* Buttons */
-.btn-hrms {
-  background-color: var(--hrms-primary);
-  border-color: var(--hrms-primary);
+.copy-id-btn {
+  background: transparent;
+  border: none;
+  border-left: 1px solid var(--hrms-border);
+  color: var(--hrms-accent);
+  padding: 3px 6px;
+  cursor: pointer;
+}
+
+.copy-id-btn:hover {
+  background: rgba(143, 130, 240, 0.18);
   color: #FFFFFF;
-  font-weight: 500;
+}
+
+/* ==========================================================================
+   BUTTONS (Modern Indigo-Violet Palette with #8F82F0 Glow)
+   ========================================================================== */
+.btn-hrms,
+.btn-primary {
+  background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%) !important;
+  border: none !important;
+  color: #FFFFFF !important;
+  font-weight: 600;
   border-radius: 8px;
-  padding: 0.55rem 1.1rem;
-  transition: all 0.2s ease;
+  padding: 0.55rem 1.15rem;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.28);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.btn-hrms:hover, .btn-hrms:focus {
-  background-color: var(--hrms-primary-hover);
-  border-color: var(--hrms-primary-hover);
-  color: #FFFFFF;
-  box-shadow: 0 4px 10px rgba(27, 94, 32, 0.25);
+[data-bs-theme="dark"] .btn-hrms,
+[data-bs-theme="dark"] .btn-primary {
+  background: linear-gradient(135deg, #8F82F0 0%, #6E5FDE 100%) !important;
+  box-shadow: 0 2px 10px rgba(143, 130, 240, 0.35);
+  color: #FFFFFF !important;
+}
+
+.btn-hrms:hover,
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(143, 130, 240, 0.45) !important;
+  color: #FFFFFF !important;
 }
 
 .btn-hrms-outline {
-  border: 1px solid var(--hrms-primary);
-  color: var(--hrms-primary);
+  border: 1.5px solid var(--hrms-primary) !important;
+  color: var(--hrms-primary) !important;
   background: transparent;
-  font-weight: 500;
+  font-weight: 600;
   border-radius: 8px;
-  padding: 0.55rem 1.1rem;
+  padding: 0.5rem 1.1rem;
+  transition: all 0.2s ease;
 }
 
 .btn-hrms-outline:hover {
@@ -298,51 +516,224 @@ body {
   color: var(--hrms-primary);
 }
 
-/* Punch Widget */
-.punch-card {
-  background: linear-gradient(135deg, #1B5E20, #2E7D32);
-  color: white;
-  border-radius: var(--hrms-radius);
-  padding: 1.5rem;
-  box-shadow: 0 8px 20px rgba(27, 94, 32, 0.2);
+/* ==========================================================================
+   FORM CONTROLS & INPUTS (Day & Night)
+   ========================================================================== */
+.form-control,
+.form-select {
+  background-color: var(--hrms-card-bg) !important;
+  color: var(--hrms-text) !important;
+  border: 1.5px solid var(--hrms-border) !important;
+  border-radius: 8px !important;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.88rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.live-clock-digit {
-  font-family: 'Roboto Mono', monospace;
-  font-size: 2rem;
-  font-weight: 700;
-  letter-spacing: 1px;
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select {
+  background-color: #120E30 !important;
+  border: 1.5px solid #24205B !important;
+  color: #F3F4FD !important;
 }
 
-/* Table styling */
-.hrms-table {
-  color: var(--hrms-text);
-  margin-bottom: 0;
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--hrms-accent) !important;
+  box-shadow: 0 0 0 3px rgba(143, 130, 240, 0.25) !important;
+  outline: none !important;
 }
 
-.hrms-table th {
-  background-color: rgba(0, 0, 0, 0.02);
-  color: var(--hrms-text-muted);
-  font-size: 0.8rem;
+.input-group-text {
+  background-color: var(--hrms-card-subsurface) !important;
+  border: 1.5px solid var(--hrms-border) !important;
+  color: var(--hrms-text-muted) !important;
+}
+
+[data-bs-theme="dark"] .input-group-text {
+  background-color: #16113A !important;
+  border-color: #24205B !important;
+  color: #9E9BC4 !important;
+}
+
+/* ==========================================================================
+   DROPDOWNS, MODALS & MENUS
+   ========================================================================== */
+.dropdown-menu {
+  background-color: var(--hrms-card-bg) !important;
+  border: 1px solid var(--hrms-border) !important;
+  border-radius: 10px;
+  box-shadow: var(--hrms-shadow-lg) !important;
+  padding: 0.5rem;
+}
+
+.dropdown-item {
+  color: var(--hrms-text) !important;
+  border-radius: 6px;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.85rem;
+  transition: all 0.15s ease;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background-color: var(--hrms-sidebar-hover) !important;
+  color: var(--hrms-accent) !important;
+}
+
+.dropdown-divider {
+  border-color: var(--hrms-border) !important;
+}
+
+.modal-content {
+  background-color: var(--hrms-card-bg) !important;
+  border: 1px solid var(--hrms-border) !important;
+  color: var(--hrms-text) !important;
+  border-radius: var(--hrms-radius-lg);
+  box-shadow: var(--hrms-shadow-lg);
+}
+
+/* ==========================================================================
+   BADGES (Role Authority & Workflow Statuses)
+   ========================================================================== */
+.badge-role {
+  padding: 0.35rem 0.65rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 0.85rem 1.1rem;
-  border-bottom: 1px solid var(--hrms-border);
+  border-radius: 6px;
+  font-size: 0.76rem;
+  letter-spacing: 0.02em;
 }
 
-.hrms-table td {
-  padding: 0.95rem 1.1rem;
-  vertical-align: middle;
-  border-bottom: 1px solid var(--hrms-border);
-  font-size: 0.92rem;
+.role-head {
+  background: rgba(143, 130, 240, 0.16) !important;
+  color: #8F82F0 !important;
+  border: 1px solid rgba(143, 130, 240, 0.35) !important;
 }
 
-.hrms-table tbody tr:hover {
-  background-color: rgba(46, 125, 50, 0.04);
+.role-hr {
+  background: rgba(14, 165, 233, 0.15) !important;
+  color: #38BDF8 !important;
+  border: 1px solid rgba(14, 165, 233, 0.35) !important;
 }
 
-/* Mobile responsive */
+.role-manager {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #FBBF24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+}
+
+.role-employee {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34D399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+}
+
+/* ==========================================================================
+   THEME TOGGLE BUTTON (TOPBAR)
+   ========================================================================== */
+#themeToggleBtn {
+  background: var(--hrms-card-subsurface);
+  border: 1px solid var(--hrms-border);
+  color: var(--hrms-text);
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#themeToggleBtn:hover {
+  border-color: var(--hrms-accent);
+  box-shadow: 0 0 10px rgba(143, 130, 240, 0.3);
+  transform: rotate(15deg);
+}
+
+/* ==========================================================================
+   BOOTSTRAP ADAPTIVE UTILITY OVERRIDES IN DARK MODE
+   ========================================================================== */
+[data-bs-theme="dark"] .text-dark {
+  color: var(--hrms-text) !important;
+}
+
+[data-bs-theme="dark"] .text-secondary {
+  color: var(--hrms-text-muted) !important;
+}
+
+[data-bs-theme="dark"] .bg-white {
+  background-color: var(--hrms-card-bg) !important;
+}
+
+[data-bs-theme="dark"] .bg-light {
+  background-color: var(--hrms-card-subsurface) !important;
+}
+
+[data-bs-theme="dark"] .border,
+[data-bs-theme="dark"] .border-top,
+[data-bs-theme="dark"] .border-bottom,
+[data-bs-theme="dark"] .border-start,
+[data-bs-theme="dark"] .border-end {
+  border-color: var(--hrms-border) !important;
+}
+
+[data-bs-theme="dark"] .table-hover > tbody > tr:hover > * {
+  background-color: var(--hrms-card-subsurface) !important;
+  color: var(--hrms-text) !important;
+}
+
+[data-bs-theme="dark"] .list-group-item {
+  background-color: var(--hrms-card-bg) !important;
+  border-color: var(--hrms-border) !important;
+  color: var(--hrms-text) !important;
+}
+
+[data-bs-theme="dark"] .pagination .page-link {
+  background-color: var(--hrms-card-bg);
+  border-color: var(--hrms-border);
+  color: var(--hrms-text);
+}
+
+[data-bs-theme="dark"] .pagination .page-item.active .page-link {
+  background-color: var(--hrms-primary);
+  border-color: var(--hrms-primary);
+  color: #FFFFFF;
+}
+
+[data-bs-theme="dark"] .badge.bg-light {
+  background-color: var(--hrms-card-subsurface) !important;
+  color: var(--hrms-text) !important;
+}
+
+[data-bs-theme="dark"] .bg-success-subtle {
+  background-color: rgba(16, 185, 129, 0.16) !important;
+  color: #34D399 !important;
+}
+
+[data-bs-theme="dark"] .bg-warning-subtle {
+  background-color: rgba(245, 158, 11, 0.16) !important;
+  color: #FBBF24 !important;
+}
+
+[data-bs-theme="dark"] .bg-primary-subtle {
+  background-color: rgba(143, 130, 240, 0.18) !important;
+  color: #8F82F0 !important;
+}
+
+[data-bs-theme="dark"] .bg-info-subtle {
+  background-color: rgba(14, 165, 233, 0.16) !important;
+  color: #38BDF8 !important;
+}
+
+[data-bs-theme="dark"] .bg-danger-subtle {
+  background-color: rgba(239, 68, 68, 0.16) !important;
+  color: #F87171 !important;
+}
+
+/* ==========================================================================
+   MOBILE RESPONSIVENESS
+   ========================================================================== */
 @media (max-width: 991.98px) {
   .sidebar {
     transform: translateX(-100%);
@@ -359,8 +750,8 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(15, 12, 41, 0.7);
+    backdrop-filter: blur(4px);
     z-index: 1035;
   }
 }
-

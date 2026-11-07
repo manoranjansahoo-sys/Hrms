@@ -323,12 +323,55 @@ class QuickSocialApplicationForm(forms.Form):
         })
     )
     current_address = forms.CharField(
-        label="Current Residential Address",
-        widget=forms.Textarea(attrs={
+        label="Current Residential Address / Street",
+        widget=forms.TextInput(attrs={
             'class': 'form-control',
             'id': 'id_current_address',
-            'rows': 3,
-            'placeholder': 'Complete Address, City, State & PIN Code',
+            'placeholder': 'House/Flat No., Street, Locality',
+            'required': True
+        })
+    )
+    city = forms.CharField(
+        max_length=100,
+        label="City",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'id': 'id_city',
+            'placeholder': 'e.g. Bengaluru',
+            'required': True
+        })
+    )
+    state = forms.CharField(
+        max_length=100,
+        label="State / Province",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'id': 'id_state',
+            'placeholder': 'e.g. Karnataka',
+            'required': True
+        })
+    )
+    postal_code = forms.CharField(
+        max_length=20,
+        label="PIN / Postal Code",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'id': 'id_postal_code',
+            'placeholder': 'e.g. 560103',
+            'required': True,
+            'maxlength': '10',
+            'inputmode': 'numeric',
+            'oninput': "this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);"
+        })
+    )
+    country = forms.CharField(
+        max_length=100,
+        initial='India',
+        label="Country / Nationality",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'id': 'id_country',
+            'placeholder': 'e.g. India',
             'required': True
         })
     )

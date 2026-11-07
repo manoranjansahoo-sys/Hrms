@@ -570,10 +570,33 @@
                     </div>
                     <div class="reg-full">
                         <label class="reg-label" for="id_current_address">
-                            <i class="bi bi-geo-alt-fill text-danger me-1"></i> Current Residential Address <b>*</b>
+                            <i class="bi bi-geo-alt-fill text-danger me-1"></i> Current Residential Address (House No, Building, Street) <b>*</b>
                         </label>
                         {{ form.current_address }}
-                        <small class="text-muted">Enter complete street address, locality, city, state, and postal code.</small>
+                    </div>
+                    <div>
+                        <label class="reg-label" for="id_city">
+                            <i class="bi bi-buildings-fill text-secondary me-1"></i> City <b>*</b>
+                        </label>
+                        {{ form.city }}
+                    </div>
+                    <div>
+                        <label class="reg-label" for="id_state">
+                            <i class="bi bi-map-fill text-secondary me-1"></i> State / Province <b>*</b>
+                        </label>
+                        {{ form.state }}
+                    </div>
+                    <div>
+                        <label class="reg-label" for="id_postal_code">
+                            <i class="bi bi-mailbox2 text-secondary me-1"></i> PIN / Postal Code <b>*</b>
+                        </label>
+                        {{ form.postal_code }}
+                    </div>
+                    <div>
+                        <label class="reg-label" for="id_country">
+                            <i class="bi bi-globe-americas text-secondary me-1"></i> Country / Nationality <b>*</b>
+                        </label>
+                        {{ form.country }}
                     </div>
                 </div>
             </section>
@@ -649,22 +672,22 @@
             <div class="p-3 bg-white">
                 <!-- Sample Accounts for Fast 1-Click Verification -->
                 <div class="list-group list-group-flush border rounded-3 mb-3 overflow-hidden">
-                    <button type="button" class="list-group-item list-group-item-action p-3 d-flex align-items-center gap-3" onclick="confirmGoogleAccount('Ananya Sharma', 'ananya.sharma@gmail.com')">
+                    <button type="button" class="list-group-item list-group-item-action p-3 d-flex align-items-center gap-3" onclick="confirmGoogleAccount('Subhashree Mohapatra', 'subhashree.mohapatra@gmail.com')">
                         <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px;">
-                            A
+                            S
                         </div>
                         <div class="text-start">
-                            <div class="fw-semibold text-dark small">Ananya Sharma</div>
-                            <div class="text-muted" style="font-size: 0.78rem;">ananya.sharma@gmail.com</div>
+                            <div class="fw-semibold text-dark small">Subhashree Mohapatra</div>
+                            <div class="text-muted" style="font-size: 0.78rem;">subhashree.mohapatra@gmail.com</div>
                         </div>
                     </button>
-                    <button type="button" class="list-group-item list-group-item-action p-3 d-flex align-items-center gap-3" onclick="confirmGoogleAccount('Rahul Verma', 'rahul.verma@gmail.com')">
+                    <button type="button" class="list-group-item list-group-item-action p-3 d-flex align-items-center gap-3" onclick="confirmGoogleAccount('Soumya Ranjan Sahoo', 'soumya.sahoo@gmail.com')">
                         <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px;">
-                            R
+                            S
                         </div>
                         <div class="text-start">
-                            <div class="fw-semibold text-dark small">Rahul Verma</div>
-                            <div class="text-muted" style="font-size: 0.78rem;">rahul.verma@gmail.com</div>
+                            <div class="fw-semibold text-dark small">Soumya Ranjan Sahoo</div>
+                            <div class="text-muted" style="font-size: 0.78rem;">soumya.sahoo@gmail.com</div>
                         </div>
                     </button>
                 </div>
@@ -766,6 +789,10 @@
         const phoneInput = document.getElementById('id_phone');
         const altPhoneInput = document.getElementById('id_alt_phone');
         const addressInput = document.getElementById('id_current_address');
+        const cityInput = document.getElementById('id_city');
+        const stateInput = document.getElementById('id_state');
+        const postalCodeInput = document.getElementById('id_postal_code');
+        const countryInput = document.getElementById('id_country');
         const resumeInput = document.getElementById('id_resume');
         const fileSelectedBadge = document.getElementById('fileSelectedBadge');
         const posSelect = document.getElementById('positionSelect');
@@ -774,6 +801,10 @@
         if (phoneInput) phoneInput.value = '';
         if (altPhoneInput) altPhoneInput.value = '';
         if (addressInput) addressInput.value = '';
+        if (cityInput) cityInput.value = '';
+        if (stateInput) stateInput.value = '';
+        if (postalCodeInput) postalCodeInput.value = '';
+        if (countryInput) countryInput.value = 'India';
         if (resumeInput) resumeInput.value = '';
         if (fileSelectedBadge) fileSelectedBadge.style.display = 'none';
         if (posSelect) {

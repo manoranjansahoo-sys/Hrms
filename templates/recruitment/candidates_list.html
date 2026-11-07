@@ -7,10 +7,10 @@
     /* ENTERPRISE CANDIDATE TABLE - STRICT 2-LINE FULL VIEW      */
     /* ========================================================= */
     .recruitment-table-card {
-        background: #FFFFFF;
-        border: 1px solid #E5E7EB;
+        background: var(--hrms-card-bg);
+        border: 1px solid var(--hrms-border);
         border-radius: 12px;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+        box-shadow: var(--hrms-shadow);
         overflow: hidden;
     }
 
@@ -26,12 +26,12 @@
     }
 
     .table-scroll-wrapper::-webkit-scrollbar-track {
-        background: #F3F4F6;
+        background: var(--hrms-card-subsurface);
         border-radius: 4px;
     }
 
     .table-scroll-wrapper::-webkit-scrollbar-thumb {
-        background: #D1D5DB;
+        background: var(--hrms-border);
         border-radius: 4px;
     }
 
@@ -54,14 +54,14 @@
 
     /* Header Styling */
     .candidate-table thead th {
-        background-color: #F8FAF7;
-        color: #374151;
+        background-color: var(--hrms-card-header-bg);
+        color: var(--hrms-text-muted);
         font-size: 0.73rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.04em;
         padding: 0.7rem 0.55rem;
-        border-bottom: 1px solid #E5E7EB;
+        border-bottom: 1px solid var(--hrms-border);
         border-top: none;
         white-space: nowrap;
         vertical-align: middle;
@@ -74,14 +74,14 @@
     }
 
     .candidate-table tbody tr.clickable-candidate-row:hover {
-        background-color: #F8FAFC !important;
-        box-shadow: inset 3px 0 0 #0F766E;
+        background-color: var(--hrms-card-subsurface) !important;
+        box-shadow: inset 3px 0 0 var(--hrms-accent);
     }
 
     .candidate-table tbody td {
         padding: 0.65rem 0.55rem;
         vertical-align: middle;
-        border-bottom: 1px solid #F1F3F5;
+        border-bottom: 1px solid var(--hrms-border);
         font-size: 0.82rem;
     }
 
@@ -93,7 +93,7 @@
     .table-cell-title {
         font-weight: 600;
         font-size: 0.81rem;
-        color: #0F172A;
+        color: var(--hrms-text);
         line-height: 1.25;
         white-space: nowrap;
         overflow: hidden;
@@ -103,7 +103,7 @@
 
     .table-cell-subtext {
         font-size: 0.71rem;
-        color: #64748B;
+        color: var(--hrms-text-muted);
         line-height: 1.25;
         white-space: nowrap;
         overflow: hidden;
@@ -445,7 +445,7 @@
     <!-- UNIFIED CANDIDATES TABLE CARD (INTEGRATED FILTER HEADER + FLUID TABLE + DYNAMIC PAGINATION FOOTER) -->
     <div class="recruitment-table-card">
         <!-- Integrated Search & Filter Header (No separate Filter button; Auto-applies on change) -->
-        <div class="p-3 px-4 bg-white border-bottom">
+        <div class="p-3 px-4 border-bottom" style="background-color: var(--hrms-card-bg); border-color: var(--hrms-border) !important;">
             <form id="candidateFilterForm" method="GET" class="row g-2 align-items-center mb-0">
                 <input type="hidden" name="per_page" id="perPageHiddenInput" value="{{ selected_per_page }}">
                 
@@ -628,7 +628,7 @@
         </div>
 
         <!-- TABLE FOOTER: PAGINATION & PAGE SIZE (5, 10, 20, 50, 100) -->
-        <div class="p-3 px-4 bg-white border-top d-flex flex-wrap justify-content-between align-items-center gap-3" id="tablePaginationFooter">
+        <div class="p-3 px-4 border-top d-flex flex-wrap justify-content-between align-items-center gap-3" id="tablePaginationFooter" style="background-color: var(--hrms-card-bg); border-color: var(--hrms-border) !important;">
             <!-- Left Side: Show 5, 10, 20, 50, 100 & Showing X to Y of Z -->
             <div class="d-flex align-items-center gap-2">
                 <span class="small text-muted">Show</span>
