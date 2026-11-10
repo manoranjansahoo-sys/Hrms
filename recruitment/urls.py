@@ -1,10 +1,13 @@
 from django.urls import path
+from django.views.generic import TemplateView
 from recruitment import views
 from recruitment import google_auth
 
 app_name = 'recruitment'
 
 urlpatterns = [
+    path('privacy-policy/', TemplateView.as_view(template_name='recruitment/public/privacy_policy.html'), name='privacy_policy'),
+    path('terms/', TemplateView.as_view(template_name='recruitment/public/terms.html'), name='terms'),
     path('candidate/google/verify/', google_auth.google_verify, name='google_verify'),
     path('candidate/google/reset/', google_auth.google_reset, name='google_reset'),
     # 1. HR Link & Recruitment Management

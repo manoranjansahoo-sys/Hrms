@@ -1,0 +1,40 @@
+{% extends 'recruitment/public/base_public.html' %}
+{% block title %}Privacy Policy — Designlope HRMS{% endblock %}
+
+{% block content %}
+<article class="container" style="max-width: 75ch;">
+    <div class="card-custom p-4 p-md-5">
+        <h1 class="h2 fw-bold">Designlope HRMS Privacy Policy</h1>
+        <p class="text-muted small">Last updated: 10 November 2026</p>
+        <p>This notice explains how the Designlope HRMS careers portal uses information when you sign in with Google and submit a recruitment application. It covers the careers portal, rather than unrelated services on this domain.</p>
+
+        <h2 class="h5 mt-4">Information collected</h2>
+        <p>Google sign-in provides your name, email address, email verification status and a Google account identifier. The portal verifies Google's identity token to confirm your sign-in and keeps the verified identity in your application session.</p>
+        <p>Your application includes the position selected, phone number, optional alternative phone number, residential address, city, state, postal code, country and uploaded resume. Application records also include a reference number, submission dates, recruitment status and review history. Information supplied during later recruitment or onboarding steps is recorded as part of those steps.</p>
+
+        <h2 class="h5 mt-4">How information is used</h2>
+        <p>Information is used to identify applicants, associate applications with the verified email address, review suitability for a position, prevent duplicate applications for that position, communicate about recruitment and support application tracking and onboarding.</p>
+        <p>Google sign-in does not request access to your Gmail messages, Google Drive files, contacts or Google password. The Google identity information requested by this sign-in flow is used for authentication and recruitment, rather than advertising.</p>
+
+        <h2 class="h5 mt-4">Access and service providers</h2>
+        <p>Application information is available through the recruitment workflow to authorized HR and head administrators. If an application progresses to employee onboarding, information submitted for that process is used to create the employee record.</p>
+        <p>The portal depends on hosting, database, file storage and configured email services to store applications and deliver recruitment communications. Google processes the sign-in interaction under its own <a href="https://policies.google.com/privacy">Privacy Policy</a>. Public pages also load fonts and interface resources from Google Fonts and jsDelivr; your browser connects to those providers when loading the resources.</p>
+
+        <h2 class="h5 mt-4">Cookies and security</h2>
+        <p>The portal uses session and security cookies to maintain sign-in and protect form submissions. Blocking these cookies may prevent sign-in or application submission. Google identity tokens are checked on the server before the application form can be submitted with that identity.</p>
+        <p>Keep your application reference and onboarding links private. Contact the portal administrator if you believe someone has used your email address or accessed your application without permission.</p>
+
+        <h2 class="h5 mt-4">Storage, retention and requests</h2>
+        <p>Application records and uploaded resumes are stored separately from the temporary Google sign-in session. Signing out or switching Google accounts does not delete an application. The portal does not currently provide an automatic application-deletion schedule or an applicant self-service deletion button.</p>
+        <p>To ask about access, correction, withdrawal or deletion of your application information, email <a href="mailto:ansumansenapatiraja@gmail.com">ansumansenapatiraja@gmail.com</a>. Include your application reference where available, but do not send passwords or Google sign-in tokens. The administrator may need to verify your identity before acting on a request and will explain any information that must be retained.</p>
+        <p>You can stop using Google sign-in and manage the app's connection in your <a href="https://myaccount.google.com/connections">Google Account connections</a>. Removing that connection does not itself delete information already submitted to the careers portal.</p>
+
+        <h2 class="h5 mt-4">Updates and contact</h2>
+        <p>Changes to this notice will be reflected on this page with an updated date. Questions about this portal's handling of applicant information can be sent to <a href="mailto:ansumansenapatiraja@gmail.com">ansumansenapatiraja@gmail.com</a>.</p>
+        <nav class="border-top pt-3 mt-4 d-flex flex-wrap gap-3" aria-label="Policy links">
+            <a href="{% url 'recruitment:terms' %}">Terms of Service</a>
+            <a href="{% url 'recruitment:candidate_fast_apply' %}">Careers application</a>
+        </nav>
+    </div>
+</article>
+{% endblock %}

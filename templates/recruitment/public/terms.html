@@ -1,0 +1,42 @@
+{% extends 'recruitment/public/base_public.html' %}
+{% block title %}Terms of Service — Designlope HRMS{% endblock %}
+
+{% block content %}
+<article class="container" style="max-width: 75ch;">
+    <div class="card-custom p-4 p-md-5">
+        <h1 class="h2 fw-bold">Designlope HRMS Terms of Service</h1>
+        <p class="text-muted small">Last updated: 10 November 2026</p>
+        <p>These terms describe the use of the Designlope HRMS careers portal for recruitment applications, application tracking and related onboarding steps. They do not replace an employment agreement or an offer issued separately by the hiring organization.</p>
+
+        <h2 class="h5 mt-4">Using the portal</h2>
+        <p>Use the portal to submit your own application and provide accurate, current information. Only upload resumes and documents that you have permission to share. If information changes or an application needs correction, contact the recruitment administrator.</p>
+
+        <h2 class="h5 mt-4">Google sign-in</h2>
+        <p>The Fast Apply form requires Google sign-in to verify the email address associated with your application. Sign in with an account you control. Google authentication verifies the account used for sign-in; it does not certify qualifications, employment history or the accuracy of a resume.</p>
+        <p>The portal does not ask for your Google password. Do not send passwords or sign-in tokens to the recruitment team. Google's own terms apply when you use its sign-in service.</p>
+
+        <h2 class="h5 mt-4">Applications and recruitment decisions</h2>
+        <p>Submitting an application records your interest in a position. A submission confirmation, application reference, interview invitation or portal status does not by itself constitute an employment offer or guarantee selection.</p>
+        <p>Recruitment staff review applications through the portal and may contact you for further information or interviews. Any offer, employment conditions and joining requirements are communicated separately. Keep the reference number provided after submission for tracking and correspondence.</p>
+
+        <h2 class="h5 mt-4">Responsible use</h2>
+        <p>Do not impersonate another applicant, submit misleading documents, upload malicious files, attempt to access another person's records or interfere with the portal. Protect your application reference and any onboarding links, and report suspected misuse to the administrator.</p>
+
+        <h2 class="h5 mt-4">Privacy and communications</h2>
+        <p>Application information is handled as described in the <a href="{% url 'recruitment:privacy_policy' %}">Privacy Policy</a>. Contact details submitted in the recruitment process are used for application-related communications. Check that your email address and phone number are correct and accessible to you.</p>
+
+        <h2 class="h5 mt-4">Availability and submission problems</h2>
+        <p>Access can be interrupted by maintenance, connectivity problems or third-party service issues. If a submission fails, check whether a confirmation or application reference was issued before submitting again. Contact the recruitment administrator if you cannot confirm the status.</p>
+
+        <h2 class="h5 mt-4">Questions, corrections and withdrawal</h2>
+        <p>For help with the portal, an application correction or withdrawal, email <a href="mailto:ansumansenapatiraja@gmail.com">ansumansenapatiraja@gmail.com</a> with your application reference where available. Information requests and deletion requests are addressed through the process in the Privacy Policy.</p>
+
+        <h2 class="h5 mt-4">Updates</h2>
+        <p>The current version of these terms is published on this page with its update date. Changes to portal terms do not amend a separate employment agreement.</p>
+        <nav class="border-top pt-3 mt-4 d-flex flex-wrap gap-3" aria-label="Policy links">
+            <a href="{% url 'recruitment:privacy_policy' %}">Privacy Policy</a>
+            <a href="{% url 'recruitment:candidate_fast_apply' %}">Careers application</a>
+        </nav>
+    </div>
+</article>
+{% endblock %}
