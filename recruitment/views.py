@@ -26,6 +26,7 @@ from recruitment.forms import (
     ScheduleInterviewForm
 )
 from notifications.models import create_notification
+from recruitment.google_auth import verified_identity, sign_in_config
 
 
 # =========================================================================
@@ -804,6 +805,12 @@ def candidate_fast_apply(request, job_id=None):
     If a job is specified via link/URL, the form locks that specific role.
     If no job is specified, the dropdown is visible for role selection.
     """
+    identity = verified_identity(request)
+    if request.method == 'POST' and (
+        not identity or request.POST.get('email', '').strip().lower() != identity['email']
+    ):
+        return HttpResponse('Please sign in with Google using the application email.', status=403)
+
     job = None
     target_job_id = job_id or request.GET.get('job')
     if target_job_id:
@@ -818,7 +825,10 @@ def candidate_fast_apply(request, job_id=None):
         job = open_jobs[0]
 
     if request.method == 'POST':
-        form = QuickSocialApplicationForm(request.POST, request.FILES, default_job=job, fixed_job=job if has_fixed_job else None)
+        application_data = request.POST.copy()
+        application_data['full_name'] = identity['name']
+        application_data['email'] = identity['email']
+        form = QuickSocialApplicationForm(application_data, request.FILES, default_job=job, fixed_job=job if has_fixed_job else None)
         if form.is_valid():
             cd = form.cleaned_data
             selected_job = cd.get('job') or job
@@ -944,6 +954,8 @@ def candidate_fast_apply(request, job_id=None):
         }
 
     return render(request, 'recruitment/public/fast_apply.html', {
+        'google_config': sign_in_config(request),
+        'google_identity': {'name': identity['name'], 'email': identity['email']} if identity else None,
         'form': form,
         'job': job,
         'has_fixed_job': has_fixed_job,

@@ -1,9 +1,12 @@
 from django.urls import path
 from recruitment import views
+from recruitment import google_auth
 
 app_name = 'recruitment'
 
 urlpatterns = [
+    path('candidate/google/verify/', google_auth.google_verify, name='google_verify'),
+    path('candidate/google/reset/', google_auth.google_reset, name='google_reset'),
     # 1. HR Link & Recruitment Management
     path('hr/candidate-links/', views.candidate_links_list, name='links_list'),
     path('hr/candidate-links/create/', views.create_candidate_link, name='create_link'),

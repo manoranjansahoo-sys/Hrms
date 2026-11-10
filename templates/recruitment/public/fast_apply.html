@@ -417,15 +417,8 @@
                         </p>
                     </div>
                     <div>
-                        <button type="button" class="btn-google" id="googleSignInBtn" data-bs-toggle="modal" data-bs-target="#googleSignInModal">
-                            <svg width="20" height="20" viewBox="0 0 24 24">
-                                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.87c2.26-2.09 3.675-5.17 3.675-9.15z"/>
-                                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.87-3.05c-1.08.72-2.45 1.16-4.06 1.16-3.13 0-5.78-2.11-6.73-4.96H1.25v3.15C3.25 21.36 7.31 24 12 24z"/>
-                                <path fill="#FBBC05" d="M5.27 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.61H1.25C.45 8.22 0 10.05 0 12s.45 3.78 1.25 5.39l4.02-3.15z"/>
-                                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.64 1.25 6.61l4.02 3.15c.95-2.85 3.6-4.96 6.73-4.96z"/>
-                            </svg>
-                            <span>Sign up with Google</span>
-                        </button>
+                        <div id="googleSignInBtn"></div>
+                        <p id="googleAuthError" class="text-danger small mb-0" role="alert"></p>
                     </div>
                 </div>
             </div>
@@ -465,7 +458,7 @@
             <p class="text-muted small mb-3" style="max-width: 480px; margin: 0 auto; line-height: 1.55;">
                 To fill out this official application, please sign in with your Google account above. Once authenticated, the application form will automatically unlock.
             </p>
-            <button type="button" class="btn btn-sm btn-outline-primary px-3 py-1.5 fw-semibold rounded-pill" data-bs-toggle="modal" data-bs-target="#googleSignInModal">
+            <button type="button" class="btn btn-sm btn-outline-primary px-3 py-1.5 fw-semibold rounded-pill" onclick="document.getElementById('googleGateSection').scrollIntoView()">
                 <i class="bi bi-google me-1"></i> Unlock with Google
             </button>
         </div>
@@ -653,76 +646,54 @@
 </div>
 
 <!-- ========================================================= -->
-<!-- GOOGLE SIGN-IN INTERACTIVE MODAL (ACCOUNT CHOOSER)         -->
+<!-- GOOGLE SIGN-IN CONFIGURATION                              -->
 <!-- ========================================================= -->
-<div class="modal fade" id="googleSignInModal" tabindex="-1" aria-labelledby="googleSignInModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
-            <div class="p-4 bg-white text-center border-bottom pb-3">
-                <svg width="38" height="38" viewBox="0 0 24 24" class="mb-2">
-                    <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.87c2.26-2.09 3.675-5.17 3.675-9.15z"/>
-                    <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.87-3.05c-1.08.72-2.45 1.16-4.06 1.16-3.13 0-5.78-2.11-6.73-4.96H1.25v3.15C3.25 21.36 7.31 24 12 24z"/>
-                    <path fill="#FBBC05" d="M5.27 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.61H1.25C.45 8.22 0 10.05 0 12s.45 3.78 1.25 5.39l4.02-3.15z"/>
-                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.64 1.25 6.61l4.02 3.15c.95-2.85 3.6-4.96 6.73-4.96z"/>
-                </svg>
-                <h5 class="fw-bold text-dark mb-1">Sign in with Google</h5>
-                <p class="text-muted small mb-0">Choose an account to continue to Company HRMS Careers</p>
-            </div>
-
-            <div class="p-3 bg-white">
-                <!-- Sample Accounts for Fast 1-Click Verification -->
-                <div class="list-group list-group-flush border rounded-3 mb-3 overflow-hidden">
-                    <button type="button" class="list-group-item list-group-item-action p-3 d-flex align-items-center gap-3" onclick="confirmGoogleAccount('Subhashree Mohapatra', 'subhashree.mohapatra@gmail.com')">
-                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px;">
-                            S
-                        </div>
-                        <div class="text-start">
-                            <div class="fw-semibold text-dark small">Subhashree Mohapatra</div>
-                            <div class="text-muted" style="font-size: 0.78rem;">subhashree.mohapatra@gmail.com</div>
-                        </div>
-                    </button>
-                    <button type="button" class="list-group-item list-group-item-action p-3 d-flex align-items-center gap-3" onclick="confirmGoogleAccount('Soumya Ranjan Sahoo', 'soumya.sahoo@gmail.com')">
-                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px;">
-                            S
-                        </div>
-                        <div class="text-start">
-                            <div class="fw-semibold text-dark small">Soumya Ranjan Sahoo</div>
-                            <div class="text-muted" style="font-size: 0.78rem;">soumya.sahoo@gmail.com</div>
-                        </div>
-                    </button>
-                </div>
-
-                <!-- Custom Google Account Input -->
-                <div class="p-3 bg-light rounded-3 border">
-                    <div class="small fw-bold text-dark mb-2"><i class="bi bi-person-plus me-1"></i> Or enter your Google Account:</div>
-                    <div class="input-group input-group-sm mb-2">
-                        <span class="input-group-text"><i class="bi bi-person"></i></span>
-                        <input type="text" id="customGoogleName" class="form-control" placeholder="Your Full Name">
-                    </div>
-                    <div class="input-group input-group-sm mb-2">
-                        <span class="input-group-text">@</span>
-                        <input type="email" id="customGoogleEmail" class="form-control" placeholder="your.name@gmail.com">
-                    </div>
-                    <button type="button" class="btn btn-dark btn-sm w-100 fw-semibold" onclick="submitCustomGoogleAccount()">
-                        <i class="bi bi-check2-circle me-1"></i> Verify & Unlock Form
-                    </button>
-                </div>
-            </div>
-
-            <div class="modal-footer bg-light py-2 px-3 justify-content-between">
-                <span class="text-muted small" style="font-size: 0.74rem;"><i class="bi bi-shield-check text-success"></i> Google Identity Verified</span>
-                <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Cancel</button>
-            </div>
-        </div>
-    </div>
-</div>
-
+{{ google_config|json_script:"google-config" }}
+{{ google_identity|json_script:"google-identity" }}
 <script>
     const jobsData = {{ jobs_json|safe }};
 
+    const googleConfig = JSON.parse(document.getElementById('google-config').textContent);
+    let googleIdentity = JSON.parse(document.getElementById('google-identity').textContent);
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    async function googleRequest(url, data = {}) {
+        const response = await fetch(url, {
+            method: 'POST', credentials: 'same-origin',
+            headers: {'X-CSRFToken': csrfToken},
+            body: new URLSearchParams(data)
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Google sign-in failed.');
+        return result;
+    }
+
+    async function handleGoogleCredential(response) {
+        const error = document.getElementById('googleAuthError');
+        error.textContent = '';
+        try {
+            googleIdentity = await googleRequest("{% url 'recruitment:google_verify' %}", {credential: response.credential});
+            confirmGoogleAccount(googleIdentity.name, googleIdentity.email);
+        } catch (e) {
+            error.textContent = e.message;
+        }
+    }
+
+    function initializeGoogleSignIn() {
+        if (!googleConfig.client_id) {
+            document.getElementById('googleAuthError').textContent = 'Google sign-in is currently unavailable.';
+            return;
+        }
+        google.accounts.id.initialize({
+            client_id: googleConfig.client_id, nonce: googleConfig.nonce,
+            callback: handleGoogleCredential
+        });
+        google.accounts.id.renderButton(document.getElementById('googleSignInBtn'), {
+            theme: 'outline', size: 'large', text: 'signup_with'
+        });
+    }
+
     function confirmGoogleAccount(name, email) {
-        sessionStorage.setItem('google_auth_name', name);
-        sessionStorage.setItem('google_auth_email', email);
 
         document.getElementById('googleNameDisplay').textContent = name;
         document.getElementById('googleEmailDisplay').textContent = email;
@@ -748,39 +719,14 @@
         if (lockedNotice) lockedNotice.style.display = 'none';
         if (formEl) formEl.style.display = 'block';
 
-        const modalEl = document.getElementById('googleSignInModal');
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        if (modal) modal.hide();
     }
 
-    function submitCustomGoogleAccount() {
-        const name = document.getElementById('customGoogleName').value.trim();
-        const email = document.getElementById('customGoogleEmail').value.trim();
-        if (!name || !email) {
-            alert('Please enter your full name and valid Google email address.');
-            return;
-        }
-        confirmGoogleAccount(name, email);
-    }
-
-    function resetGoogleAuth() {
-        sessionStorage.removeItem('google_auth_name');
-        sessionStorage.removeItem('google_auth_email');
-
-        document.getElementById('googleUnsignedState').style.display = 'block';
-        document.getElementById('googleSignedState').style.display = 'none';
-
-        // Lock form again
-        const lockedNotice = document.getElementById('lockedNoticeBox');
-        const formEl = document.getElementById('fastApplyForm');
-        if (lockedNotice) lockedNotice.style.display = 'block';
-        if (formEl) formEl.style.display = 'none';
-
-        const emailInput = document.getElementById('id_email');
-        if (emailInput) {
-            emailInput.readOnly = false;
-            emailInput.style.backgroundColor = '#FFFFFF';
-            emailInput.style.borderColor = '#CBD5E1';
+    async function resetGoogleAuth() {
+        try {
+            await googleRequest("{% url 'recruitment:google_reset' %}");
+            window.location.reload();
+        } catch (e) {
+            alert(e.message);
         }
     }
 
@@ -813,8 +759,8 @@
         }
 
         // Keep Google verified name and email in place
-        const savedName = sessionStorage.getItem('google_auth_name');
-        const savedEmail = sessionStorage.getItem('google_auth_email');
+        const savedName = googleIdentity && googleIdentity.name;
+        const savedEmail = googleIdentity && googleIdentity.email;
         const nameInput = document.getElementById('id_full_name');
         const emailInput = document.getElementById('id_email');
         if (nameInput && savedName) nameInput.value = savedName;
@@ -829,16 +775,14 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        // Check if previously signed in with Google in session or if form has errors
-        const savedName = sessionStorage.getItem('google_auth_name');
-        const savedEmail = sessionStorage.getItem('google_auth_email');
+        // Restore only an identity verified by the server.
+        const savedName = googleIdentity && googleIdentity.name;
+        const savedEmail = googleIdentity && googleIdentity.email;
         const emailInput = document.getElementById('id_email');
         const nameInput = document.getElementById('id_full_name');
 
         if (savedName && savedEmail) {
             confirmGoogleAccount(savedName, savedEmail);
-        } else if (emailInput && emailInput.value) {
-            confirmGoogleAccount(nameInput.value || 'Candidate', emailInput.value);
         }
 
         // Live position preview (if dropdown is active)
@@ -930,4 +874,5 @@
         }
     });
 </script>
+<script src="https://accounts.google.com/gsi/client" onload="initializeGoogleSignIn()" async defer></script>
 {% endblock %}

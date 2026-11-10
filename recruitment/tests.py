@@ -472,6 +472,14 @@ class RecruitmentTests(TestCase):
             'country': 'India',
             'resume': dummy_resume,
         }
+        session = self.client.session
+        session['candidate_google_identity'] = {
+            'sub': 'test-google-user',
+            'name': 'Aarav Patel',
+            'email': 'aarav.patel@gmail.com',
+            'expires_at': (timezone.now() + timedelta(hours=1)).timestamp(),
+        }
+        session.save()
         resp_post = self.client.post(fast_apply_url, post_data)
         self.assertEqual(resp_post.status_code, 302)
 
