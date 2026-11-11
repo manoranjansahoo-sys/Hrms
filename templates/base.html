@@ -55,13 +55,13 @@
             <li class="menu-item">
                 <a href="{% url 'portal:home' %}" class="menu-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
                     <i class="bi bi-house-door-fill text-success"></i>
-                    <span>Company Portal</span>
+                    <span>Organisation</span>
                 </a>
             </li>
             <li class="menu-item">
                 <a href="{% url 'portal:smart_dashboard' %}" class="menu-link {% if 'dashboard' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="bi bi-speedometer2 text-info"></i>
-                    <span>My Dashboard</span>
+                    <span>Dashboard</span>
                 </a>
             </li>
 
@@ -114,7 +114,7 @@
                             <li>
                                 <a href="{% url 'attendance:admin_register' %}" class="menu-link py-1.5 px-3 {% if 'admin_register' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
                                     <i class="bi bi-calendar-check-fill me-2" style="font-size: 0.85rem;"></i>
-                                    <span>Daily Register</span>
+                                    <span>Daily Attendance</span>
                                 </a>
                             </li>
                             <li>
@@ -137,7 +137,7 @@
                         <span>Payroll Sign-Off</span>
                     </a>
                 </li>
-                <li class="menu-item">
+                <!-- <li class="menu-item">
                     <a href="{% url 'accounts:audit_logs' %}" class="menu-link {% if 'audit' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-shield-check"></i>
                         <span>Security & Audit Log</span>
@@ -148,13 +148,13 @@
                         <i class="bi bi-geo-alt-fill text-danger"></i>
                         <span>Company Locations</span>
                     </a>
-                </li>
-                <li class="menu-item">
+                </li> -->
+                <!-- <li class="menu-item">
                     <a href="/admin/" target="_blank" class="menu-link">
                         <i class="bi bi-gear-fill"></i>
                         <span>Django Admin Panel</span>
                     </a>
-                </li>
+                </li> -->
 
             {% elif request.user.is_hr_role %}
                 <!-- HR ADMINISTRATOR NAVIGATION -->
@@ -229,7 +229,7 @@
                         <span>Payroll Operations</span>
                     </a>
                 </li>
-                <li class="menu-item">
+                <!-- <li class="menu-item">
                     <a href="{% url 'portal:dashboard_hr' %}" class="menu-link {% if request.resolver_match.url_name == 'dashboard_hr' %}active{% endif %}">
                         <i class="bi bi-grid-1x2-fill"></i>
                         <span>HR Command Center</span>
@@ -266,7 +266,7 @@
                         <i class="bi bi-file-earmark-check"></i>
                         <span>Document Requests</span>
                     </a>
-                </li>
+                </li> -->
                 <li class="menu-item">
                     <a href="{% url 'support:tickets_list' %}" class="menu-link">
                         <i class="bi bi-headset"></i>
@@ -369,19 +369,19 @@
                     <span>My Salary & Payslips</span>
                 </a>
             </li>
-            <li class="menu-item">
+            <!-- <li class="menu-item">
                 <a href="{% url 'performance:goals_list' %}" class="menu-link">
                     <i class="bi bi-award"></i>
                     <span>Goals & Reviews</span>
                 </a>
-            </li>
+            </li> -->
             <li class="menu-item">
                 <a href="{% url 'support:tickets_list' %}" class="menu-link">
                     <i class="bi bi-chat-left-dots"></i>
                     <span>Service Tickets</span>
                 </a>
             </li>
-            <li class="menu-item">
+            <!-- <li class="menu-item">
                 <a href="{% url 'support:documents_list' %}" class="menu-link">
                     <i class="bi bi-file-earmark-text"></i>
                     <span>Document Requests</span>
@@ -392,7 +392,7 @@
                     <i class="bi bi-laptop"></i>
                     <span>My Assets</span>
                 </a>
-            </li>
+            </li> -->
             {% endif %}
 
             <!-- GENERAL COMPANY PORTAL ITEMS -->
