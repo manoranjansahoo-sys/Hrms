@@ -135,8 +135,18 @@ class EmployeeCreateForm(forms.ModelForm):
             'experience_summary': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': ''}),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.user = user
+
+        # Role authority restriction: Admin/Head/Superuser can assign all roles.
+        # HR administrator can strictly assign only Employee and Site Manager.
+        if user and not (user.is_superuser or getattr(user, 'role', '') == CustomUser.Role.HEAD):
+            self.fields['role'].choices = [
+                (CustomUser.Role.EMPLOYEE, 'Employee'),
+                (CustomUser.Role.SITE_MANAGER, 'Site Manager'),
+            ]
+
         required_fields = [
             'department', 'designation', 'site', 'employment_type',
             'joining_date', 'date_of_birth', 'gender',
@@ -151,6 +161,14 @@ class EmployeeCreateForm(forms.ModelForm):
         if 'marital_status' in self.fields:
             self.fields['marital_status'].required = False
             self.fields['marital_status'].initial = 'SINGLE'
+
+    def clean_role(self):
+        role = self.cleaned_data.get('role')
+        if self.user and not (self.user.is_superuser or getattr(self.user, 'role', '') == CustomUser.Role.HEAD):
+            allowed_roles = [CustomUser.Role.EMPLOYEE, CustomUser.Role.SITE_MANAGER]
+            if role not in allowed_roles:
+                raise forms.ValidationError("HR administrators are authorized to onboard Employee and Site Manager roles only.")
+        return role
 
     def clean_marital_status(self):
         status = self.cleaned_data.get('marital_status')

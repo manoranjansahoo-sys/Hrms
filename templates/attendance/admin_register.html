@@ -2,111 +2,554 @@
 {% block title %}Daily Attendance Register{% endblock %}
 
 {% block content %}
+<style>
+    /* 1. SINGLE WHITE CARD (CLEAN NEUTRAL BORDER, NO COLOR TINT) */
+    .single-attendance-card {
+        background-color: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+        overflow: hidden;
+    }
+    .single-attendance-card .card-toolbar {
+        background-color: #FFFFFF !important;
+        border-bottom: 1px solid #E2E8F0 !important;
+    }
+
+    /* 2. FILTER BOX FIELDS (NO BLUE BORDER) */
+    .filter-box-field {
+        border: 1px solid #CBD5E1;
+        border-radius: 8px;
+        overflow: hidden;
+        background-color: #FFFFFF !important;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .filter-box-field:focus-within {
+        border-color: #94A3B8 !important;
+        box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.25) !important;
+    }
+    .filter-box-field .form-control,
+    .filter-box-field .form-select {
+        border: none;
+        box-shadow: none;
+        background-color: #FFFFFF !important;
+        font-size: 0.85rem;
+        color: #1E293B;
+        height: 38px;
+    }
+
+    /* 3. DISTINCT TABLE HEADER & CLEAR COLUMN SEPARATION */
+    .attendance-table {
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+        background-color: #FFFFFF !important;
+    }
+    .attendance-table thead {
+        background-color: #F8FAFC !important;
+    }
+    .attendance-table thead th {
+        background-color: #F8FAFC !important;
+        color: #475569 !important;
+        font-size: 0.76rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.04em !important;
+        text-transform: uppercase !important;
+        padding: 13px 16px !important;
+        border-top: none !important;
+        border-bottom: 2px solid #CBD5E1 !important;
+        border-right: 1px solid #E2E8F0 !important;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+    .attendance-table thead th:last-child {
+        border-right: none !important;
+    }
+
+    /* TABLE BODY CELLS (CLEAR COLUMN DEMARCATION) */
+    .attendance-table tbody tr {
+        background-color: #FFFFFF !important;
+        transition: background-color 0.15s ease;
+    }
+    .attendance-table tbody td {
+        background-color: inherit;
+        padding: 13px 16px !important;
+        font-size: 0.85rem;
+        color: #1E293B;
+        border-top: none !important;
+        border-bottom: 1px solid #EDF2F7 !important;
+        border-right: 1px solid #F1F5F9 !important;
+        vertical-align: middle;
+    }
+    .attendance-table tbody td:last-child {
+        border-right: none !important;
+    }
+    .attendance-clickable-row {
+        cursor: pointer;
+    }
+    .attendance-clickable-row:hover,
+    .attendance-clickable-row:hover td {
+        background-color: #F8FAFC !important;
+    }
+    .attendance-clickable-row:hover .employee-name-link span {
+        color: #0F172A !important;
+        text-decoration: underline;
+    }
+
+    /* 4. STATS PILLS (NATURAL TONES, NO BLUE BORDER) */
+    .attendance-stat-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 14px;
+        border-radius: 9999px;
+        font-size: 0.78rem;
+        font-weight: 500;
+        letter-spacing: 0.01em;
+        line-height: 1.4;
+        cursor: pointer;
+        outline: none;
+        transition: all 0.15s ease;
+        user-select: none;
+        border-style: solid;
+        border-width: 1px;
+    }
+    .attendance-stat-pill:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06);
+    }
+    .attendance-stat-pill strong {
+        font-weight: 700;
+        margin-left: 2px;
+    }
+    .stat-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    /* SMOOTH LITE COLORS (DEFAULT INACTIVE) */
+    .pill-present {
+        background: #F0FDF4;
+        color: #15803D;
+        border-color: #BBF7D0;
+    }
+    .dot-present { background: #16A34A; }
+
+    .pill-absent {
+        background: #FEF2F2;
+        color: #B91C1C;
+        border-color: #FECACA;
+    }
+    .dot-absent { background: #DC2626; }
+
+    .pill-leave {
+        background: #F0F9FF;
+        color: #0369A1;
+        border-color: #BAE6FD;
+    }
+    .dot-leave { background: #0284C7; }
+
+    .pill-late {
+        background: #FFFBEB;
+        color: #B45309;
+        border-color: #FDE68A;
+    }
+    .dot-late { background: #D97706; }
+
+    /* ACTIVE STATES: TONE-MATCHED SOLID (ZERO BLUE BORDER) */
+    .pill-present.active-pill {
+        background: #16A34A !important;
+        color: #FFFFFF !important;
+        border-color: #15803D !important;
+        box-shadow: 0 2px 5px rgba(22, 163, 74, 0.25) !important;
+        font-weight: 700;
+    }
+    .pill-present.active-pill .stat-dot { background: #FFFFFF !important; }
+
+    .pill-absent.active-pill {
+        background: #DC2626 !important;
+        color: #FFFFFF !important;
+        border-color: #B91C1C !important;
+        box-shadow: 0 2px 5px rgba(220, 38, 38, 0.25) !important;
+        font-weight: 700;
+    }
+    .pill-absent.active-pill .stat-dot { background: #FFFFFF !important; }
+
+    .pill-leave.active-pill {
+        background: #0284C7 !important;
+        color: #FFFFFF !important;
+        border-color: #0369A1 !important;
+        box-shadow: 0 2px 5px rgba(2, 132, 199, 0.25) !important;
+        font-weight: 700;
+    }
+    .pill-leave.active-pill .stat-dot { background: #FFFFFF !important; }
+
+    .pill-late.active-pill {
+        background: #D97706 !important;
+        color: #FFFFFF !important;
+        border-color: #B45309 !important;
+        box-shadow: 0 2px 5px rgba(217, 119, 6, 0.25) !important;
+        font-weight: 700;
+    }
+    .pill-late.active-pill .stat-dot { background: #FFFFFF !important; }
+</style>
+
 <div class="container-fluid p-0">
+    <!-- PAGE HEADER WITH STATS PILLS ON THE RIGHT SIDE (CLICKABLE FILTER BUTTONS, NO "ALL" BUTTON) -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
-            <h3 class="fw-bold mb-1">Daily Attendance Register</h3>
-            <p class="text-muted small mb-0">Master check-in records, working hours, biometric/web sources, and status tracking.</p>
+            <h3 class="fw-bold mb-1 text-dark" style="font-size: 1.45rem; letter-spacing: -0.02em;">Daily Attendance Register</h3>
+            <p class="text-muted small mb-0">Daily live attendance roster aggregated across all employees and site locations.</p>
+        </div>
+
+        <!-- STATS PILLS (INTERACTIVE FILTER BUTTONS) -->
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <button type="button" class="attendance-stat-pill pill-present" id="filterPillPresent" data-status-filter="PRESENT" title="Filter by Present Employees (Click to toggle)">
+                <span class="stat-dot dot-present"></span>
+                <span>Present:</span>
+                <strong>{{ present_cnt }}</strong>
+            </button>
+            <button type="button" class="attendance-stat-pill pill-absent" id="filterPillAbsent" data-status-filter="ABSENT" title="Filter by Absent Employees (Click to toggle)">
+                <span class="stat-dot dot-absent"></span>
+                <span>Absent:</span>
+                <strong>{{ absent_cnt }}</strong>
+            </button>
+            <button type="button" class="attendance-stat-pill pill-leave" id="filterPillLeave" data-status-filter="ON_LEAVE" title="Filter by On Leave Employees (Click to toggle)">
+                <span class="stat-dot dot-leave"></span>
+                <span>On Leave:</span>
+                <strong>{{ leave_cnt }}</strong>
+            </button>
+            <button type="button" class="attendance-stat-pill pill-late" id="filterPillLate" data-status-filter="LATE" title="Filter by Late Arrivals (Click to toggle)">
+                <span class="stat-dot dot-late"></span>
+                <span>Late Arrivals:</span>
+                <strong>{{ late_cnt }}</strong>
+            </button>
         </div>
     </div>
 
-    <!-- FILTER BAR -->
-    <div class="hrms-card mb-4 p-3">
-        <form method="GET" class="row g-2 align-items-center">
-            <div class="col-md-3">
-                <label class="form-label small fw-semibold text-muted mb-1">Selected Date</label>
-                <input type="date" name="date" class="form-control form-control-sm" value="{{ selected_date|date:'Y-m-d' }}">
-            </div>
-            <div class="col-md-3">
-                <label class="form-label small fw-semibold text-muted mb-1">Department</label>
-                <select name="department" class="form-select form-select-sm">
-                    <option value="">All Departments</option>
-                    {% for d in departments %}
-                        <option value="{{ d.id }}" {% if selected_dept == d.id|stringformat:"i" %}selected{% endif %}>{{ d.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label small fw-semibold text-muted mb-1">Campus / Site</label>
-                <select name="site" class="form-select form-select-sm">
-                    <option value="">All Sites</option>
-                    {% for s in sites %}
-                        <option value="{{ s.id }}" {% if selected_site == s.id|stringformat:"i" %}selected{% endif %}>{{ s.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3 d-flex align-items-end gap-2">
-                <button type="submit" class="btn btn-sm btn-hrms w-100">Load Register</button>
-                <a href="{% url 'attendance:admin_register' %}" class="btn btn-sm btn-light border">Reset</a>
-            </div>
-        </form>
-    </div>
+    <!-- SINGLE COMBINED WHITE CARD (FILTERS + ROSTER TABLE) -->
+    <div class="hrms-card single-attendance-card">
+        <!-- TOP FILTER TOOLBAR INSIDE THE CARD -->
+        <div class="p-3 border-bottom card-toolbar">
+            <form method="GET" class="row g-2 align-items-center" id="attendanceFilterForm">
+                <!-- 1. DATE BOX (NO LABEL, NO ICON) -->
+                <div class="col-md-4 col-sm-6">
+                    <div class="filter-box-field">
+                        <input type="date" name="date" class="form-control form-control-sm px-3 fw-medium" value="{{ selected_date|date:'Y-m-d' }}" onchange="this.form.submit()">
+                    </div>
+                </div>
 
-    <!-- STATS STRIP -->
-    <div class="d-flex gap-3 mb-3">
-        <span class="badge bg-success py-2 px-3 fs-6">Present: {{ present_cnt }}</span>
-        <span class="badge bg-danger py-2 px-3 fs-6">Absent: {{ absent_cnt }}</span>
-        <span class="badge bg-info text-dark py-2 px-3 fs-6">On Leave: {{ leave_cnt }}</span>
-        <span class="badge bg-warning text-dark py-2 px-3 fs-6">Late Arrivals: {{ late_cnt }}</span>
-    </div>
+                <!-- 2. DEPARTMENT BOX (NO ICON) -->
+                <div class="col-md-4 col-sm-6">
+                    <div class="filter-box-field">
+                        <select name="department" class="form-select form-select-sm px-3 fw-medium" onchange="this.form.submit()">
+                            <option value="">Select Department</option>
+                            {% for d in departments %}
+                                <option value="{{ d.id }}" {% if selected_dept == d.id|stringformat:"i" %}selected{% endif %}>{{ d.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
 
-    <!-- ROSTER TABLE -->
-    <div class="hrms-card">
+                <!-- 3. CAMPUS / SITE BOX (NO ICON) -->
+                <div class="col-md-4 col-sm-12">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="filter-box-field flex-grow-1">
+                            <select name="site" class="form-select form-select-sm px-3 fw-medium" onchange="this.form.submit()">
+                                <option value="">Select Campus / Site</option>
+                                {% for s in sites %}
+                                    <option value="{{ s.id }}" {% if selected_site == s.id|stringformat:"i" %}selected{% endif %}>{{ s.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% if selected_dept or selected_site %}
+                            <a href="{% url 'attendance:admin_register' %}" class="btn btn-sm btn-outline-secondary py-1 px-2.5 rounded-pill text-nowrap d-inline-flex align-items-center gap-1 shadow-none" style="font-size: 0.78rem;" title="Reset Filters">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                                <span>Reset</span>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- TABLE DIRECTLY INSIDE THE SAME WHITE CARD -->
         <div class="table-responsive">
-            <table class="table hrms-table">
+            <table class="table attendance-table table-hover mb-0 align-middle">
                 <thead>
                     <tr>
-                        <th>Employee</th>
-                        <th>Emp ID</th>
-                        <th>Department</th>
-                        <th>Site</th>
-                        <th>Punch In</th>
-                        <th>Punch Out</th>
-                        <th>Working Hours</th>
-                        <th>Status</th>
-                        <th>Source</th>
+                        <th class="ps-4" style="width: 28%;">Employee</th>
+                        <th style="width: 16%;">Site</th>
+                        <th class="text-center" style="width: 11%;">Punch In</th>
+                        <th class="text-center" style="width: 11%;">Punch Out</th>
+                        <th class="text-center" style="width: 11%;">Working Hours</th>
+                        <th class="text-center" style="width: 13%;">Arrival</th>
+                        <th class="text-center pe-4" style="width: 10%;">Status</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="attendanceTableBody">
                     {% for item in roster %}
-                        <tr>
-                            <td>
-                                <div class="fw-bold text-dark">{{ item.employee.full_name }}</div>
-                                <small class="text-muted">{{ item.employee.designation.title }}</small>
+                        <tr class="attendance-clickable-row attendance-data-row" 
+                            data-status="{% if not item.attendance %}ABSENT{% elif item.attendance.status == 'PRESENT' %}PRESENT{% elif item.attendance.status == 'HALF_DAY' %}HALF_DAY{% elif item.attendance.status == 'ON_LEAVE' %}ON_LEAVE{% else %}ABSENT{% endif %}"
+                            data-late="{% if item.attendance.is_late %}true{% else %}false{% endif %}"
+                            onclick="window.location='{% url 'attendance:employee_attendance_detail' emp_id=item.employee.emp_id %}'"
+                            title="Click to view full attendance history for {{ item.employee.full_name }}">
+                            <td class="ps-4">
+                                <div class="fw-bold text-dark d-inline-flex align-items-center employee-name-link">
+                                    <span>{{ item.employee.full_name }}</span>
+                                </div>
+                                <div class="font-monospace text-muted small" style="font-size: 0.76rem; letter-spacing: 0.02em;">
+                                    {{ item.employee.emp_id }}
+                                </div>
                             </td>
-                            <td><span class="font-monospace text-success fw-bold">{{ item.employee.emp_id }}</span></td>
-                            <td>{{ item.employee.department.name|default:"--" }}</td>
                             <td>{{ item.employee.site.city|default:"--" }}</td>
-                            <td class="font-monospace">{{ item.attendance.punch_in|time:"h:i A"|default:"--" }}</td>
-                            <td class="font-monospace">{{ item.attendance.punch_out|time:"h:i A"|default:"--" }}</td>
-                            <td>{{ item.attendance.working_hours|default:"0.00" }} hrs</td>
-                            <td>
-                                {% if item.attendance %}
-                                    {% if item.attendance.status == 'PRESENT' %}
-                                        <span class="badge bg-success">Present</span>
-                                    {% elif item.attendance.status == 'HALF_DAY' %}
-                                        <span class="badge bg-warning text-dark">Half Day</span>
-                                    {% elif item.attendance.status == 'ON_LEAVE' %}
-                                        <span class="badge bg-info text-dark">On Leave</span>
-                                    {% else %}
-                                        <span class="badge bg-danger">Absent</span>
-                                    {% endif %}
+                            <td class="text-center font-monospace">{{ item.attendance.punch_in|time:"h:i A"|default:"--" }}</td>
+                            <td class="text-center font-monospace">{{ item.attendance.punch_out|time:"h:i A"|default:"--" }}</td>
+                            <td class="text-center fw-medium">{{ item.attendance.working_hours|default:"0.00" }} hrs</td>
+                            <td class="text-center">
+                                {% if item.attendance and item.attendance.punch_in and item.attendance.arrival_display %}
                                     {% if item.attendance.is_late %}
-                                        <span class="badge bg-danger ms-1">Late</span>
+                                        <span class="badge" style="background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; font-weight: 600; width: 115px; display: inline-block; text-align: center; padding: 4px 6px; font-size: 0.76rem;">
+                                            {{ item.attendance.arrival_display }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge" style="background: #DCFCE7; color: #15803D; border: 1px solid #BBF7D0; font-weight: 600; width: 115px; display: inline-block; text-align: center; padding: 4px 6px; font-size: 0.76rem;">
+                                            On Time
+                                        </span>
                                     {% endif %}
                                 {% else %}
-                                    <span class="badge bg-danger">Absent</span>
+                                    <span class="text-muted">--</span>
                                 {% endif %}
                             </td>
-                            <td><small class="text-muted">{{ item.attendance.get_device_source_display|default:"--" }}</small></td>
+                            <td class="text-center pe-4">
+                                {% if item.attendance %}
+                                    {% if item.attendance.status == 'PRESENT' %}
+                                        <span class="badge" style="background: #DCFCE7; color: #15803D; border: 1px solid #BBF7D0; font-weight: 600; padding: 4px 8px;">Present</span>
+                                    {% elif item.attendance.status == 'HALF_DAY' %}
+                                        <span class="badge" style="background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; font-weight: 600; padding: 4px 8px;">Half Day</span>
+                                    {% elif item.attendance.status == 'ON_LEAVE' %}
+                                        <span class="badge" style="background: #E0F2FE; color: #0369A1; border: 1px solid #BAE6FD; font-weight: 600; padding: 4px 8px;">On Leave</span>
+                                    {% else %}
+                                        <span class="badge" style="background: #FEE2E2; color: #B91C1C; border: 1px solid #FECACA; font-weight: 600; padding: 4px 8px;">Absent</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge" style="background: #FEE2E2; color: #B91C1C; border: 1px solid #FECACA; font-weight: 600; padding: 4px 8px;">Absent</span>
+                                {% endif %}
+                            </td>
                         </tr>
                     {% empty %}
-                        <tr><td colspan="9" class="text-center py-4 text-muted">No employees recorded.</td></tr>
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-calendar-x fs-2 d-block mb-2 opacity-50"></i>
+                                No employees recorded.
+                            </td>
+                        </tr>
                     {% endfor %}
+                    <!-- DYNAMIC EMPTY FILTER ROW -->
+                    <tr id="filteredEmptyRow" style="display: none;">
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-person-x fs-2 d-block mb-2 opacity-50"></i>
+                            No employees found matching selected status filter.
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
+
+        <!-- TABLE FOOTER: PAGINATION & PAGE SIZE (5, 10, 20, 50, 100) -->
+        <div class="p-3 px-4 bg-white border-top d-flex flex-wrap justify-content-between align-items-center gap-3" id="tablePaginationFooter" style="background-color: #FFFFFF !important; border-color: #E2E8F0 !important;">
+            <!-- Left Side: Show 5, 10, 20, 50, 100 & Showing X to Y of Z -->
+            <div class="d-flex align-items-center gap-2">
+                <span class="small text-muted">Show</span>
+                <select id="pageSizeSelect" class="form-select form-select-sm" style="width: auto; font-weight: 600; border-radius: 6px; border: 1px solid #CBD5E1; cursor: pointer; background-color: #FFFFFF;">
+                    <option value="5"selected>5</option>
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                <span class="small text-muted">per page</span>
+                <span class="text-muted mx-2 d-none d-sm-inline">|</span>
+                <span class="small text-muted" id="pageInfoText">Showing 1 to 10 of {{ roster|length }} records</span>
+            </div>
+
+            <!-- Right Side: Page Next Left and Right Arrow -->
+            <div class="d-flex align-items-center gap-1" id="paginationControls">
+                <button type="button" class="btn btn-sm btn-outline-secondary px-2.5 py-1" id="prevPageBtn" title="Previous Page" style="border-radius: 6px;" disabled>
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <div id="pageNumbersContainer" class="d-flex align-items-center gap-1">
+                    <!-- Dynamic page numbers -->
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-secondary px-2.5 py-1" id="nextPageBtn" title="Next Page" style="border-radius: 6px;">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const allRows = Array.from(document.querySelectorAll('.attendance-data-row'));
+    const pageSizeSelect = document.getElementById('pageSizeSelect');
+    const pageInfoText = document.getElementById('pageInfoText');
+    const prevPageBtn = document.getElementById('prevPageBtn');
+    const nextPageBtn = document.getElementById('nextPageBtn');
+    const pageNumbersContainer = document.getElementById('pageNumbersContainer');
+    const filteredEmptyRow = document.getElementById('filteredEmptyRow');
+    const statPills = document.querySelectorAll('.attendance-stat-pill');
+
+    let currentStatusFilter = null; // null = show all
+    let currentPage = 1;
+    let pageSize = parseInt(pageSizeSelect ? pageSizeSelect.value : 10, 10);
+    let currentFilteredRows = [...allRows];
+
+    // Check URL parameters for status filter
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialStatus = urlParams.get('status');
+    if (initialStatus && ['PRESENT', 'ABSENT', 'ON_LEAVE', 'LATE'].includes(initialStatus.toUpperCase())) {
+        currentStatusFilter = initialStatus.toUpperCase();
+        statPills.forEach(p => {
+            if (p.getAttribute('data-status-filter') === currentStatusFilter) {
+                p.classList.add('active-pill');
+            } else {
+                p.classList.remove('active-pill');
+            }
+        });
+    }
+
+    function applyFilterAndPaginate() {
+        // 1. Filter rows by selected status button
+        currentFilteredRows = allRows.filter(row => {
+            if (!currentStatusFilter) return true;
+            const status = row.getAttribute('data-status');
+            const isLate = row.getAttribute('data-late') === 'true';
+
+            if (currentStatusFilter === 'PRESENT') return status === 'PRESENT';
+            if (currentStatusFilter === 'ABSENT') return status === 'ABSENT';
+            if (currentStatusFilter === 'ON_LEAVE') return (status === 'ON_LEAVE' || status === 'HALF_DAY');
+            if (currentStatusFilter === 'LATE') return isLate;
+            return true;
+        });
+
+        const total = currentFilteredRows.length;
+        const totalPages = Math.ceil(total / pageSize) || 1;
+
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
+        // Hide all data rows first
+        allRows.forEach(row => row.style.display = 'none');
+
+        // Show page slice
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = Math.min(startIndex + pageSize, total);
+
+        if (total === 0) {
+            if (filteredEmptyRow) filteredEmptyRow.style.display = '';
+        } else {
+            if (filteredEmptyRow) filteredEmptyRow.style.display = 'none';
+            for (let i = startIndex; i < endIndex; i++) {
+                currentFilteredRows[i].style.display = '';
+            }
+        }
+
+        // Update info text
+        if (pageInfoText) {
+            if (total === 0) {
+                pageInfoText.textContent = 'Showing 0 to 0 of 0 records';
+            } else {
+                pageInfoText.textContent = `Showing ${startIndex + 1} to ${endIndex} of ${total} records`;
+            }
+        }
+
+        // Prev & Next buttons state
+        if (prevPageBtn) prevPageBtn.disabled = (currentPage <= 1);
+        if (nextPageBtn) nextPageBtn.disabled = (currentPage >= totalPages);
+
+        // Render page number buttons
+        if (pageNumbersContainer) {
+            pageNumbersContainer.innerHTML = '';
+            for (let p = 1; p <= totalPages; p++) {
+                if (totalPages > 7) {
+                    if (p !== 1 && p !== totalPages && Math.abs(p - currentPage) > 1) {
+                        if (p === 2 || p === totalPages - 1) {
+                            const dots = document.createElement('span');
+                            dots.className = 'px-1 text-muted small';
+                            dots.textContent = '...';
+                            pageNumbersContainer.appendChild(dots);
+                        }
+                        continue;
+                    }
+                }
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `btn btn-sm px-2.5 py-1 ${p === currentPage ? 'btn-dark fw-bold text-white shadow-sm' : 'btn-outline-secondary'}`;
+                btn.style.borderRadius = '6px';
+                btn.style.minWidth = '32px';
+                btn.textContent = p;
+                btn.addEventListener('click', () => {
+                    currentPage = p;
+                    applyFilterAndPaginate();
+                });
+                pageNumbersContainer.appendChild(btn);
+            }
+        }
+    }
+
+    // Status pill click listeners
+    statPills.forEach(pill => {
+        pill.addEventListener('click', function () {
+            const filterVal = this.getAttribute('data-status-filter');
+            if (currentStatusFilter === filterVal) {
+                // Clicking active button toggles back to show all
+                currentStatusFilter = null;
+                this.classList.remove('active-pill');
+            } else {
+                currentStatusFilter = filterVal;
+                statPills.forEach(p => p.classList.remove('active-pill'));
+                this.classList.add('active-pill');
+            }
+
+            currentPage = 1;
+            applyFilterAndPaginate();
+        });
+    });
+
+    // Page size selector listener
+    if (pageSizeSelect) {
+        pageSizeSelect.addEventListener('change', function () {
+            pageSize = parseInt(this.value, 10);
+            currentPage = 1;
+            applyFilterAndPaginate();
+        });
+    }
+
+    // Prev & Next navigation listeners
+    if (prevPageBtn) {
+        prevPageBtn.addEventListener('click', function () {
+            if (currentPage > 1) {
+                currentPage--;
+                applyFilterAndPaginate();
+            }
+        });
+    }
+    if (nextPageBtn) {
+        nextPageBtn.addEventListener('click', function () {
+            const totalPages = Math.ceil(currentFilteredRows.length / pageSize) || 1;
+            if (currentPage < totalPages) {
+                currentPage++;
+                applyFilterAndPaginate();
+            }
+        });
+    }
+
+    // Run initial pagination
+    applyFilterAndPaginate();
+});
+</script>
 {% endblock %}
 

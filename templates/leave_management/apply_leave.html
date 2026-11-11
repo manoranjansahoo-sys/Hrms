@@ -1,73 +1,255 @@
 {% extends 'base.html' %}
-{% block title %}Apply for Leave{% endblock %}
+{% load static %}
+{% block title %}Apply for Leave / Time-Off{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Light, smooth, luxury leave balance cards */
+.al-balance-card {
+  background: #FFFFFF;
+  border-radius: 12px;
+  padding: 1.25rem 1.4rem;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+.al-balance-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+.al-balance-card.card-sl {
+  background: #F0FDF4;
+  border-color: #BBF7D0;
+}
+.al-balance-card.card-pl {
+  background: #EFF6FF;
+  border-color: #BFDBFE;
+}
+
+.al-badge-pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  letter-spacing: 0.03em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.al-badge-sl {
+  background: #16A34A;
+  color: #FFFFFF;
+}
+.al-badge-pl {
+  background: #2563EB;
+  color: #FFFFFF;
+}
+
+.al-meta-strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  padding-top: 0.75rem;
+  margin-top: 0.75rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  font-size: 0.76rem;
+  color: #64748B;
+}
+
+.al-page-wrapper {
+  width: 100%;
+  padding: 0.25rem 0 2.5rem 0;
+}
+
+.al-content-container {
+  width: 100%;
+  max-width: 100%;
+}
+
+.al-form-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+  padding: 1.75rem 2rem;
+  width: 100%;
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid p-0">
-    <div class="mb-4">
-        <h3 class="fw-bold mb-1">Apply for Leave / Time-Off</h3>
-        <p class="text-muted small mb-0">Submit leave applications with automatic balance validation and multi-tier manager approvals.</p>
-    </div>
+<div class="al-page-wrapper">
+    <div class="al-content-container">
+        <!-- Page Header -->
+        <div class="mb-4">
+            <h3 class="fw-bold mb-1" style="color: #1E293B;">Apply for Leave / Time-Off</h3>
+            <p class="text-muted small mb-0">Submit leave applications with automatic balance validation and multi-tier manager approvals.</p>
+        </div>
 
-    <!-- LEAVE BALANCE SUMMARY CARDS -->
-    <div class="row g-3 mb-4">
+        <!-- LEAVE BALANCE SUMMARY CARDS (Sick Leave & Paid Leave - Light, Smooth, No Overlap) -->
+        <div class="row g-3 mb-4">
         {% for b in balances %}
-            <div class="col-sm-6 col-md-3">
-                <div class="p-3 border rounded bg-light text-center h-100">
-                    <span class="badge bg-secondary mb-1">{{ b.leave_type.code }}</span>
-                    <div class="fw-bold text-dark fs-4">{{ b.available_days }}</div>
-                    <small class="text-muted">{{ b.leave_type.name }} Available</small>
+            <div class="col-sm-6">
+                <div class="al-balance-card {% if b.leave_type.code == 'SL' %}card-sl{% else %}card-pl{% endif %}">
+                    <!-- Top Row: Badge + Name on Left, Days Left on Right -->
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="al-badge-pill {% if b.leave_type.code == 'SL' %}al-badge-sl{% else %}al-badge-pl{% endif %}">
+                                {% if b.leave_type.code == 'SL' %}
+                                    <i class="bi bi-heart-pulse-fill"></i> SL
+                                {% else %}
+                                    <i class="bi bi-briefcase-fill"></i> PL
+                                {% endif %}
+                            </span>
+                            <span class="fw-bold" style="font-size: 0.90rem; color: #1E293B;">
+                                {{ b.leave_type.name }} Available
+                            </span>
+                        </div>
+                        <div>
+                            <span class="fw-bold" style="font-size: 1.55rem; color: #1E293B;">{{ b.available_days }}</span>
+                            <span class="text-muted" style="font-size: 0.80rem;">days</span>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Meta Strip: Allocated, Used, Pending -->
+                    <div class="al-meta-strip">
+                        <span>Allocated: <b style="color: #334155;">{{ b.allocated_days }}</b></span>
+                        <span>&bull;</span>
+                        <span>Used: <b style="color: #334155;">{{ b.used_days }}</b></span>
+                        <span>&bull;</span>
+                        <span>Pending: <b style="color: #334155;">{{ b.pending_days }}</b></span>
+                    </div>
                 </div>
             </div>
         {% endfor %}
     </div>
 
-    <div class="hrms-card p-4" style="max-width: 750px;">
-        <form method="POST" enctype="multipart/form-data">
+    <!-- APPLICATION FORM CARD -->
+    <div class="al-form-card">
+        <form method="POST" enctype="multipart/form-data" id="leaveApplicationForm">
             {% csrf_token %}
+
+            <!-- Row 1: Leave Category & Half-Day Switch -->
             <div class="row g-3 mb-3">
                 <div class="col-md-6">
-                    <label class="form-label small fw-semibold">Leave Category *</label>
+                    <label class="form-label small fw-bold text-dark" for="id_leave_type">Leave Category *</label>
                     {{ form.leave_type }}
                 </div>
-                <div class="col-md-6 d-flex align-items-center mt-4">
-                    <div class="form-check">
+                <div class="col-md-6 d-flex align-items-center mt-3 mt-md-4">
+                    <div class="form-check form-switch d-flex align-items-center gap-2 pt-md-2">
                         {{ form.is_half_day }}
-                        <label class="form-check-label small fw-semibold" for="halfDayCheck">
+                        <label class="form-check-label fw-semibold text-dark small" for="halfDayCheck">
                             Is this a Half-Day Leave?
                         </label>
                     </div>
                 </div>
             </div>
 
-            <div class="row g-3 mb-3">
-                <div class="col-md-6">
-                    <label class="form-label small fw-semibold">Start Date *</label>
+            <!-- Row 2: Dynamic Dates (Start Date & End Date OR Single Date for Half-Day) -->
+            <div class="row g-3 mb-3" id="dateFieldsRow">
+                <div class="col-md-6" id="startDateCol">
+                    <label class="form-label small fw-bold text-dark" id="startDateLabel" for="id_start_date">Start Date *</label>
                     {{ form.start_date }}
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label small fw-semibold">End Date *</label>
+                <div class="col-md-6" id="endDateCol">
+                    <label class="form-label small fw-bold text-dark" id="endDateLabel" for="id_end_date">End Date *</label>
                     {{ form.end_date }}
                 </div>
             </div>
 
+            <!-- Row 3: Reason for Leave -->
             <div class="mb-3">
-                <label class="form-label small fw-semibold">Reason for Leave *</label>
+                <label class="form-label small fw-bold text-dark" for="id_reason">Reason for Leave *</label>
                 {{ form.reason }}
             </div>
 
+            <!-- Row 4: Optional Attachment -->
             <div class="mb-4">
-                <label class="form-label small fw-semibold">Attachment (Optional / Required for Medical Sick Leave > 2 days)</label>
+                <label class="form-label small fw-semibold text-muted" for="id_attachment">
+                    Supporting Document / Medical Attachment (Optional)
+                </label>
                 {{ form.attachment }}
             </div>
 
+            <!-- Submit Controls -->
             <div class="d-flex justify-content-end gap-2 pt-3 border-top">
-                <a href="{% url 'leave_management:my_leaves' %}" class="btn btn-outline-secondary">Cancel</a>
-                <button type="submit" class="btn btn-hrms px-4">
+                <a href="{% url 'leave_management:my_leaves' %}" class="btn btn-outline-secondary px-3" style="border-radius: 8px;">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-primary px-4 fw-semibold" style="border-radius: 8px;">
                     <i class="bi bi-send-fill me-1"></i> Submit Leave Request
                 </button>
             </div>
         </form>
     </div>
+    </div>
 </div>
-{% endblock %}
 
+<!-- Dynamic Behavior for Half-Day Leave: Single Date & Hide End Date -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const halfDayCheck = document.getElementById('halfDayCheck');
+    const startDateLabel = document.getElementById('startDateLabel');
+    const startDateCol = document.getElementById('startDateCol');
+    const endDateCol = document.getElementById('endDateCol');
+    const startDateInput = document.getElementById('id_start_date');
+    const endDateInput = document.getElementById('id_end_date');
+
+    function updateDateFields() {
+        if (!halfDayCheck) return;
+        const isHalfDay = halfDayCheck.checked;
+
+        if (isHalfDay) {
+            // Half-Day Mode:
+            // 1. Change label from "Start Date *" to "Date *"
+            if (startDateLabel) {
+                startDateLabel.textContent = 'Date *';
+            }
+            // 2. Expand Start Date to take full width
+            if (startDateCol) {
+                startDateCol.className = 'col-12';
+            }
+            // 3. Hide End Date column completely
+            if (endDateCol) {
+                endDateCol.classList.add('d-none');
+            }
+            // 4. Automatically keep End Date matching Start Date
+            if (startDateInput && endDateInput && startDateInput.value) {
+                endDateInput.value = startDateInput.value;
+            }
+        } else {
+            // Full-Day Mode:
+            if (startDateLabel) {
+                startDateLabel.textContent = 'Start Date *';
+            }
+            if (startDateCol) {
+                startDateCol.className = 'col-md-6';
+            }
+            if (endDateCol) {
+                endDateCol.classList.remove('d-none');
+            }
+        }
+    }
+
+    if (halfDayCheck) {
+        halfDayCheck.addEventListener('change', updateDateFields);
+    }
+
+    if (startDateInput) {
+        startDateInput.addEventListener('change', function() {
+            if (halfDayCheck && halfDayCheck.checked && endDateInput) {
+                endDateInput.value = startDateInput.value;
+            }
+        });
+    }
+
+    // Trigger on page load
+    updateDateFields();
+});
+</script>
+{% endblock %}

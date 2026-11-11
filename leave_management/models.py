@@ -104,3 +104,102 @@ class LeaveRequest(models.Model):
 
     def __str__(self):
         return f"{self.employee.emp_id} - {self.leave_type.code} ({self.start_date} to {self.end_date}): {self.status}"
+
+    @property
+    def sick_leave_available(self):
+        if hasattr(self, '_sick_leave_available'):
+            return self._sick_leave_available
+        bal = self.employee.leave_balances.filter(leave_type__code='SL', year=self.start_date.year).first()
+        return bal.available_days if bal else Decimal('0.0')
+
+    @property
+    def sick_leave_allocated(self):
+        if hasattr(self, '_sick_leave_allocated'):
+            return self._sick_leave_allocated
+        bal = self.employee.leave_balances.filter(leave_type__code='SL', year=self.start_date.year).first()
+        return bal.allocated_days if bal else Decimal('0.0')
+
+    @property
+    def sick_leave_used(self):
+        if hasattr(self, '_sick_leave_used'):
+            return self._sick_leave_used
+        bal = self.employee.leave_balances.filter(leave_type__code='SL', year=self.start_date.year).first()
+        return bal.used_days if bal else Decimal('0.0')
+
+    @property
+    def sick_leave_pending(self):
+        if hasattr(self, '_sick_leave_pending'):
+            return self._sick_leave_pending
+        bal = self.employee.leave_balances.filter(leave_type__code='SL', year=self.start_date.year).first()
+        return bal.pending_days if bal else Decimal('0.0')
+
+    @property
+    def paid_leave_available(self):
+        if hasattr(self, '_paid_leave_available'):
+            return self._paid_leave_available
+        bal = self.employee.leave_balances.filter(leave_type__code='PL', year=self.start_date.year).first()
+        return bal.available_days if bal else Decimal('0.0')
+
+    @property
+    def paid_leave_allocated(self):
+        if hasattr(self, '_paid_leave_allocated'):
+            return self._paid_leave_allocated
+        bal = self.employee.leave_balances.filter(leave_type__code='PL', year=self.start_date.year).first()
+        return bal.allocated_days if bal else Decimal('0.0')
+
+    @property
+    def paid_leave_used(self):
+        if hasattr(self, '_paid_leave_used'):
+            return self._paid_leave_used
+        bal = self.employee.leave_balances.filter(leave_type__code='PL', year=self.start_date.year).first()
+        return bal.used_days if bal else Decimal('0.0')
+
+    @property
+    def paid_leave_pending(self):
+        if hasattr(self, '_paid_leave_pending'):
+            return self._paid_leave_pending
+        bal = self.employee.leave_balances.filter(leave_type__code='PL', year=self.start_date.year).first()
+        return bal.pending_days if bal else Decimal('0.0')
+
+
+def ensure_employee_leave_balances(employee, year=None):
+    """Ensures employee has balances for company standard leave types (Sick Leave SL and Paid Leave PL)."""
+    from django.utils import timezone
+    if year is None:
+        year = timezone.localdate().year
+
+    sl_type, _ = LeaveType.objects.get_or_create(
+        code='SL',
+        defaults={'name': 'Sick Leave', 'days_per_year': Decimal('12.0'), 'is_paid': True, 'requires_attachment': True}
+    )
+    pl_type, _ = LeaveType.objects.get_or_create(
+        code='PL',
+        defaults={'name': 'Paid Leave', 'days_per_year': Decimal('18.0'), 'is_paid': True}
+    )
+
+    sl_bal, _ = LeaveBalance.objects.get_or_create(
+        employee=employee,
+        leave_type=sl_type,
+        year=year,
+        defaults={'allocated_days': sl_type.days_per_year, 'used_days': Decimal('0.0'), 'pending_days': Decimal('0.0')}
+    )
+    pl_bal, _ = LeaveBalance.objects.get_or_create(
+        employee=employee,
+        leave_type=pl_type,
+        year=year,
+        defaults={'allocated_days': pl_type.days_per_year, 'used_days': Decimal('0.0'), 'pending_days': Decimal('0.0')}
+    )
+    return sl_bal, pl_bal
+
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=EmployeeProfile)
+def auto_create_leave_balances_on_employee_creation(sender, instance, created, **kwargs):
+    if created:
+        try:
+            ensure_employee_leave_balances(instance)
+        except Exception:
+            pass
+

@@ -24,6 +24,8 @@ urlpatterns = [
     path('hr/candidates/<int:application_id>/convert-employee/', views.convert_to_employee, name='convert_to_employee'),
 
     # 2. Public Candidate Registration Portal (No Login Required - Google Form Style)
+    path('candidate/api/google-auth/', views.candidate_google_auth, name='candidate_google_auth'),
+    path('candidate/api/google-logout/', views.candidate_google_logout, name='candidate_google_logout'),
     path('candidate/apply/', views.candidate_register, name='candidate_apply'),
     path('candidate/fast-apply/', views.candidate_fast_apply, name='candidate_fast_apply'),
     path('candidate/fast-apply/<int:job_id>/', views.candidate_fast_apply, name='candidate_fast_apply_job'),

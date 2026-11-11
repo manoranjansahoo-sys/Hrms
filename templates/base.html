@@ -83,7 +83,7 @@
                 <li class="menu-item">
                     <a href="{% url 'recruitment:candidates_list' %}" class="menu-link {% if 'candidates' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-person-lines-fill"></i>
-                        <span>Candidate Pipeline</span>
+                        <span>Interview candidates</span>
                     </a>
                 </li>
                 <li class="menu-item">
@@ -94,6 +94,41 @@
                             <span class="badge bg-warning text-dark menu-badge">{{ pending_leaves_count }}</span>
                         {% endif %}
                     </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#attendanceSubmenuHead" class="menu-link d-flex align-items-center justify-content-between {% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="collapse" role="button" aria-expanded="{% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}true{% else %}false{% endif %}" aria-controls="attendanceSubmenuHead">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-calendar-check"></i>
+                            <span>Attendance</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-1.5">
+                            {% if pending_corrections_count > 0 %}
+                                <span class="badge bg-warning text-dark rounded-pill" style="font-size: 0.68rem;">{{ pending_corrections_count }}</span>
+                            {% endif %}
+                            <i class="bi bi-chevron-down small" style="font-size: 0.72rem;"></i>
+                        </div>
+                    </a>
+                    <div class="collapse {% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}show{% endif %}" id="attendanceSubmenuHead">
+                        <ul class="list-unstyled ps-3 pt-1 pb-1 mb-0" style="background: rgba(0,0,0,0.18); border-radius: 8px; margin-top: 3px;">
+                            <li>
+                                <a href="{% url 'attendance:admin_register' %}" class="menu-link py-1.5 px-3 {% if 'admin_register' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
+                                    <i class="bi bi-calendar-check-fill me-2" style="font-size: 0.85rem;"></i>
+                                    <span>Daily Register</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{% url 'attendance:corrections_list' %}" class="menu-link py-1.5 px-3 d-flex align-items-center justify-content-between {% if 'corrections' in request.resolver_match.url_name %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-clock-history me-2" style="font-size: 0.85rem;"></i>
+                                        <span>Attendance Corrections</span>
+                                    </div>
+                                    {% if pending_corrections_count > 0 %}
+                                        <span class="badge bg-warning text-dark menu-badge">{{ pending_corrections_count }}</span>
+                                    {% endif %}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </li>
                 <li class="menu-item">
                     <a href="{% url 'payroll:dashboard' %}" class="menu-link {% if 'payroll' in request.resolver_match.url_name %}active{% endif %}">
@@ -126,66 +161,59 @@
                 <li class="menu-item">
                     <a href="{% url 'recruitment:links_list' %}" class="menu-link {% if 'links' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-link-45deg text-warning"></i>
-                        <span>Recruitment Links</span>
+                        <span>Links Generation</span>
                     </a>
                 </li>
                 <li class="menu-item">
                     <a href="{% url 'recruitment:candidates_list' %}" class="menu-link {% if 'candidates' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-person-lines-fill text-info"></i>
-                        <span>Candidate Pipeline</span>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="{% url 'recruitment:jobs_list' %}" class="menu-link {% if 'jobs' in request.resolver_match.url_name %}active{% endif %}">
-                        <i class="bi bi-briefcase-fill text-success"></i>
-                        <span>Job Openings</span>
-                    </a>
-                </li>
-
-                <li class="menu-category">HR Administration</li>
-                <li class="menu-item">
-                    <a href="{% url 'portal:dashboard_hr' %}" class="menu-link {% if request.resolver_match.url_name == 'dashboard_hr' %}active{% endif %}">
-                        <i class="bi bi-grid-1x2-fill"></i>
-                        <span>HR Command Center</span>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="{% url 'employees:employee_list' %}" class="menu-link {% if 'employee_list' in request.resolver_match.url_name %}active{% endif %}">
-                        <i class="bi bi-people"></i>
-                        <span>Employee Directory</span>
+                        <span>Interview</span>
                     </a>
                 </li>
                 <li class="menu-item">
                     <a href="{% url 'employees:employee_create' %}" class="menu-link {% if 'employee_create' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-person-plus-fill"></i>
-                        <span>Onboard Employee</span>
+                        <span>Add Employee</span>
                     </a>
                 </li>
+
+                <li class="menu-category">HR Administration</li>
                 <li class="menu-item">
-                    <a href="{% url 'employees:profile_corrections_list' %}" class="menu-link">
-                        <i class="bi bi-person-badge"></i>
-                        <span>Profile Corrections</span>
-                        {% if pending_profile_requests_count > 0 %}
-                            <span class="badge bg-danger menu-badge">{{ pending_profile_requests_count }}</span>
-                        {% endif %}
+                    <a href="#attendanceSubmenuHR" class="menu-link d-flex align-items-center justify-content-between {% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="collapse" role="button" aria-expanded="{% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}true{% else %}false{% endif %}" aria-controls="attendanceSubmenuHR">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-calendar-check"></i>
+                            <span>Attendance</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-1.5">
+                            {% if pending_corrections_count > 0 %}
+                                <span class="badge bg-warning text-dark rounded-pill" style="font-size: 0.68rem;">{{ pending_corrections_count }}</span>
+                            {% endif %}
+                            <i class="bi bi-chevron-down small" style="font-size: 0.72rem;"></i>
+                        </div>
                     </a>
+                    <div class="collapse {% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}show{% endif %}" id="attendanceSubmenuHR">
+                        <ul class="list-unstyled ps-3 pt-1 pb-1 mb-0" style="background: rgba(0,0,0,0.18); border-radius: 8px; margin-top: 3px;">
+                            <li>
+                                <a href="{% url 'attendance:admin_register' %}" class="menu-link py-1.5 px-3 {% if 'admin_register' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
+                                    <i class="bi bi-calendar-check-fill me-2" style="font-size: 0.85rem;"></i>
+                                    <span>Daily Register</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{% url 'attendance:corrections_list' %}" class="menu-link py-1.5 px-3 d-flex align-items-center justify-content-between {% if 'corrections' in request.resolver_match.url_name %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-clock-history me-2" style="font-size: 0.85rem;"></i>
+                                        <span>Attendance Corrections</span>
+                                    </div>
+                                    {% if pending_corrections_count > 0 %}
+                                        <span class="badge bg-warning text-dark menu-badge">{{ pending_corrections_count }}</span>
+                                    {% endif %}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </li>
-                <li class="menu-item">
-                    <a href="{% url 'attendance:admin_register' %}" class="menu-link">
-                        <i class="bi bi-calendar-check"></i>
-                        <span>Attendance Register</span>
-                    </a>
-                </li>
-                <li class="menu-item">
-                    <a href="{% url 'attendance:corrections_list' %}" class="menu-link">
-                        <i class="bi bi-clock-history"></i>
-                        <span>Attendance Corrections</span>
-                        {% if pending_corrections_count > 0 %}
-                            <span class="badge bg-warning text-dark menu-badge">{{ pending_corrections_count }}</span>
-                        {% endif %}
-                    </a>
-                </li>
-                <li class="menu-item">
+                 <li class="menu-item">
                     <a href="{% url 'leave_management:admin_queue' %}" class="menu-link">
                         <i class="bi bi-calendar2-week"></i>
                         <span>Leave Management</span>
@@ -201,6 +229,32 @@
                     </a>
                 </li>
                 <li class="menu-item">
+                    <a href="{% url 'portal:dashboard_hr' %}" class="menu-link {% if request.resolver_match.url_name == 'dashboard_hr' %}active{% endif %}">
+                        <i class="bi bi-grid-1x2-fill"></i>
+                        <span>HR Command Center</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="{% url 'employees:employee_list' %}" class="menu-link {% if 'employee_list' in request.resolver_match.url_name %}active{% endif %}">
+                        <i class="bi bi-people"></i>
+                        <span> All Employee</span>
+                    </a>
+                </li>
+                
+                <li class="menu-item">
+                    <a href="{% url 'employees:profile_corrections_list' %}" class="menu-link">
+                        <i class="bi bi-person-badge"></i>
+                        <span>Profile Corrections</span>
+                        {% if pending_profile_requests_count > 0 %}
+                            <span class="badge bg-danger menu-badge">{{ pending_profile_requests_count }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+            
+
+
+                
+                <li class="menu-item">
                     <a href="{% url 'performance:reviews_list' %}" class="menu-link">
                         <i class="bi bi-star-fill"></i>
                         <span>Reviews & Awards</span>
@@ -215,7 +269,7 @@
                 <li class="menu-item">
                     <a href="{% url 'support:tickets_list' %}" class="menu-link">
                         <i class="bi bi-headset"></i>
-                        <span>Employee Helpdesk</span>
+                        <span>Helpdesk</span>
                     </a>
                 </li>
 
@@ -235,19 +289,39 @@
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="{% url 'attendance:admin_register' %}" class="menu-link">
-                        <i class="bi bi-clock"></i>
-                        <span>Team Attendance</span>
+                    <a href="#attendanceSubmenuSM" class="menu-link d-flex align-items-center justify-content-between {% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="collapse" role="button" aria-expanded="{% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}true{% else %}false{% endif %}" aria-controls="attendanceSubmenuSM">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-clock"></i>
+                            <span>Team Attendance</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-1.5">
+                            {% if pending_corrections_count > 0 %}
+                                <span class="badge bg-warning text-dark rounded-pill" style="font-size: 0.68rem;">{{ pending_corrections_count }}</span>
+                            {% endif %}
+                            <i class="bi bi-chevron-down small" style="font-size: 0.72rem;"></i>
+                        </div>
                     </a>
-                </li>
-                <li class="menu-item">
-                    <a href="{% url 'attendance:corrections_list' %}" class="menu-link">
-                        <i class="bi bi-hourglass-split"></i>
-                        <span>Punch Corrections</span>
-                        {% if pending_corrections_count > 0 %}
-                            <span class="badge bg-warning text-dark menu-badge">{{ pending_corrections_count }}</span>
-                        {% endif %}
-                    </a>
+                    <div class="collapse {% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}show{% endif %}" id="attendanceSubmenuSM">
+                        <ul class="list-unstyled ps-3 pt-1 pb-1 mb-0" style="background: rgba(0,0,0,0.18); border-radius: 8px; margin-top: 3px;">
+                            <li>
+                                <a href="{% url 'attendance:admin_register' %}" class="menu-link py-1.5 px-3 {% if 'admin_register' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
+                                    <i class="bi bi-calendar-check-fill me-2" style="font-size: 0.85rem;"></i>
+                                    <span>Daily Register</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{% url 'attendance:corrections_list' %}" class="menu-link py-1.5 px-3 d-flex align-items-center justify-content-between {% if 'corrections' in request.resolver_match.url_name %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-hourglass-split me-2" style="font-size: 0.85rem;"></i>
+                                        <span>Punch Corrections</span>
+                                    </div>
+                                    {% if pending_corrections_count > 0 %}
+                                        <span class="badge bg-warning text-dark menu-badge">{{ pending_corrections_count }}</span>
+                                    {% endif %}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </li>
                 <li class="menu-item">
                     <a href="{% url 'leave_management:admin_queue' %}" class="menu-link">
@@ -391,7 +465,7 @@
                                 <span class="badge role-hr">HR</span>
                                 <div>
                                     <div class="fw-semibold">Smruti Rekha Swain</div>
-                                    <small class="text-muted">HR Administrator (People & Culture)</small>
+                                    <small class="text-muted">HR Administrator</small>
                                 </div>
                             </a>
                         </li>
@@ -400,7 +474,7 @@
                                 <span class="badge role-manager">Site Mgr</span>
                                 <div>
                                     <div class="fw-semibold">Rajesh Kumar Jena</div>
-                                    <small class="text-muted">Site Manager (Campuses & Operations)</small>
+                                    <small class="text-muted">Site Manager </small>
                                 </div>
                             </a>
                         </li>
@@ -418,14 +492,32 @@
 
                 <!-- QUICK PUNCH IN / OUT WIDGET IN TOPBAR -->
                 {% if request.user.employee_profile %}
+                    {% with today_att=user_today_attendance %}
                     <div class="d-none d-md-flex align-items-center gap-1">
-                        <a href="{% url 'attendance:punch_in' %}" class="btn btn-sm btn-outline-success" title="Quick Punch In">
-                            <i class="bi bi-box-arrow-in-right"></i> Punch In
-                        </a>
-                        <a href="{% url 'attendance:punch_out' %}" class="btn btn-sm btn-outline-danger" title="Quick Punch Out">
-                            <i class="bi bi-box-arrow-right"></i> Punch Out
-                        </a>
+                        {% if not today_att or not today_att.punch_in %}
+                            <a href="{% url 'attendance:punch_in' %}" class="btn btn-sm btn-outline-success" title="Punch In">
+                                <i class="bi bi-box-arrow-in-right"></i> Punch In
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-secondary opacity-50" disabled title="Punch In required before you can Punch Out" style="cursor: not-allowed;">
+                                <i class="bi bi-box-arrow-right"></i> Punch Out
+                            </button>
+                        {% elif not today_att.punch_out %}
+                            <button type="button" class="btn btn-sm btn-outline-secondary opacity-50" disabled title="Already Punched In today" style="cursor: not-allowed;">
+                                <i class="bi bi-box-arrow-in-right"></i> Punch In
+                            </button>
+                            <a href="{% url 'attendance:punch_out' %}" class="btn btn-sm btn-outline-danger" title="Punch Out">
+                                <i class="bi bi-box-arrow-right"></i> Punch Out
+                            </a>
+                        {% else %}
+                            <button type="button" class="btn btn-sm btn-outline-secondary opacity-50" disabled title="Already punched out for today. Punch In closed." style="cursor: not-allowed;">
+                                <i class="bi bi-box-arrow-in-right"></i> Punch In
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary opacity-50" disabled title="Already punched out for today." style="cursor: not-allowed;">
+                                <i class="bi bi-box-arrow-right"></i> Punch Out
+                            </button>
+                        {% endif %}
                     </div>
+                    {% endwith %}
                 {% endif %}
 
                 <!-- THEME TOGGLE (LIGHT / DARK) -->
@@ -532,10 +624,6 @@
         <footer class="mt-auto py-3 px-4 border-top text-center text-muted small bg-body">
             <div class="d-flex flex-wrap justify-content-between align-items-center">
                 <div>&copy; 2026 Company HRMS Enterprise. All rights reserved.</div>
-                <div class="d-flex gap-3">
-                    <span>Privacy Policy</span>
-                    <span>Terms of Employment</span>
-                </div>
             </div>
         </footer>
     </div>

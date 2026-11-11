@@ -9,7 +9,7 @@ from accounts.decorators import role_required, hr_required, site_manager_require
 from organization.models import Department, Site, Holiday, CompanyEvent, Announcement, CompanyPolicy, EventParticipant
 from employees.models import EmployeeProfile, ProfileCorrectionRequest
 from attendance.models import Attendance, AttendanceCorrectionRequest
-from leave_management.models import LeaveRequest, LeaveBalance
+from leave_management.models import LeaveRequest, LeaveBalance, ensure_employee_leave_balances
 from payroll.models import PayrollPeriod, Payslip
 from performance.models import Goal, PerformanceReview, EmployeeAward
 from support.models import SupportTicket, OfficialDocumentRequest, Asset
@@ -95,7 +95,8 @@ def company_home_portal(request):
     # 7. Quick stats for user
     leave_balances = []
     if emp_profile:
-        leave_balances = LeaveBalance.objects.filter(employee=emp_profile, year=today.year)
+        ensure_employee_leave_balances(emp_profile, today.year)
+        leave_balances = LeaveBalance.objects.filter(employee=emp_profile, year=today.year, leave_type__code__in=['SL', 'PL']).select_related('leave_type')
 
     return render(request, 'portal/home.html', {
         'emp_profile': emp_profile,
@@ -128,8 +129,9 @@ def dashboard_employee(request):
     # Today's attendance
     today_attendance = Attendance.objects.filter(employee=emp_profile, date=today).first()
 
-    # Leave balances for this year
-    leave_balances = LeaveBalance.objects.filter(employee=emp_profile, year=today.year).select_related('leave_type')
+    # Leave balances for this year (Sick Leave & Paid Leave)
+    ensure_employee_leave_balances(emp_profile, today.year)
+    leave_balances = LeaveBalance.objects.filter(employee=emp_profile, year=today.year, leave_type__code__in=['SL', 'PL']).select_related('leave_type')
 
     # Recent leave requests
     my_leaves = LeaveRequest.objects.filter(employee=emp_profile).select_related('leave_type')[:5]

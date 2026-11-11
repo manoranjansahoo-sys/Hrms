@@ -51,17 +51,28 @@
                             {% endif %}
                         </div>
 
-                        <div class="d-flex justify-content-center gap-2">
+                        <div class="d-flex justify-content-center align-items-center gap-2">
                             {% if not today_attendance or not today_attendance.punch_in %}
                                 <a href="{% url 'attendance:punch_in' %}" class="btn btn-warning btn-sm px-4 fw-bold shadow-sm">
                                     <i class="bi bi-box-arrow-in-right"></i> Punch In Now
                                 </a>
+                                <button type="button" class="btn btn-outline-light btn-sm px-3 opacity-50" disabled title="Punch In required before you can Punch Out" style="cursor: not-allowed;">
+                                    <i class="bi bi-box-arrow-right"></i> Punch Out
+                                </button>
                             {% elif not today_attendance.punch_out %}
+                                <button type="button" class="btn btn-outline-light btn-sm px-3 opacity-50" disabled title="Already Punched In today" style="cursor: not-allowed;">
+                                    <i class="bi bi-box-arrow-in-right"></i> Punch In
+                                </button>
                                 <a href="{% url 'attendance:punch_out' %}" class="btn btn-outline-light btn-sm px-4 fw-bold">
                                     <i class="bi bi-box-arrow-right"></i> Punch Out
                                 </a>
                             {% else %}
-                                <span class="badge bg-white text-dark py-2 px-3"><i class="bi bi-check-all text-success"></i> Day Completed</span>
+                                <button type="button" class="btn btn-outline-light btn-sm px-3 opacity-50" disabled title="Already punched out for today. Punch In closed." style="cursor: not-allowed;">
+                                    <i class="bi bi-box-arrow-in-right"></i> Punch In
+                                </button>
+                                <button type="button" class="btn btn-outline-light btn-sm px-3 opacity-50" disabled title="Already punched out for today." style="cursor: not-allowed;">
+                                    <i class="bi bi-box-arrow-right"></i> Punch Out
+                                </button>
                             {% endif %}
                         </div>
                     </div>

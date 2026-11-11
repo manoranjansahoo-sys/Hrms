@@ -176,6 +176,11 @@ class Candidate(models.Model):
     gender = models.CharField(max_length=20, choices=GENDER_CHOICES, default='UNDISCLOSED')
     photo = models.ImageField(upload_to='candidates/photos/', blank=True, null=True)
 
+    # Google Authentication & Identity Verification
+    google_sub = models.CharField(max_length=100, blank=True, null=True, db_index=True, help_text="Google User ID")
+    google_picture_url = models.URLField(max_length=500, blank=True, null=True, help_text="Google Profile Avatar URL")
+    is_google_verified = models.BooleanField(default=False, help_text="Verified via Google Identity Services / OAuth")
+
     current_address = models.TextField(blank=True)
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100, blank=True, default='')
@@ -209,6 +214,8 @@ class Candidate(models.Model):
     def get_photo_url(self):
         if self.photo and hasattr(self.photo, 'url'):
             return self.photo.url
+        if self.google_picture_url:
+            return self.google_picture_url
         name_parts = self.full_name.split()
         first = name_parts[0] if name_parts else 'User'
         last = name_parts[-1] if len(name_parts) > 1 else ''
@@ -333,6 +340,10 @@ class CandidateDocument(models.Model):
 
 
 class JobApplication(models.Model):
+    class ApplicationType(models.TextChoices):
+        ONLINE_FAST_APPLY = 'ONLINE_FAST_APPLY', 'Candidate Job Application (Online)'
+        OFFICE_REGISTRATION = 'OFFICE_REGISTRATION', 'Candidate Registration (Office Walk-In)'
+
     class Status(models.TextChoices):
         SUBMITTED = 'SUBMITTED', 'Submitted'
         UNDER_REVIEW = 'UNDER_REVIEW', 'Under Review'
@@ -361,6 +372,18 @@ class JobApplication(models.Model):
         null=True,
         blank=True,
         related_name='applications'
+    )
+    application_type = models.CharField(
+        max_length=30,
+        choices=ApplicationType.choices,
+        default=ApplicationType.OFFICE_REGISTRATION,
+        db_index=True,
+        help_text="Tracks whether application is online pre-screening fast-apply or in-person office registration"
+    )
+    is_office_registered = models.BooleanField(
+        default=True,
+        db_index=True,
+        help_text="True if candidate completed in-person office walk-in registration form"
     )
     resume = models.FileField(upload_to='candidates/resumes/')
     status = models.CharField(max_length=30, choices=Status.choices, default=Status.SUBMITTED)

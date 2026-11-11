@@ -1,78 +1,919 @@
 {% extends 'base.html' %}
-{% block title %}Attendance Corrections Queue{% endblock %}
+{% load static %}
+{% block title %}Attendance Corrections Queue | Company HRMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ==========================================================================
+       ENTERPRISE ATTENDANCE CORRECTIONS QUEUE - SMOOTH & CLEAN DESIGN SYSTEM
+       ========================================================================== */
+    :root {
+        --ac-primary: #1E3A8A;
+        --ac-secondary: #2563EB;
+        --ac-secondary-subtle: #EFF6FF;
+        --ac-bg: #F8FAFC;
+        --ac-card-bg: #FFFFFF;
+        --ac-card-subsurface: #F8FAFC;
+        --ac-text-primary: #0F172A;
+        --ac-text-secondary: #64748B;
+        --ac-border: #E2E8F0;
+        --ac-border-subtle: #F1F5F9;
+        --ac-radius: 14px;
+        --ac-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+        --ac-shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.03);
+    }
+
+    [data-bs-theme="dark"] {
+        --ac-primary: #3B82F6;
+        --ac-secondary: #60A5FA;
+        --ac-secondary-subtle: rgba(59, 130, 246, 0.15);
+        --ac-bg: #0F172A;
+        --ac-card-bg: #1E293B;
+        --ac-card-subsurface: #0F172A;
+        --ac-text-primary: #F8FAFC;
+        --ac-text-secondary: #94A3B8;
+        --ac-border: #334155;
+        --ac-border-subtle: #1E293B;
+        --ac-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.3);
+        --ac-shadow-md: 0 6px 18px rgba(0, 0, 0, 0.4);
+    }
+
+    .ac-wrapper {
+        padding: 0.25rem 0 2.5rem 0;
+        color: var(--ac-text-primary);
+    }
+
+    /* Page Header */
+    .ac-header-card {
+        background: var(--ac-card-bg);
+        border: 1px solid var(--ac-border);
+        border-radius: var(--ac-radius);
+        padding: 1.25rem 1.5rem;
+        box-shadow: var(--ac-shadow-sm);
+        margin-bottom: 1.25rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .ac-header-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(180deg, #2563EB 0%, #10B981 100%);
+    }
+    .ac-title {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: var(--ac-text-primary);
+        letter-spacing: -0.02em;
+        margin-bottom: 0.2rem;
+    }
+    .ac-subtitle {
+        color: var(--ac-text-secondary);
+        font-size: 0.84rem;
+        margin-bottom: 0;
+    }
+
+    /* KPI Summary Cards */
+    .ac-kpi-card {
+        background: var(--ac-card-bg);
+        border: 1px solid var(--ac-border);
+        border-radius: 12px;
+        padding: 0.90rem 1.15rem;
+        box-shadow: var(--ac-shadow-sm);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .ac-kpi-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--ac-shadow-md);
+    }
+    .ac-kpi-val {
+        font-size: 1.45rem;
+        font-weight: 800;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+    }
+    .ac-kpi-label {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: var(--ac-text-secondary);
+        margin-bottom: 0.15rem;
+    }
+    .ac-kpi-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+    }
+
+    /* Main Table Container in Pure White */
+    .ac-table-container {
+        background: #FFFFFF !important;
+        border: 1px solid var(--ac-border);
+        border-radius: var(--ac-radius);
+        box-shadow: var(--ac-shadow-sm);
+        overflow: hidden;
+    }
+
+    /* Toolbar & Filter Tabs */
+    .ac-toolbar {
+        padding: 0.85rem 1.25rem;
+        background: #FFFFFF !important;
+        border-bottom: 1px solid var(--ac-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+    .ac-filter-group {
+        display: inline-flex;
+        background: #F8FAFC;
+        padding: 0.25rem;
+        border-radius: 10px;
+        border: 1px solid var(--ac-border);
+        gap: 0.2rem;
+    }
+    .ac-tab-btn {
+        padding: 0.35rem 0.80rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--ac-text-secondary);
+        border-radius: 7px;
+        border: none;
+        background: transparent;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        cursor: pointer;
+    }
+    .ac-tab-btn:hover {
+        color: var(--ac-text-primary);
+    }
+    .ac-tab-btn.active {
+        background: #FFFFFF !important;
+        color: var(--ac-secondary);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+        font-weight: 700;
+    }
+    .ac-search-box {
+        position: relative;
+        min-width: 220px;
+    }
+    .ac-search-box input {
+        padding-left: 2.1rem;
+        font-size: 0.80rem;
+        border-radius: 8px;
+        border: 1px solid var(--ac-border);
+        background: #F8FAFC;
+        color: var(--ac-text-primary);
+        height: 34px;
+        transition: all 0.15s ease;
+    }
+    .ac-search-box input:focus {
+        background: #FFFFFF !important;
+        border-color: var(--ac-secondary);
+        box-shadow: 0 0 0 3px var(--ac-secondary-subtle);
+    }
+    .ac-search-icon {
+        position: absolute;
+        left: 0.70rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--ac-text-secondary);
+        font-size: 0.80rem;
+        pointer-events: none;
+    }
+
+    /* Clean & Smooth Pure White Table */
+    .ac-table-responsive {
+        width: 100%;
+        overflow-x: hidden;
+        background-color: #FFFFFF !important;
+    }
+    @media (max-width: 991px) {
+        .ac-table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+    }
+    .ac-table {
+        width: 100%;
+        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+        background-color: #FFFFFF !important;
+    }
+    .ac-table thead th {
+        background: #FFFFFF !important;
+        color: var(--ac-text-secondary);
+        font-size: 0.74rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.90rem 1rem;
+        border-bottom: 1px solid var(--ac-border) !important;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+    .ac-table tbody tr {
+        background-color: #FFFFFF !important;
+        transition: background-color 0.15s ease;
+    }
+    .ac-table tbody tr:hover td {
+        background-color: #F8FAFC !important;
+    }
+    .ac-table tbody td {
+        padding: 0.90rem 1rem;
+        border-bottom: 1px solid var(--ac-border-subtle);
+        background-color: #FFFFFF !important;
+        color: var(--ac-text-primary);
+        font-size: 0.84rem;
+        vertical-align: middle;
+    }
+
+    /* Column 1: Strictly Only Employee Name */
+    .ac-emp-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+    }
+    .ac-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+        color: #FFFFFF;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.80rem;
+        flex-shrink: 0;
+    }
+    .ac-emp-name {
+        font-weight: 700;
+        color: var(--ac-text-primary);
+        font-size: 0.88rem;
+        line-height: 1.2;
+    }
+
+    /* Timing Chips */
+    .ac-timing-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.18rem 0.50rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-family: var(--bs-font-monospace);
+        font-weight: 600;
+        background: var(--ac-card-subsurface);
+        border: 1px solid var(--ac-border);
+    }
+
+    /* Reason styling */
+    .ac-reason-text {
+        font-size: 0.82rem;
+        color: var(--ac-text-primary);
+        max-width: 260px;
+        white-space: normal;
+        line-height: 1.4;
+    }
+
+    /* Smooth Action Buttons */
+    .ac-btn-action {
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        padding: 0.35rem 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        transition: all 0.15s ease;
+        border: 1px solid transparent;
+        cursor: pointer;
+    }
+    .ac-btn-approve {
+        background: #10B981;
+        color: #FFFFFF;
+        border-color: #10B981;
+    }
+    .ac-btn-approve:hover {
+        background: #059669;
+        border-color: #059669;
+        color: #FFFFFF;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+    }
+    .ac-btn-reject {
+        background: #FFFFFF;
+        color: #EF4444;
+        border-color: #FCA5A5;
+    }
+    .ac-btn-reject:hover {
+        background: #FEF2F2;
+        color: #DC2626;
+        border-color: #EF4444;
+        transform: translateY(-1px);
+    }
+
+    /* Eye Action View Button in Reason Cell */
+    .ac-view-btn {
+        background: #FFFFFF;
+        border: 1px solid var(--ac-border);
+        color: #2563EB;
+        border-radius: 8px;
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s ease;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        cursor: pointer;
+    }
+    .ac-view-btn:hover {
+        background: #EFF6FF;
+        border-color: #BFDBFE;
+        color: #1D4ED8;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(37, 99, 235, 0.16);
+    }
+
+    /* Table Footer Counter */
+    .ac-table-footer {
+        padding: 0.75rem 1.25rem;
+        background: var(--ac-card-subsurface);
+        border-top: 1px solid var(--ac-border);
+        font-size: 0.78rem;
+        color: var(--ac-text-secondary);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid p-0">
-    <div class="mb-4">
-        <h3 class="fw-bold mb-1">Attendance Correction & Missing Punch Queue</h3>
-        <p class="text-muted small mb-0">Approve or reject employee attendance adjustment requests with server-side audit logs.</p>
+<div class="container-fluid p-0 ac-wrapper">
+    <!-- PAGE HEADER -->
+    <div class="ac-header-card">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div>
+                <h3 class="ac-title">
+                    <i class="bi bi-clock-history text-primary me-2"></i>Attendance Correction & Missing Punch Queue
+                </h3>
+                <p class="ac-subtitle">Review, audit, and approve employee attendance adjustment requests with real-time biometric and punch log verification.</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <a href="{% url 'attendance:admin_register' %}" class="btn btn-sm btn-outline-secondary fw-semibold" style="border-radius: 8px;">
+                    <i class="bi bi-calendar-check me-1"></i> Attendance Register
+                </a>
+            </div>
+        </div>
     </div>
 
-    <div class="hrms-card">
-        <div class="table-responsive">
-            <table class="table hrms-table">
+    <!-- STAT SUMMARY CARDS -->
+    <div class="row g-3 mb-4">
+        <!-- Total Requests -->
+        <div class="col-6 col-md-3">
+            <div class="ac-kpi-card">
+                <div>
+                    <div class="ac-kpi-label">Total Requests</div>
+                    <div class="ac-kpi-val text-dark" id="kpiTotal">{{ corrections|length }}</div>
+                </div>
+                <div class="ac-kpi-icon" style="background: #EFF6FF; color: #2563EB;">
+                    <i class="bi bi-folder2-open"></i>
+                </div>
+            </div>
+        </div>
+        <!-- Pending Review -->
+        <div class="col-6 col-md-3">
+            <div class="ac-kpi-card">
+                <div>
+                    <div class="ac-kpi-label">Pending Review</div>
+                    <div class="ac-kpi-val" style="color: #D97706;" id="kpiPending">
+                        {% with pending_count=0 %}
+                            {% for c in corrections %}{% if c.status == 'PENDING' %}{% with pending_count=pending_count|add:1 %}{% endwith %}{% endif %}{% endfor %}
+                            {{ pending_count }}
+                        {% endwith %}
+                    </div>
+                </div>
+                <div class="ac-kpi-icon" style="background: #FEF3C7; color: #D97706;">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+            </div>
+        </div>
+        <!-- Approved -->
+        <div class="col-6 col-md-3">
+            <div class="ac-kpi-card">
+                <div>
+                    <div class="ac-kpi-label">Approved</div>
+                    <div class="ac-kpi-val" style="color: #10B981;" id="kpiApproved">
+                        {% with approved_count=0 %}
+                            {% for c in corrections %}{% if c.status == 'APPROVED' %}{% with approved_count=approved_count|add:1 %}{% endwith %}{% endif %}{% endfor %}
+                            {{ approved_count }}
+                        {% endwith %}
+                    </div>
+                </div>
+                <div class="ac-kpi-icon" style="background: #ECFDF5; color: #10B981;">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+            </div>
+        </div>
+        <!-- Rejected -->
+        <div class="col-6 col-md-3">
+            <div class="ac-kpi-card">
+                <div>
+                    <div class="ac-kpi-label">Rejected</div>
+                    <div class="ac-kpi-val" style="color: #EF4444;" id="kpiRejected">
+                        {% with rejected_count=0 %}
+                            {% for c in corrections %}{% if c.status == 'REJECTED' %}{% with rejected_count=rejected_count|add:1 %}{% endwith %}{% endif %}{% endfor %}
+                            {{ rejected_count }}
+                        {% endwith %}
+                    </div>
+                </div>
+                <div class="ac-kpi-icon" style="background: #FEF2F2; color: #EF4444;">
+                    <i class="bi bi-x-circle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CARD & TABLE -->
+    <div class="ac-table-container">
+        <!-- TOOLBAR WITH FILTER TABS AND INSTANT SEARCH -->
+        <div class="ac-toolbar">
+            <div class="ac-filter-group">
+                <button type="button" class="ac-tab-btn active" data-filter="all">
+                    All <span class="badge rounded-pill bg-secondary-subtle text-secondary small ms-1">{{ corrections|length }}</span>
+                </button>
+                <button type="button" class="ac-tab-btn" data-filter="PENDING">
+                    <i class="bi bi-hourglass-split text-warning"></i> Pending
+                </button>
+                <button type="button" class="ac-tab-btn" data-filter="APPROVED">
+                    <i class="bi bi-check-circle-fill text-success"></i> Approved
+                </button>
+                <button type="button" class="ac-tab-btn" data-filter="REJECTED">
+                    <i class="bi bi-x-circle-fill text-danger"></i> Rejected
+                </button>
+            </div>
+            <div class="ac-search-box">
+                <i class="bi bi-search ac-search-icon"></i>
+                <input type="text" id="corrSearchInput" class="form-control" placeholder="Search employee, date, reason...">
+            </div>
+        </div>
+
+        <!-- TABLE SECTION -->
+        <div class="ac-table-responsive">
+            <table class="table ac-table" id="corrTable">
                 <thead>
                     <tr>
-                        <th>Employee</th>
-                        <th>Target Date</th>
-                        <th>Requested Timing</th>
-                        <th>Reason</th>
-                        <th>Submitted At</th>
-                        <th>Status</th>
-                        <th class="text-end">Action</th>
+                        <th class="ps-4" style="width: 30%;">Employee</th>
+                        <th style="width: 20%;">Target Date</th>
+                        <th class="text-center" style="width: 16%;">Reason</th>
+                        <th style="width: 18%;">Submitted</th>
+                        <th class="text-center pe-4" style="width: 16%;">Status</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for corr in corrections %}
-                        <tr>
-                            <td>
-                                <div class="fw-bold text-dark">{{ corr.employee.full_name }}</div>
-                                <small class="text-muted">{{ corr.employee.emp_id }} &bull; {{ corr.employee.site.city }}</small>
+                        <tr class="corr-row" data-status="{{ corr.status }}" data-employee="{{ corr.employee.full_name|lower }}" data-reason="{{ corr.reason|lower }}" data-date="{{ corr.date|date:'d M Y'|lower }}">
+                            <!-- 1. EMPLOYEE: NAME + EMP ID JUST BELOW -->
+                            <td class="ps-4">
+                                <div class="ac-emp-wrapper">
+                                    <div class="ac-avatar">
+                                        {{ corr.employee.full_name|slice:":1"|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="ac-emp-name">{{ corr.employee.full_name }}</div>
+                                        <div class="font-monospace text-muted small" style="font-size: 0.74rem;">{{ corr.employee.emp_id }}</div>
+                                    </div>
+                                </div>
                             </td>
-                            <td class="fw-semibold text-dark">{{ corr.date|date:"d M Y" }}</td>
+
+                            <!-- 2. TARGET DATE -->
                             <td>
-                                <div class="small font-monospace">In: {{ corr.requested_punch_in|time:"h:i A"|default:"--" }}</div>
-                                <div class="small font-monospace">Out: {{ corr.requested_punch_out|time:"h:i A"|default:"--" }}</div>
+                                <div class="d-inline-flex align-items-center fw-semibold text-dark" style="gap: 8px;">
+                                    <i class="bi bi-calendar3 text-primary opacity-75" style="font-size: 0.95rem;"></i>
+                                    <span>{{ corr.date|date:"d M Y" }}</span>
+                                </div>
                             </td>
-                            <td class="small">{{ corr.reason }}</td>
-                            <td class="text-muted small">{{ corr.created_at|date:"d M, H:i" }}</td>
+
+                            <!-- 3. REASON: ONLY EYE ICON (CLICK TO VIEW FULL DETAILS & ACTIONS) -->
+                            <td class="text-center">
+                                <button type="button" 
+                                        class="ac-view-btn" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#correctionModal{{ corr.id }}"
+                                        title="Click to view reason, timing & actions">
+                                    <i class="bi bi-eye-fill"></i>
+                                </button>
+                            </td>
+
+                            <!-- 4. SUBMITTED AT -->
                             <td>
+                                <div class="text-muted small d-flex align-items-center gap-1">
+                                    <i class="bi bi-clock"></i>
+                                    <span>{{ corr.created_at|date:"d M, h:i A" }}</span>
+                                </div>
+                            </td>
+
+                            <!-- 5. STATUS -->
+                            <td class="text-center pe-4">
                                 {% if corr.status == 'APPROVED' %}
-                                    <span class="badge bg-success">Approved</span>
+                                    <span class="badge rounded-pill px-2.5 py-1" style="background: #DCFCE7; color: #15803D; border: 1px solid #BBF7D0; font-size: 0.74rem; font-weight: 600;">
+                                        <i class="bi bi-check-circle-fill me-1"></i> Approved
+                                    </span>
                                 {% elif corr.status == 'REJECTED' %}
-                                    <span class="badge bg-danger">Rejected</span>
+                                    <span class="badge rounded-pill px-2.5 py-1" style="background: #FEE2E2; color: #B91C1C; border: 1px solid #FECACA; font-size: 0.74rem; font-weight: 600;">
+                                        <i class="bi bi-x-circle-fill me-1"></i> Rejected
+                                    </span>
                                 {% else %}
-                                    <span class="badge bg-warning text-dark">Pending Review</span>
-                                {% endif %}
-                            </td>
-                            <td class="text-end">
-                                {% if corr.status == 'PENDING' %}
-                                    <form method="POST" action="{% url 'attendance:approve_correction' request_id=corr.id %}" class="d-inline">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="APPROVE">
-                                        <button type="submit" class="btn btn-sm btn-success py-1 px-2" title="Approve Correction">
-                                            <i class="bi bi-check-lg"></i> Approve
-                                        </button>
-                                    </form>
-                                    <form method="POST" action="{% url 'attendance:approve_correction' request_id=corr.id %}" class="d-inline">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="REJECT">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Reject Correction">
-                                            <i class="bi bi-x-lg"></i> Reject
-                                        </button>
-                                    </form>
-                                {% else %}
-                                    <small class="text-muted">Reviewed</small>
+                                    <span class="badge rounded-pill px-2.5 py-1" style="background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; font-size: 0.74rem; font-weight: 600;">
+                                        <i class="bi bi-hourglass-split me-1"></i> Pending
+                                    </span>
                                 {% endif %}
                             </td>
                         </tr>
                     {% empty %}
-                        <tr><td colspan="7" class="text-center py-4 text-muted">No attendance corrections in the queue.</td></tr>
+                        <tr id="emptyTableRow">
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-2 d-block text-secondary opacity-50 mb-2"></i>
+                                <div class="fw-semibold">No attendance corrections found in queue</div>
+                                <div class="small text-muted">Employee attendance adjustments will appear here for management approval.</div>
+                            </td>
+                        </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+
+        <!-- TABLE FOOTER: ROWS PER PAGE & PAGINATION CONTROLS -->
+        <div class="p-3 px-4 bg-white border-top d-flex flex-wrap justify-content-between align-items-center gap-3" id="tablePaginationFooter" style="background-color: #FFFFFF !important; border-color: #E2E8F0 !important;">
+            <!-- Left Side: Show 5, 10, 20, 50 rows & Showing X to Y of Z -->
+            <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="small text-muted fw-medium">Show</span>
+                    <select class="form-select form-select-sm" id="corrPageSizeSelect" style="width: 75px; border-radius: 6px; font-weight: 500;">
+                        <option value="5"selected>5</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                    </select>
+                    <span class="small text-muted fw-medium">rows</span>
+                </div>
+                <span class="text-muted small border-start ps-3" id="corrPageInfoText">
+                    Showing 1 to {{ corrections|length|default:0 }} of {{ corrections|length|default:0 }} records
+                </span>
+            </div>
+
+            <!-- Right Side: Page navigation buttons -->
+            <div class="d-flex align-items-center gap-1" id="corrPaginationControls">
+                <button type="button" class="btn btn-sm btn-outline-secondary px-2.5 py-1" id="corrPrevPageBtn" disabled style="border-radius: 6px;">
+                    <i class="bi bi-chevron-left me-1"></i>
+                </button>
+                <div class="d-flex align-items-center gap-1" id="corrPageNumbersContainer">
+                    <!-- Page numbers generated via JS -->
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-secondary px-2.5 py-1" id="corrNextPageBtn" style="border-radius: 6px;">
+                    <i class="bi bi-chevron-right ms-1"></i>
+                </button>
+            </div>
+        </div>
     </div>
 </div>
-{% endblock %}
 
+<!-- CORRECTION DETAIL & ACTION MODALS (SMOOTH & PROFESSIONAL INTERACTION) -->
+{% for corr in corrections %}
+    <div class="modal fade" id="correctionModal{{ corr.id }}" tabindex="-1" aria-labelledby="corrModalLabel{{ corr.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                <!-- MODAL HEADER -->
+                <div class="modal-header border-0 pb-0 pt-4 px-4 d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm"
+                             style="width: 48px; height: 48px; font-size: 1.15rem; background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%); flex-shrink: 0;">
+                            {{ corr.employee.full_name|slice:":1"|upper }}
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2">
+                                <h5 class="fw-bold mb-0 text-dark" id="corrModalLabel{{ corr.id }}">{{ corr.employee.full_name }}</h5>
+                                <span class="badge bg-light text-secondary border font-monospace small px-2 py-0.5" style="font-size: 0.75rem;">
+                                    {{ corr.employee.emp_id }}
+                                </span>
+                            </div>
+                            <div class="text-muted small">
+                                <span>{{ corr.employee.department.name|default:"General" }}</span>
+                                {% if corr.employee.site %} &bull; <span>{{ corr.employee.site.name }}</span>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <!-- MODAL BODY -->
+                <div class="modal-body p-4">
+                    <!-- TARGET DATE & STATUS INFO BAR -->
+                    <div class="p-3 mb-4 rounded-3 d-flex flex-wrap align-items-center justify-content-between gap-2" style="background: #F8FAFC; border: 1px solid #E2E8F0;">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-calendar3 text-primary"></i>
+                            <span class="text-muted small">Target Date:</span>
+                            <strong class="text-dark">{{ corr.date|date:"D, d M Y" }}</strong>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-clock text-secondary"></i>
+                            <span class="text-muted small">Submitted:</span>
+                            <span class="text-dark small fw-medium">{{ corr.created_at|date:"d M Y, h:i A" }}</span>
+                        </div>
+                        <div>
+                            {% if corr.status == 'APPROVED' %}
+                                <span class="badge rounded-pill px-2.5 py-1" style="background: #DCFCE7; color: #15803D; border: 1px solid #BBF7D0; font-size: 0.76rem; font-weight: 600;">
+                                    <i class="bi bi-check-circle-fill me-1"></i> Approved
+                                </span>
+                            {% elif corr.status == 'REJECTED' %}
+                                <span class="badge rounded-pill px-2.5 py-1" style="background: #FEE2E2; color: #B91C1C; border: 1px solid #FECACA; font-size: 0.76rem; font-weight: 600;">
+                                    <i class="bi bi-x-circle-fill me-1"></i> Rejected
+                                </span>
+                            {% else %}
+                                <span class="badge rounded-pill px-2.5 py-1" style="background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; font-size: 0.76rem; font-weight: 600;">
+                                    <i class="bi bi-hourglass-split me-1"></i> Pending Review
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- REQUESTED TIMING SECTION -->
+                    <div class="mb-4">
+                        <label class="form-label text-uppercase text-secondary fw-bold small mb-2" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                            <i class="bi bi-clock-history me-1 text-primary"></i> Requested Timing Adjustment
+                        </label>
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="p-3 rounded-3 h-100" style="background: #F0FDF4; border: 1px solid #DCFCE7;">
+                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                        <span class="small fw-bold text-success">
+                                            <i class="bi bi-box-arrow-in-right me-1"></i> Requested Punch In
+                                        </span>
+                                    </div>
+                                    <div class="fs-4 fw-bold text-dark font-monospace">
+                                        {{ corr.requested_punch_in|time:"h:i A"|default:"-- : --" }}
+                                    </div>
+                                    <div class="small text-muted" style="font-size: 0.75rem;">
+                                        Adjusted check-in timestamp
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="p-3 rounded-3 h-100" style="background: #EFF6FF; border: 1px solid #DBEAFE;">
+                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                        <span class="small fw-bold text-primary">
+                                            <i class="bi bi-box-arrow-right me-1"></i> Requested Punch Out
+                                        </span>
+                                    </div>
+                                    <div class="fs-4 fw-bold text-dark font-monospace">
+                                        {{ corr.requested_punch_out|time:"h:i A"|default:"-- : --" }}
+                                    </div>
+                                    <div class="small text-muted" style="font-size: 0.75rem;">
+                                        Adjusted check-out timestamp
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- REASON SECTION -->
+                    <div class="mb-4">
+                        <label class="form-label text-uppercase text-secondary fw-bold small mb-2" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                            <i class="bi bi-chat-left-quote me-1 text-primary"></i> Reason / Explanation Provided by Employee
+                        </label>
+                        <div class="p-3 rounded-3" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-left: 4px solid #2563EB;">
+                            <p class="mb-0 text-dark fw-medium" style="font-size: 0.90rem; line-height: 1.5; white-space: pre-wrap;">{{ corr.reason }}</p>
+                        </div>
+                    </div>
+
+                    <!-- IF ALREADY REVIEWED: REVIEWER NOTES -->
+                    {% if corr.status != 'PENDING' %}
+                        <div class="p-3 rounded-3 mb-0" style="background: #F8FAFC; border: 1px solid #E2E8F0;">
+                            <div class="small text-muted mb-1">
+                                <i class="bi bi-shield-check text-secondary me-1"></i>
+                                Reviewed by: <strong class="text-dark">{{ corr.reviewed_by.get_full_name|default:corr.reviewed_by.username|default:"Management" }}</strong>
+                                {% if corr.reviewed_at %} on {{ corr.reviewed_at|date:"d M Y, h:i A" }}{% endif %}
+                            </div>
+                            {% if corr.review_notes %}
+                                <div class="small text-dark mt-1">
+                                    <strong>Notes:</strong> {{ corr.review_notes }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <!-- IF PENDING: ACTION FORM -->
+                    {% if corr.status == 'PENDING' %}
+                        <form method="POST" action="{% url 'attendance:approve_correction' request_id=corr.id %}" id="corrActionForm{{ corr.id }}" class="mt-4 pt-3 border-top">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold text-secondary mb-1">
+                                    <i class="bi bi-pencil-square me-1"></i> Reviewer Note (Optional)
+                                </label>
+                                <input type="text" name="notes" class="form-control form-control-sm" placeholder="e.g. Verified with biometric terminal log / supervisor verification" style="border-radius: 8px;">
+                            </div>
+                            <div class="d-flex align-items-center justify-content-end gap-2">
+                                <button type="button" class="btn btn-sm btn-light border px-3" data-bs-dismiss="modal">
+                                    Cancel
+                                </button>
+                                <button type="submit" name="action" value="REJECT" class="btn btn-sm btn-outline-danger px-3 d-inline-flex align-items-center gap-1.5" style="border-radius: 8px;">
+                                    <i class="bi bi-x-circle"></i> Reject Request
+                                </button>
+                                <button type="submit" name="action" value="APPROVE" class="btn btn-sm btn-success px-3.5 d-inline-flex align-items-center gap-1.5 text-white shadow-sm" style="border-radius: 8px;">
+                                    <i class="bi bi-check-circle-fill"></i> Approve Request
+                                </button>
+                            </div>
+                        </form>
+                    {% else %}
+                        <div class="d-flex justify-content-end mt-4 pt-3 border-top">
+                            <button type="button" class="btn btn-sm btn-secondary px-4" data-bs-dismiss="modal" style="border-radius: 8px;">
+                                Close
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+
+<!-- CLIENT JAVASCRIPT FOR SMOOTH FILTERING, SEARCH & PAGINATION -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('corrSearchInput');
+    const tabButtons = document.querySelectorAll('.ac-tab-btn');
+    const rows = Array.from(document.querySelectorAll('.corr-row'));
+    const kpiPending = document.getElementById('kpiPending');
+    const kpiApproved = document.getElementById('kpiApproved');
+    const kpiRejected = document.getElementById('kpiRejected');
+
+    const pageSizeSelect = document.getElementById('corrPageSizeSelect');
+    const pageInfoText = document.getElementById('corrPageInfoText');
+    const prevPageBtn = document.getElementById('corrPrevPageBtn');
+    const nextPageBtn = document.getElementById('corrNextPageBtn');
+    const pageNumbersContainer = document.getElementById('corrPageNumbersContainer');
+    const emptyRow = document.getElementById('emptyTableRow');
+
+    // Calculate actual KPI values dynamically from DOM
+    let pendingCount = 0, approvedCount = 0, rejectedCount = 0;
+    rows.forEach(r => {
+        const s = r.getAttribute('data-status');
+        if (s === 'PENDING') pendingCount++;
+        else if (s === 'APPROVED') approvedCount++;
+        else if (s === 'REJECTED') rejectedCount++;
+    });
+    if (kpiPending) kpiPending.textContent = pendingCount;
+    if (kpiApproved) kpiApproved.textContent = approvedCount;
+    if (kpiRejected) kpiRejected.textContent = rejectedCount;
+
+    let activeFilter = 'all';
+    let currentPage = 1;
+    let pageSize = pageSizeSelect ? parseInt(pageSizeSelect.value) : 10;
+
+    function applyFilterAndPaginate() {
+        const query = (searchInput ? searchInput.value : '').trim().toLowerCase();
+
+        // 1. Filter matching rows
+        const matchingRows = rows.filter(row => {
+            const status = row.getAttribute('data-status') || '';
+            const emp = row.getAttribute('data-employee') || '';
+            const reason = row.getAttribute('data-reason') || '';
+            const date = row.getAttribute('data-date') || '';
+
+            const matchesStatus = (activeFilter === 'all' || status === activeFilter);
+            const matchesQuery = (!query || emp.includes(query) || reason.includes(query) || date.includes(query));
+
+            return matchesStatus && matchesQuery;
+        });
+
+        const total = matchingRows.length;
+        const totalPages = Math.ceil(total / pageSize) || 1;
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
+        // 2. Hide all rows first
+        rows.forEach(r => r.style.display = 'none');
+
+        // 3. Show matching rows within the current page window
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = Math.min(startIndex + pageSize, total);
+
+        for (let i = startIndex; i < endIndex; i++) {
+            matchingRows[i].style.display = '';
+        }
+
+        // Show / hide empty row
+        if (emptyRow) {
+            emptyRow.style.display = (total === 0) ? '' : 'none';
+        }
+
+        // 4. Update page info text
+        if (pageInfoText) {
+            if (total === 0) {
+                pageInfoText.textContent = 'Showing 0 to 0 of 0 records';
+            } else {
+                pageInfoText.textContent = `Showing ${startIndex + 1} to ${endIndex} of ${total} records`;
+            }
+        }
+
+        // 5. Update Prev & Next buttons
+        if (prevPageBtn) prevPageBtn.disabled = (currentPage <= 1);
+        if (nextPageBtn) nextPageBtn.disabled = (currentPage >= totalPages);
+
+        // 6. Render page numbers
+        if (pageNumbersContainer) {
+            pageNumbersContainer.innerHTML = '';
+            for (let p = 1; p <= totalPages; p++) {
+                if (totalPages > 7) {
+                    if (p !== 1 && p !== totalPages && Math.abs(p - currentPage) > 1) {
+                        if (p === 2 || p === totalPages - 1) {
+                            const dots = document.createElement('span');
+                            dots.className = 'px-1 text-muted small';
+                            dots.textContent = '...';
+                            pageNumbersContainer.appendChild(dots);
+                        }
+                        continue;
+                    }
+                }
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `btn btn-sm px-2.5 py-1 ${p === currentPage ? 'btn-dark fw-bold text-white shadow-sm' : 'btn-outline-secondary'}`;
+                btn.style.borderRadius = '6px';
+                btn.style.minWidth = '32px';
+                btn.textContent = p;
+                btn.addEventListener('click', () => {
+                    currentPage = p;
+                    applyFilterAndPaginate();
+                });
+                pageNumbersContainer.appendChild(btn);
+            }
+        }
+    }
+
+    // Tab buttons click listeners
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', function () {
+            tabButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            activeFilter = this.getAttribute('data-filter');
+            currentPage = 1;
+            applyFilterAndPaginate();
+        });
+    });
+
+    // Instant search input
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            currentPage = 1;
+            applyFilterAndPaginate();
+        });
+    }
+
+    // Page size selector (rows per page)
+    if (pageSizeSelect) {
+        pageSizeSelect.addEventListener('change', function () {
+            pageSize = parseInt(this.value);
+            currentPage = 1;
+            applyFilterAndPaginate();
+        });
+    }
+
+    // Prev / Next button listeners
+    if (prevPageBtn) {
+        prevPageBtn.addEventListener('click', function () {
+            if (currentPage > 1) {
+                currentPage--;
+                applyFilterAndPaginate();
+            }
+        });
+    }
+    if (nextPageBtn) {
+        nextPageBtn.addEventListener('click', function () {
+            currentPage++;
+            applyFilterAndPaginate();
+        });
+    }
+
+    // Initial render
+    applyFilterAndPaginate();
+});
+</script>
+{% endblock %}

@@ -100,6 +100,15 @@
                     <label class="form-label small fw-semibold">System Authority / Role <span class="text-danger">*</span></label>
                     {{ form.role }}
                     {% if form.role.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.role.errors.0 }}</div>{% endif %}
+                    {% if request.user.role == 'hr' and not request.user.is_superuser %}
+                        <div class="text-muted small mt-1" style="font-size: 0.72rem;">
+                            <i class="bi bi-info-circle me-1"></i>HR can assign: <strong>Employee</strong>, <strong>Site Manager</strong>
+                        </div>
+                    {% else %}
+                        <div class="text-muted small mt-1" style="font-size: 0.72rem;">
+                            <i class="bi bi-shield-check me-1 text-primary"></i>Admin authority: <strong>All roles available</strong>
+                        </div>
+                    {% endif %}
                 </div>
 
                 <div class="col-md-4">

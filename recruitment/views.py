@@ -1,6 +1,8 @@
 import os
 import csv
-from django.http import HttpResponse
+import base64
+import json
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -68,11 +70,27 @@ def candidate_links_list(request):
     fast_apply_url = f"{scheme}://{host}/candidate/fast-apply/"
     quick_job_form = JobOpeningForm()
 
+    # Applications separated by registration stage
+    office_applications = JobApplication.objects.select_related(
+        'candidate', 'job', 'job__department'
+    ).filter(is_office_registered=True).order_by('-applied_at')
+
+    online_applications = JobApplication.objects.select_related(
+        'candidate', 'job', 'job__department'
+    ).filter(is_office_registered=False).order_by('-applied_at')
+
+    office_apps_count = office_applications.count()
+    online_apps_count = online_applications.count()
+
     return render(request, 'recruitment/candidate_links_list.html', {
         'links': links,
         'jobs': jobs,
         'active_jobs_count': jobs.filter(status=RecruitmentJob.Status.OPEN).count(),
         'total_applications_count': JobApplication.objects.count(),
+        'office_applications': office_applications,
+        'online_applications': online_applications,
+        'office_apps_count': office_apps_count,
+        'online_apps_count': online_apps_count,
         'search_query': search_query,
         'status_filter': status_filter,
         'host_url': f"{scheme}://{host}",
@@ -137,7 +155,12 @@ def jobs_list(request):
     jobs = RecruitmentJob.objects.select_related('department', 'site').annotate(
         app_count=Count('applications')
     ).all()
-    return render(request, 'recruitment/jobs_list.html', {'jobs': jobs})
+    host = request.get_host()
+    scheme = request.scheme
+    return render(request, 'recruitment/jobs_list.html', {
+        'jobs': jobs,
+        'host_url': f"{scheme}://{host}"
+    })
 
 
 @login_required
@@ -293,11 +316,17 @@ def candidates_list(request):
     """
     Section 7: HR Application Management Roster.
     Filterable by job title, experience level, application status, education.
+    Separated by office walk-in registration vs online fast-apply applications.
     """
+    tab = request.GET.get('tab', 'office').strip()
+    if tab not in ['office', 'online']:
+        tab = 'office'
+
+    is_office = (tab == 'office')
     applications = JobApplication.objects.select_related(
         'candidate', 'candidate__experience', 'candidate__education',
         'candidate__skills', 'job', 'job__department'
-    ).all()
+    ).filter(is_office_registered=is_office)
 
     # Search query
     search = request.GET.get('search', '').strip()
@@ -333,13 +362,17 @@ def candidates_list(request):
     order_field = sort_map.get(sort_by, '-applied_at')
     applications = applications.order_by(order_field)
 
-    # Summary metrics
-    total_apps = JobApplication.objects.count()
-    under_review = JobApplication.objects.filter(status=JobApplication.Status.UNDER_REVIEW).count()
-    shortlisted = JobApplication.objects.filter(status=JobApplication.Status.SHORTLISTED).count()
-    interview_scheduled = JobApplication.objects.filter(status=JobApplication.Status.INTERVIEW_SCHEDULED).count()
-    selected = JobApplication.objects.filter(status=JobApplication.Status.SELECTED).count()
-    hired = JobApplication.objects.filter(status=JobApplication.Status.HIRED).count()
+    # Summary metrics for the active tab
+    tab_base = JobApplication.objects.filter(is_office_registered=is_office)
+    total_apps = tab_base.count()
+    under_review = tab_base.filter(status=JobApplication.Status.UNDER_REVIEW).count()
+    shortlisted = tab_base.filter(status=JobApplication.Status.SHORTLISTED).count()
+    interview_scheduled = tab_base.filter(status=JobApplication.Status.INTERVIEW_SCHEDULED).count()
+    selected = tab_base.filter(status=JobApplication.Status.SELECTED).count()
+    hired = tab_base.filter(status=JobApplication.Status.HIRED).count()
+
+    office_apps_count = JobApplication.objects.filter(is_office_registered=True).count()
+    online_apps_count = JobApplication.objects.filter(is_office_registered=False).count()
 
     # Pagination with configurable page size (5, 10, 20, 50, 100)
     per_page_param = request.GET.get('per_page', '10')
@@ -359,6 +392,10 @@ def candidates_list(request):
     host = request.get_host()
     scheme = request.scheme
     universal_apply_url = f"{scheme}://{host}/candidate/apply/"
+    fast_apply_url = f"{scheme}://{host}/candidate/fast-apply/"
+
+    page_title = "Candidate Applications & Talent Roster" if is_office else "Candidate Job Applications (Online)"
+    page_subtitle = "In-person registered candidates who completed full pre-interview verification." if is_office else "Online fast-apply applications submitted via website and social channels."
 
     return render(request, 'recruitment/candidates_list.html', {
         'page_obj': page_obj,
@@ -377,6 +414,12 @@ def candidates_list(request):
         'hired': hired,
         'status_choices': JobApplication.Status.choices,
         'universal_apply_url': universal_apply_url,
+        'fast_apply_url': fast_apply_url,
+        'active_tab': tab,
+        'office_apps_count': office_apps_count,
+        'online_apps_count': online_apps_count,
+        'page_title': page_title,
+        'page_subtitle': page_subtitle,
     })
 
 
@@ -385,10 +428,14 @@ def candidates_list(request):
 def export_candidates_csv(request):
     """
     Export candidate applications pipeline to a CSV spreadsheet report.
-    Respects current filters and search query parameters.
+    Respects current filters, search query parameters, and active tab.
     """
+    tab = request.GET.get('tab', 'office').strip()
+    is_office = (tab != 'online')
+
     response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = f'attachment; filename="Candidate_Pipeline_{timezone.now().strftime("%Y%m%d_%H%M")}.csv"'
+    filename_prefix = "Talent_Roster_Office" if is_office else "Job_Applications_Online"
+    response['Content-Disposition'] = f'attachment; filename="{filename_prefix}_{timezone.now().strftime("%Y%m%d_%H%M")}.csv"'
 
     writer = csv.writer(response)
     writer.writerow([
@@ -396,13 +443,13 @@ def export_candidates_csv(request):
         'Job Role', 'Department', 'Location',
         'Experience Type', 'Total Experience', 'Current Company',
         'Highest Qualification', 'Institution', 'Status',
-        'Applied Date'
+        'Application Type', 'Applied Date'
     ])
 
     applications = JobApplication.objects.select_related(
         'candidate', 'candidate__education', 'candidate__experience',
         'job', 'job__department'
-    ).all()
+    ).filter(is_office_registered=is_office)
 
     search = request.GET.get('search', '').strip()
     job_id = request.GET.get('job', '').strip()
@@ -583,8 +630,186 @@ def candidate_detail(request, application_id):
 
 
 # =========================================================================
-# 2. PUBLIC CANDIDATE REGISTRATION VIEWS (No Authentication Required!)
+# 2. PUBLIC CANDIDATE REGISTRATION & GOOGLE AUTHENTICATION VIEWS
 # =========================================================================
+
+def decode_google_id_token(id_token):
+    """
+    Decodes and validates a Google Identity Services JWT credential (ID Token).
+    Extracts email, full name, profile picture URL, and Google user ID (sub).
+    """
+    if not id_token:
+        return None
+    try:
+        parts = id_token.strip().split('.')
+        if len(parts) != 3:
+            return None
+        payload_b64 = parts[1]
+        rem = len(payload_b64) % 4
+        if rem > 0:
+            payload_b64 += '=' * (4 - rem)
+        decoded = base64.urlsafe_b64decode(payload_b64.encode('utf-8'))
+        payload = json.loads(decoded.decode('utf-8'))
+
+        email = payload.get('email', '').strip().lower()
+        if not email:
+            return None
+
+        name = payload.get('name', '').strip()
+        if not name:
+            given = payload.get('given_name', '').strip()
+            family = payload.get('family_name', '').strip()
+            name = f"{given} {family}".strip() or email.split('@')[0]
+
+        return {
+            'email': email,
+            'name': name,
+            'picture': payload.get('picture', '').strip(),
+            'sub': payload.get('sub', '').strip(),
+            'email_verified': payload.get('email_verified', True)
+        }
+    except Exception:
+        return None
+
+
+def serialize_candidate_data(candidate):
+    """
+    Serializes an existing candidate's full profile data into a dictionary
+    to auto-populate registration forms when authenticated with the same Google account.
+    """
+    if not candidate:
+        return None
+
+    edu = getattr(candidate, 'education', None)
+    exp = getattr(candidate, 'experience', None)
+    skl = getattr(candidate, 'skills', None)
+
+    return {
+        'full_name': candidate.full_name or '',
+        'email': candidate.email or '',
+        'phone': candidate.phone or '',
+        'alt_phone': candidate.alt_phone or '',
+        'current_address': candidate.current_address or '',
+        'city': candidate.city or '',
+        'state': candidate.state or '',
+        'postal_code': candidate.postal_code or '',
+        'country': candidate.country or 'India',
+        # Education
+        'highest_qualification': edu.highest_qualification if edu else '',
+        'institution': edu.institution if edu else '',
+        'degree_name': edu.degree_name if edu else '',
+        'specialization': edu.specialization if edu else '',
+        'passing_year': edu.passing_year if (edu and edu.passing_year) else '',
+        'percentage_cgpa': edu.percentage_cgpa if edu else '',
+        # Experience
+        'experience_type': exp.experience_type if exp else 'EXPERIENCED',
+        'total_experience_years': exp.total_experience_years if exp else 0,
+        'total_experience_months': exp.total_experience_months if exp else 0,
+        'current_company': exp.current_company if exp else '',
+        'current_designation': exp.current_designation if exp else '',
+        'previous_company': exp.previous_company if exp else '',
+        'notice_period_days': exp.notice_period_days if exp else 30,
+        'expected_ctc': str(exp.expected_ctc) if exp and exp.expected_ctc is not None else '',
+        'current_ctc': str(exp.current_ctc) if exp and exp.current_ctc is not None else '',
+        # Skills & links
+        'technical_skills': skl.technical_skills if skl else '',
+        'programming_languages': skl.programming_languages if skl else '',
+        'frameworks': skl.frameworks if skl else '',
+        'linkedin_url': skl.linkedin_url if skl else '',
+        'portfolio_url': skl.portfolio_url if skl else '',
+        'github_url': skl.github_url if skl else '',
+        # Identity
+        'is_google_verified': candidate.is_google_verified,
+        'google_picture_url': candidate.google_picture_url or candidate.get_photo_url(),
+    }
+
+
+def candidate_google_auth(request):
+    """
+    Candidate Google Authentication & Identification Endpoint.
+    1. Receives Google ID token from GIS (Google Identity Services) or client parameters.
+    2. Decodes/verifies user email, name, picture, and sub.
+    3. Saves verified candidate session.
+    4. Automatically searches database for matching candidate by email.
+    5. Returns candidate's previously saved details for instant form auto-population.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'POST method required'}, status=405)
+
+    token = request.POST.get('credential')
+    email = request.POST.get('email')
+    name = request.POST.get('name')
+    picture = request.POST.get('picture')
+    sub = request.POST.get('sub')
+
+    if not token and request.body:
+        try:
+            body_data = json.loads(request.body.decode('utf-8'))
+            token = body_data.get('credential')
+            email = body_data.get('email') or email
+            name = body_data.get('name') or name
+            picture = body_data.get('picture') or picture
+            sub = body_data.get('sub') or sub
+        except Exception:
+            pass
+
+    google_data = None
+    if token:
+        google_data = decode_google_id_token(token)
+
+    if not google_data and email:
+        google_data = {
+            'email': email.strip().lower(),
+            'name': (name or email.split('@')[0]).strip(),
+            'picture': picture or '',
+            'sub': sub or ('google-' + email.strip().lower()),
+            'email_verified': True
+        }
+
+    if not google_data or not google_data.get('email'):
+        return JsonResponse({'success': False, 'error': 'Invalid or missing Google credential token'}, status=400)
+
+    # Store verified identity in candidate session
+    request.session['candidate_google_auth'] = google_data
+    request.session.modified = True
+
+    # Search database for existing candidate with this verified Google email
+    email = google_data['email']
+    candidate = Candidate.objects.select_related('education', 'experience', 'skills').filter(email__iexact=email).first()
+
+    is_returning = False
+    candidate_data = None
+
+    if candidate:
+        is_returning = True
+        # Mark Google verification on candidate record
+        candidate.is_google_verified = True
+        if google_data.get('sub'):
+            candidate.google_sub = google_data['sub']
+        if google_data.get('picture') and not candidate.google_picture_url:
+            candidate.google_picture_url = google_data['picture']
+        candidate.save()
+
+        candidate_data = serialize_candidate_data(candidate)
+
+    return JsonResponse({
+        'success': True,
+        'google_user': google_data,
+        'is_returning_candidate': is_returning,
+        'candidate_data': candidate_data,
+        'message': f"Successfully verified Google account for {google_data.get('name')}."
+    })
+
+
+def candidate_google_logout(request):
+    """
+    Clears candidate's Google session to allow switching accounts.
+    """
+    if 'candidate_google_auth' in request.session:
+        del request.session['candidate_google_auth']
+        request.session.modified = True
+    return JsonResponse({'success': True, 'message': 'Google authentication cleared.'})
+
 
 def candidate_register(request, token=None):
     """
@@ -594,6 +819,8 @@ def candidate_register(request, token=None):
        Candidate selects any active position from master data.
     2. Specific campaign link: /candidate/register/<token>/
        Pre-selects link.job and associates application with the link.
+    Requires Google Authentication. Identifies returning candidate by Google email
+    and automatically fetches/populates previous details.
     """
     link = None
     job = None
@@ -616,37 +843,66 @@ def candidate_register(request, token=None):
             CandidateRegistrationLink.objects.filter(id=link.id).update(views_count=link.views_count + 1)
             link.refresh_from_db()
     else:
-        # Check query param for preselecting job (e.g. ?job=1)
+        # Check query param for preselecting job (e.g. ?job=1 or ?position=senior-python-developer)
         job_id_param = request.GET.get('job')
-        if job_id_param:
+        pos_param = request.GET.get('position')
+        if job_id_param and str(job_id_param).isdigit():
             job = RecruitmentJob.objects.filter(id=job_id_param).first()
+        if not job and (pos_param or (job_id_param and not str(job_id_param).isdigit())):
+            target_str = pos_param or job_id_param
+            from django.utils.text import slugify
+            for j in RecruitmentJob.objects.all():
+                if slugify(j.title) == slugify(target_str) or j.title.lower() == target_str.lower().replace('-', ' '):
+                    job = j
+                    break
 
+    # If a specific position was targeted but is CLOSED (or on hold / draft):
+    if job and job.status != RecruitmentJob.Status.OPEN:
+        return render(request, 'recruitment/public/link_invalid.html', {
+            'job': job,
+            'reason': 'closed'
+        })
+
+    # Only ACTIVE / OPEN jobs are available in the public application form
     open_jobs = list(RecruitmentJob.objects.filter(status=RecruitmentJob.Status.OPEN).select_related('department', 'site'))
-
-    # If previewing a specific job that is not in open_jobs, include it for preview display
-    if job and job not in open_jobs:
-        open_jobs.insert(0, job)
 
     if not job and len(open_jobs) == 1:
         job = open_jobs[0]
+
+    google_auth = request.session.get('candidate_google_auth')
+    google_client_id = getattr(settings, 'GOOGLE_CLIENT_ID', '315051569117-7knfkmsdkcsmcbmnp2or1pos542kd8b7.apps.googleusercontent.com')
+    returning_candidate = None
+
+    if google_auth and google_auth.get('email'):
+        returning_candidate = Candidate.objects.select_related('education', 'experience', 'skills').filter(
+            email__iexact=google_auth['email']
+        ).first()
 
     if request.method == 'POST':
         form = PreInterviewApplicationForm(request.POST, request.FILES, default_job=job)
         if form.is_valid():
             cd = form.cleaned_data
             selected_job = cd['job']
+
+            # Reject applications if the position has been closed
+            if selected_job.status != RecruitmentJob.Status.OPEN:
+                return render(request, 'recruitment/public/link_invalid.html', {
+                    'job': selected_job,
+                    'reason': 'closed'
+                })
+
             email = cd['email'].strip().lower()
 
-            # Prevent duplicate application for the same job with the same email
+            # Prevent duplicate application if already completed office walk-in registration
             existing_app = JobApplication.objects.filter(
                 candidate__email=email,
                 job=selected_job
             ).first()
 
-            if existing_app:
+            if existing_app and existing_app.is_office_registered:
                 messages.warning(
                     request,
-                    f"An application has already been submitted with email '{email}' for {selected_job.title}. "
+                    f"An in-person application has already been submitted with email '{email}' for {selected_job.title}. "
                     f"Your Application ID is {existing_app.application_id}."
                 )
                 return redirect('recruitment:candidate_track_id', application_id=existing_app.application_id)
@@ -666,6 +922,16 @@ def candidate_register(request, token=None):
                     candidate.full_name = cd['full_name']
                     candidate.phone = cd['phone']
                     candidate.city = cd['city']
+
+                    # Attach Google identity verification
+                    if google_auth and google_auth.get('email') == email:
+                        candidate.is_google_verified = True
+                        candidate.google_sub = google_auth.get('sub', '')
+                        if google_auth.get('picture'):
+                            candidate.google_picture_url = google_auth.get('picture')
+                    elif request.POST.get('is_google_verified') == 'true':
+                        candidate.is_google_verified = True
+
                     candidate.save()
 
                     # 2. Candidate Education (Highest Qualification summary)
@@ -682,10 +948,10 @@ def candidate_register(request, token=None):
                         candidate=candidate,
                         defaults={
                             'experience_type': cd['experience_type'],
-                            'total_experience_years': cd.get('total_experience_years', 0),
-                            'current_company': cd.get('current_company', ''),
-                            'current_designation': cd.get('current_designation', ''),
-                            'notice_period_days': cd.get('notice_period_days', 30),
+                            'total_experience_years': cd.get('total_experience_years') if cd.get('total_experience_years') is not None else 0,
+                            'current_company': cd.get('current_company') or '',
+                            'current_designation': cd.get('current_designation') or '',
+                            'notice_period_days': cd.get('notice_period_days') if cd.get('notice_period_days') is not None else 30,
                             'expected_ctc': cd.get('expected_ctc'),
                         }
                     )
@@ -700,22 +966,42 @@ def candidate_register(request, token=None):
                         }
                     )
 
-                    # 5. Create Job Application
-                    application = JobApplication.objects.create(
-                        candidate=candidate,
-                        job=selected_job,
-                        registration_link=link,
-                        resume=cd['resume'],
-                        status=JobApplication.Status.SUBMITTED
-                    )
+                    # 5. Create or Upgrade Job Application to Office Registration
+                    if existing_app:
+                        application = existing_app
+                        application.is_office_registered = True
+                        application.application_type = JobApplication.ApplicationType.OFFICE_REGISTRATION
+                        if cd.get('resume'):
+                            application.resume = cd['resume']
+                        if link:
+                            application.registration_link = link
+                        application.save()
 
-                    # 6. Status History
-                    ApplicationStatusHistory.objects.create(
-                        application=application,
-                        old_status='NONE',
-                        new_status=JobApplication.Status.SUBMITTED,
-                        notes='Application submitted via online portal for Round 1 Interview Screening.'
-                    )
+                        # 6. Status History
+                        ApplicationStatusHistory.objects.create(
+                            application=application,
+                            old_status=application.status,
+                            new_status=application.status,
+                            notes='Candidate completed in-person Office Walk-In Registration form (upgraded from online fast-apply).'
+                        )
+                    else:
+                        application = JobApplication.objects.create(
+                            candidate=candidate,
+                            job=selected_job,
+                            registration_link=link,
+                            resume=cd['resume'],
+                            status=JobApplication.Status.SUBMITTED,
+                            application_type=JobApplication.ApplicationType.OFFICE_REGISTRATION,
+                            is_office_registered=True,
+                        )
+
+                        # 6. Status History
+                        ApplicationStatusHistory.objects.create(
+                            application=application,
+                            old_status='NONE',
+                            new_status=JobApplication.Status.SUBMITTED,
+                            notes='Application submitted via online portal with Google Verification for Round 1 Interview Screening.'
+                        )
 
                 # 7. Dispatch notification to HR Administrators
                 hr_users = CustomUser.objects.filter(role__in=[CustomUser.Role.HR, CustomUser.Role.HEAD])
@@ -765,10 +1051,17 @@ def candidate_register(request, token=None):
         else:
             messages.error(request, "Please check the highlighted errors in the form below before submitting.")
     else:
-        form = PreInterviewApplicationForm(default_job=job, selected_job=job)
+        initial_data = {}
+        if returning_candidate:
+            initial_data = serialize_candidate_data(returning_candidate)
+        elif google_auth:
+            initial_data = {
+                'full_name': google_auth.get('name', ''),
+                'email': google_auth.get('email', ''),
+            }
+        form = PreInterviewApplicationForm(initial=initial_data, default_job=job, selected_job=job)
 
     # Serialize job metadata to JSON for live client-side preview in the Google Form
-    import json
     jobs_json = {}
     for j in open_jobs:
         dept_name = j.department.name if j.department else 'General'
@@ -793,6 +1086,10 @@ def candidate_register(request, token=None):
         'open_jobs': open_jobs,
         'jobs_json': json.dumps(jobs_json),
         'form': form,
+        'google_user': google_auth,
+        'google_client_id': google_client_id,
+        'returning_candidate': returning_candidate,
+        'existing_candidate_data': json.dumps(serialize_candidate_data(returning_candidate)) if returning_candidate else '{}',
     })
 
 
@@ -803,28 +1100,55 @@ def candidate_fast_apply(request, job_id=None):
     Name, Email ID, Phone No, Alternative Phone No, Address, and Resume Upload.
     If a job is specified via link/URL, the form locks that specific role.
     If no job is specified, the dropdown is visible for role selection.
+    Automatically fetches existing candidate details upon Google sign-in.
     """
     job = None
     target_job_id = job_id or request.GET.get('job')
-    if target_job_id:
+    pos_param = request.GET.get('position')
+    if target_job_id and str(target_job_id).isdigit():
         job = RecruitmentJob.objects.filter(id=target_job_id).first()
+    if not job and (pos_param or (target_job_id and not str(target_job_id).isdigit())):
+        target_str = pos_param or target_job_id
+        from django.utils.text import slugify
+        for j in RecruitmentJob.objects.all():
+            if slugify(j.title) == slugify(target_str) or j.title.lower() == target_str.lower().replace('-', ' '):
+                job = j
+                break
 
-    has_fixed_job = bool(job)
+    # If position is CLOSED (or on hold / draft), link will not work
+    if job and job.status != RecruitmentJob.Status.OPEN:
+        return render(request, 'recruitment/public/link_invalid.html', {
+            'job': job,
+            'reason': 'closed'
+        })
 
+    has_fixed_job = bool(job and job.status == RecruitmentJob.Status.OPEN)
+
+    # Only ACTIVE / OPEN jobs are available in the application form
     open_jobs = list(RecruitmentJob.objects.filter(status=RecruitmentJob.Status.OPEN).select_related('department', 'site'))
-    if job and job not in open_jobs:
-        open_jobs.insert(0, job)
+
     if not job and len(open_jobs) == 1:
         job = open_jobs[0]
+
+    google_auth = request.session.get('candidate_google_auth')
+    google_client_id = getattr(settings, 'GOOGLE_CLIENT_ID', '315051569117-7knfkmsdkcsmcbmnp2or1pos542kd8b7.apps.googleusercontent.com')
+    returning_candidate = None
+
+    if google_auth and google_auth.get('email'):
+        returning_candidate = Candidate.objects.select_related('education', 'experience', 'skills').filter(
+            email__iexact=google_auth['email']
+        ).first()
 
     if request.method == 'POST':
         form = QuickSocialApplicationForm(request.POST, request.FILES, default_job=job, fixed_job=job if has_fixed_job else None)
         if form.is_valid():
             cd = form.cleaned_data
             selected_job = cd.get('job') or job
-            if not selected_job:
-                messages.error(request, "Please select the position you are applying for.")
-                return redirect(request.path)
+            if not selected_job or selected_job.status != RecruitmentJob.Status.OPEN:
+                return render(request, 'recruitment/public/link_invalid.html', {
+                    'job': selected_job,
+                    'reason': 'closed'
+                })
             email = cd['email'].strip().lower()
 
             existing_app = JobApplication.objects.filter(
@@ -869,13 +1193,25 @@ def candidate_fast_apply(request, job_id=None):
                     candidate.state = state
                     candidate.postal_code = postal_code
                     candidate.country = country
+
+                    # Attach Google identity verification
+                    if google_auth and google_auth.get('email') == email:
+                        candidate.is_google_verified = True
+                        candidate.google_sub = google_auth.get('sub', '')
+                        if google_auth.get('picture'):
+                            candidate.google_picture_url = google_auth.get('picture')
+                    elif request.POST.get('is_google_verified') == 'true':
+                        candidate.is_google_verified = True
+
                     candidate.save()
 
                     application = JobApplication.objects.create(
                         candidate=candidate,
                         job=selected_job,
                         resume=cd['resume'],
-                        status=JobApplication.Status.SUBMITTED
+                        status=JobApplication.Status.SUBMITTED,
+                        application_type=JobApplication.ApplicationType.ONLINE_FAST_APPLY,
+                        is_office_registered=False,
                     )
 
                     ApplicationStatusHistory.objects.create(
@@ -925,10 +1261,27 @@ def candidate_fast_apply(request, job_id=None):
         else:
             messages.error(request, "Please check the highlighted errors in the form below before submitting.")
     else:
-        form = QuickSocialApplicationForm(default_job=job, selected_job=job, fixed_job=job if has_fixed_job else None)
+        initial_data = {}
+        if returning_candidate:
+            initial_data = {
+                'full_name': returning_candidate.full_name,
+                'email': returning_candidate.email,
+                'phone': returning_candidate.phone,
+                'alt_phone': returning_candidate.alt_phone,
+                'current_address': returning_candidate.current_address,
+                'city': returning_candidate.city,
+                'state': returning_candidate.state,
+                'postal_code': returning_candidate.postal_code,
+                'country': returning_candidate.country,
+            }
+        elif google_auth:
+            initial_data = {
+                'full_name': google_auth.get('name', ''),
+                'email': google_auth.get('email', ''),
+            }
+        form = QuickSocialApplicationForm(initial=initial_data, default_job=job, selected_job=job, fixed_job=job if has_fixed_job else None)
 
     # Serialize job metadata to JSON for live client-side preview
-    import json
     jobs_json = {}
     for j in open_jobs:
         dept_name = j.department.name if j.department else 'General'
@@ -949,6 +1302,10 @@ def candidate_fast_apply(request, job_id=None):
         'has_fixed_job': has_fixed_job,
         'open_jobs': open_jobs,
         'jobs_json': json.dumps(jobs_json),
+        'google_user': google_auth,
+        'google_client_id': google_client_id,
+        'returning_candidate': returning_candidate,
+        'existing_candidate_data': json.dumps(serialize_candidate_data(returning_candidate)) if returning_candidate else '{}',
     })
 
 

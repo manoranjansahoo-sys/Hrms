@@ -193,6 +193,59 @@ class EmployeeOnboardingAndLoginTests(TestCase):
         self.assertTrue(login_phone_res.context['user'].is_authenticated)
         self.assertEqual(login_phone_res.context['user'].username, 'rahul_verma')
 
+    def test_hr_role_choices_restricted(self):
+        # HR user form has only Employee and Site Manager
+        form = EmployeeCreateForm(user=self.hr_user)
+        role_choices = [c[0] for c in form.fields['role'].choices]
+        self.assertIn(CustomUser.Role.EMPLOYEE, role_choices)
+        self.assertIn(CustomUser.Role.SITE_MANAGER, role_choices)
+        self.assertNotIn(CustomUser.Role.HR, role_choices)
+        self.assertNotIn(CustomUser.Role.HEAD, role_choices)
+
+    def test_admin_role_choices_unrestricted(self):
+        admin_user = CustomUser.objects.create_superuser(
+            username='super_admin',
+            email='admin@example.com',
+            role=CustomUser.Role.HEAD,
+            password='AdminPassword123'
+        )
+        form = EmployeeCreateForm(user=admin_user)
+        role_choices = [c[0] for c in form.fields['role'].choices]
+        self.assertIn(CustomUser.Role.EMPLOYEE, role_choices)
+        self.assertIn(CustomUser.Role.SITE_MANAGER, role_choices)
+        self.assertIn(CustomUser.Role.HR, role_choices)
+        self.assertIn(CustomUser.Role.HEAD, role_choices)
+
+    def test_hr_cannot_create_hr_or_head_role(self):
+        self.client.force_login(self.hr_user)
+        post_data = {
+            'first_name': 'Sneha',
+            'last_name': 'Patil',
+            'username': 'sneha_patil',
+            'email': 'sneha.patil@company.com',
+            'phone': '9876543219',
+            'password': 'CustomSecret2026!',
+            'confirm_password': 'CustomSecret2026!',
+            'role': CustomUser.Role.HEAD,  # HR attempts to create HEAD
+            'department': self.dept.id,
+            'designation': self.desig.id,
+            'site': self.site.id,
+            'employment_type': 'FULL_TIME',
+            'joining_date': '2026-11-04',
+            'date_of_birth': '1996-08-20',
+            'gender': 'FEMALE',
+            'marital_status': 'SINGLE',
+            'emergency_contact_phone': '8876543219',
+            'bank_name': 'HDFC Bank',
+            'bank_account_number': '987654321099',
+            'ifsc_code': 'HDFC0001234',
+            'pan_number': 'ABCDE9877Z',
+        }
+        res = self.client.post(reverse('employees:employee_create'), data=post_data)
+        self.assertEqual(res.status_code, 200)
+        form = res.context['form']
+        self.assertIn('role', form.errors)
+
     def test_profile_correction_request_and_hr_approval_applies_bank_and_phone(self):
         # 1. Create an employee
         emp_user = CustomUser.objects.create_user(

@@ -136,16 +136,16 @@
                         </div>
                     {% endif %}
 
-                    <!-- LEAVE BALANCES SUMMARY -->
+                    <!-- LEAVE BALANCES SUMMARY (Sick Leave & Paid Leave) -->
                     <div class="border rounded p-3 mb-4 bg-body">
                         <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="bi bi-calendar2-range text-info me-2"></i>Annual Leave Quotas</h6>
                         <div class="row g-2 text-center">
                             {% for b in leave_balances %}
-                                <div class="col-4">
-                                    <div class="p-2 border rounded bg-light">
-                                        <div class="small text-muted">{{ b.leave_type.code }}</div>
-                                        <div class="fw-bold text-dark fs-5">{{ b.available_days }}</div>
-                                        <small class="text-muted" style="font-size: 0.7rem;">of {{ b.allocated_days }} days</small>
+                                <div class="col-6">
+                                    <div class="p-2 border rounded {% if b.leave_type.code == 'SL' %}bg-success-subtle border-success-subtle{% else %}bg-primary-subtle border-primary-subtle{% endif %}">
+                                        <div class="small fw-bold {% if b.leave_type.code == 'SL' %}text-success{% else %}text-primary{% endif %}">{{ b.leave_type.name }} ({{ b.leave_type.code }})</div>
+                                        <div class="fw-bold text-dark fs-5">{{ b.available_days }} <span class="fs-6 fw-normal text-muted">left</span></div>
+                                        <small class="text-muted" style="font-size: 0.7rem;">of {{ b.allocated_days }} days allocated</small>
                                     </div>
                                 </div>
                             {% empty %}

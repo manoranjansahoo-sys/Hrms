@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+{% block title %}Attendance History - {{ employee.full_name }} ({{ employee.emp_id }}){% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <!-- TOP NAVIGATION / ACTIONS -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1 small">
+                    <li class="breadcrumb-item"><a href="{% url 'attendance:admin_register' %}" class="text-decoration-none">Daily Attendance Register</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ employee.emp_id }}</li>
+                </ol>
+            </nav>
+            <h3 class="fw-bold mb-0">Employee Attendance Record</h3>
+        </div>
+        <div>
+            <a href="{% url 'attendance:admin_register' %}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1.5 shadow-sm">
+                <i class="bi bi-arrow-left"></i>
+                <span>Back to Daily Register</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- EMPLOYEE PROFILE SUMMARY HEADER CARD -->
+    <div class="hrms-card mb-4 p-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-4">
+            <div class="d-flex align-items-center gap-3.5">
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm" style="width: 60px; height: 60px; font-size: 1.35rem; background: linear-gradient(135deg, #10B981 0%, #047857 100%); flex-shrink: 0;">
+                    {% if employee.avatar %}
+                        <img src="{{ employee.avatar.url }}" alt="{{ employee.full_name }}" class="w-100 h-100 rounded-circle object-fit-cover">
+                    {% else %}
+                        {{ employee.full_name|slice:":1"|upper }}
+                    {% endif %}
+                </div>
+                <div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                        <h4 class="fw-bold text-dark mb-0">{{ employee.full_name }}</h4>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill font-monospace px-2.5 py-1">
+                            {{ employee.emp_id }}
+                        </span>
+                        <span class="badge bg-light text-dark border rounded-pill px-2.5 py-1">
+                            {{ employee.get_status_display|default:"Active" }}
+                        </span>
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center gap-3 text-muted small">
+                        <span><i class="bi bi-briefcase me-1 text-secondary"></i>{{ employee.designation.title|default:"Staff" }}</span>
+                        <span>&bull;</span>
+                        <span><i class="bi bi-building me-1 text-secondary"></i>{{ employee.department.name|default:"General" }}</span>
+                        <span>&bull;</span>
+                        <span><i class="bi bi-geo-alt me-1 text-danger"></i>{{ employee.site.name|default:"Main Campus" }} ({{ employee.site.city|default:"--" }})</span>
+                        {% if employee.reporting_manager %}
+                            <span>&bull;</span>
+                            <span><i class="bi bi-person-badge me-1 text-info"></i>Reports to: {{ employee.reporting_manager.full_name }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTACT META PILLS -->
+            <div class="d-flex flex-column gap-1.5 text-end small">
+                {% if employee.user.email %}
+                    <div class="text-muted"><i class="bi bi-envelope me-1.5 text-primary"></i><span class="font-monospace">{{ employee.user.email }}</span></div>
+                {% endif %}
+                {% if employee.phone %}
+                    <div class="text-muted"><i class="bi bi-telephone me-1.5 text-success"></i><span class="font-monospace">{{ employee.phone }}</span></div>
+                {% endif %}
+                {% if employee.joining_date %}
+                    <div class="text-muted"><i class="bi bi-calendar-check me-1.5 text-secondary"></i>Joined: {{ employee.joining_date|date:"d M Y" }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- QUICK MONTH FILTER / VIEW TOGGLE -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+        <div class="d-flex flex-wrap gap-1.5 align-items-center">
+            <span class="small fw-semibold text-muted me-1"><i class="bi bi-calendar3 me-1"></i>Period:</span>
+            {% for m in recent_months %}
+                <a href="?month={{ m.month }}&year={{ m.year }}" 
+                   class="btn btn-sm {% if m.is_selected %}btn-primary fw-bold text-white shadow-sm{% else %}btn-outline-secondary border-0 bg-white{% endif %} py-1 px-2.5 rounded-pill" style="font-size: 0.82rem;">
+                    {{ m.short_label }}
+                </a>
+            {% endfor %}
+            <a href="?view_all=1" 
+               class="btn btn-sm {% if view_all %}btn-primary fw-bold text-white shadow-sm{% else %}btn-outline-secondary border-0 bg-white{% endif %} py-1 px-2.5 rounded-pill" style="font-size: 0.82rem;">
+                <i class="bi bi-infinity me-1"></i>All Records
+            </a>
+        </div>
+        <div class="small text-muted">
+            Showing <strong>{{ total_records }}</strong> attendance record{{ total_records|pluralize }}
+        </div>
+    </div>
+
+    <!-- SUMMARY STATS KPI CARDS -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-md-3 col-xl">
+            <div class="stat-card p-3 rounded-3 bg-white border shadow-sm d-flex align-items-center gap-3">
+                <div class="rounded-3 d-flex align-items-center justify-content-center text-success" style="width: 44px; height: 44px; background: #DCFCE7; font-size: 1.3rem;">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <div>
+                    <div class="small text-muted fw-semibold">Days Present</div>
+                    <div class="fs-4 fw-bold text-success">{{ total_present }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3 col-xl">
+            <div class="stat-card p-3 rounded-3 bg-white border shadow-sm d-flex align-items-center gap-3">
+                <div class="rounded-3 d-flex align-items-center justify-content-center text-warning" style="width: 44px; height: 44px; background: #FEF3C7; font-size: 1.3rem;">
+                    <i class="bi bi-alarm-fill"></i>
+                </div>
+                <div>
+                    <div class="small text-muted fw-semibold">Late Arrivals</div>
+                    <div class="fs-4 fw-bold text-warning">{{ total_late }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3 col-xl">
+            <div class="stat-card p-3 rounded-3 bg-white border shadow-sm d-flex align-items-center gap-3">
+                <div class="rounded-3 d-flex align-items-center justify-content-center text-info" style="width: 44px; height: 44px; background: #E0F2FE; font-size: 1.3rem;">
+                    <i class="bi bi-calendar2-minus-fill"></i>
+                </div>
+                <div>
+                    <div class="small text-muted fw-semibold">Leave / Half-Days</div>
+                    <div class="fs-4 fw-bold text-info">{{ total_leave|add:total_half_day }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3 col-xl">
+            <div class="stat-card p-3 rounded-3 bg-white border shadow-sm d-flex align-items-center gap-3">
+                <div class="rounded-3 d-flex align-items-center justify-content-center text-primary" style="width: 44px; height: 44px; background: #EFF6FF; font-size: 1.3rem;">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <div>
+                    <div class="small text-muted fw-semibold">Total Hours</div>
+                    <div class="fs-4 fw-bold text-primary">{{ total_hours }} <span class="small fs-6 text-muted fw-normal">hrs</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3 col-xl">
+            <div class="stat-card p-3 rounded-3 bg-white border shadow-sm d-flex align-items-center gap-3">
+                <div class="rounded-3 d-flex align-items-center justify-content-center text-purple" style="width: 44px; height: 44px; background: #F3E8FF; color: #7E22CE; font-size: 1.3rem;">
+                    <i class="bi bi-lightning-charge-fill"></i>
+                </div>
+                <div>
+                    <div class="small text-muted fw-semibold">Overtime</div>
+                    <div class="fs-4 fw-bold" style="color: #7E22CE;">{{ total_ot }} <span class="small fs-6 text-muted fw-normal">hrs</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PUNCH LOG HISTORY TABLE -->
+    <div class="hrms-card mb-4">
+        <div class="hrms-card-header d-flex justify-content-between align-items-center">
+            <h6 class="fw-bold mb-0">
+                <i class="bi bi-list-check me-1.5 text-primary"></i>
+                Attendance Punch Logs 
+                {% if not view_all %}
+                    ({{ selected_month }}/{{ selected_year }})
+                {% else %}
+                    (All-Time Complete Roster)
+                {% endif %}
+            </h6>
+        </div>
+        <div class="table-responsive">
+            <table class="table hrms-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Day</th>
+                        <th>Punch In</th>
+                        <th>Punch Out</th>
+                        <th>Working Hours</th>
+                        <th>Overtime</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for att in attendances %}
+                        <tr>
+                            <td class="fw-bold text-dark">{{ att.date|date:"d M Y" }}</td>
+                            <td class="text-muted small">{{ att.date|date:"l" }}</td>
+                            <td class="font-monospace text-dark">
+                                {% if att.punch_in %}
+                                    {{ att.punch_in|time:"h:i A" }}
+                                    {% if att.is_late %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle ms-1" style="font-size: 0.68rem;">Late</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">--</span>
+                                {% endif %}
+                            </td>
+                            <td class="font-monospace text-dark">
+                                {{ att.punch_out|time:"h:i A"|default:"--" }}
+                            </td>
+                            <td class="fw-bold text-dark">
+                                {{ att.working_hours|default:"0.00" }} hrs
+                            </td>
+                            <td class="font-monospace {% if att.overtime_hours > 0 %}text-success fw-bold{% else %}text-muted{% endif %}">
+                                {{ att.overtime_hours|default:"0.00" }} hrs
+                            </td>
+                            <td>
+                                {% if att.status == 'PRESENT' %}
+                                    <span class="badge bg-success">Present</span>
+                                {% elif att.status == 'HALF_DAY' %}
+                                    <span class="badge bg-warning text-dark">Half Day</span>
+                                {% elif att.status == 'ON_LEAVE' %}
+                                    <span class="badge bg-info text-dark">On Leave</span>
+                                {% elif att.status == 'WEEK_OFF' %}
+                                    <span class="badge bg-light text-secondary border">Weekly Off</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Absent</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-calendar-x fs-2 d-block mb-2 opacity-50"></i>
+                                No attendance records found for this period.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- RECENT ATTENDANCE CORRECTION REQUESTS -->
+    {% if corrections %}
+        <div class="hrms-card">
+            <div class="hrms-card-header d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0">
+                    <i class="bi bi-clock-history me-1.5 text-warning"></i>
+                    Recent Attendance Correction Requests
+                </h6>
+            </div>
+            <div class="table-responsive">
+                <table class="table hrms-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Requested Date</th>
+                            <th>Requested In</th>
+                            <th>Requested Out</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Submitted On</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in corrections %}
+                            <tr>
+                                <td class="fw-bold text-dark">{{ c.date|date:"d M Y" }}</td>
+                                <td class="font-monospace">{{ c.requested_punch_in|time:"h:i A"|default:"--" }}</td>
+                                <td class="font-monospace">{{ c.requested_punch_out|time:"h:i A"|default:"--" }}</td>
+                                <td class="small text-muted">{{ c.reason|default:"--" }}</td>
+                                <td>
+                                    {% if c.status == 'PENDING' %}
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    {% elif c.status == 'APPROVED' %}
+                                        <span class="badge bg-success">Approved</span>
+                                    {% elif c.status == 'REJECTED' %}
+                                        <span class="badge bg-danger">Rejected</span>
+                                    {% endif %}
+                                </td>
+                                <td class="small text-muted">{{ c.created_at|date:"d M Y h:i A" }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+

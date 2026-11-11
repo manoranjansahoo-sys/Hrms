@@ -5,8 +5,10 @@ from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
 from accounts.decorators import role_required, hr_required, site_manager_required, log_audit_trail
+from django.db.models import Q
+from organization.models import Department
 from accounts.models import CustomUser
-from leave_management.models import LeaveRequest, LeaveBalance, LeaveType
+from leave_management.models import LeaveRequest, LeaveBalance, LeaveType, ensure_employee_leave_balances
 from leave_management.forms import LeaveApplicationForm
 from attendance.models import Attendance
 from notifications.models import create_notification
@@ -21,7 +23,8 @@ def apply_leave(request):
         return redirect('portal:smart_dashboard')
 
     today = timezone.localdate()
-    balances = LeaveBalance.objects.filter(employee=emp, year=today.year).select_related('leave_type')
+    ensure_employee_leave_balances(emp, today.year)
+    balances = LeaveBalance.objects.filter(employee=emp, year=today.year, leave_type__code__in=['SL', 'PL']).select_related('leave_type')
 
     if request.method == 'POST':
         form = LeaveApplicationForm(request.POST, request.FILES)
@@ -29,28 +32,31 @@ def apply_leave(request):
             leave_req = form.save(commit=False)
             leave_req.employee = emp
 
-            start = leave_req.start_date
-            end = leave_req.end_date
-
-            if end < start:
-                messages.error(request, "End date cannot be earlier than start date.")
-                return render(request, 'leave_management/apply_leave.html', {'form': form, 'balances': balances})
-
-            # Calculate total days (excluding Sundays)
-            curr = start
-            working_days_count = 0
-            while curr <= end:
-                if curr.weekday() != 6: # Not Sunday
-                    working_days_count += 1
-                curr += timedelta(days=1)
-
-            if working_days_count == 0:
-                messages.error(request, "Selected date range contains no working days.")
-                return render(request, 'leave_management/apply_leave.html', {'form': form, 'balances': balances})
-
             if leave_req.is_half_day:
+                leave_req.end_date = leave_req.start_date
+                start = leave_req.start_date
+                end = leave_req.start_date
                 total_days = Decimal('0.5')
             else:
+                start = leave_req.start_date
+                end = leave_req.end_date
+
+                if end < start:
+                    messages.error(request, "End date cannot be earlier than start date.")
+                    return render(request, 'leave_management/apply_leave.html', {'form': form, 'balances': balances})
+
+                # Calculate total days (excluding Sundays)
+                curr = start
+                working_days_count = 0
+                while curr <= end:
+                    if curr.weekday() != 6: # Not Sunday
+                        working_days_count += 1
+                    curr += timedelta(days=1)
+
+                if working_days_count == 0:
+                    messages.error(request, "Selected date range contains no working days.")
+                    return render(request, 'leave_management/apply_leave.html', {'form': form, 'balances': balances})
+
                 total_days = Decimal(str(working_days_count))
 
             leave_req.total_days = total_days
@@ -106,7 +112,8 @@ def my_leaves(request):
         return redirect('portal:home')
 
     today = timezone.localdate()
-    balances = LeaveBalance.objects.filter(employee=emp, year=today.year).select_related('leave_type')
+    ensure_employee_leave_balances(emp, today.year)
+    balances = LeaveBalance.objects.filter(employee=emp, year=today.year, leave_type__code__in=['SL', 'PL']).select_related('leave_type')
     leave_requests = LeaveRequest.objects.filter(employee=emp).select_related('leave_type', 'manager_action_by', 'hr_action_by').order_by('-applied_at')
 
     return render(request, 'leave_management/my_leaves.html', {
@@ -149,18 +156,88 @@ def leave_requests_admin(request):
     """
     user = request.user
     status_filter = request.GET.get('status', '')
+    search_q = request.GET.get('q', '').strip()
+    dept_filter = request.GET.get('dept', '').strip()
+    type_filter = request.GET.get('type', '').strip()
 
-    queryset = LeaveRequest.objects.select_related('employee__user', 'employee__site', 'employee__department', 'leave_type').all()
+    base_queryset = LeaveRequest.objects.select_related(
+        'employee__user', 'employee__site', 'employee__department', 'employee__designation',
+        'leave_type', 'manager_action_by', 'hr_action_by'
+    ).order_by('-applied_at')
 
     if user.is_site_manager_role and not (user.is_hr_role or user.is_head_role):
-        queryset = queryset.filter(employee__site__in=user.managed_sites.all())
+        base_queryset = base_queryset.filter(employee__site__in=user.managed_sites.all())
 
+    # Calculate status badge counts on the user's accessible scope
+    count_all = base_queryset.count()
+    count_pending_mgr = base_queryset.filter(status=LeaveRequest.Status.PENDING_MANAGER).count()
+    count_pending_hr = base_queryset.filter(status=LeaveRequest.Status.PENDING_HR).count()
+    count_approved = base_queryset.filter(status=LeaveRequest.Status.APPROVED).count()
+    count_rejected = base_queryset.filter(status=LeaveRequest.Status.REJECTED).count()
+
+    # Apply filters to queryset
+    queryset = base_queryset
     if status_filter:
         queryset = queryset.filter(status=status_filter)
 
+    if search_q:
+        queryset = queryset.filter(
+            Q(employee__full_name__icontains=search_q) |
+            Q(employee__emp_id__icontains=search_q) |
+            Q(employee__department__name__icontains=search_q) |
+            Q(employee__designation__title__icontains=search_q) |
+            Q(leave_type__name__icontains=search_q) |
+            Q(reason__icontains=search_q)
+        )
+
+    if dept_filter:
+        queryset = queryset.filter(employee__department_id=dept_filter)
+
+    if type_filter:
+        queryset = queryset.filter(leave_type_id=type_filter)
+
+    departments = Department.objects.all().order_by('name')
+    leave_types = LeaveType.objects.filter(code__in=['SL', 'PL']).order_by('name')
+
+    requests_list = list(queryset)
+    if requests_list:
+        today_year = timezone.localdate().year
+        employee_ids = {r.employee_id for r in requests_list}
+        all_balances = LeaveBalance.objects.filter(
+            employee_id__in=employee_ids,
+            year=today_year,
+            leave_type__code__in=['SL', 'PL']
+        ).select_related('leave_type')
+
+        bal_map = {(b.employee_id, b.leave_type.code): b for b in all_balances}
+
+        for r in requests_list:
+            sl = bal_map.get((r.employee_id, 'SL'))
+            pl = bal_map.get((r.employee_id, 'PL'))
+
+            r._sick_leave_available = sl.available_days if sl else Decimal('0.0')
+            r._sick_leave_allocated = sl.allocated_days if sl else Decimal('0.0')
+            r._sick_leave_used = sl.used_days if sl else Decimal('0.0')
+            r._sick_leave_pending = sl.pending_days if sl else Decimal('0.0')
+
+            r._paid_leave_available = pl.available_days if pl else Decimal('0.0')
+            r._paid_leave_allocated = pl.allocated_days if pl else Decimal('0.0')
+            r._paid_leave_used = pl.used_days if pl else Decimal('0.0')
+            r._paid_leave_pending = pl.pending_days if pl else Decimal('0.0')
+
     return render(request, 'leave_management/admin_queue.html', {
-        'leave_requests': queryset,
+        'leave_requests': requests_list,
         'selected_status': status_filter,
+        'count_all': count_all,
+        'count_pending_mgr': count_pending_mgr,
+        'count_pending_hr': count_pending_hr,
+        'count_approved': count_approved,
+        'count_rejected': count_rejected,
+        'departments': departments,
+        'leave_types': leave_types,
+        'search_q': search_q,
+        'selected_dept': dept_filter,
+        'selected_type': type_filter,
     })
 
 
@@ -170,7 +247,7 @@ def process_leave(request, request_id):
     """
     Multi-level approval workflow:
     - Site Manager recommends or rejects.
-    - HR or Head provides final approval or rejection.
+    - HR or Head provides final approval or rejection (always editable/modifiable anytime).
     """
     user = request.user
     leave_req = get_object_or_404(LeaveRequest, id=request_id)
@@ -178,8 +255,9 @@ def process_leave(request, request_id):
     remarks = request.POST.get('remarks', '')
 
     emp = leave_req.employee
+    old_status = leave_req.status
 
-    if action == 'RECOMMEND' and (user.is_site_manager_role or user.is_hr_role or user.is_head_role):
+    if action == 'RECOMMEND' and (user.is_site_manager_role or user.is_hr_role or user.is_head_role or user.is_superuser):
         leave_req.manager_decision = 'RECOMMENDED'
         leave_req.manager_remarks = remarks
         leave_req.manager_action_by = user
@@ -205,13 +283,17 @@ def process_leave(request, request_id):
         leave_req.status = LeaveRequest.Status.APPROVED
         leave_req.save()
 
-        # Adjust balance: deduct pending and increase used
+        # Adjust balance: deduct pending and increase used if transitioning to approved
         if leave_req.leave_type.is_paid:
             bal = LeaveBalance.objects.filter(employee=emp, leave_type=leave_req.leave_type, year=leave_req.start_date.year).first()
             if bal:
-                bal.pending_days = max(Decimal('0.0'), bal.pending_days - leave_req.total_days)
-                bal.used_days += leave_req.total_days
-                bal.save()
+                if old_status in [LeaveRequest.Status.PENDING_MANAGER, LeaveRequest.Status.PENDING_HR]:
+                    bal.pending_days = max(Decimal('0.0'), bal.pending_days - leave_req.total_days)
+                    bal.used_days += leave_req.total_days
+                    bal.save()
+                elif old_status == LeaveRequest.Status.REJECTED:
+                    bal.used_days += leave_req.total_days
+                    bal.save()
 
         # Mark Attendance records as ON_LEAVE
         curr = leave_req.start_date
@@ -236,7 +318,7 @@ def process_leave(request, request_id):
 
     elif action == 'REJECT':
         leave_req.status = LeaveRequest.Status.REJECTED
-        if user.is_site_manager_role:
+        if user.is_site_manager_role and not (user.is_hr_role or user.is_head_role or user.is_superuser):
             leave_req.manager_decision = 'REJECTED'
             leave_req.manager_remarks = remarks
             leave_req.manager_action_by = user
@@ -248,12 +330,32 @@ def process_leave(request, request_id):
             leave_req.hr_action_at = timezone.now()
         leave_req.save()
 
-        # Revert pending balance
+        # Revert balance
         if leave_req.leave_type.is_paid:
             bal = LeaveBalance.objects.filter(employee=emp, leave_type=leave_req.leave_type, year=leave_req.start_date.year).first()
             if bal:
-                bal.pending_days = max(Decimal('0.0'), bal.pending_days - leave_req.total_days)
-                bal.save()
+                if old_status == LeaveRequest.Status.APPROVED:
+                    # Revert used days back to available
+                    bal.used_days = max(Decimal('0.0'), bal.used_days - leave_req.total_days)
+                    bal.save()
+                elif old_status in [LeaveRequest.Status.PENDING_MANAGER, LeaveRequest.Status.PENDING_HR]:
+                    # Revert pending balance
+                    bal.pending_days = max(Decimal('0.0'), bal.pending_days - leave_req.total_days)
+                    bal.save()
+
+        # If modifying from previously APPROVED to REJECTED, revert Attendance records
+        if old_status == LeaveRequest.Status.APPROVED:
+            curr = leave_req.start_date
+            while curr <= leave_req.end_date:
+                att = Attendance.objects.filter(employee=emp, date=curr).first()
+                if att and att.notes and f"Approved {leave_req.leave_type.name}" in att.notes:
+                    if not att.punch_in and not att.punch_out:
+                        att.delete()
+                    else:
+                        att.status = 'PRESENT'
+                        att.notes = 'Leave revoked by HR'
+                        att.save()
+                curr += timedelta(days=1)
 
         create_notification(
             recipient=emp.user,

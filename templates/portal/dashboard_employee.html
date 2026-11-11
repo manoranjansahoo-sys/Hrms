@@ -9,23 +9,39 @@
             <h3 class="fw-bold text-dark mb-1">Employee Self-Service Workspace</h3>
             <p class="text-muted small mb-0">Overview of your attendance, leave balances, compensation, and performance goals.</p>
         </div>
-        <div class="d-flex gap-2">
-            <a href="{% url 'attendance:punch_in' %}" class="btn btn-hrms btn-sm shadow-sm">
-                <i class="bi bi-box-arrow-in-right"></i> Punch In
-            </a>
-            <a href="{% url 'attendance:punch_out' %}" class="btn btn-outline-danger btn-sm shadow-sm">
-                <i class="bi bi-box-arrow-right"></i> Punch Out
-            </a>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            {% if not today_attendance or not today_attendance.punch_in %}
+                <a href="{% url 'attendance:punch_in' %}" class="btn btn-hrms btn-sm shadow-sm">
+                    <i class="bi bi-box-arrow-in-right"></i> Punch In
+                </a>
+                <button type="button" class="btn btn-outline-secondary btn-sm shadow-sm opacity-50" disabled title="Punch In required before you can Punch Out" style="cursor: not-allowed;">
+                    <i class="bi bi-box-arrow-right"></i> Punch Out
+                </button>
+            {% elif not today_attendance.punch_out %}
+                <button type="button" class="btn btn-outline-secondary btn-sm shadow-sm opacity-50" disabled title="Already Punched In today" style="cursor: not-allowed;">
+                    <i class="bi bi-box-arrow-in-right"></i> Punch In
+                </button>
+                <a href="{% url 'attendance:punch_out' %}" class="btn btn-outline-danger btn-sm shadow-sm">
+                    <i class="bi bi-box-arrow-right"></i> Punch Out
+                </a>
+            {% else %}
+                <button type="button" class="btn btn-outline-secondary btn-sm shadow-sm opacity-50" disabled title="Already punched out for today. Punch In closed." style="cursor: not-allowed;">
+                    <i class="bi bi-box-arrow-in-right"></i> Punch In
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm shadow-sm opacity-50" disabled title="Already punched out for today." style="cursor: not-allowed;">
+                    <i class="bi bi-box-arrow-right"></i> Punch Out
+                </button>
+            {% endif %}
             <a href="{% url 'leave_management:apply_leave' %}" class="btn btn-warning btn-sm text-dark fw-bold shadow-sm">
                 <i class="bi bi-calendar-plus"></i> Apply Leave
             </a>
         </div>
     </div>
 
-    <!-- STATS ROW: LEAVE BALANCES & ATTENDANCE -->
+    <!-- STATS ROW: ATTENDANCE & LEAVE BALANCES (SICK LEAVE & PAID LEAVE) -->
     <div class="row g-3 mb-4">
         <!-- PUNCH STATUS CARD -->
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="stat-card">
                 <div class="stat-icon stat-icon-green">
                     <i class="bi bi-clock-history"></i>
@@ -34,8 +50,13 @@
                     <div class="stat-label">Today's Attendance</div>
                     <div class="fw-bold fs-5 text-dark">
                         {% if today_attendance and today_attendance.punch_in %}
-                            <span class="text-success">Present</span>
-                            <div class="small text-muted font-monospace" style="font-size: 0.78rem;">In: {{ today_attendance.punch_in|time:"h:i A" }}</div>
+                            {% if today_attendance.punch_out %}
+                                <span class="text-secondary">Punched Out</span>
+                                <div class="small text-muted font-monospace" style="font-size: 0.78rem;">In: {{ today_attendance.punch_in|time:"h:i A" }} &bull; Out: {{ today_attendance.punch_out|time:"h:i A" }}</div>
+                            {% else %}
+                                <span class="text-success">Present</span>
+                                <div class="small text-muted font-monospace" style="font-size: 0.78rem;">In: {{ today_attendance.punch_in|time:"h:i A" }}</div>
+                            {% endif %}
                         {% else %}
                             <span class="text-secondary">Not Checked In</span>
                         {% endif %}
@@ -45,16 +66,15 @@
         </div>
 
         {% for bal in leave_balances %}
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <div class="stat-card">
                     <div class="stat-icon 
-                        {% if bal.leave_type.code == 'CL' %}stat-icon-amber
-                        {% elif bal.leave_type.code == 'SL' %}stat-icon-blue
-                        {% else %}stat-icon-purple{% endif %}">
-                        <i class="bi bi-calendar-check"></i>
+                        {% if bal.leave_type.code == 'SL' %}stat-icon-green
+                        {% else %}stat-icon-blue{% endif %}">
+                        <i class="bi {% if bal.leave_type.code == 'SL' %}bi-heart-pulse-fill{% else %}bi-briefcase-fill{% endif %}"></i>
                     </div>
                     <div>
-                        <div class="stat-label">{{ bal.leave_type.name }}</div>
+                        <div class="stat-label">{{ bal.leave_type.name }} ({{ bal.leave_type.code }})</div>
                         <div class="stat-value text-dark">{{ bal.available_days }} <span class="fs-6 fw-normal text-muted">days left</span></div>
                     </div>
                 </div>

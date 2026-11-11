@@ -13,16 +13,18 @@
         </a>
     </div>
 
-    <!-- BALANCES STRIP -->
+    <!-- BALANCES STRIP (Sick Leave & Paid Leave) -->
     <div class="row g-3 mb-4">
         {% for b in balances %}
-            <div class="col-sm-6 col-md-3">
+            <div class="col-sm-6 col-md-6">
                 <div class="stat-card">
-                    <div class="stat-icon stat-icon-green"><i class="bi bi-calendar2-check"></i></div>
+                    <div class="stat-icon {% if b.leave_type.code == 'SL' %}stat-icon-green{% else %}stat-icon-blue{% endif %}">
+                        <i class="bi {% if b.leave_type.code == 'SL' %}bi-heart-pulse-fill{% else %}bi-briefcase-fill{% endif %}"></i>
+                    </div>
                     <div>
-                        <div class="stat-label">{{ b.leave_type.name }}</div>
+                        <div class="stat-label">{{ b.leave_type.name }} ({{ b.leave_type.code }})</div>
                         <div class="stat-value text-dark">{{ b.available_days }} <span class="fs-6 text-muted">days left</span></div>
-                        <small class="text-muted">Used: {{ b.used_days }} &bull; Allocated: {{ b.allocated_days }}</small>
+                        <small class="text-muted">Used: {{ b.used_days }} &bull; Allocated: {{ b.allocated_days }} &bull; Pending: {{ b.pending_days }}</small>
                     </div>
                 </div>
             </div>
@@ -52,8 +54,20 @@
                     {% for req in leave_requests %}
                         <tr>
                             <td class="fw-bold">{{ req.leave_type.name }}</td>
-                            <td class="font-monospace text-dark">{{ req.start_date|date:"d M Y" }} &rarr; {{ req.end_date|date:"d M Y" }}</td>
-                            <td><b>{{ req.total_days }}</b></td>
+                            <td class="font-monospace text-dark">
+                                {% if req.is_half_day %}
+                                    {{ req.start_date|date:"d M Y" }}
+                                {% else %}
+                                    {{ req.start_date|date:"d M Y" }} &rarr; {{ req.end_date|date:"d M Y" }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if req.is_half_day %}
+                                    <span class="badge" style="background: #E0F2FE; color: #0284C7; font-weight: 700;">Half Day</span>
+                                {% else %}
+                                    <b>{{ req.total_days }}</b>
+                                {% endif %}
+                            </td>
                             <td class="text-truncate" style="max-width: 200px;">{{ req.reason }}</td>
                             <td>
                                 {% if req.manager_decision == 'RECOMMENDED' %}

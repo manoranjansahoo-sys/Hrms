@@ -1,106 +1,1388 @@
 {% extends 'base.html' %}
-{% block title %}Leave Approvals Queue{% endblock %}
+{% load static %}
+{% block title %}Leave Approvals & Workflow Queue{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ==========================================================================
+   ENTERPRISE LEAVE APPROVALS - SCHEDULE TABLE DESIGN SYSTEM
+   Color Tokens:
+     Primary:       #1E3A8A
+     Secondary:     #2563EB
+     Page Bg:       #F4F6FB (Dark: #0F0C29)
+     Card Bg:       #FFFFFF (Dark: #171338)
+     Primary Text:  #172033 (Dark: #F3F4FD)
+     Secondary Text:#64748B (Dark: #9E9BC4)
+     Pending Mgr:   #F59E0B
+     Pending HR:    #0EA5E9
+     Approved:      #16A34A
+     Rejected:      #DC2626
+     Borders:       #E5EAF2 (Dark: #24205B)
+   ========================================================================== */
+
+:root {
+  --lq-primary: #1E3A8A;
+  --lq-primary-hover: #172554;
+  --lq-secondary: #2563EB;
+  --lq-secondary-light: #EFF6FF;
+  --lq-bg: #F4F6FB;
+  --lq-card-bg: #FFFFFF;
+  --lq-card-subsurface: #F8FAFC;
+  --lq-text-primary: #172033;
+  --lq-text-secondary: #64748B;
+  --lq-border: #E5EAF2;
+  --lq-border-subtle: #F1F5F9;
+
+  /* Status Tokens */
+  --lq-pending-mgr: #F59E0B;
+  --lq-pending-mgr-bg: #FEF3C7;
+  --lq-pending-hr: #0EA5E9;
+  --lq-pending-hr-bg: #E0F2FE;
+  --lq-approved: #16A34A;
+  --lq-approved-bg: #DCFCE7;
+  --lq-rejected: #DC2626;
+  --lq-rejected-bg: #FEE2E2;
+
+  --lq-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+  --lq-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.03);
+  --lq-radius: 14px;
+}
+
+[data-bs-theme="dark"] {
+  --lq-bg: #0F0C29;
+  --lq-card-bg: #171338;
+  --lq-card-subsurface: #1E1949;
+  --lq-text-primary: #F3F4FD;
+  --lq-text-secondary: #9E9BC4;
+  --lq-border: #24205B;
+  --lq-border-subtle: #2C276D;
+
+  --lq-secondary-light: rgba(37, 99, 235, 0.15);
+  --lq-pending-mgr-bg: rgba(245, 158, 11, 0.18);
+  --lq-pending-hr-bg: rgba(14, 165, 233, 0.18);
+  --lq-approved-bg: rgba(22, 163, 74, 0.18);
+  --lq-rejected-bg: rgba(220, 38, 38, 0.18);
+
+  --lq-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.4);
+  --lq-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+}
+
+.lq-wrapper {
+  padding: 0.5rem 0 3rem 0;
+  color: var(--lq-text-primary);
+}
+
+/* Page Header */
+.lq-header-card {
+  background: var(--lq-card-bg);
+  border: 1px solid var(--lq-border);
+  border-radius: var(--lq-radius);
+  padding: 1.25rem 1.75rem;
+  box-shadow: var(--lq-shadow-sm);
+  margin-bottom: 1.15rem;
+  position: relative;
+  overflow: hidden;
+}
+.lq-header-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 5px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--lq-primary) 0%, var(--lq-secondary) 100%);
+}
+.lq-title {
+  font-size: 1.40rem;
+  font-weight: 700;
+  color: var(--lq-text-primary);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+.lq-subtitle {
+  color: var(--lq-text-secondary);
+  font-size: 0.86rem;
+  margin-bottom: 0;
+}
+
+/* KPI Metric Cards */
+.lq-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1.15rem;
+}
+.lq-stat-card {
+  background: var(--lq-card-bg);
+  border: 1px solid var(--lq-border);
+  border-radius: var(--lq-radius);
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--lq-shadow-sm);
+  transition: all 0.2s ease;
+  text-decoration: none;
+  color: inherit;
+}
+.lq-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--lq-shadow);
+  border-color: var(--lq-secondary);
+  color: inherit;
+}
+.lq-stat-card.active {
+  border-color: var(--lq-secondary);
+  box-shadow: 0 0 0 2px var(--lq-secondary-light);
+}
+.lq-stat-label {
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  color: var(--lq-text-secondary);
+  margin-bottom: 0.15rem;
+}
+.lq-stat-value {
+  font-size: 1.55rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--lq-text-primary);
+}
+.lq-stat-icon-wrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+/* Table Card & Toolbar */
+.lq-table-card {
+  background: var(--lq-card-bg);
+  border: 1px solid var(--lq-border);
+  border-radius: var(--lq-radius);
+  box-shadow: var(--lq-shadow);
+  overflow: hidden;
+  width: 100%;
+}
+
+.lq-table-toolbar {
+  padding: 0.9rem 1.25rem;
+  background: var(--lq-card-bg);
+  border-bottom: 1px solid var(--lq-border);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+
+/* Status Filter Tabs */
+.lq-segmented-tabs {
+  display: inline-flex;
+  background: var(--lq-card-subsurface);
+  padding: 0.25rem;
+  border-radius: 10px;
+  border: 1px solid var(--lq-border);
+  gap: 0.25rem;
+  overflow-x: auto;
+}
+.lq-tab-btn {
+  padding: 0.38rem 0.80rem;
+  font-size: 0.80rem;
+  font-weight: 600;
+  color: var(--lq-text-secondary);
+  border-radius: 8px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  border: none;
+  background: transparent;
+}
+.lq-tab-btn:hover {
+  color: var(--lq-text-primary);
+  background: rgba(0, 0, 0, 0.04);
+}
+.lq-tab-btn.active {
+  background: var(--lq-card-bg);
+  color: var(--lq-secondary);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  font-weight: 700;
+}
+.lq-tab-badge {
+  font-size: 0.68rem;
+  padding: 0.10rem 0.42rem;
+  border-radius: 999px;
+  background: var(--lq-border);
+  color: var(--lq-text-secondary);
+  font-weight: 700;
+}
+.lq-tab-btn.active .lq-tab-badge {
+  background: var(--lq-secondary-light);
+  color: var(--lq-secondary);
+}
+
+/* Search Box in Toolbar */
+.lq-search-box {
+  position: relative;
+  min-width: 240px;
+}
+.lq-search-box input {
+  padding-left: 2.2rem;
+  font-size: 0.82rem;
+  border-radius: 8px;
+  border: 1px solid var(--lq-border);
+  background: var(--lq-card-subsurface);
+  color: var(--lq-text-primary);
+  height: 35px;
+  transition: all 0.2s ease;
+}
+.lq-search-box input:focus {
+  background: var(--lq-card-bg);
+  border-color: var(--lq-secondary);
+  box-shadow: 0 0 0 3px var(--lq-secondary-light);
+}
+.lq-search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--lq-text-secondary);
+  font-size: 0.80rem;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   SCHEDULE TABLE SPECIFICATIONS (100% WIDTH, ZERO SIDE SCROLL, NO OVERLAPPING)
+   ========================================================================== */
+.lq-table-responsive {
+  width: 100%;
+  overflow-x: hidden; /* Zero horizontal side scrolling on desktop */
+}
+
+@media (max-width: 1024px) {
+  .lq-table-responsive {
+    overflow-x: auto; /* Graceful touch scroll on small tablet / mobile */
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+.lq-schedule-table {
+  width: 100%;
+  margin-bottom: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: auto;
+}
+
+.lq-schedule-table thead th {
+  background: var(--lq-card-subsurface);
+  color: var(--lq-text-secondary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.90rem 1rem;
+  border-bottom: 1px solid var(--lq-border);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.lq-schedule-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+.lq-schedule-table tbody tr:hover td {
+  background-color: var(--lq-card-subsurface);
+}
+
+.lq-schedule-table tbody td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--lq-border-subtle);
+  color: var(--lq-text-primary);
+  font-size: 0.84rem;
+  vertical-align: middle;
+}
+
+/* Column 1: Clean Employee Column (NO stacked Pune / Department wrap) */
+.lq-emp-col {
+  white-space: nowrap;
+}
+.lq-emp-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+.lq-avatar-sm {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.84rem;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+.lq-emp-name-text {
+  font-weight: 700;
+  color: var(--lq-text-primary);
+  line-height: 1.2;
+}
+.lq-id-pill {
+  font-family: var(--bs-font-monospace);
+  font-weight: 600;
+  color: var(--lq-primary);
+  background: var(--lq-secondary-light);
+  padding: 0.06rem 0.38rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  display: inline-block;
+}
+
+/* Column 2: Leave Category */
+.lq-category-col {
+  white-space: nowrap;
+}
+.lq-cat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 0.20rem 0.50rem;
+  border-radius: 6px;
+  background: var(--lq-card-bg);
+  border: 1px solid var(--lq-border);
+  color: var(--lq-text-primary);
+}
+
+/* Column 3: Schedule Range */
+.lq-schedule-col {
+  white-space: nowrap;
+}
+.lq-schedule-range {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 600;
+  color: var(--lq-text-primary);
+  font-size: 0.82rem;
+}
+
+/* Column 4: Duration */
+.lq-duration-col {
+  white-space: nowrap;
+}
+.lq-days-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 700;
+  font-size: 0.78rem;
+  padding: 0.20rem 0.55rem;
+  border-radius: 999px;
+  background: var(--lq-secondary-light);
+  color: var(--lq-secondary);
+}
+
+/* Column 5: Attractive Eye Icon Button */
+.lq-info-col {
+  text-align: center;
+  white-space: nowrap;
+  width: 75px;
+}
+.lq-eye-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--lq-secondary-light);
+  color: var(--lq-secondary);
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.12);
+}
+.lq-eye-btn:hover {
+  background: var(--lq-secondary);
+  color: #FFFFFF;
+  transform: translateY(-1.5px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+  border-color: var(--lq-secondary);
+}
+
+/* Column 6: Status & Resolution (Spacious, Smooth & Premium) */
+.lq-action-col {
+  white-space: nowrap;
+  text-align: right;
+  min-width: 240px;
+}
+.lq-btn-sm {
+  padding: 0.38rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid transparent;
+  line-height: 1.25;
+}
+.lq-btn-sm:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Smooth Premium Approve Button */
+.lq-btn-sm.approve {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: #FFFFFF;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.28);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+.lq-btn-sm.approve:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: #FFFFFF;
+  transform: translateY(-1.5px);
+  box-shadow: 0 5px 14px rgba(16, 185, 129, 0.42);
+}
+
+/* Smooth Premium Recommend Button */
+.lq-btn-sm.recommend {
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+  color: #FFFFFF;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.28);
+}
+.lq-btn-sm.recommend:hover {
+  background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
+  color: #FFFFFF;
+  transform: translateY(-1.5px);
+  box-shadow: 0 5px 14px rgba(37, 99, 235, 0.42);
+}
+
+/* Smooth Premium Reject Button */
+.lq-btn-sm.reject {
+  background: #FEF2F2;
+  border-color: rgba(220, 38, 38, 0.25);
+  color: #DC2626;
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.08);
+}
+[data-bs-theme="dark"] .lq-btn-sm.reject {
+  background: rgba(220, 38, 38, 0.14);
+  border-color: rgba(220, 38, 38, 0.35);
+  color: #F87171;
+}
+.lq-btn-sm.reject:hover {
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+  color: #FFFFFF;
+  border-color: transparent;
+  transform: translateY(-1.5px);
+  box-shadow: 0 5px 14px rgba(220, 38, 38, 0.38);
+}
+
+/* Premium Status Stamp in Action Column */
+.lq-status-stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.32rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.25;
+  transition: all 0.2s ease;
+}
+.lq-status-stamp.approved {
+  background: var(--lq-approved-bg);
+  color: #15803D;
+  border: 1px solid rgba(22, 163, 74, 0.3);
+}
+.lq-status-stamp.rejected {
+  background: var(--lq-rejected-bg);
+  color: #B91C1C;
+  border: 1px solid rgba(220, 38, 38, 0.3);
+}
+.lq-status-stamp.pending {
+  background: var(--lq-pending-hr-bg);
+  color: #0369A1;
+  border: 1px solid rgba(14, 165, 233, 0.3);
+}
+
+/* ==========================================================================
+   TABLE FOOTER: ROWS SELECTOR (10, 20, 50, 100) ON THE LEFT + PAGINATION ON RIGHT
+   ========================================================================== */
+.lq-table-footer {
+  padding: 0.85rem 1.25rem;
+  background: var(--lq-card-bg);
+  border-top: 1px solid var(--lq-border);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.lq-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.lq-rows-per-page {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.80rem;
+  color: var(--lq-text-secondary);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.lq-rows-per-page select {
+  height: 32px;
+  font-size: 0.80rem;
+  border-radius: 7px;
+  border: 1px solid var(--lq-border);
+  background: var(--lq-card-subsurface);
+  color: var(--lq-text-primary);
+  padding: 0.2rem 1.6rem 0.2rem 0.55rem;
+  font-weight: 600;
+}
+.lq-page-info {
+  font-size: 0.80rem;
+  color: var(--lq-text-secondary);
+  font-weight: 500;
+}
+
+.lq-pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0;
+  list-style: none;
+  padding: 0;
+}
+.lq-page-btn {
+  min-width: 30px;
+  height: 30px;
+  padding: 0 0.45rem;
+  border-radius: 6px;
+  border: 1px solid var(--lq-border);
+  background: var(--lq-card-bg);
+  color: var(--lq-text-primary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.lq-page-btn:hover:not(:disabled) {
+  border-color: var(--lq-secondary);
+  color: var(--lq-secondary);
+  background: var(--lq-secondary-light);
+}
+.lq-page-btn.active {
+  background: var(--lq-secondary);
+  border-color: var(--lq-secondary);
+  color: #FFFFFF;
+}
+.lq-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   SMOOTH MODAL ANIMATION & LUXURY POPUP DESIGN
+   ========================================================================== */
+.modal.fade .modal-dialog {
+  transform: scale(0.92) translateY(-15px);
+  transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.26s ease;
+}
+.modal.show .modal-dialog {
+  transform: scale(1) translateY(0);
+}
+
+.lq-modal-content {
+  background: var(--lq-card-bg);
+  border: 1px solid var(--lq-border);
+  border-radius: 16px;
+  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.2);
+  overflow: hidden;
+}
+.lq-modal-header {
+  padding: 1.15rem 1.5rem;
+  background: var(--lq-card-subsurface);
+  border-bottom: 1px solid var(--lq-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.lq-modal-body {
+  padding: 1.35rem 1.5rem;
+}
+.lq-modal-footer {
+  padding: 0.9rem 1.5rem;
+  background: var(--lq-card-subsurface);
+  border-top: 1px solid var(--lq-border);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
+
+.lq-reason-quote-box {
+  background: var(--lq-card-subsurface);
+  border-left: 4px solid var(--lq-secondary);
+  border-radius: 0 10px 10px 0;
+  padding: 1rem 1.25rem;
+  font-size: 0.90rem;
+  line-height: 1.6;
+  color: var(--lq-text-primary);
+}
+
+.lq-review-history-card {
+  background: var(--lq-card-subsurface);
+  border: 1px dashed var(--lq-border);
+  border-radius: 10px;
+  padding: 0.85rem 1.1rem;
+  font-size: 0.82rem;
+  margin-top: 0.65rem;
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid p-0">
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-        <div>
-            <h3 class="fw-bold mb-1">Leave Approvals & Workflow Queue</h3>
-            <p class="text-muted small mb-0">Multi-tier role-based approvals for Site Managers, HR Operations, and Super Admin.</p>
-        </div>
-        <div class="btn-group">
-            <a href="{% url 'leave_management:admin_queue' %}" class="btn btn-sm {% if not selected_status %}btn-success{% else %}btn-outline-secondary{% endif %}">All</a>
-            <a href="?status=PENDING_MANAGER" class="btn btn-sm {% if selected_status == 'PENDING_MANAGER' %}btn-success{% else %}btn-outline-secondary{% endif %}">Pending Manager</a>
-            <a href="?status=PENDING_HR" class="btn btn-sm {% if selected_status == 'PENDING_HR' %}btn-success{% else %}btn-outline-secondary{% endif %}">Pending HR</a>
-            <a href="?status=APPROVED" class="btn btn-sm {% if selected_status == 'APPROVED' %}btn-success{% else %}btn-outline-secondary{% endif %}">Approved</a>
+<div class="lq-wrapper container-fluid p-0">
+
+    <!-- 1. PROFESSIONAL PAGE HEADER -->
+    <div class="lq-header-card">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <h1 class="lq-title">
+                    <i class="bi bi-calendar2-check-fill text-primary"></i>
+                    Leave Approvals & Workflow Queue
+                </h1>
+                <p class="lq-subtitle">
+                    Multi-tier role-based approvals for Site Managers, HR Operations, and Super Admin.
+                </p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <a href="{% url 'leave_management:leave_calendar' %}" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1.5" style="border-radius: 8px;">
+                    <i class="bi bi-calendar3"></i> Leave Calendar
+                </a>
+                <a href="{% url 'leave_management:apply_leave' %}" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1.5" style="border-radius: 8px;">
+                    <i class="bi bi-plus-circle-fill"></i> New Request
+                </a>
+            </div>
         </div>
     </div>
 
-    <div class="hrms-card">
-        <div class="table-responsive">
-            <table class="table hrms-table">
+    <!-- 2. KPI SUMMARY METRIC CARDS -->
+    <div class="lq-stats-grid">
+        <a href="{% url 'leave_management:admin_queue' %}" class="lq-stat-card {% if not selected_status %}active{% endif %}">
+            <div>
+                <div class="lq-stat-label">Total in Queue</div>
+                <div class="lq-stat-value">{{ count_all|default:"0" }}</div>
+                <small class="text-muted" style="font-size: 0.70rem;">All requests in scope</small>
+            </div>
+            <div class="lq-stat-icon-wrapper" style="background: rgba(30, 58, 138, 0.1); color: var(--lq-primary);">
+                <i class="bi bi-inbox-fill"></i>
+            </div>
+        </a>
+
+        <a href="?status=PENDING_MANAGER{% if search_q %}&q={{ search_q }}{% endif %}" class="lq-stat-card {% if selected_status == 'PENDING_MANAGER' %}active{% endif %}">
+            <div>
+                <div class="lq-stat-label">Pending Manager</div>
+                <div class="lq-stat-value" style="color: var(--lq-pending-mgr);">{{ count_pending_mgr|default:"0" }}</div>
+                <small class="text-muted" style="font-size: 0.70rem;">Site Manager review</small>
+            </div>
+            <div class="lq-stat-icon-wrapper" style="background: var(--lq-pending-mgr-bg); color: var(--lq-pending-mgr);">
+                <i class="bi bi-person-badge-fill"></i>
+            </div>
+        </a>
+
+        <a href="?status=PENDING_HR{% if search_q %}&q={{ search_q }}{% endif %}" class="lq-stat-card {% if selected_status == 'PENDING_HR' %}active{% endif %}">
+            <div>
+                <div class="lq-stat-label">Pending HR Ops</div>
+                <div class="lq-stat-value" style="color: var(--lq-pending-hr);">{{ count_pending_hr|default:"0" }}</div>
+                <small class="text-muted" style="font-size: 0.70rem;">Awaiting final sign-off</small>
+            </div>
+            <div class="lq-stat-icon-wrapper" style="background: var(--lq-pending-hr-bg); color: var(--lq-pending-hr);">
+                <i class="bi bi-award-fill"></i>
+            </div>
+        </a>
+
+        <a href="?status=APPROVED{% if search_q %}&q={{ search_q }}{% endif %}" class="lq-stat-card {% if selected_status == 'APPROVED' %}active{% endif %}">
+            <div>
+                <div class="lq-stat-label">Approved</div>
+                <div class="lq-stat-value" style="color: var(--lq-approved);">{{ count_approved|default:"0" }}</div>
+                <small class="text-muted" style="font-size: 0.70rem;">Attendance synced</small>
+            </div>
+            <div class="lq-stat-icon-wrapper" style="background: var(--lq-approved-bg); color: var(--lq-approved);">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+        </a>
+    </div>
+
+    <!-- 3. PREMIUM SCHEDULE TABLE CARD (ZERO HORIZONTAL SCROLL) -->
+    <div class="lq-table-card">
+        <!-- Toolbar: Status Filter Tabs & Search Box -->
+        <div class="lq-table-toolbar">
+            <!-- Segmented Status Tabs -->
+            <div class="lq-segmented-tabs">
+                <a href="{% url 'leave_management:admin_queue' %}{% if search_q %}?q={{ search_q }}{% endif %}" 
+                   class="lq-tab-btn {% if not selected_status %}active{% endif %}">
+                    <span>All</span>
+                    <span class="lq-tab-badge">{{ count_all }}</span>
+                </a>
+                <a href="?status=PENDING_MANAGER{% if search_q %}&q={{ search_q }}{% endif %}" 
+                   class="lq-tab-btn {% if selected_status == 'PENDING_MANAGER' %}active{% endif %}">
+                    <i class="bi bi-clock-history" style="color: var(--lq-pending-mgr);"></i>
+                    <span>Pending Manager</span>
+                    <span class="lq-tab-badge">{{ count_pending_mgr }}</span>
+                </a>
+                <a href="?status=PENDING_HR{% if search_q %}&q={{ search_q }}{% endif %}" 
+                   class="lq-tab-btn {% if selected_status == 'PENDING_HR' %}active{% endif %}">
+                    <i class="bi bi-hourglass-split" style="color: var(--lq-pending-hr);"></i>
+                    <span>Pending HR</span>
+                    <span class="lq-tab-badge">{{ count_pending_hr }}</span>
+                </a>
+                <a href="?status=APPROVED{% if search_q %}&q={{ search_q }}{% endif %}" 
+                   class="lq-tab-btn {% if selected_status == 'APPROVED' %}active{% endif %}">
+                    <i class="bi bi-check2-all" style="color: var(--lq-approved);"></i>
+                    <span>Approved</span>
+                    <span class="lq-tab-badge">{{ count_approved }}</span>
+                </a>
+                <a href="?status=REJECTED{% if search_q %}&q={{ search_q }}{% endif %}" 
+                   class="lq-tab-btn {% if selected_status == 'REJECTED' %}active{% endif %}">
+                    <i class="bi bi-x-circle" style="color: var(--lq-rejected);"></i>
+                    <span>Rejected</span>
+                    <span class="lq-tab-badge">{{ count_rejected }}</span>
+                </a>
+            </div>
+
+            <!-- Search Filter Input -->
+            <div class="lq-search-box">
+                <i class="bi bi-search lq-search-icon"></i>
+                <input type="text" id="lqSearchInput" class="form-control" 
+                       placeholder="Filter employee, ID, reason..." 
+                       value="{{ search_q|default:'' }}">
+            </div>
+        </div>
+
+        <!-- The Structured Enterprise Schedule Table -->
+        <div class="lq-table-responsive">
+            <table class="lq-schedule-table">
                 <thead>
                     <tr>
-                        <th>Employee</th>
-                        <th>Leave Type</th>
-                        <th>Dates</th>
-                        <th>Days</th>
-                        <th>Reason</th>
-                        <th>Status</th>
-                        <th class="text-end">Action</th>
+                        <th class="lq-emp-col">Employee</th>
+                        <th class="lq-category-col">Leave Category</th>
+                        <th class="lq-schedule-col">Schedule Range</th>
+                        <th class="lq-duration-col">Duration</th>
+                        <th class="lq-info-col text-center">Reason</th>
+                        <th class="lq-action-col text-end">Status</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="lqTableBody">
                     {% for req in leave_requests %}
-                        <tr>
-                            <td>
-                                <div class="fw-bold text-dark">{{ req.employee.full_name }}</div>
-                                <small class="text-muted">{{ req.employee.emp_id }} &bull; {{ req.employee.site.city|default:"HQ" }} &bull; {{ req.employee.department.name }}</small>
-                            </td>
-                            <td><span class="badge bg-light text-dark border">{{ req.leave_type.name }}</span></td>
-                            <td class="font-monospace text-dark">{{ req.start_date|date:"d M" }} &rarr; {{ req.end_date|date:"d M Y" }}</td>
-                            <td><b>{{ req.total_days }}</b></td>
-                            <td class="small text-truncate" style="max-width: 200px;">{{ req.reason }}</td>
-                            <td>
-                                {% if req.status == 'APPROVED' %}
-                                    <span class="badge bg-success">Approved</span>
-                                {% elif req.status == 'PENDING_MANAGER' %}
-                                    <span class="badge bg-warning text-dark">Pending Manager</span>
-                                {% elif req.status == 'PENDING_HR' %}
-                                    <span class="badge bg-info text-dark">Pending HR</span>
-                                {% elif req.status == 'REJECTED' %}
-                                    <span class="badge bg-danger">Rejected</span>
+                    <tr class="lq-row" 
+                        data-search-text="{{ req.employee.full_name }} {{ req.employee.emp_id }} {{ req.employee.department.name }} {{ req.leave_type.name }} {{ req.leave_type.code }} {{ req.reason }}"
+                        data-modal-target="#detailModal{{ req.id }}"
+                        style="cursor: pointer;">
+                        
+                        <!-- 1. Employee Profile (Clean Name + ID, NO stacked Pune / Dept wrap) -->
+                        <td class="lq-emp-col">
+                            <div class="lq-emp-wrapper">
+                                {% if req.employee.avatar %}
+                                    <img src="{{ req.employee.avatar.url }}" alt="{{ req.employee.full_name }}" class="lq-avatar-sm">
                                 {% else %}
-                                    <span class="badge bg-secondary">{{ req.status }}</span>
+                                    <div class="lq-avatar-sm">
+                                        {{ req.employee.full_name|slice:":2"|upper }}
+                                    </div>
                                 {% endif %}
-                            </td>
-                            <td class="text-end">
-                                <!-- ACTION BUTTONS BASED ON USER ROLE -->
-                                {% if request.user.is_site_manager_role and req.status == 'PENDING_MANAGER' %}
-                                    <form method="POST" action="{% url 'leave_management:process_leave' request_id=req.id %}" class="d-inline">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="RECOMMEND">
-                                        <button type="submit" class="btn btn-sm btn-success py-1 px-2" title="Recommend to HR">
-                                            <i class="bi bi-check2"></i> Recommend
-                                        </button>
-                                    </form>
-                                    <form method="POST" action="{% url 'leave_management:process_leave' request_id=req.id %}" class="d-inline">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="REJECT">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Reject">
-                                            <i class="bi bi-x"></i> Reject
-                                        </button>
-                                    </form>
+                                <div>
+                                    <div class="lq-emp-name-text">{{ req.employee.full_name }}</div>
+                                    <div>
+                                        <span class="lq-id-pill">{{ req.employee.emp_id }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
 
-                                {% elif request.user.is_hr_role or request.user.is_head_role %}
-                                    {% if req.status == 'PENDING_HR' or req.status == 'PENDING_MANAGER' %}
-                                        <form method="POST" action="{% url 'leave_management:process_leave' request_id=req.id %}" class="d-inline">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="action" value="APPROVE">
-                                            <button type="submit" class="btn btn-sm btn-success py-1 px-2" title="Final Approve">
-                                                <i class="bi bi-check-lg"></i> Final Approve
-                                            </button>
-                                        </form>
-                                        <form method="POST" action="{% url 'leave_management:process_leave' request_id=req.id %}" class="d-inline">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="action" value="REJECT">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Reject">
-                                                <i class="bi bi-x-lg"></i> Reject
-                                            </button>
-                                        </form>
-                                    {% else %}
-                                        <small class="text-muted">Completed</small>
-                                    {% endif %}
+                        <!-- 2. Leave Category (Code, Name, Paid) -->
+                        <td class="lq-category-col">
+                            <div class="lq-cat-badge">
+                                <i class="bi bi-tag-fill text-primary" style="font-size: 0.70rem;"></i>
+                                {{ req.leave_type.code }}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle ms-1" style="font-size: 0.60rem; padding: 0.1rem 0.35rem;">Paid</span>
+                            </div>
+                            <div class="text-muted mt-0.5" style="font-size: 0.72rem;">{{ req.leave_type.name }}</div>
+                        </td>
+
+                        <!-- 3. Schedule Range (Start Date -> End Date or Single Date) -->
+                        <td class="lq-schedule-col">
+                            <div class="lq-schedule-range">
+                                <i class="bi bi-calendar3 text-secondary" style="font-size: 0.75rem;"></i>
+                                {% if req.is_half_day %}
+                                    <span>{{ req.start_date|date:"d M Y" }}</span>
+                                {% else %}
+                                    <span>{{ req.start_date|date:"d M Y" }}</span>
+                                    <i class="bi bi-arrow-right text-muted" style="font-size: 0.70rem;"></i>
+                                    <span>{{ req.end_date|date:"d M Y" }}</span>
                                 {% endif %}
-                            </td>
-                        </tr>
+                            </div>
+                        </td>
+
+                        <!-- 4. Duration (Days or Half-Day ONLY) -->
+                        <td class="lq-duration-col">
+                            {% if req.is_half_day %}
+                                <div class="lq-days-pill" style="background: #E0F2FE; color: #0284C7; font-weight: 700;">
+                                    <i class="bi bi-clock-history"></i>
+                                    <span>Half Day</span>
+                                </div>
+                            {% else %}
+                                <div class="lq-days-pill">
+                                    <i class="bi bi-clock-history"></i>
+                                    <span>{{ req.total_days }} {% if req.total_days == 1 %}Day{% else %}Days{% endif %}</span>
+                                </div>
+                            {% endif %}
+                        </td>
+
+                        <!-- 5. Attractive Eye Icon Button for Full Details, Reason & Balances -->
+                        <td class="lq-info-col text-center">
+                            <button type="button" class="lq-eye-btn" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#detailModal{{ req.id }}" 
+                                    title="Click to view reason & full leave balances">
+                                <i class="bi bi-eye-fill"></i>
+                            </button>
+                        </td>
+
+                        <!-- 6. Status Column (Shows Pending, Approved by HR, or Rejected) -->
+                        <td class="lq-action-col">
+                            {% if req.status == 'PENDING_MANAGER' %}
+                                <div class="lq-status-stamp pending-mgr" title="Awaiting Site Manager review">
+                                    <span class="lq-dot amber"></span>
+                                    <span>Pending Site Manager</span>
+                                </div>
+                            {% elif req.status == 'PENDING_HR' %}
+                                <div class="lq-status-stamp pending-hr" title="Awaiting HR approval">
+                                    <span class="lq-dot blue"></span>
+                                    <span>Pending HR Ops</span>
+                                </div>
+                            {% elif req.status == 'APPROVED' %}
+                                <div class="lq-status-stamp approved" title="Approved on {{ req.hr_action_at|date:'d M Y, h:i A' }}">
+                                    <i class="bi bi-shield-fill-check"></i>
+                                    <span>
+                                        {% if req.hr_action_by %}
+                                            {% if req.hr_action_by.is_head_role %}
+                                                Approved by Head ({{ req.hr_action_by.get_full_name|default:req.hr_action_by.username }})
+                                            {% else %}
+                                                Approved by HR ({{ req.hr_action_by.get_full_name|default:req.hr_action_by.username }})
+                                            {% endif %}
+                                        {% else %}
+                                            Approved & Synced
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            {% elif req.status == 'REJECTED' %}
+                                <div class="lq-status-stamp rejected" title="Rejected on {{ req.hr_action_at|default:req.manager_action_at|date:'d M Y, h:i A' }}">
+                                    <i class="bi bi-x-circle-fill"></i>
+                                    <span>
+                                        {% if req.hr_action_by %}
+                                            Rejected by HR ({{ req.hr_action_by.get_full_name|default:req.hr_action_by.username }})
+                                        {% elif req.manager_action_by %}
+                                            Rejected by Manager ({{ req.manager_action_by.get_full_name|default:req.manager_action_by.username }})
+                                        {% else %}
+                                            Rejected & Closed
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ req.status }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <!-- SMOOTH DETAIL & REMARKS MODAL OPENED BY THE [i] BUTTON -->
+                    <div class="modal fade" id="detailModal{{ req.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-lg">
+                            <div class="modal-content lq-modal-content">
+                                <div class="lq-modal-header">
+                                    <div class="d-flex align-items-center gap-2.5">
+                                        <div class="lq-avatar-sm" style="width: 32px; height: 32px; font-size: 0.75rem;">
+                                            {{ req.employee.full_name|slice:":2"|upper }}
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold mb-0 text-dark">{{ req.employee.full_name }}</h6>
+                                            <small class="text-muted font-monospace" style="font-size: 0.72rem;">
+                                                {{ req.employee.emp_id }} &bull; {{ req.employee.department.name }} &bull; {{ req.employee.site.city|default:"HQ" }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="lq-modal-body">
+                                    <!-- 1. Employee Leave Balances: Sick Leave & Paid Leave Quotas -->
+                                    <div class="mb-3">
+                                        <div class="d-flex align-items-center justify-content-between mb-2">
+                                            <label class="form-label small fw-bold text-uppercase text-muted mb-0" style="font-size: 0.70rem; letter-spacing: 0.05em;">
+                                                <i class="bi bi-wallet2 text-primary me-1"></i> Current Employee Leave Balances
+                                            </label>
+                                            <span class="text-muted" style="font-size: 0.70rem;">Quota for {{ req.start_date.year }}</span>
+                                        </div>
+                                        <div class="row g-2">
+                                            <!-- Sick Leave Card -->
+                                            <div class="col-sm-6">
+                                                <div class="p-3 rounded-3" style="background: #F0FDF4; border: 1px solid #BBF7D0;">
+                                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                                        <span class="fw-bold small d-flex align-items-center gap-1.5" style="color: #166534;">
+                                                            <i class="bi bi-heart-pulse-fill text-success"></i> Sick Leave (SL)
+                                                        </span>
+                                                        <span class="badge" style="background: #16A34A; color: #ffffff; font-size: 0.76rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 6px;">
+                                                            {{ req.sick_leave_available }} Days Left
+                                                        </span>
+                                                    </div>
+                                                    <div class="d-flex align-items-center justify-content-between text-muted" style="font-size: 0.73rem;">
+                                                        <span>Allocated: <b class="text-dark">{{ req.sick_leave_allocated }}d</b></span>
+                                                        <span>Used: <b class="text-dark">{{ req.sick_leave_used }}d</b></span>
+                                                        <span>Pending: <b class="text-dark">{{ req.sick_leave_pending }}d</b></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Paid Leave Card -->
+                                            <div class="col-sm-6">
+                                                <div class="p-3 rounded-3" style="background: #EFF6FF; border: 1px solid #BFDBFE;">
+                                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                                        <span class="fw-bold small d-flex align-items-center gap-1.5" style="color: #1E40AF;">
+                                                            <i class="bi bi-briefcase-fill text-primary"></i> Paid Leave (PL)
+                                                        </span>
+                                                        <span class="badge" style="background: #2563EB; color: #ffffff; font-size: 0.76rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 6px;">
+                                                            {{ req.paid_leave_available }} Days Left
+                                                        </span>
+                                                    </div>
+                                                    <div class="d-flex align-items-center justify-content-between text-muted" style="font-size: 0.73rem;">
+                                                        <span>Allocated: <b class="text-dark">{{ req.paid_leave_allocated }}d</b></span>
+                                                        <span>Used: <b class="text-dark">{{ req.paid_leave_used }}d</b></span>
+                                                        <span>Pending: <b class="text-dark">{{ req.paid_leave_pending }}d</b></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 2. Requested Leave Schedule Overview -->
+                                    <div class="d-flex flex-wrap align-items-center justify-content-between p-3 rounded-3 mb-3" style="background: var(--lq-card-subsurface); border: 1px solid var(--lq-border);">
+                                        <div>
+                                            <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.68rem;">Requested Category & Schedule</small>
+                                            <div class="fw-bold fs-6 text-primary">{{ req.leave_type.name }} ({{ req.leave_type.code }})</div>
+                                            <div class="text-dark small fw-semibold">
+                                                {% if req.is_half_day %}
+                                                    {{ req.start_date|date:"d M Y" }} (Half Day)
+                                                {% else %}
+                                                    {{ req.start_date|date:"d M Y" }} to {{ req.end_date|date:"d M Y" }}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="lq-days-pill fs-6 px-3 py-1" {% if req.is_half_day %}style="background: #E0F2FE; color: #0284C7;"{% endif %}>
+                                                {% if req.is_half_day %}Half Day{% else %}{{ req.total_days }} {% if req.total_days == 1 %}Day{% else %}Days{% endif %}{% endif %}
+                                            </span>
+                                            <div class="text-muted mt-1" style="font-size: 0.72rem;">
+                                                Applied: {{ req.applied_at|date:"d M Y, h:i A" }}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 3. Full Justification / Reason -->
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold text-uppercase text-muted" style="font-size: 0.70rem;">
+                                            <i class="bi bi-chat-quote-fill text-primary"></i> Leave Justification / Employee Reason
+                                        </label>
+                                        <div class="lq-reason-quote-box">
+                                            {{ req.reason }}
+                                        </div>
+                                    </div>
+
+                                    <!-- Reviewer Remarks History (Site Manager & HR Operations) -->
+                                    <div>
+                                        <label class="form-label small fw-bold text-uppercase text-muted" style="font-size: 0.70rem;">
+                                            <i class="bi bi-shield-check text-success"></i> Reviewer Remarks & Workflow History
+                                        </label>
+                                        
+                                        {% if req.manager_remarks %}
+                                        <div class="lq-review-history-card">
+                                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                                <strong class="text-dark">
+                                                    <i class="bi bi-person-badge-fill text-warning me-1"></i> Site Manager Note
+                                                </strong>
+                                                <span class="text-muted" style="font-size: 0.70rem;">{{ req.manager_action_at|date:"d M Y, h:i A" }}</span>
+                                            </div>
+                                            <div class="text-dark">"{{ req.manager_remarks }}"</div>
+                                            <div class="text-muted mt-1" style="font-size: 0.70rem;">Reviewer: {{ req.manager_action_by.get_full_name|default:req.manager_action_by.username }}</div>
+                                        </div>
+                                        {% endif %}
+
+                                        {% if req.hr_remarks %}
+                                        <div class="lq-review-history-card" style="border-left: 3px solid var(--lq-secondary);">
+                                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                                <strong class="text-dark">
+                                                    <i class="bi bi-award-fill text-primary me-1"></i> HR Operations Remarks
+                                                </strong>
+                                                <span class="text-muted" style="font-size: 0.70rem;">{{ req.hr_action_at|date:"d M Y, h:i A" }}</span>
+                                            </div>
+                                            <div class="text-dark">"{{ req.hr_remarks }}"</div>
+                                            <div class="text-muted mt-1" style="font-size: 0.70rem;">Reviewer: {{ req.hr_action_by.get_full_name|default:req.hr_action_by.username }}</div>
+                                        </div>
+                                        {% endif %}
+
+                                        {% if not req.manager_remarks and not req.hr_remarks %}
+                                        <div class="p-2.5 rounded-2 text-muted text-center" style="background: var(--lq-card-subsurface); border: 1px dashed var(--lq-border); font-size: 0.78rem;">
+                                            No additional reviewer notes recorded yet.
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Supporting File Attachment if present -->
+                                    {% if req.attachment %}
+                                    <div class="mt-3 pt-2 border-top">
+                                        <label class="form-label small fw-bold text-uppercase text-muted" style="font-size: 0.70rem;">Attachment</label>
+                                        <div>
+                                            <a href="{{ req.attachment.url }}" target="_blank" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1.5" style="border-radius: 8px;">
+                                                <i class="bi bi-file-earmark-arrow-down-fill"></i> Download Attached Document
+                                            </a>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="lq-modal-footer flex-column align-items-stretch">
+                                    {% if request.user.is_hr_role or request.user.is_head_role or request.user.is_superuser %}
+                                        <!-- HR & Head Operations: APPROVE AND REJECT BUTTONS ALWAYS VISIBLE & MODIFIABLE -->
+                                        <form method="POST" action="{% url 'leave_management:process_leave' request_id=req.id %}" class="w-100">
+                                            {% csrf_token %}
+                                            <div class="mb-3 p-2.5 rounded-3" style="background: var(--lq-card-subsurface); border: 1px solid var(--lq-border);">
+                                                <div class="d-flex align-items-center justify-content-between mb-1.5">
+                                                    <label class="form-label small fw-bold text-dark d-flex align-items-center gap-1.5 mb-0">
+                                                        <i class="bi bi-chat-left-dots-fill text-primary"></i> HR Decision Remarks & Modify Status:
+                                                    </label>
+                                                    <div>
+                                                        {% if req.status == 'APPROVED' %}
+                                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 0.72rem;">
+                                                                <i class="bi bi-check-circle-fill me-1"></i>Currently Approved
+                                                            </span>
+                                                        {% elif req.status == 'REJECTED' %}
+                                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1" style="font-size: 0.72rem;">
+                                                                <i class="bi bi-x-circle-fill me-1"></i>Currently Rejected
+                                                            </span>
+                                                        {% elif req.status == 'PENDING_HR' %}
+                                                            <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1" style="font-size: 0.72rem;">
+                                                                <i class="bi bi-hourglass-split me-1"></i>Pending HR Approval
+                                                            </span>
+                                                        {% else %}
+                                                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1" style="font-size: 0.72rem;">
+                                                                <i class="bi bi-clock-history me-1"></i>Pending Site Manager
+                                                            </span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <input type="text" name="remarks" id="hrRemarks{{ req.id }}" class="form-control form-control-sm" 
+                                                       value="{{ req.hr_remarks|default:'' }}"
+                                                       placeholder="Enter remarks (optional for approve, required for reject)...">
+                                                <div class="form-text text-muted" style="font-size: 0.70rem;">
+                                                    {% if req.status == 'APPROVED' %}
+                                                        This leave is currently approved. Click <b>Reject</b> if you need to revoke or modify it, or update remarks and click <b>Approve</b>.
+                                                    {% elif req.status == 'REJECTED' %}
+                                                        This leave is currently rejected. Click <b>Approve</b> if you want to overturn and approve it, or update remarks and click <b>Reject</b>.
+                                                    {% else %}
+                                                        Remarks are optional for approval, but required if rejecting.
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <div class="d-flex align-items-center justify-content-end gap-2">
+                                                <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">Close</button>
+                                                <button type="submit" name="action" value="APPROVE" class="lq-btn-sm approve shadow-sm px-3 py-1.5"
+                                                        title="Approve or keep approved">
+                                                    <i class="bi bi-check-circle-fill"></i> Approve
+                                                </button>
+                                                <button type="submit" name="action" value="REJECT" class="lq-btn-sm reject px-3 py-1.5" 
+                                                        title="Reject or modify to rejected"
+                                                        onclick="if(!document.getElementById('hrRemarks{{ req.id }}').value.trim()){ alert('Please enter remarks explaining the rejection.'); return false; }">
+                                                    <i class="bi bi-x-circle-fill"></i> Reject
+                                                </button>
+                                            </div>
+                                        </form>
+
+                                    {% elif request.user.is_site_manager_role %}
+                                        <!-- Site Manager View -->
+                                        <form method="POST" action="{% url 'leave_management:process_leave' request_id=req.id %}" class="w-100">
+                                            {% csrf_token %}
+                                            <div class="mb-3 p-2.5 rounded-3" style="background: var(--lq-card-subsurface); border: 1px solid var(--lq-border);">
+                                                <label class="form-label small fw-bold text-dark d-flex align-items-center gap-1.5 mb-1">
+                                                    <i class="bi bi-chat-left-dots-fill text-primary"></i> Manager Decision Remarks:
+                                                </label>
+                                                <input type="text" name="remarks" id="mgrRemarks{{ req.id }}" class="form-control form-control-sm" 
+                                                       value="{{ req.manager_remarks|default:'' }}"
+                                                       placeholder="Enter recommendation remarks or reason for rejection...">
+                                                <div class="form-text" style="font-size: 0.70rem;">Remarks are optional for recommendation, but required if rejecting.</div>
+                                            </div>
+                                            <div class="d-flex align-items-center justify-content-end gap-2">
+                                                <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">Close</button>
+                                                <button type="submit" name="action" value="RECOMMEND" class="lq-btn-sm recommend shadow-sm px-3 py-1.5">
+                                                    <i class="bi bi-arrow-right-circle-fill"></i> Recommend to HR
+                                                </button>
+                                                <button type="submit" name="action" value="REJECT" class="lq-btn-sm reject px-3 py-1.5" 
+                                                        onclick="if(!document.getElementById('mgrRemarks{{ req.id }}').value.trim()){ alert('Please enter remarks explaining the rejection.'); return false; }">
+                                                    <i class="bi bi-x-circle-fill"></i> Reject
+                                                </button>
+                                            </div>
+                                        </form>
+
+                                    {% else %}
+                                        <div class="d-flex justify-content-end w-100">
+                                            <button type="button" class="btn btn-sm btn-secondary px-3" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     {% empty %}
-                        <tr><td colspan="7" class="text-center py-5 text-muted">No leave requests matching filter.</td></tr>
+                    <tr id="lqEmptyServerRow">
+                        <td colspan="6" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="bi bi-check2-circle fs-1 text-primary d-block mb-2"></i>
+                                <h6 class="fw-bold mb-1">No Leave Requests Found</h6>
+                                <p class="small mb-3">All requests matching this filter have been processed.</p>
+                                <a href="{% url 'leave_management:admin_queue' %}" class="btn btn-sm btn-primary">
+                                    View All Requests
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
                     {% endfor %}
+
+                    <!-- No Results Row for Client Search Filter -->
+                    <tr id="lqNoResultsRow" class="d-none">
+                        <td colspan="6" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="bi bi-search fs-2 text-danger d-block mb-2"></i>
+                                <h6 class="fw-bold mb-1">No Matching Records Found</h6>
+                                <p class="small mb-0">Try adjusting your search criteria or clearing the search filter.</p>
+                            </div>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
-    </div>
-</div>
-{% endblock %}
 
+        <!-- 4. TABLE FOOTER: ROWS SELECTOR (10, 20, 50, 100) ON THE LEFT + PAGINATION ON RIGHT -->
+        <div class="lq-table-footer">
+            <!-- Left Side: Rows Per Page Selector (10, 20, 50, 100) & Showing Info -->
+            <div class="lq-footer-left">
+                <div class="lq-rows-per-page">
+                    <label for="lqPageSizeSelect">Rows per page:</label>
+                    <select id="lqPageSizeSelect" class="form-select form-select-sm">
+                        <option value="10" selected>10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+
+                <div id="lqShowingInfo" class="lq-page-info">
+                    Showing 0 of 0 entries
+                </div>
+            </div>
+
+            <!-- Right Side: Numbered Pagination Controls -->
+            <ul id="lqPagination" class="lq-pagination">
+                <!-- Dynamically rendered by JavaScript -->
+            </ul>
+        </div>
+    </div>
+
+</div>
+
+<!-- JavaScript for Dynamic Pagination (10, 20, 50, 100), Search & Smooth Modal Behavior -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const allRows = Array.from(document.querySelectorAll('.lq-row'));
+    const searchInput = document.getElementById('lqSearchInput');
+    const pageSizeSelect = document.getElementById('lqPageSizeSelect');
+    const paginationContainer = document.getElementById('lqPagination');
+    const showingInfo = document.getElementById('lqShowingInfo');
+    const noResultsRow = document.getElementById('lqNoResultsRow');
+
+    let currentPage = 1;
+    let pageSize = parseInt(pageSizeSelect.value, 10) || 10;
+    let filteredRows = [...allRows];
+
+    // Click anywhere on a table row to open detail modal with balances & reason
+    allRows.forEach(row => {
+        row.addEventListener('click', function(e) {
+            if (e.target.closest('button, a, input, select, form')) return;
+            const targetId = row.getAttribute('data-modal-target');
+            if (targetId) {
+                const modalEl = document.querySelector(targetId);
+                if (modalEl) {
+                    const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    bsModal.show();
+                }
+            }
+        });
+    });
+
+    // Filter rows based on search input
+    function applySearch() {
+        const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        if (!query) {
+            filteredRows = [...allRows];
+        } else {
+            filteredRows = allRows.filter(row => {
+                const text = (row.getAttribute('data-search-text') || '').toLowerCase();
+                return text.includes(query);
+            });
+        }
+        currentPage = 1;
+        renderTable();
+    }
+
+    // Render table rows based on current page and page size
+    function renderTable() {
+        const total = filteredRows.length;
+        const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
+        }
+
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+
+        // Hide all rows first
+        allRows.forEach(r => r.style.display = 'none');
+
+        if (total === 0) {
+            if (noResultsRow) noResultsRow.classList.remove('d-none');
+            if (showingInfo) showingInfo.textContent = 'Showing 0 of 0 entries';
+            if (paginationContainer) paginationContainer.innerHTML = '';
+            return;
+        } else {
+            if (noResultsRow) noResultsRow.classList.add('d-none');
+        }
+
+        // Show slice for current page
+        filteredRows.slice(startIndex, endIndex).forEach(row => {
+            row.style.display = '';
+        });
+
+        // Update entry count text
+        const displayStart = startIndex + 1;
+        const displayEnd = Math.min(endIndex, total);
+        if (showingInfo) {
+            showingInfo.textContent = `Showing ${displayStart} to ${displayEnd} of ${total} entries`;
+        }
+
+        renderPagination(totalPages);
+    }
+
+    // Render numbered pagination buttons with Prev / Next
+    function renderPagination(totalPages) {
+        if (!paginationContainer) return;
+        paginationContainer.innerHTML = '';
+
+        if (totalPages <= 1) return;
+
+        // Previous button
+        const prevLi = document.createElement('li');
+        const prevBtn = document.createElement('button');
+        prevBtn.className = 'lq-page-btn';
+        prevBtn.innerHTML = '<i class="bi bi-chevron-left"></i>';
+        prevBtn.disabled = (currentPage === 1);
+        prevBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTable();
+            }
+        });
+        prevLi.appendChild(prevBtn);
+        paginationContainer.appendChild(prevLi);
+
+        // Page Numbers
+        for (let i = 1; i <= totalPages; i++) {
+            if (totalPages > 7) {
+                if (i !== 1 && i !== totalPages && Math.abs(i - currentPage) > 2) {
+                    if (i === 2 || i === totalPages - 1) {
+                        const dotsLi = document.createElement('li');
+                        dotsLi.innerHTML = '<span class="px-1 text-muted" style="font-size:0.75rem;">...</span>';
+                        paginationContainer.appendChild(dotsLi);
+                    }
+                    continue;
+                }
+            }
+
+            const pageLi = document.createElement('li');
+            const pageBtn = document.createElement('button');
+            pageBtn.className = `lq-page-btn ${i === currentPage ? 'active' : ''}`;
+            pageBtn.textContent = i;
+            pageBtn.addEventListener('click', () => {
+                currentPage = i;
+                renderTable();
+            });
+            pageLi.appendChild(pageBtn);
+            paginationContainer.appendChild(pageLi);
+        }
+
+        // Next button
+        const nextLi = document.createElement('li');
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'lq-page-btn';
+        nextBtn.innerHTML = '<i class="bi bi-chevron-right"></i>';
+        nextBtn.disabled = (currentPage === totalPages);
+        nextBtn.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderTable();
+            }
+        });
+        nextLi.appendChild(nextBtn);
+        paginationContainer.appendChild(nextLi);
+    }
+
+    // Event listener for page size change (10, 20, 50, 100)
+    if (pageSizeSelect) {
+        pageSizeSelect.addEventListener('change', function() {
+            pageSize = parseInt(this.value, 10) || 10;
+            currentPage = 1;
+            renderTable();
+        });
+    }
+
+    // Event listener for live search input
+    if (searchInput) {
+        searchInput.addEventListener('input', applySearch);
+    }
+
+    // Initial render
+    renderTable();
+});
+</script>
+{% endblock %}

@@ -135,7 +135,7 @@ class RecruitmentTests(TestCase):
         self.client.login(username='test_hr', password='password123')
         resp = self.client.get(links_url)
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'Universal Candidate Registration')
+        self.assertContains(resp, 'Candidate Registration Portal & Positions')
         self.client.logout()
 
         # Head / Super Admin gets 200 OK
@@ -446,7 +446,8 @@ class RecruitmentTests(TestCase):
         # 1. GET page
         resp_get = self.client.get(fast_apply_url)
         self.assertEqual(resp_get.status_code, 200)
-        self.assertContains(resp_get, 'Sign in with Google')
+        self.assertContains(resp_get, 'Sign up with Google')
+        self.assertNotContains(resp_get, '<span>Sign in with Google</span>')
         self.assertContains(resp_get, 'Alternative Phone Number')
         self.assertContains(resp_get, 'Current Residential Address')
         self.assertContains(resp_get, 'Clear form')
@@ -483,10 +484,31 @@ class RecruitmentTests(TestCase):
         self.assertEqual(cand.alt_phone, '+91 98765 43211')
         self.assertIn('Sunrise Towers', cand.current_address)
 
-        # 4. Verify JobApplication created
+        # 4. Verify JobApplication created as online fast-apply
         app = JobApplication.objects.filter(candidate=cand, job=self.job).first()
         self.assertIsNotNone(app)
         self.assertEqual(app.status, JobApplication.Status.SUBMITTED)
+        self.assertFalse(app.is_office_registered)
+        self.assertEqual(app.application_type, JobApplication.ApplicationType.ONLINE_FAST_APPLY)
+
+        # 4b. Candidate arrives at office and completes in-person registration (Form 2)
+        reg_url = reverse('recruitment:candidate_register', kwargs={'token': self.link.token})
+        office_post_data = {
+            'job': self.job.id,
+            'full_name': 'Aarav Patel',
+            'email': 'aarav.patel@gmail.com',
+            'phone': '+91 98765 43210',
+            'city': 'Bengaluru',
+            'highest_qualification': 'B.Tech / B.E.',
+            'experience_type': 'EXPERIENCED',
+            'technical_skills': 'Python, Django, AWS',
+            'resume': SimpleUploadedFile('aarav_cv2.pdf', b'updated pdf bytes', content_type='application/pdf'),
+        }
+        resp_office = self.client.post(reg_url, office_post_data)
+        self.assertEqual(resp_office.status_code, 302)
+        app.refresh_from_db()
+        self.assertTrue(app.is_office_registered)
+        self.assertEqual(app.application_type, JobApplication.ApplicationType.OFFICE_REGISTRATION)
 
         # 5. Check links_list view includes fast-apply link and table pagination/search controls
         self.client.login(username='test_hr', password='password123')
@@ -566,3 +588,166 @@ class RecruitmentTests(TestCase):
         # 7. Verify unified table footer with 5, 10, 20, 50, 100 page size and pagination
         self.assertContains(resp, 'pageSizeSelect')
         self.assertContains(resp, 'paginationControls')
+
+    def test_google_auth_and_returning_candidate_autofill(self):
+        """
+        Verify real Google Sign-In authentication, session gating,
+        automatic candidate identity recognition, database auto-population,
+        and talent roster Google-verified badge display.
+        """
+        import json
+
+        # 0. Verify button wording on Candidate Job Application vs Candidate Registration
+        fast_apply_get = self.client.get(reverse('recruitment:candidate_fast_apply'))
+        self.assertContains(fast_apply_get, 'Sign up with Google')
+        self.assertNotContains(fast_apply_get, '<span>Sign in with Google</span>')
+
+        register_get = self.client.get(reverse('recruitment:candidate_register', kwargs={'token': self.link.token}))
+        self.assertContains(register_get, 'Log in with Google')
+        self.assertNotContains(register_get, 'Sign up with Google')
+
+        # 1. New Candidate authenticates via Google Auth API
+        google_payload = {
+            'email': 'priya.nair@gmail.com',
+            'name': 'Priya Nair',
+            'sub': 'google-oauth2-1029384756',
+            'picture': 'https://lh3.googleusercontent.com/a/test-avatar'
+        }
+        auth_resp = self.client.post(
+            reverse('recruitment:candidate_google_auth'),
+            data=json.dumps(google_payload),
+            content_type='application/json'
+        )
+        self.assertEqual(auth_resp.status_code, 200)
+        auth_data = auth_resp.json()
+        self.assertTrue(auth_data['success'])
+        self.assertFalse(auth_data['is_returning_candidate'])
+        self.assertEqual(auth_data['google_user']['email'], 'priya.nair@gmail.com')
+
+        # 2. Candidate completes Fast Apply form
+        resume_file = SimpleUploadedFile("priya_resume.pdf", b"%PDF-1.4 test resume bytes", content_type="application/pdf")
+        apply_resp = self.client.post(
+            reverse('recruitment:candidate_fast_apply_job', kwargs={'job_id': self.job.id}),
+            data={
+                'job': self.job.id,
+                'full_name': 'Priya Nair',
+                'email': 'priya.nair@gmail.com',
+                'phone': '9876543210',
+                'alt_phone': '9876543211',
+                'current_address': 'Flat 302, Palm Grove, Koramangala',
+                'city': 'Bengaluru',
+                'state': 'Karnataka',
+                'postal_code': '560034',
+                'country': 'India',
+                'resume': resume_file,
+                'is_google_verified': 'true'
+            }
+        )
+        # Should redirect to candidate success page
+        self.assertEqual(apply_resp.status_code, 302)
+
+        # Verify candidate created with Google Verified status
+        candidate = Candidate.objects.get(email='priya.nair@gmail.com')
+        self.assertTrue(candidate.is_google_verified)
+        self.assertEqual(candidate.google_sub, 'google-oauth2-1029384756')
+        self.assertEqual(candidate.city, 'Bengaluru')
+
+        # Add education and skills for this candidate
+        CandidateEducation.objects.create(
+            candidate=candidate,
+            highest_qualification='M.Tech Computer Science',
+            institution='IIT Kharagpur'
+        )
+        CandidateExperience.objects.create(
+            candidate=candidate,
+            experience_type='EXPERIENCED',
+            total_experience_years=5,
+            current_company='Tech Innovations Ltd',
+            current_designation='Lead Software Architect'
+        )
+        CandidateSkill.objects.create(
+            candidate=candidate,
+            technical_skills='Python, Django, AWS, Kubernetes',
+            linkedin_url='https://linkedin.com/in/priyanair'
+        )
+
+        # 3. Candidate later opens Registration link sent by HR
+        # When logging in with the SAME Google account:
+        re_auth_resp = self.client.post(
+            reverse('recruitment:candidate_google_auth'),
+            data=json.dumps(google_payload),
+            content_type='application/json'
+        )
+        self.assertEqual(re_auth_resp.status_code, 200)
+        re_auth_data = re_auth_resp.json()
+        self.assertTrue(re_auth_data['success'])
+        # MUST identify that same person!
+        self.assertTrue(re_auth_data['is_returning_candidate'])
+        self.assertIsNotNone(re_auth_data['candidate_data'])
+        c_data = re_auth_data['candidate_data']
+        self.assertEqual(c_data['full_name'], 'Priya Nair')
+        self.assertEqual(c_data['phone'], '9876543210')
+        self.assertEqual(c_data['city'], 'Bengaluru')
+        self.assertEqual(c_data['highest_qualification'], 'M.Tech Computer Science')
+        self.assertEqual(c_data['current_company'], 'Tech Innovations Ltd')
+        self.assertEqual(c_data['technical_skills'], 'Python, Django, AWS, Kubernetes')
+
+        # 4. GET /candidate/register/<token>/ returns pre-filled initial form
+        reg_resp = self.client.get(
+            reverse('recruitment:candidate_register', kwargs={'token': self.link.token})
+        )
+        self.assertEqual(reg_resp.status_code, 200)
+        self.assertContains(reg_resp, 'Priya Nair')
+        self.assertContains(reg_resp, 'priya.nair@gmail.com')
+        self.assertContains(reg_resp, '9876543210')
+        self.assertContains(reg_resp, 'Google Verified')
+
+        # 5. Verify Talent Roster displays candidate (Google Verified badge removed from table per requirement)
+        self.client.force_login(self.hr_user)
+        roster_resp = self.client.get(reverse('recruitment:candidates_list'))
+        self.assertEqual(roster_resp.status_code, 200)
+        self.assertContains(roster_resp, 'Priya Nair')
+        self.assertNotContains(roster_resp, 'Google Verified')
+
+        # 6. Verify Candidate Detail Dossier displays Google Verification
+        app = JobApplication.objects.filter(candidate=candidate).first()
+        detail_resp = self.client.get(reverse('recruitment:candidate_detail', kwargs={'application_id': app.id}))
+        self.assertEqual(detail_resp.status_code, 200)
+        self.assertContains(detail_resp, 'Google Verified')
+        self.assertContains(detail_resp, 'google-oauth2-1029384756')
+
+    def test_job_status_change_and_closed_position_behavior(self):
+        # 1. Closed job link will not work on candidate_apply
+        closed_job = RecruitmentJob.objects.create(
+            title='Archived DevOps Specialist',
+            department=self.dept,
+            site=self.site,
+            location='Pune',
+            vacancies=1,
+            description='Archived position description.',
+            requirements='DevOps skills.',
+            status=RecruitmentJob.Status.CLOSED
+        )
+        resp = self.client.get(reverse('recruitment:candidate_apply') + f'?job={closed_job.id}')
+        self.assertEqual(resp.status_code, 200)
+        self.assertTemplateUsed(resp, 'recruitment/public/link_invalid.html')
+        self.assertContains(resp, 'Registration Link No Longer Active')
+
+        # 2. Closed job link will not work on fast-apply
+        fast_resp = self.client.get(reverse('recruitment:candidate_fast_apply') + f'?job={closed_job.id}')
+        self.assertEqual(fast_resp.status_code, 200)
+        self.assertTemplateUsed(fast_resp, 'recruitment/public/link_invalid.html')
+
+        # 3. Closed job does not appear in universal form positions dropdown
+        general_resp = self.client.get(reverse('recruitment:candidate_apply'))
+        self.assertEqual(general_resp.status_code, 200)
+        self.assertNotContains(general_resp, 'Archived DevOps Specialist')
+
+        # 4. In HR Job Positions table, open job has active link, closed job has disabled link
+        self.client.force_login(self.hr_user)
+        table_resp = self.client.get(reverse('recruitment:links_list'))
+        self.assertEqual(table_resp.status_code, 200)
+        self.assertContains(table_resp, 'status-open')
+        self.assertContains(table_resp, 'status-closed')
+        self.assertContains(table_resp, 'Position is not open - application link is disabled')
+

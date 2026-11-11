@@ -505,37 +505,25 @@ class Command(BaseCommand):
         profile_emp4.emergency_contact_name = 'Priyadarshini Rout'
         profile_emp4.save()
 
-        # 7. Leave Types & Balances
-        lt_cl, _ = LeaveType.objects.get_or_create(
-            code='CL',
-            defaults={'name': 'Casual Leave', 'days_per_year': Decimal('12.0'), 'is_paid': True, 'description': 'For unplanned personal affairs, casual events.'}
-        )
+        # 7. Leave Types & Balances (Strictly Two Company Leave Types: Sick Leave and Paid Leave)
         lt_sl, _ = LeaveType.objects.get_or_create(
             code='SL',
-            defaults={'name': 'Sick Leave', 'days_per_year': Decimal('10.0'), 'is_paid': True, 'requires_attachment': True, 'description': 'Medical illness or health consultations.'}
+            defaults={'name': 'Sick Leave', 'days_per_year': Decimal('12.0'), 'is_paid': True, 'requires_attachment': True, 'description': 'Medical illness or health consultations.'}
         )
-        lt_el, _ = LeaveType.objects.get_or_create(
-            code='EL',
-            defaults={'name': 'Earned / Privilege Leave', 'days_per_year': Decimal('15.0'), 'is_paid': True, 'description': 'Planned vacations and annual rest leaves.'}
-        )
-        lt_lop, _ = LeaveType.objects.get_or_create(
-            code='LOP',
-            defaults={'name': 'Loss of Pay (Unpaid Leave)', 'days_per_year': Decimal('0.0'), 'is_paid': False, 'description': 'Leaves taken without paid quota balance.'}
+        lt_pl, _ = LeaveType.objects.get_or_create(
+            code='PL',
+            defaults={'name': 'Paid Leave', 'days_per_year': Decimal('18.0'), 'is_paid': True, 'description': 'Annual paid leave and planned rest days.'}
         )
 
         all_profiles = [profile_admin, profile_hr, profile_mgr, profile_emp, profile_emp2, profile_emp3, profile_emp4]
         for p in all_profiles:
             LeaveBalance.objects.get_or_create(
-                employee=p, leave_type=lt_cl, year=2026,
-                defaults={'allocated_days': Decimal('12.0'), 'used_days': Decimal('2.0'), 'pending_days': Decimal('0.0')}
-            )
-            LeaveBalance.objects.get_or_create(
                 employee=p, leave_type=lt_sl, year=2026,
-                defaults={'allocated_days': Decimal('10.0'), 'used_days': Decimal('1.0'), 'pending_days': Decimal('0.0')}
+                defaults={'allocated_days': Decimal('12.0'), 'used_days': Decimal('1.0'), 'pending_days': Decimal('0.0')}
             )
             LeaveBalance.objects.get_or_create(
-                employee=p, leave_type=lt_el, year=2026,
-                defaults={'allocated_days': Decimal('15.0'), 'used_days': Decimal('3.0'), 'pending_days': Decimal('0.0')}
+                employee=p, leave_type=lt_pl, year=2026,
+                defaults={'allocated_days': Decimal('18.0'), 'used_days': Decimal('3.0'), 'pending_days': Decimal('0.0')}
             )
 
         # Sample Leave Requests
@@ -545,7 +533,7 @@ class Command(BaseCommand):
             start_date=today + timedelta(days=5),
             end_date=today + timedelta(days=6),
             defaults={
-                'leave_type': lt_cl,
+                'leave_type': lt_pl,
                 'total_days': Decimal('2.0'),
                 'reason': 'Attending family celebration and personal commitments.',
                 'status': LeaveRequest.Status.PENDING_MANAGER,
@@ -559,7 +547,7 @@ class Command(BaseCommand):
             start_date=today + timedelta(days=10),
             end_date=today + timedelta(days=12),
             defaults={
-                'leave_type': lt_el,
+                'leave_type': lt_pl,
                 'total_days': Decimal('3.0'),
                 'reason': 'Annual family vacation trip to Himachal.',
                 'status': LeaveRequest.Status.PENDING_HR,

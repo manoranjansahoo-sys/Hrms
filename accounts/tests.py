@@ -64,10 +64,13 @@ class HRMSEnterpriseTests(TestCase):
         )
 
         # Leave Types & Balances
-        self.lt_cl = LeaveType.objects.create(name='Casual Leave', code='CL', days_per_year=Decimal('12.0'), is_paid=True)
-        self.bal = LeaveBalance.objects.create(
-            employee=self.emp_profile, leave_type=self.lt_cl, year=2026,
-            allocated_days=Decimal('12.0'), used_days=Decimal('0.0'), pending_days=Decimal('0.0')
+        self.lt_pl, _ = LeaveType.objects.get_or_create(
+            code='PL',
+            defaults={'name': 'Paid Leave', 'days_per_year': Decimal('18.0'), 'is_paid': True}
+        )
+        self.bal, _ = LeaveBalance.objects.get_or_create(
+            employee=self.emp_profile, leave_type=self.lt_pl, year=2026,
+            defaults={'allocated_days': Decimal('18.0'), 'used_days': Decimal('0.0'), 'pending_days': Decimal('0.0')}
         )
 
         # Salary Structure
@@ -145,7 +148,7 @@ class HRMSEnterpriseTests(TestCase):
 
         # Submit leave application
         response = self.client.post(reverse('leave_management:apply_leave'), {
-            'leave_type': self.lt_cl.id,
+            'leave_type': self.lt_pl.id,
             'start_date': (today + timedelta(days=2)).strftime('%Y-%m-%d'),
             'end_date': (today + timedelta(days=3)).strftime('%Y-%m-%d'),
             'reason': 'Family vacation trip',

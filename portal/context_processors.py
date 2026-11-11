@@ -15,6 +15,8 @@ def hrms_global_context(request):
         'pending_leaves_count': 0,
         'pending_corrections_count': 0,
         'pending_profile_requests_count': 0,
+        'user_today_attendance': None,
+        'today_attendance': None,
     }
 
     if request.user.is_authenticated:
@@ -46,6 +48,18 @@ def hrms_global_context(request):
                 status='PENDING',
                 employee__site__in=managed_sites
             ).count()
+
+        # Today's attendance for the logged-in employee (available across all templates)
+        emp = getattr(user, 'employee_profile', None)
+        if emp:
+            from django.utils import timezone
+            from attendance.models import Attendance
+            att = Attendance.objects.filter(
+                employee=emp,
+                date=timezone.localdate()
+            ).first()
+            context['user_today_attendance'] = att
+            context['today_attendance'] = att
 
     return context
 

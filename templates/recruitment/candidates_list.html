@@ -354,6 +354,42 @@
             width: 100% !important;
         }
     }
+
+    /* Segmented Tab Buttons (Matches Screenshot Pixel-Perfect) */
+    .roster-tab-btn {
+        border-radius: 8px !important;
+        font-size: 0.86rem !important;
+        font-weight: 600 !important;
+        padding: 0.5rem 1rem !important;
+        color: #475569 !important;
+        background: transparent !important;
+        border: none !important;
+        transition: all 0.15s ease-in-out;
+        text-decoration: none !important;
+    }
+    .roster-tab-btn:hover {
+        color: #1E293B !important;
+        background: rgba(0, 0, 0, 0.03) !important;
+    }
+    .roster-tab-btn.active {
+        background-color: #0D6EFD !important;
+        color: #FFFFFF !important;
+        box-shadow: 0 1px 3px rgba(13, 110, 253, 0.25) !important;
+    }
+    .roster-tab-btn.active .tab-icon {
+        color: #FFFFFF !important;
+    }
+    .roster-tab-btn.active .tab-badge {
+        background-color: #FFFFFF !important;
+        color: #0D6EFD !important;
+    }
+    .roster-tab-btn .tab-badge {
+        background-color: #E2E8F0;
+        color: #475569;
+        font-size: 0.72rem;
+        padding: 0.2rem 0.55rem;
+        border-radius: 9999px;
+    }
 </style>
 {% endblock %}
 
@@ -363,10 +399,9 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <div>
             <div class="d-flex align-items-center gap-2">
-                <span class="badge role-hr">Recruitment Pipeline</span>
-                <h4 class="fw-bold text-dark mb-0">Candidate Applications & Talent Roster</h4>
+                <h4 class="fw-bold text-dark mb-0">Candidate Applications</h4>
             </div>
-            <p class="text-muted small mb-0">Screen candidate profiles, inspect resumes, schedule interview rounds, update statuses, and log internal notes.</p>
+            <p class="text-muted small mb-0">In-person registered candidates for interview evaluation and pipeline management.</p>
         </div>
         <div class="d-flex flex-wrap gap-2 align-items-center">
             <button type="button" class="btn btn-success btn-sm shadow-sm fw-semibold" onclick="copyUniversalRegistrationLink(this)" data-url="{{ universal_apply_url }}" title="Copy Public Candidate Registration Link">
@@ -390,7 +425,7 @@
             <div class="stat-card py-2 px-3">
                 <div class="stat-icon stat-icon-blue"><i class="bi bi-people-fill"></i></div>
                 <div>
-                    <div class="stat-label">Total Applied</div>
+                    <div class="stat-label">Applied</div>
                     <div class="stat-value text-primary fs-5">{{ total_apps }}</div>
                 </div>
             </div>
@@ -399,7 +434,7 @@
             <div class="stat-card py-2 px-3">
                 <div class="stat-icon stat-icon-amber"><i class="bi bi-hourglass-split"></i></div>
                 <div>
-                    <div class="stat-label">Under Review</div>
+                    <div class="stat-label">Review</div>
                     <div class="stat-value text-warning fs-5">{{ under_review }}</div>
                 </div>
             </div>
@@ -447,6 +482,7 @@
         <!-- Integrated Search & Filter Header (No separate Filter button; Auto-applies on change) -->
         <div class="p-3 px-4 border-bottom" style="background-color: var(--hrms-card-bg); border-color: var(--hrms-border) !important;">
             <form id="candidateFilterForm" method="GET" class="row g-2 align-items-center mb-0">
+                <input type="hidden" name="tab" value="{{ active_tab }}">
                 <input type="hidden" name="per_page" id="perPageHiddenInput" value="{{ selected_per_page }}">
                 
                 <div class="col-xl-3 col-lg-3 col-md-6">
@@ -487,7 +523,7 @@
                         <option value="role_asc" {% if selected_sort == 'role_asc' %}selected{% endif %}>Role</option>
                     </select>
                     {% if search_query or selected_job or selected_status or selected_exp or selected_sort != 'date_desc' %}
-                        <a href="{% url 'recruitment:candidates_list' %}" class="btn btn-sm btn-outline-danger px-2 py-1" title="Clear / Reset All Filters">
+                        <a href="{% url 'recruitment:candidates_list' %}?tab={{ active_tab }}" class="btn btn-sm btn-outline-danger px-2 py-1" title="Clear / Reset All Filters">
                             <i class="bi bi-x-circle"></i>
                         </a>
                     {% endif %}
@@ -531,9 +567,11 @@
                                 <div class="d-flex align-items-center gap-2">
                                     <img src="{{ app.candidate.get_photo_url }}" alt="{{ app.candidate.full_name }}" class="candidate-avatar">
                                     <div class="overflow-hidden">
-                                        <span class="table-cell-title fw-bold text-dark fs-6" title="{{ app.candidate.full_name }}">
-                                            {{ app.candidate.full_name }}
-                                        </span>
+                                        <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                                            <span class="table-cell-title fw-bold text-dark fs-6" title="{{ app.candidate.full_name }}">
+                                                {{ app.candidate.full_name }}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             </td>

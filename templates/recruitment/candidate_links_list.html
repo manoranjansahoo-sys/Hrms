@@ -31,12 +31,161 @@
         backdrop-filter: blur(4px);
         background-color: rgba(15, 23, 42, 0.45);
     }
+
+    /* Premium Micro-Badge Status Icons (Clean, Icon-Only, Elevated UI) */
+    .job-status-pill {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: help;
+        position: relative;
+    }
+    .job-status-pill:hover {
+        transform: scale(1.22);
+    }
+    .job-status-pill.status-open {
+        background: #ECFDF5;
+        color: #059669;
+        border: 1.5px solid #A7F3D0;
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.12);
+    }
+    .job-status-pill.status-open:hover {
+        background: #D1FAE5;
+        border-color: #34D399;
+        box-shadow: 0 4px 10px rgba(16, 185, 129, 0.28);
+    }
+    .job-status-pill.status-on-hold {
+        background: #FFFBEB;
+        color: #D97706;
+        border: 1.5px solid #FDE68A;
+        box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.12);
+    }
+    .job-status-pill.status-on-hold:hover {
+        background: #FEF3C7;
+        border-color: #FBBF24;
+        box-shadow: 0 4px 10px rgba(245, 158, 11, 0.28);
+    }
+    .job-status-pill.status-closed {
+        background: #FEF2F2;
+        color: #DC2626;
+        border: 1.5px solid #FECACA;
+        box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.12);
+    }
+    .job-status-pill.status-closed:hover {
+        background: #FEE2E2;
+        border-color: #F87171;
+        box-shadow: 0 4px 10px rgba(239, 68, 68, 0.28);
+    }
+    .job-status-pill.status-draft {
+        background: #F8FAFC;
+        color: #64748B;
+        border: 1.5px solid #E2E8F0;
+        box-shadow: 0 0 0 2px rgba(100, 116, 139, 0.10);
+    }
+    .job-status-pill.status-draft:hover {
+        background: #F1F5F9;
+        border-color: #CBD5E1;
+        box-shadow: 0 4px 10px rgba(100, 116, 139, 0.22);
+    }
+
+    /* Segmented Tab Buttons (Matches Screenshot Pixel-Perfect) */
+    .roster-tab-btn {
+        border-radius: 8px !important;
+        font-size: 0.86rem !important;
+        font-weight: 600 !important;
+        padding: 0.5rem 1rem !important;
+        color: #475569 !important;
+        background: transparent !important;
+        border: none !important;
+        transition: all 0.15s ease-in-out;
+    }
+    .roster-tab-btn:hover {
+        color: #1E293B !important;
+        background: rgba(0, 0, 0, 0.03) !important;
+    }
+    .roster-tab-btn.active {
+        background-color: #0D6EFD !important;
+        color: #FFFFFF !important;
+        box-shadow: 0 1px 3px rgba(13, 110, 253, 0.25) !important;
+    }
+    .roster-tab-btn.active .tab-icon {
+        color: #FFFFFF !important;
+    }
+    .roster-tab-btn.active .tab-badge {
+        background-color: #FFFFFF !important;
+        color: #0D6EFD !important;
+    }
+    .roster-tab-btn .tab-badge {
+        background-color: #E2E8F0;
+        color: #475569;
+        font-size: 0.72rem;
+        padding: 0.2rem 0.55rem;
+        border-radius: 9999px;
+    }
+
+    .candidate-row-item {
+        cursor: pointer;
+        transition: background-color 0.12s ease;
+    }
+    .candidate-row-item:hover {
+        background-color: #F8FAFC !important;
+    }
+
+    /* Candidate Table Actions: Status Indicator & CV Button with proper gap (gafe) and slightly increased size */
+    .candidate-actions-wrap {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 16px; /* increased gap between status and cv button */
+        white-space: nowrap;
+    }
+    .candidate-status-icon {
+        font-size: 1.25rem !important; /* slightly increased */
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        transition: transform 0.18s ease-in-out;
+        cursor: pointer;
+    }
+    .candidate-status-icon:hover {
+        transform: scale(1.22);
+    }
+    .candidate-cv-btn {
+        font-size: 1.25rem !important; /* slightly increased */
+        color: #DC2626 !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        text-decoration: none !important;
+        transition: transform 0.18s ease-in-out, color 0.15s ease;
+        cursor: pointer;
+    }
+    .candidate-cv-btn:hover {
+        color: #B91C1C !important;
+        transform: scale(1.22);
+    }
+    .candidate-cv-disabled {
+        font-size: 1.25rem !important;
+        color: #94A3B8 !important;
+        opacity: 0.45;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: not-allowed;
+    }
 </style>
     <!-- PAGE HEADER -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
             <div class="d-flex align-items-center gap-2 mb-1">
-                <span class="badge px-2.5 py-1 text-primary-emphasis bg-primary-subtle border border-primary-subtle rounded-pill small">Recruitment Suite</span>
+                
                 <h3 class="fw-bold text-dark mb-0">Candidate Registration Portal & Positions</h3>
             </div>
             <p class="text-muted small mb-0">
@@ -70,13 +219,10 @@
                 <div class="p-3 px-4 text-white d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #1E40AF 0%, #2563EB 55%, #1D4ED8 100%);">
                     <div>
                         <h5 class="fw-bold mb-0 text-white">
-                            <i class="bi bi-link-45deg me-1"></i> Universal Candidate Registration
+                            <i class="bi bi-link-45deg me-1"></i>Details Form
                         </h5>
                         <small class="text-white-75">Standard application across all active positions</small>
                     </div>
-                    <span class="badge rounded-pill px-2.5 py-1 text-white" style="background: rgba(255, 255, 255, 0.2); font-size: 0.75rem;">
-                        <i class="bi bi-check-circle-fill text-warning me-1"></i> {{ active_jobs_count }} Roles
-                    </span>
                 </div>
                 <div class="p-3 px-4 bg-white d-flex flex-column justify-content-between flex-grow-1">
                     <div class="mb-3">
@@ -105,28 +251,26 @@
             </div>
         </div>
 
-        <!-- 1B. LINKEDIN & WEBSITE DIRECT FAST-APPLY LINK (GOOGLE SIGN-IN) -->
+        <!-- 1B. CANDIDATE JOB APPLICATION LINK (GOOGLE SIGN-UP) -->
         <div class="col-lg-6">
             <div class="card h-100 border-0 shadow-sm" style="border-radius: 14px; overflow: hidden; border-top: 3px solid #10B981 !important;">
                 <div class="p-3 px-4 text-white d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #0F766E 0%, #0D9488 55%, #059669 100%);">
                     <div>
                         <h5 class="fw-bold mb-0 text-white">
-                            <i class="bi bi-linkedin me-1.5"></i> LinkedIn & Website Fast-Apply
+                            <i class="bi bi-briefcase-fill me-1.5"></i> Sign UP Form
                         </h5>
-                        <small class="text-white-75">1-Minute application with Google Sign-In verification</small>
+                       
                     </div>
-                    <span class="badge rounded-pill px-2.5 py-1 text-white" style="background: rgba(255, 255, 255, 0.2); font-size: 0.75rem;">
-                        <i class="bi bi-google me-1"></i> Google Sign-In
-                    </span>
+                    
                 </div>
                 <div class="p-3 px-4 bg-white d-flex flex-column justify-content-between flex-grow-1">
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-dark mb-1">
-                            <i class="bi bi-share text-success me-1"></i> LinkedIn & Direct Campaign Link:
+                            <i class="bi bi-share text-success me-1"></i> Candidate Job Application Link:
                         </label>
                         <div class="input-group">
                             <input type="text" class="form-control font-monospace bg-white fw-semibold small" id="fastApplyLinkInput" value="{{ fast_apply_url }}" readonly style="border: 1px solid #CBD5E1; color: #0F172A; font-size: 0.86rem;">
-                            <button class="btn btn-success px-3 fw-semibold shadow-sm text-white" type="button" onclick="copyFastApplyLink(this)" title="Copy Fast Apply Link" style="background: #0F766E; border-color: #0F766E;">
+                            <button class="btn btn-success px-3 fw-semibold shadow-sm text-white" type="button" onclick="copyFastApplyLink(this)" title="Copy Candidate Job Application Link" style="background: #0F766E; border-color: #0F766E;">
                                 <i class="bi bi-clipboard-check me-1"></i> Copy
                             </button>
                         </div>
@@ -166,11 +310,12 @@
             <table class="table table-hover align-middle mb-0" style="border-collapse: separate; border-spacing: 0;">
                 <thead style="background: #F8FAFC;">
                     <tr class="text-muted small text-uppercase" style="font-size: 0.76rem; letter-spacing: 0.05em; font-weight: 600; border-bottom: 1px solid #E2E8F0;">
-                        <th class="ps-4 py-3" style="width: 38%;">Position Title</th>
-                        <th class="py-3" style="width: 22%;">Location</th>
-                        <th class="py-3 text-center" style="width: 16%;">Experience</th>
-                        <th class="py-3 text-center" style="width: 12%;">Application</th>
-                        <th class="pe-4 py-3 text-end" style="width: 12%; min-width: 110px;">Actions</th>
+                        <th class="ps-4 py-3" style="width: 34%;">Position Title</th>
+                        <th class="py-3" style="width: 20%;">Location</th>
+                        <th class="py-3 text-center" style="width: 14%;">Experience</th>
+                        <th class="py-3 text-center" style="width: 14%; min-width: 120px;">Link</th>
+                        <th class="py-3 text-center" style="width: 10%;">Application</th>
+                        <th class="pe-4 py-3 text-end" style="width: 8%; min-width: 90px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -190,29 +335,47 @@
                             data-status-code="{{ j.status }}" 
                             data-created="{{ j.created_at|date:'d M Y' }}" 
                             data-applications="{{ j.app_count }}" 
-                            data-apply-url="{% url 'recruitment:candidate_apply' %}?job={{ j.id }}" 
-                            data-fast-apply-url="{% url 'recruitment:candidate_fast_apply' %}?job={{ j.id }}" 
+                            data-apply-url="{% url 'recruitment:candidate_apply' %}?job={{ j.id }}&position={{ j.title|slugify }}" 
+                            data-fast-apply-url="{% url 'recruitment:candidate_fast_apply' %}?job={{ j.id }}&position={{ j.title|slugify }}" 
                             data-candidates-url="{% url 'recruitment:candidates_list' %}?job={{ j.id }}" 
                             data-desc="{{ j.description|escape }}" 
                             data-req="{{ j.requirements|escape }}" 
-                            style="border-bottom: 1px solid #F1F5F9; cursor: pointer;">
-                            <!-- 1. POSITION TITLE & POSTED DATE WITH TICK SIGN FIRST IF ACTIVE -->
+                            style="border-bottom: 1px solid #F1F5F9; cursor: pointer; {% if j.status == 'CLOSED' %}background-color: #FAFAFA; opacity: 0.88;{% endif %}">
+                            <!-- 1. POSITION TITLE & STATUS ICON ONLY (NO STATUS LETTERS/BADGES) -->
                             <td class="ps-4 py-3">
-                                <div class="d-flex align-items-center gap-2">
+                                <div class="d-flex align-items-center" style="gap: 14px;">
                                     {% if j.status == 'OPEN' %}
-                                        <i class="bi bi-check-circle-fill text-success fs-6" title="Active Position"></i>
+                                        <span class="job-status-pill status-open" data-bs-toggle="tooltip" data-bs-placement="top" title="Status: Active">
+                                            <i class="bi bi-check-lg" style="font-size: 0.86rem; font-weight: 800; -webkit-text-stroke: 0.5px;"></i>
+                                        </span>
+                                        <span class="fw-bold text-dark fs-6">{{ j.title }}</span>
+                                    {% elif j.status == 'ON_HOLD' %}
+                                        <span class="job-status-pill status-on-hold" data-bs-toggle="tooltip" data-bs-placement="top" title="Status: On Hold">
+                                            <i class="bi bi-pause-fill" style="font-size: 0.90rem;"></i>
+                                        </span>
+                                        <span class="fw-bold text-dark fs-6">{{ j.title }}</span>
+                                    {% elif j.status == 'CLOSED' %}
+                                        <span class="job-status-pill status-closed" data-bs-toggle="tooltip" data-bs-placement="top" title="Status: Closed">
+                                            <i class="bi bi-x-lg" style="font-size: 0.74rem; font-weight: 800; -webkit-text-stroke: 0.5px;"></i>
+                                        </span>
+                                        <span class="fw-semibold text-secondary text-decoration-line-through fs-6" style="opacity: 0.85;">{{ j.title }}</span>
+                                    {% else %}
+                                        <span class="job-status-pill status-draft" data-bs-toggle="tooltip" data-bs-placement="top" title="Status: Draft">
+                                            <i class="bi bi-pencil-fill" style="font-size: 0.70rem;"></i>
+                                        </span>
+                                        <span class="fw-bold text-dark fs-6">{{ j.title }}</span>
                                     {% endif %}
-                                    <span class="fw-bold text-dark fs-6">{{ j.title }}</span>
                                 </div>
-                                <div class="text-muted small mt-0.5" style="{% if j.status == 'OPEN' %}margin-left: 1.45rem;{% endif %} font-size: 0.8rem;">
-                                    <i class="bi bi-calendar3 me-1"></i>Posted on {{ j.created_at|date:"d M Y" }}
+                                <div class="text-muted small mt-1 d-flex align-items-center" style="margin-left: 38px; font-size: 0.8rem; gap: 6px;">
+                                    <i class="bi bi-calendar3"></i>
+                                    <span>Posted on {{ j.created_at|date:"d M Y" }}</span>
                                 </div>
                             </td>
 
                             <!-- 2. LOCATION (NO BOX, CLEAN TEXT & GAP) -->
                             <td class="py-3">
-                                <div class="d-flex align-items-center gap-1.5 text-secondary small">
-                                    <i class="bi bi-geo-alt-fill text-danger"></i>
+                                <div class="d-flex align-items-center text-secondary small" style="gap: 8px;">
+                                    <i class="bi bi-geo-alt-fill text-danger fs-6"></i>
                                     <span>{{ j.location|default:"Bengaluru HQ" }}</span>
                                 </div>
                             </td>
@@ -222,14 +385,37 @@
                                 <span class="text-secondary small fw-medium">{{ j.experience_required|default:"2-5 Years" }}</span>
                             </td>
 
-                            <!-- 4. APPLICATION: ONLY NUMBER (NO 'APPLIED' TEXT, CLICKABLE) -->
+                            <!-- 4. LINK: ONLY COPY BUTTON (DISABLED FOR CLOSED / ON HOLD / DRAFT) -->
+                            <td class="py-3 text-center stop-row-click" style="min-width: 120px;">
+                                {% if j.status == 'OPEN' %}
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-primary px-3 py-1 shadow-none d-inline-flex align-items-center fw-semibold" 
+                                            onclick="copyJobPositionUrl(this, '{{ host_url }}{% url 'recruitment:candidate_apply' %}?job={{ j.id }}&position={{ j.title|slugify }}')" 
+                                            title="Copy application link for {{ j.title }}"
+                                            style="height: 31px; border-radius: 6px; font-size: 0.78rem; white-space: nowrap; gap: 8px;">
+                                        <i class="bi bi-link-45deg fs-6"></i>
+                                        <span>Copy Link</span>
+                                    </button>
+                                {% else %}
+                                    <button type="button" 
+                                            class="btn btn-sm btn-light text-muted border px-3 py-1 d-inline-flex align-items-center fw-semibold" 
+                                            disabled 
+                                            title="Position is not open - application link is disabled"
+                                            style="height: 31px; border-radius: 6px; font-size: 0.78rem; opacity: 0.60; cursor: not-allowed; white-space: nowrap; gap: 8px;">
+                                        <i class="bi bi-slash-circle text-danger"></i>
+                                        <span>Disabled</span>
+                                    </button>
+                                {% endif %}
+                            </td>
+
+                            <!-- 5. APPLICATION: ONLY NUMBER (NO 'APPLIED' TEXT, CLICKABLE) -->
                             <td class="py-3 text-center">
                                 <a href="{% url 'recruitment:candidates_list' %}?job={{ j.id }}" class="fw-bold text-primary text-decoration-none fs-6 stop-row-click" title="View {{ j.app_count }} applications">
                                     {{ j.app_count }}
                                 </a>
                             </td>
 
-                            <!-- 5. ACTIONS: ONLY PENCIL ICON & BOX CORNER ARROW ICON (NO EYE ICON, MAINTAIN GAP) -->
+                            <!-- 6. ACTIONS: ONLY PENCIL ICON & BOX CORNER ARROW ICON (NO EYE ICON, MAINTAIN GAP) -->
                             <td class="pe-4 py-3 text-end text-nowrap">
                                 <div class="d-inline-flex align-items-center gap-3 stop-row-click">
                                     <!-- PENCIL ICON (EDIT) -->
@@ -254,7 +440,7 @@
                                     </button>
 
                                     <!-- BOX CORNER ARROW ICON (PREVIEW REGISTRATION FORM) -->
-                                    <a href="{% url 'recruitment:candidate_apply' %}?job={{ j.id }}" 
+                                    <a href="{% url 'recruitment:candidate_apply' %}?job={{ j.id }}&position={{ j.title|slugify }}" 
                                        target="_blank" 
                                        class="btn btn-link text-primary p-0 shadow-none" 
                                        title="Preview Registration Form"
@@ -266,7 +452,7 @@
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">
+                            <td colspan="6" class="text-center py-5 text-muted">
                                 <div class="py-4">
                                     <i class="bi bi-briefcase fs-1 text-muted d-block mb-2 opacity-50"></i>
                                     <h6 class="fw-bold text-dark">No job positions found</h6>
@@ -288,13 +474,13 @@
             <div class="d-flex align-items-center gap-2">
                 <span class="small text-muted">Show</span>
                 <select id="pageSizeSelect" class="form-select form-select-sm" style="width: auto; font-weight: 600; border-radius: 6px; border: 1px solid #CBD5E1; cursor: pointer;">
-                    <option value="5">5</option>
-                    <option value="10" selected>10</option>
+                    <option value="5"selected>5</option>
+                    <option value="10">10</option>
                     <option value="20">20</option>
                     <option value="50">50</option>
                     <option value="100">100</option>
                 </select>
-                <span class="small text-muted">entries per page</span>
+                <span class="small text-muted">per page</span>
                 <span class="text-muted mx-2 d-none d-sm-inline">|</span>
                 <span class="small text-muted" id="pageInfoText">Showing 1 to 10 of {{ jobs|length }} entries</span>
             </div>
@@ -308,6 +494,296 @@
                     <!-- Dynamic page numbers -->
                 </div>
                 <button type="button" class="btn btn-sm btn-outline-secondary px-2.5 py-1" id="nextPageBtn" title="Next Page" style="border-radius: 6px;">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- 3. CANDIDATE APPLICATIONS (SEPARATED BY FORM COMPLETION) -->
+    <!-- ========================================================= -->
+    <div class="card mb-4 border shadow-sm" style="border-radius: 12px; border-color: #E2E8F0 !important; overflow: hidden;">
+        <div class="p-3 px-4 bg-white border-bottom d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <!-- EXACT SEGMENTED TABS FROM USER SCREENSHOT -->
+            <div class="d-inline-flex p-1 bg-light rounded-3 border" style="background-color: #F8FAFC !important; border-color: #E2E8F0 !important;">
+                <ul class="nav nav-pills gap-1" id="linkGenRosterTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link roster-tab-btn active d-inline-flex align-items-center gap-2" 
+                                id="pills-talent-roster-tab" 
+                                data-bs-toggle="pill" 
+                                data-bs-target="#pills-talent-roster" 
+                                type="button" 
+                                role="tab">
+                            <i class="bi bi-person-check-fill tab-icon text-success"></i>
+                            <span>Interview Candidates</span>
+                            <span class="tab-badge ms-1">{{ office_apps_count }}</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link roster-tab-btn d-inline-flex align-items-center gap-2" 
+                                id="pills-job-apps-tab" 
+                                data-bs-toggle="pill" 
+                                data-bs-target="#pills-job-apps" 
+                                type="button" 
+                                role="tab">
+                            <i class="bi bi-briefcase-fill tab-icon text-primary"></i>
+                            <span>Signup Candidate</span>
+                            <span class="tab-badge ms-1">{{ online_apps_count }}</span>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="position-relative" style="width: 280px; max-width: 100%;">
+                <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted small"></i>
+                <input type="text" id="candidateSubSearchInput" class="form-control form-control-sm ps-5 bg-light shadow-none" placeholder="Search applicants..." style="border-radius: 8px; border: 1px solid #CBD5E1; height: 36px; font-size: 0.86rem;">
+            </div>
+        </div>
+
+        <div class="tab-content" id="linkGenRosterTabContent">
+            <!-- TAB 1: CANDIDATE APPLICATIONS & TALENT ROSTER (BOTH FORMS COMPLETED / OFFICE WALK-IN) -->
+            <div class="tab-pane fade show active" id="pills-talent-roster" role="tabpanel" tabindex="0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 candidate-list-table">
+                        <thead style="background: #F8FAFC;">
+                            <tr class="text-muted small text-uppercase" style="font-size: 0.76rem; letter-spacing: 0.05em; font-weight: 600; border-bottom: 1px solid #E2E8F0;">
+                                <th class="ps-4 py-3" style="width: 20%;">Application ID</th>
+                                <th class="py-3" style="width: 25%;">Name</th>
+                                <th class="py-3" style="width: 23%;">Email ID</th>
+                                <th class="py-3" style="width: 14%;">Phone No</th>
+                                <th class="py-3" style="width: 12%;">Position Name</th>
+                                <th class="pe-4 py-3 text-end" style="width: 6%;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for app in office_applications %}
+                                <tr class="candidate-row-item candidate-office-row" 
+                                    data-url="{% url 'recruitment:candidate_detail' application_id=app.id %}" 
+                                    data-name="{{ app.candidate.full_name|lower }}"
+                                    data-email="{{ app.candidate.email|lower }}"
+                                    data-phone="{{ app.candidate.phone|default:''|lower }}"
+                                    data-id="{{ app.application_id|lower }}"
+                                    data-job="{{ app.job.title|lower }}"
+                                    style="border-bottom: 1px solid #F1F5F9; cursor: pointer;">
+                                    <td class="ps-4 py-3">
+                                        <span class="app-id-pill" title="Application ID: {{ app.application_id }}">
+                                            <span class="app-id-code">{% if app.application_id|slice:":4" == "APP-" %}{{ app.application_id|slice:"4:" }}{% elif app.application_id|slice:":5" == "HRMS-" %}{{ app.application_id|slice:"5:" }}{% else %}{{ app.application_id }}{% endif %}</span>
+                                            <button type="button" class="copy-id-btn stop-row-click" onclick="copyAppIdCode('{{ app.application_id }}', this); event.stopPropagation();" title="Copy Application ID">
+                                                <i class="bi bi-copy"></i>
+                                            </button>
+                                        </span>
+                                        <div class="text-muted small mt-1" style="font-size: 0.76rem;">
+                                            <i class="bi bi-calendar3 me-1 text-secondary"></i>Apply:{{ app.applied_at|date:"d/m/Y" }}
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <img src="{{ app.candidate.get_photo_url }}" alt="{{ app.candidate.full_name }}" class="rounded-circle border shadow-2xs" width="32" height="32" style="object-fit: cover;">
+                                            <span class="fw-bold text-dark fs-6">{{ app.candidate.full_name }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="d-flex align-items-center text-secondary small" style="gap: 8px;">
+                                            <i class="bi bi-envelope text-primary opacity-75"></i>
+                                            <span>{{ app.candidate.email }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="d-flex align-items-center text-secondary small" style="gap: 8px;">
+                                            <i class="bi bi-telephone text-secondary opacity-75"></i>
+                                            <span>{{ app.candidate.phone|default:"--" }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="fw-semibold text-truncate small" style="color: #0F172A;">
+                                            <i class="bi bi-briefcase text-primary opacity-75 me-1"></i>{{ app.job.title }}
+                                        </div>
+                                    </td>
+                                    <td class="pe-4 py-3 text-end stop-row-click">
+                                        <div class="candidate-actions-wrap">
+                                            <span class="candidate-status-icon" title="Status: {{ app.get_status_display }}">
+                                                {% if app.status == 'SUBMITTED' %}
+                                                    <i class="bi bi-clock-history text-secondary"></i>
+                                                {% elif app.status == 'UNDER_REVIEW' %}
+                                                    <i class="bi bi-hourglass-split text-primary"></i>
+                                                {% elif app.status == 'SHORTLISTED' %}
+                                                    <i class="bi bi-star-fill text-info"></i>
+                                                {% elif app.status == 'INTERVIEW_SCHEDULED' %}
+                                                    <i class="bi bi-calendar2-check-fill text-warning"></i>
+                                                {% elif app.status == 'SELECTED' %}
+                                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                                {% elif app.status == 'HIRED' %}
+                                                    <i class="bi bi-patch-check-fill text-success"></i>
+                                                {% elif app.status == 'REJECTED' %}
+                                                    <i class="bi bi-x-circle-fill text-danger"></i>
+                                                {% else %}
+                                                    <i class="bi bi-pause-circle-fill text-warning"></i>
+                                                {% endif %}
+                                            </span>
+                                            {% if app.resume %}
+                                                <a href="{{ app.resume.url }}" target="_blank" download class="candidate-cv-btn" title="Download CV (PDF)" onclick="event.stopPropagation();">
+                                                    <i class="bi bi-file-earmark-pdf-fill"></i>
+                                                </a>
+                                            {% else %}
+                                                <span class="candidate-cv-disabled" title="No CV attached"><i class="bi bi-file-earmark-x"></i></span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr class="candidate-empty-row">
+                                    <td colspan="6" class="text-center py-4 text-muted small">
+                                        <i class="bi bi-inbox fs-4 d-block mb-1 opacity-50"></i>
+                                        No candidates Yet.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            <tr class="candidate-empty-row candidate-no-match-row" style="display: none;">
+                                <td colspan="6" class="text-center py-4 text-muted small">
+                                    <i class="bi bi-search fs-4 d-block mb-1 opacity-50"></i>
+                                    No matching candidates found.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 2: CANDIDATE JOB APPLICATIONS (ONLINE FAST-APPLY ONLY) -->
+            <div class="tab-pane fade" id="pills-job-apps" role="tabpanel" tabindex="0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 candidate-list-table">
+                        <thead style="background: #F8FAFC;">
+                            <tr class="text-muted small text-uppercase" style="font-size: 0.76rem; letter-spacing: 0.05em; font-weight: 600; border-bottom: 1px solid #E2E8F0;">
+                                <th class="ps-4 py-3" style="width: 20%;">Application ID</th>
+                                <th class="py-3" style="width: 25%;">Name</th>
+                                <th class="py-3" style="width: 23%;">Email ID</th>
+                                <th class="py-3" style="width: 14%;">Phone No</th>
+                                <th class="py-3" style="width: 12%;">Position Name</th>
+                                <th class="pe-4 py-3 text-end" style="width: 6%;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for app in online_applications %}
+                                <tr class="candidate-row-item candidate-online-row" 
+                                    data-url="{% url 'recruitment:candidate_detail' application_id=app.id %}" 
+                                    data-name="{{ app.candidate.full_name|lower }}"
+                                    data-email="{{ app.candidate.email|lower }}"
+                                    data-phone="{{ app.candidate.phone|default:''|lower }}"
+                                    data-id="{{ app.application_id|lower }}"
+                                    data-job="{{ app.job.title|lower }}"
+                                    style="border-bottom: 1px solid #F1F5F9; cursor: pointer;">
+                                    <td class="ps-4 py-3">
+                                        <span class="app-id-pill" title="Application ID: {{ app.application_id }}">
+                                            <span class="app-id-code">{% if app.application_id|slice:":4" == "APP-" %}{{ app.application_id|slice:"4:" }}{% elif app.application_id|slice:":5" == "HRMS-" %}{{ app.application_id|slice:"5:" }}{% else %}{{ app.application_id }}{% endif %}</span>
+                                            <button type="button" class="copy-id-btn stop-row-click" onclick="copyAppIdCode('{{ app.application_id }}', this); event.stopPropagation();" title="Copy Application ID">
+                                                <i class="bi bi-copy"></i>
+                                            </button>
+                                        </span>
+                                        <div class="text-muted small mt-1" style="font-size: 0.76rem;">
+                                            <i class="bi bi-calendar3 me-1 text-secondary"></i>Apply: {{ app.applied_at|date:"d/m/Y" }}
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <img src="{{ app.candidate.get_photo_url }}" alt="{{ app.candidate.full_name }}" class="rounded-circle border shadow-2xs" width="32" height="32" style="object-fit: cover;">
+                                            <span class="fw-bold text-dark fs-6">{{ app.candidate.full_name }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="d-flex align-items-center text-secondary small" style="gap: 8px;">
+                                            <i class="bi bi-envelope text-primary opacity-75"></i>
+                                            <span>{{ app.candidate.email }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="d-flex align-items-center text-secondary small" style="gap: 8px;">
+                                            <i class="bi bi-telephone text-secondary opacity-75"></i>
+                                            <span>{{ app.candidate.phone|default:"--" }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="fw-semibold text-truncate small" style="color: #0F172A;">
+                                            <i class="bi bi-briefcase text-primary opacity-75 me-1"></i>{{ app.job.title }}
+                                        </div>
+                                    </td>
+                                    <td class="pe-4 py-3 text-end stop-row-click">
+                                        <div class="candidate-actions-wrap">
+                                            <span class="candidate-status-icon" title="Status: {{ app.get_status_display }}">
+                                                {% if app.status == 'SUBMITTED' %}
+                                                    <i class="bi bi-clock-history text-secondary"></i>
+                                                {% elif app.status == 'UNDER_REVIEW' %}
+                                                    <i class="bi bi-hourglass-split text-primary"></i>
+                                                {% elif app.status == 'SHORTLISTED' %}
+                                                    <i class="bi bi-star-fill text-info"></i>
+                                                {% elif app.status == 'INTERVIEW_SCHEDULED' %}
+                                                    <i class="bi bi-calendar2-check-fill text-warning"></i>
+                                                {% elif app.status == 'SELECTED' %}
+                                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                                {% elif app.status == 'HIRED' %}
+                                                    <i class="bi bi-patch-check-fill text-success"></i>
+                                                {% elif app.status == 'REJECTED' %}
+                                                    <i class="bi bi-x-circle-fill text-danger"></i>
+                                                {% else %}
+                                                    <i class="bi bi-pause-circle-fill text-warning"></i>
+                                                {% endif %}
+                                            </span>
+                                            {% if app.resume %}
+                                                <a href="{{ app.resume.url }}" target="_blank" download class="candidate-cv-btn" title="Download CV (PDF)" onclick="event.stopPropagation();">
+                                                    <i class="bi bi-file-earmark-pdf-fill"></i>
+                                                </a>
+                                            {% else %}
+                                                <span class="candidate-cv-disabled" title="No CV attached"><i class="bi bi-file-earmark-x"></i></span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr class="candidate-empty-row">
+                                    <td colspan="6" class="text-center py-4 text-muted small">
+                                        <i class="bi bi-inbox fs-4 d-block mb-1 opacity-50"></i>
+                                        No Signup Candidates yet.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            <tr class="candidate-empty-row candidate-no-match-row" style="display: none;">
+                                <td colspan="6" class="text-center py-4 text-muted small">
+                                    <i class="bi bi-search fs-4 d-block mb-1 opacity-50"></i>
+                                    No matching candidates found.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- CANDIDATE TABLE FOOTER: PAGINATION & PAGE SIZE (5, 10, 20, 50, 100) -->
+        <div class="p-3 px-4 bg-white border-top d-flex flex-wrap justify-content-between align-items-center gap-3" id="candidatePaginationFooter">
+            <!-- Left Side: Show 5, 10, 20, 50, 100 & Showing X to Y of Z -->
+            <div class="d-flex align-items-center gap-2">
+                <span class="small text-muted">Show</span>
+                <select id="candidatePageSizeSelect" class="form-select form-select-sm" style="width: auto; font-weight: 600; border-radius: 6px; border: 1px solid #CBD5E1; cursor: pointer;">
+                    <option value="5"selected>5</option>
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                <span class="small text-muted">entries per page</span>
+                <span class="text-muted mx-2 d-none d-sm-inline">|</span>
+                <span class="small text-muted" id="candidatePageInfoText">Showing 1 to 10 of {{ office_applications|length }} entries</span>
+            </div>
+
+            <!-- Right Side: Page Next Left and Right Arrow -->
+            <div class="d-flex align-items-center gap-1" id="candidatePaginationControls">
+                <button type="button" class="btn btn-sm btn-outline-secondary px-2.5 py-1" id="candidatePrevPageBtn" title="Previous Page" style="border-radius: 6px;" disabled>
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <div id="candidatePageNumbersContainer" class="d-flex align-items-center gap-1">
+                    <!-- Dynamic page numbers -->
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-secondary px-2.5 py-1" id="candidateNextPageBtn" title="Next Page" style="border-radius: 6px;">
                     <i class="bi bi-chevron-right"></i>
                 </button>
             </div>
@@ -707,10 +1183,74 @@
         </div>
     </div>
 </div>
+
+<!-- TOAST NOTIFICATION FOR COPY FEEDBACK -->
+<div class="copy-toast shadow-lg" id="copyToast" style="display: none; position: fixed; bottom: 28px; right: 28px; z-index: 1080; background: #0F172A; color: #FFFFFF; padding: 12px 20px; border-radius: 10px; font-size: 0.86rem; font-weight: 500; border: 1px solid rgba(255,255,255,0.1);">
+    <i class="bi bi-check-circle-fill text-success me-2 fs-6"></i>
+    <span id="copyToastMsg">Link copied to clipboard!</span>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+    function copyJobPositionUrl(btn, url) {
+        copyTextWithFeedback(btn, url, "Link copied to clipboard!");
+    }
+
+    function copyPositionLink(btn, inputId) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        const textToCopy = input.value;
+        copyTextWithFeedback(btn, textToCopy, "Link copied to clipboard!");
+    }
+
+    function copyDirectLink(btn, url) {
+        copyTextWithFeedback(btn, url, "Fast-Apply link copied to clipboard!");
+    }
+
+    function copyTextWithFeedback(btn, text, message) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
+                showButtonFeedback(btn, message);
+            }).catch(() => {
+                fallbackCopy(text, btn, message);
+            });
+        } else {
+            fallbackCopy(text, btn, message);
+        }
+    }
+
+    function fallbackCopy(text, btn, message) {
+        const temp = document.createElement("input");
+        temp.value = text;
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand("copy");
+        document.body.removeChild(temp);
+        showButtonFeedback(btn, message);
+    }
+
+    function showButtonFeedback(btn, message) {
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check2"></i> Copied!';
+        btn.classList.add('btn-success', 'text-white');
+        btn.classList.remove('btn-outline-primary', 'btn-outline-secondary');
+
+        const toast = document.getElementById('copyToast');
+        const toastMsg = document.getElementById('copyToastMsg');
+        if (toast) {
+            if (toastMsg) toastMsg.textContent = message || 'Link copied to clipboard!';
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 2400);
+        }
+
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('btn-success', 'text-white');
+            btn.classList.add('btn-outline-primary');
+        }, 2200);
+    }
+
     function copyUniversalLink(btn) {
         const input = document.getElementById('universalLinkInput');
         input.select();
@@ -747,6 +1287,12 @@
 
     // Modal Dynamic Population & Table Search + Pagination
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Bootstrap tooltips
+        const tooltipElements = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            tooltipElements.forEach(el => new bootstrap.Tooltip(el));
+        }
+
         // -------------------------------------------------------------
         // A. TABLE SEARCH & PAGINATION (5, 10, 20, 50, 100)
         // -------------------------------------------------------------
@@ -1038,6 +1584,194 @@
 
         if (drawerHeaderEditBtn) drawerHeaderEditBtn.addEventListener('click', handleDrawerEdit);
         if (drawerFooterEditBtn) drawerFooterEditBtn.addEventListener('click', handleDrawerEdit);
+
+        // Candidate sub-table row click
+        document.querySelectorAll('tr.candidate-row-item').forEach(function(row) {
+            row.addEventListener('click', function(e) {
+                if (e.target.closest('.stop-row-click') || e.target.closest('button') || e.target.closest('a')) {
+                    return;
+                }
+                if (this.dataset.url) {
+                    window.location.href = this.dataset.url;
+                }
+            });
+        });
+
+        // -------------------------------------------------------------
+        // B. CANDIDATE APPLICATIONS SEARCH & PAGINATION (5, 10, 20, 50, 100)
+        // -------------------------------------------------------------
+        const candSearch = document.getElementById('candidateSubSearchInput');
+        const candPageSizeSelect = document.getElementById('candidatePageSizeSelect');
+        const candPageInfoText = document.getElementById('candidatePageInfoText');
+        const candPrevBtn = document.getElementById('candidatePrevPageBtn');
+        const candNextBtn = document.getElementById('candidateNextPageBtn');
+        const candPageNumbersContainer = document.getElementById('candidatePageNumbersContainer');
+
+        let candCurrentPage = 1;
+        let candPageSize = parseInt(candPageSizeSelect ? candPageSizeSelect.value : 10, 10);
+
+        function getActiveCandidatePane() {
+            const activeTabBtn = document.querySelector('#linkGenRosterTabs button.roster-tab-btn.active');
+            const targetSelector = activeTabBtn ? activeTabBtn.getAttribute('data-bs-target') : '#pills-talent-roster';
+            return document.querySelector(targetSelector);
+        }
+
+        function renderCandidatePagination() {
+            const activePane = getActiveCandidatePane();
+            if (!activePane) return;
+
+            const allRows = Array.from(activePane.querySelectorAll('.candidate-row-item'));
+            const emptyRows = activePane.querySelectorAll('.candidate-empty-row');
+            const noMatchRow = activePane.querySelector('.candidate-no-match-row');
+            const query = (candSearch ? candSearch.value : '').toLowerCase().trim();
+
+            const filteredRows = allRows.filter(row => {
+                if (!query) return true;
+                const name = (row.getAttribute('data-name') || '').toLowerCase();
+                const email = (row.getAttribute('data-email') || '').toLowerCase();
+                const phone = (row.getAttribute('data-phone') || '').toLowerCase();
+                const id = (row.getAttribute('data-id') || '').toLowerCase();
+                const job = (row.getAttribute('data-job') || '').toLowerCase();
+                return name.includes(query) || email.includes(query) || phone.includes(query) || id.includes(query) || job.includes(query);
+            });
+
+            const total = filteredRows.length;
+            const totalPages = Math.ceil(total / candPageSize) || 1;
+
+            if (candCurrentPage > totalPages) candCurrentPage = totalPages;
+            if (candCurrentPage < 1) candCurrentPage = 1;
+
+            // Hide all candidate rows in this pane first
+            allRows.forEach(r => r.style.display = 'none');
+
+            // Handle zero state / no match state
+            if (allRows.length === 0) {
+                if (emptyRows[0]) emptyRows[0].style.display = '';
+                if (noMatchRow) noMatchRow.style.display = 'none';
+            } else if (total === 0) {
+                if (noMatchRow) noMatchRow.style.display = '';
+            } else {
+                if (noMatchRow) noMatchRow.style.display = 'none';
+                const startIndex = (candCurrentPage - 1) * candPageSize;
+                const endIndex = Math.min(startIndex + candPageSize, total);
+
+                for (let i = startIndex; i < endIndex; i++) {
+                    filteredRows[i].style.display = '';
+                }
+            }
+
+            // Update info text
+            if (candPageInfoText) {
+                if (total === 0) {
+                    candPageInfoText.textContent = 'Showing 0 to 0 of 0 entries';
+                } else {
+                    const startIndex = (candCurrentPage - 1) * candPageSize;
+                    const endIndex = Math.min(startIndex + candPageSize, total);
+                    candPageInfoText.textContent = `Showing ${startIndex + 1} to ${endIndex} of ${total} entries`;
+                }
+            }
+
+            // Prev & Next buttons
+            if (candPrevBtn) candPrevBtn.disabled = (candCurrentPage <= 1);
+            if (candNextBtn) candNextBtn.disabled = (candCurrentPage >= totalPages);
+
+            // Page numbers
+            if (candPageNumbersContainer) {
+                candPageNumbersContainer.innerHTML = '';
+                for (let p = 1; p <= totalPages; p++) {
+                    if (totalPages > 7) {
+                        if (p !== 1 && p !== totalPages && Math.abs(p - candCurrentPage) > 1) {
+                            if (p === 2 || p === totalPages - 1) {
+                                const dots = document.createElement('span');
+                                dots.className = 'px-1 text-muted small';
+                                dots.textContent = '...';
+                                candPageNumbersContainer.appendChild(dots);
+                            }
+                            continue;
+                        }
+                    }
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = `btn btn-sm px-2.5 py-1 ${p === candCurrentPage ? 'btn-primary fw-bold text-white' : 'btn-outline-secondary'}`;
+                    btn.style.borderRadius = '6px';
+                    btn.style.minWidth = '32px';
+                    btn.textContent = p;
+                    btn.addEventListener('click', () => {
+                        candCurrentPage = p;
+                        renderCandidatePagination();
+                    });
+                    candPageNumbersContainer.appendChild(btn);
+                }
+            }
+        }
+
+        // Listen for tab changes
+        const tabBtns = document.querySelectorAll('#linkGenRosterTabs button[data-bs-toggle="pill"]');
+        tabBtns.forEach(btn => {
+            btn.addEventListener('shown.bs.tab', () => {
+                candCurrentPage = 1;
+                renderCandidatePagination();
+            });
+        });
+
+        if (candSearch) {
+            candSearch.addEventListener('input', () => {
+                candCurrentPage = 1;
+                renderCandidatePagination();
+            });
+        }
+
+        if (candPageSizeSelect) {
+            candPageSizeSelect.addEventListener('change', () => {
+                candPageSize = parseInt(candPageSizeSelect.value, 10);
+                candCurrentPage = 1;
+                renderCandidatePagination();
+            });
+        }
+
+        if (candPrevBtn) {
+            candPrevBtn.addEventListener('click', () => {
+                if (candCurrentPage > 1) {
+                    candCurrentPage--;
+                    renderCandidatePagination();
+                }
+            });
+        }
+
+        if (candNextBtn) {
+            candNextBtn.addEventListener('click', () => {
+                const activePane = getActiveCandidatePane();
+                const allRows = activePane ? Array.from(activePane.querySelectorAll('.candidate-row-item')) : [];
+                const query = (candSearch ? candSearch.value : '').toLowerCase().trim();
+                const filteredCount = allRows.filter(row => {
+                    if (!query) return true;
+                    const name = (row.getAttribute('data-name') || '').toLowerCase();
+                    const email = (row.getAttribute('data-email') || '').toLowerCase();
+                    const phone = (row.getAttribute('data-phone') || '').toLowerCase();
+                    const id = (row.getAttribute('data-id') || '').toLowerCase();
+                    const job = (row.getAttribute('data-job') || '').toLowerCase();
+                    return name.includes(query) || email.includes(query) || phone.includes(query) || id.includes(query) || job.includes(query);
+                }).length;
+                const totalPages = Math.ceil(filteredCount / candPageSize) || 1;
+                if (candCurrentPage < totalPages) {
+                    candCurrentPage++;
+                    renderCandidatePagination();
+                }
+            });
+        }
+
+        // Initial candidate pagination render
+        renderCandidatePagination();
     });
+
+    function copyAppIdCode(appId, btn) {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(appId).then(() => {
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="bi bi-check2 text-success"></i>';
+                setTimeout(() => { btn.innerHTML = originalHTML; }, 1800);
+            });
+        }
+    }
 </script>
 {% endblock %}

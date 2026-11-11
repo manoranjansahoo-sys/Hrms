@@ -3,6 +3,68 @@
 
 {% block content %}
 <div class="container-fluid p-0">
+<style>
+    /* Premium Micro-Badge Status Icons (Clean, Icon-Only, Elevated UI) */
+    .job-status-pill {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: help;
+        position: relative;
+    }
+    .job-status-pill:hover {
+        transform: scale(1.22);
+    }
+    .job-status-pill.status-open {
+        background: #ECFDF5;
+        color: #059669;
+        border: 1.5px solid #A7F3D0;
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.12);
+    }
+    .job-status-pill.status-open:hover {
+        background: #D1FAE5;
+        border-color: #34D399;
+        box-shadow: 0 4px 10px rgba(16, 185, 129, 0.28);
+    }
+    .job-status-pill.status-on-hold {
+        background: #FFFBEB;
+        color: #D97706;
+        border: 1.5px solid #FDE68A;
+        box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.12);
+    }
+    .job-status-pill.status-on-hold:hover {
+        background: #FEF3C7;
+        border-color: #FBBF24;
+        box-shadow: 0 4px 10px rgba(245, 158, 11, 0.28);
+    }
+    .job-status-pill.status-closed {
+        background: #FEF2F2;
+        color: #DC2626;
+        border: 1.5px solid #FECACA;
+        box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.12);
+    }
+    .job-status-pill.status-closed:hover {
+        background: #FEE2E2;
+        border-color: #F87171;
+        box-shadow: 0 4px 10px rgba(239, 68, 68, 0.28);
+    }
+    .job-status-pill.status-draft {
+        background: #F8FAFC;
+        color: #64748B;
+        border: 1.5px solid #E2E8F0;
+        box-shadow: 0 0 0 2px rgba(100, 116, 139, 0.10);
+    }
+    .job-status-pill.status-draft:hover {
+        background: #F1F5F9;
+        border-color: #CBD5E1;
+        box-shadow: 0 4px 10px rgba(100, 116, 139, 0.22);
+    }
+</style>
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
             <h3 class="fw-bold mb-1">Company Job Openings</h3>
@@ -29,53 +91,178 @@
                         <th>Type</th>
                         <th>Vacancies</th>
                         <th>Experience</th>
+                        <th><i class="bi bi-link-45deg text-primary me-1"></i>Position Link</th>
                         <th>Applications</th>
-                        <th>Status</th>
+                        <th class="text-center">Status</th>
                         <th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for job in jobs %}
-                        <tr>
+                        <tr {% if job.status == 'CLOSED' %}style="background-color: #FAFAFA; opacity: 0.88;"{% endif %}>
                             <td>
-                                <div class="fw-bold text-dark">{{ job.title }}</div>
-                                <small class="text-muted">Deadline: {{ job.application_deadline|date:"d M Y"|default:"Open until filled" }}</small>
+                                <div class="d-flex align-items-center" style="gap: 14px;">
+                                    {% if job.status == 'OPEN' %}
+                                        <span class="job-status-pill status-open" data-bs-toggle="tooltip" data-bs-placement="top" title="Status: Active">
+                                            <i class="bi bi-check-lg" style="font-size: 0.86rem; font-weight: 800; -webkit-text-stroke: 0.5px;"></i>
+                                        </span>
+                                        <span class="fw-bold text-dark">{{ job.title }}</span>
+                                    {% elif job.status == 'ON_HOLD' %}
+                                        <span class="job-status-pill status-on-hold" data-bs-toggle="tooltip" data-bs-placement="top" title="Status: On Hold">
+                                            <i class="bi bi-pause-fill" style="font-size: 0.90rem;"></i>
+                                        </span>
+                                        <span class="fw-bold text-dark">{{ job.title }}</span>
+                                    {% elif job.status == 'CLOSED' %}
+                                        <span class="job-status-pill status-closed" data-bs-toggle="tooltip" data-bs-placement="top" title="Status: Closed">
+                                            <i class="bi bi-x-lg" style="font-size: 0.74rem; font-weight: 800; -webkit-text-stroke: 0.5px;"></i>
+                                        </span>
+                                        <span class="fw-semibold text-secondary text-decoration-line-through">{{ job.title }}</span>
+                                    {% else %}
+                                        <span class="job-status-pill status-draft" data-bs-toggle="tooltip" data-bs-placement="top" title="Status: Draft">
+                                            <i class="bi bi-pencil-fill" style="font-size: 0.70rem;"></i>
+                                        </span>
+                                        <span class="fw-bold text-dark">{{ job.title }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-muted small mt-1 d-flex align-items-center" style="margin-left: 38px; gap: 6px;">
+                                    <i class="bi bi-calendar3"></i>
+                                    <span>Deadline: {{ job.application_deadline|date:"d M Y"|default:"Open until filled" }}</span>
+                                </div>
                             </td>
                             <td><span class="badge bg-light text-dark border">{{ job.department.name|default:"General" }}</span></td>
                             <td>{{ job.location }}</td>
                             <td><small class="text-secondary">{{ job.get_employment_type_display }}</small></td>
                             <td><b>{{ job.vacancies }}</b></td>
                             <td><small class="text-muted">{{ job.experience_required }}</small></td>
+                            <!-- POSITION LINK: ACTIVE COPY BUTTON FOR OPEN, DISABLED FOR CLOSED / ON HOLD / DRAFT -->
+                            <td class="text-center" style="min-width: 120px;">
+                                {% if job.status == 'OPEN' %}
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-primary px-3 py-1 shadow-none d-inline-flex align-items-center fw-semibold" 
+                                            onclick="copyJobPosLink(this, '{{ host_url }}{% url 'recruitment:candidate_apply' %}?job={{ job.id }}&position={{ job.title|slugify }}')" 
+                                            title="Copy application link for {{ job.title }}" 
+                                            style="height: 31px; border-radius: 6px; font-size: 0.78rem; white-space: nowrap; gap: 8px;">
+                                        <i class="bi bi-link-45deg fs-6"></i>
+                                        <span>Copy Link</span>
+                                    </button>
+                                {% else %}
+                                    <button type="button" 
+                                            class="btn btn-sm btn-light text-muted border px-3 py-1 d-inline-flex align-items-center fw-semibold" 
+                                            disabled 
+                                            title="Position is not open - application link is disabled" 
+                                            style="height: 31px; border-radius: 6px; font-size: 0.78rem; opacity: 0.60; cursor: not-allowed; white-space: nowrap; gap: 8px;">
+                                        <i class="bi bi-slash-circle text-danger"></i>
+                                        <span>Disabled</span>
+                                    </button>
+                                {% endif %}
+                            </td>
                             <td>
                                 <a href="{% url 'recruitment:candidates_list' %}?job={{ job.id }}" class="fw-bold text-success text-decoration-none">
                                     {{ job.app_count }} Candidates
                                 </a>
                             </td>
-                            <td>
+                            <td class="text-center">
                                 {% if job.status == 'OPEN' %}
-                                    <span class="badge bg-success">Active / Open</span>
+                                    <span class="job-status-pill status-open" data-bs-toggle="tooltip" data-bs-placement="top" title="Status: Active">
+                                        <i class="bi bi-check-lg" style="font-size: 0.86rem; font-weight: 800; -webkit-text-stroke: 0.5px;"></i>
+                                    </span>
                                 {% elif job.status == 'ON_HOLD' %}
-                                    <span class="badge bg-warning text-dark">On Hold</span>
+                                    <span class="job-status-pill status-on-hold" data-bs-toggle="tooltip" data-bs-placement="top" title="Status: On Hold">
+                                        <i class="bi bi-pause-fill" style="font-size: 0.90rem;"></i>
+                                    </span>
+                                {% elif job.status == 'CLOSED' %}
+                                    <span class="job-status-pill status-closed" data-bs-toggle="tooltip" data-bs-placement="top" title="Status: Closed">
+                                        <i class="bi bi-x-lg" style="font-size: 0.74rem; font-weight: 800; -webkit-text-stroke: 0.5px;"></i>
+                                    </span>
                                 {% else %}
-                                    <span class="badge bg-secondary">{{ job.get_status_display }}</span>
+                                    <span class="job-status-pill status-draft" data-bs-toggle="tooltip" data-bs-placement="top" title="Status: Draft">
+                                        <i class="bi bi-pencil-fill" style="font-size: 0.70rem;"></i>
+                                    </span>
                                 {% endif %}
                             </td>
                             <td class="text-end">
-                                <a href="{% url 'recruitment:create_link' %}?job_id={{ job.id }}" class="btn btn-sm btn-outline-success py-1 px-2" title="Generate Shareable Link">
-                                    <i class="bi bi-link-45deg"></i> Link
+                                <a href="{% url 'recruitment:create_link' %}?job_id={{ job.id }}" class="btn btn-sm btn-outline-success py-1 px-2 d-inline-flex align-items-center me-1" title="Generate Shareable Link" style="gap: 4px;">
+                                    <i class="bi bi-link-45deg"></i> <span>Link</span>
                                 </a>
-                                <a href="{% url 'recruitment:edit_job' job_id=job.id %}" class="btn btn-sm btn-outline-secondary py-1 px-2" title="Edit Job Opening">
-                                    <i class="bi bi-pencil"></i> Edit
+                                <a href="{% url 'recruitment:edit_job' job_id=job.id %}" class="btn btn-sm btn-outline-secondary py-1 px-2 d-inline-flex align-items-center" title="Edit Job Opening" style="gap: 4px;">
+                                    <i class="bi bi-pencil"></i> <span>Edit</span>
                                 </a>
                             </td>
                         </tr>
                     {% empty %}
-                        <tr><td colspan="9" class="text-center py-5 text-muted">No job openings created yet.</td></tr>
+                        <tr><td colspan="10" class="text-center py-5 text-muted">No job openings created yet.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+
+<!-- TOAST FEEDBACK -->
+<div class="copy-toast shadow-lg" id="jobCopyToast" style="display: none; position: fixed; bottom: 28px; right: 28px; z-index: 1080; background: #0F172A; color: #FFFFFF; padding: 12px 20px; border-radius: 10px; font-size: 0.86rem; font-weight: 500; border: 1px solid rgba(255,255,255,0.1);">
+    <i class="bi bi-check-circle-fill text-success me-2 fs-6"></i>
+    <span id="jobCopyToastMsg">Link copied to clipboard!</span>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+        }
+    });
+
+    function copyJobPosLink(btn, url) {
+        copyTextWithFeedback(btn, url, "Position application link copied to clipboard!");
+    }
+
+    function copyDirectJobLink(btn, url) {
+        copyTextWithFeedback(btn, url, "Fast-Apply link copied to clipboard!");
+    }
+
+    function copyTextWithFeedback(btn, text, message) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
+                showButtonFeedback(btn, message);
+            }).catch(() => {
+                fallbackCopy(text, btn, message);
+            });
+        } else {
+            fallbackCopy(text, btn, message);
+        }
+    }
+
+    function fallbackCopy(text, btn, message) {
+        const temp = document.createElement("input");
+        temp.value = text;
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand("copy");
+        document.body.removeChild(temp);
+        showButtonFeedback(btn, message);
+    }
+
+    function showButtonFeedback(btn, message) {
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check2"></i> Copied!';
+        btn.classList.add('btn-success', 'text-white');
+        btn.classList.remove('btn-outline-primary', 'btn-outline-secondary');
+
+        const toast = document.getElementById('jobCopyToast');
+        const toastMsg = document.getElementById('jobCopyToastMsg');
+        if (toast) {
+            if (toastMsg) toastMsg.textContent = message || 'Link copied to clipboard!';
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 2400);
+        }
+
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('btn-success', 'text-white');
+            btn.classList.add('btn-outline-primary');
+        }, 2200);
+    }
+</script>
 {% endblock %}
 

@@ -14,7 +14,7 @@ from accounts.decorators import role_required, hr_required, log_audit_trail
 from employees.models import EmployeeProfile, EmployeeDocument, ProfileCorrectionRequest
 from employees.forms import EmployeeCreateForm, ProfileCorrectionForm
 from organization.models import Department, Site
-from leave_management.models import LeaveBalance
+from leave_management.models import LeaveBalance, ensure_employee_leave_balances
 from payroll.models import SalaryStructure
 from notifications.models import create_notification
 
@@ -132,7 +132,8 @@ def employee_detail(request, emp_id):
             return redirect('employees:employee_list')
 
     documents = emp.documents.all()
-    leave_balances = LeaveBalance.objects.filter(employee=emp, year=timezone.localdate().year).select_related('leave_type')
+    ensure_employee_leave_balances(emp, timezone.localdate().year)
+    leave_balances = LeaveBalance.objects.filter(employee=emp, year=timezone.localdate().year, leave_type__code__in=['SL', 'PL']).select_related('leave_type')
     salary_structure = None
     if can_view_confidential and hasattr(emp, 'salary_structure'):
         salary_structure = emp.salary_structure
@@ -156,7 +157,7 @@ def employee_detail(request, emp_id):
 def employee_create(request):
     """HR creates a new employee account with auto-generated EMP ID."""
     if request.method == 'POST':
-        form = EmployeeCreateForm(request.POST)
+        form = EmployeeCreateForm(request.POST, user=request.user)
         if form.is_valid():
             # 1. Create CustomUser account
             username = form.cleaned_data['username']
@@ -210,7 +211,7 @@ def employee_create(request):
             messages.success(request, f"Employee {user_obj.get_full_name()} ({new_emp_id}) onboarded successfully! They can log in immediately with Username '{username}', Email '{email}', or Mobile '{phone}' and their configured password.")
             return redirect('employees:employee_detail', emp_id=new_emp_id)
     else:
-        form = EmployeeCreateForm()
+        form = EmployeeCreateForm(user=request.user)
 
     return render(request, 'employees/employee_create.html', {'form': form})
 

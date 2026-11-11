@@ -65,8 +65,19 @@
                 <div class="d-flex align-items-center gap-4">
                     <img src="{{ candidate.get_photo_url }}" alt="{{ candidate.full_name }}" class="rounded-circle border border-4 border-white shadow" width="95" height="95" style="object-fit: cover;">
                     <div>
-                        <div class="d-flex align-items-center gap-2 mb-1">
+                        <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
                             <h3 class="fw-bold mb-0 text-dark">{{ candidate.full_name }}</h3>
+                            {% if candidate.is_google_verified %}
+                                <span class="badge bg-light text-dark border shadow-sm px-2 py-1" style="font-size: 0.76rem;" title="Identity verified via Google OAuth">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" class="me-1" style="vertical-align: -2px;">
+                                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.87c2.26-2.09 3.675-5.17 3.675-9.15z"/>
+                                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.87-3.05c-1.08.72-2.45 1.16-4.06 1.16-3.13 0-5.78-2.11-6.73-4.96H1.25v3.15C3.25 21.36 7.31 24 12 24z"/>
+                                        <path fill="#FBBC05" d="M5.27 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.61H1.25C.45 8.22 0 10.05 0 12s.45 3.78 1.25 5.39l4.02-3.15z"/>
+                                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.64 1.25 6.61l4.02 3.15c.95-2.85 3.6-4.96 6.73-4.96z"/>
+                                    </svg>
+                                    Google Verified
+                                </span>
+                            {% endif %}
                             <span class="app-id-pill shadow-sm" title="Application ID: {{ application.application_id }}">
                                 <span class="app-id-code">{% if application.application_id|slice:":4" == "APP-" %}{{ application.application_id|slice:"4:" }}{% else %}{{ application.application_id }}{% endif %}</span>
                                 <button type="button" class="copy-id-btn" onclick="navigator.clipboard.writeText('{{ application.application_id }}'); this.innerHTML = '<i class=\'bi bi-check2 text-success\'></i>'; setTimeout(() => this.innerHTML = '<i class=\'bi bi-copy\'></i>', 1800);" title="Copy Application ID">
@@ -126,6 +137,17 @@
                             <div class="col-sm-6"><span class="text-muted">Gender:</span> <span class="fw-semibold text-dark">{{ candidate.get_gender_display }}</span></div>
                             <div class="col-sm-6"><span class="text-muted">Alternative Phone:</span> <span class="fw-semibold text-dark">{{ candidate.alt_phone|default:"None" }}</span></div>
                             <div class="col-sm-6"><span class="text-muted">Current Location:</span> <span class="fw-semibold text-dark">{{ candidate.city }}{% if candidate.state %}, {{ candidate.state }}{% endif %}</span></div>
+                            <div class="col-sm-6">
+                                <span class="text-muted">Google Identity:</span>
+                                {% if candidate.is_google_verified %}
+                                    <span class="text-success fw-semibold"><i class="bi bi-patch-check-fill me-1"></i> Google Verified</span>
+                                {% else %}
+                                    <span class="text-muted">Direct / Standard</span>
+                                {% endif %}
+                            </div>
+                            {% if candidate.google_sub %}
+                                <div class="col-sm-6"><span class="text-muted">Google ID:</span> <span class="font-monospace small text-secondary">{{ candidate.google_sub }}</span></div>
+                            {% endif %}
                             <div class="col-12"><span class="text-muted">Street Address:</span> <span class="text-dark">{{ candidate.current_address|default:"--" }}</span></div>
                             {% if candidate.father_name %}
                                 <div class="col-sm-6"><span class="text-muted">Father's Name:</span> <span class="fw-semibold text-dark">{{ candidate.father_name }}</span></div>

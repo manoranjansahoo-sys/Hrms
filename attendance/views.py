@@ -35,29 +35,50 @@ def punch_in_view(request):
     client_ip = get_client_ip(request)
 
     # Check existing attendance
-    att, created = Attendance.objects.get_or_create(
-        employee=emp,
-        date=today,
-        defaults={'status': 'PRESENT'}
-    )
+    att = Attendance.objects.filter(employee=emp, date=today).first()
+    if att:
+        if att.punch_out:
+            messages.warning(
+                request,
+                f"You have already punched out for today at {timezone.localtime(att.punch_out).strftime('%I:%M %p')}. "
+                "Only one punch-in and punch-out is allowed per day."
+            )
+            return redirect(request.META.get('HTTP_REFERER', 'portal:smart_dashboard'))
+        if att.punch_in:
+            messages.warning(
+                request,
+                f"You are already punched in today at {timezone.localtime(att.punch_in).strftime('%I:%M %p')}."
+            )
+            return redirect(request.META.get('HTTP_REFERER', 'portal:smart_dashboard'))
+    else:
+        att = Attendance(employee=emp, date=today)
 
-    if att.punch_in:
-        messages.warning(request, f"You are already punched in today at {timezone.localtime(att.punch_in).strftime('%I:%M %p')}.")
-        return redirect(request.META.get('HTTP_REFERER', 'portal:smart_dashboard'))
-
-    # Determine shift
-    shift = Shift.objects.filter(is_default=True).first()
+    # Determine office schedule (Standard 9:30 AM to 6:30 PM, no multi-shifts)
+    shift = Shift.objects.filter(is_default=True).first() or Shift.objects.first()
+    if not shift:
+        shift, _ = Shift.objects.get_or_create(
+            name='Office Hours',
+            defaults={
+                'start_time': time(9, 30),
+                'end_time': time(18, 30),
+                'grace_period_minutes': 0,
+                'full_day_hours': Decimal('8.00'),
+                'half_day_hours': Decimal('4.50'),
+                'is_default': True,
+            }
+        )
     att.shift = shift
     att.punch_in = now
     att.punch_in_ip = client_ip
     att.device_source = 'WEB'
     att.status = 'PRESENT'
 
-    # Check late arrival (General shift 9:00 + grace 15 min = 9:15)
-    if shift:
-        grace_time = (datetime.combine(today, shift.start_time) + timedelta(minutes=shift.grace_period_minutes)).time()
-        if timezone.localtime(now).time() > grace_time:
-            att.is_late = True
+    # Check late arrival (Office opens at 9:30 AM)
+    start_time_val = shift.start_time if shift else time(9, 30)
+    grace_min = shift.grace_period_minutes if shift else 0
+    grace_time = (datetime.combine(today, start_time_val) + timedelta(minutes=grace_min)).time()
+    if timezone.localtime(now).time() > grace_time:
+        att.is_late = True
 
     att.save()
     log_audit_trail('CREATE', 'Attendance', f"Punch-in recorded for {emp.emp_id} at {now.strftime('%H:%M:%S')}", user=request.user, ip_address=client_ip)
@@ -79,7 +100,15 @@ def punch_out_view(request):
 
     att = Attendance.objects.filter(employee=emp, date=today).first()
     if not att or not att.punch_in:
-        messages.error(request, "You have not punched in today yet!")
+        messages.error(request, "You have not punched in today yet! Punch in is required before you can punch out.")
+        return redirect(request.META.get('HTTP_REFERER', 'portal:smart_dashboard'))
+
+    if att.punch_out:
+        messages.warning(
+            request,
+            f"You have already punched out today at {timezone.localtime(att.punch_out).strftime('%I:%M %p')}. "
+            "Only one punch-out is permitted per day."
+        )
         return redirect(request.META.get('HTTP_REFERER', 'portal:smart_dashboard'))
 
     att.punch_out = now
@@ -256,6 +285,95 @@ def attendance_admin_register(request):
         'absent_cnt': absent_cnt,
         'leave_cnt': leave_cnt,
         'late_cnt': late_cnt,
+    })
+
+
+@login_required
+@role_required([CustomUser.Role.HR, CustomUser.Role.HEAD, CustomUser.Role.SITE_MANAGER])
+def employee_attendance_detail(request, emp_id):
+    """
+    Comprehensive attendance history and drill-down logs for a specific employee.
+    Accessible to HR, Company Head, and Site Managers.
+    """
+    user = request.user
+    emp = get_object_or_404(
+        EmployeeProfile.objects.select_related('user', 'department', 'site', 'designation', 'reporting_manager'),
+        emp_id=emp_id
+    )
+
+    # Site managers can only view staff assigned to their managed sites
+    if user.is_site_manager_role and not (user.is_hr_role or user.is_head_role):
+        if not user.managed_sites.filter(id=emp.site_id).exists():
+            messages.error(request, "You do not have permission to view attendance records for this employee.")
+            return redirect('attendance:admin_register')
+
+    now = timezone.localtime(timezone.now())
+    view_all = request.GET.get('view_all', '0') == '1'
+
+    month_str = request.GET.get('month')
+    year_str = request.GET.get('year')
+
+    try:
+        month = int(month_str) if month_str else now.month
+        year = int(year_str) if year_str else now.year
+    except (ValueError, TypeError):
+        month = now.month
+        year = now.year
+
+    attendances_qs = Attendance.objects.filter(employee=emp).select_related('shift').order_by('-date')
+
+    if not view_all:
+        attendances = attendances_qs.filter(date__year=year, date__month=month)
+    else:
+        attendances = attendances_qs
+
+    # Summary Stats
+    total_records = attendances.count()
+    total_present = attendances.filter(status='PRESENT').count()
+    total_half_day = attendances.filter(status='HALF_DAY').count()
+    total_leave = attendances.filter(status='ON_LEAVE').count()
+    total_absent = attendances.filter(status='ABSENT').count()
+    total_late = attendances.filter(is_late=True).count()
+    total_hours = sum((a.working_hours or Decimal('0.00')) for a in attendances)
+    total_ot = sum((a.overtime_hours or Decimal('0.00')) for a in attendances)
+
+    # Monthly quick switcher (past 6 months)
+    recent_months = []
+    curr_date = date(now.year, now.month, 1)
+    for i in range(6):
+        m_year = curr_date.year
+        m_month = curr_date.month - i
+        while m_month <= 0:
+            m_month += 12
+            m_year -= 1
+        m_date = date(m_year, m_month, 1)
+        recent_months.append({
+            'month': m_month,
+            'year': m_year,
+            'label': m_date.strftime('%B %Y'),
+            'short_label': m_date.strftime('%b %Y'),
+            'is_selected': (not view_all and m_month == month and m_year == year)
+        })
+
+    # Recent correction requests
+    corrections = AttendanceCorrectionRequest.objects.filter(employee=emp).order_by('-date')[:10]
+
+    return render(request, 'attendance/employee_attendance_detail.html', {
+        'employee': emp,
+        'attendances': attendances,
+        'total_records': total_records,
+        'selected_month': month,
+        'selected_year': year,
+        'view_all': view_all,
+        'total_present': total_present,
+        'total_half_day': total_half_day,
+        'total_leave': total_leave,
+        'total_absent': total_absent,
+        'total_late': total_late,
+        'total_hours': total_hours,
+        'total_ot': total_ot,
+        'recent_months': recent_months,
+        'corrections': corrections,
     })
 
 

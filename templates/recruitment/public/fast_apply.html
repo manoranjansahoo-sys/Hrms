@@ -62,14 +62,56 @@
 
     /* GOOGLE AUTHENTICATION HERO GATEWAY */
     .google-gate-box {
-        padding: 26px 36px;
-        background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+        position: relative;
+        padding: 24px 36px;
+        background: #FFFFFF;
         border-bottom: 1px solid var(--line);
+        overflow: hidden;
     }
 
-    .btn-google {
+    .google-accent-line {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3.5px;
+        background: linear-gradient(90deg, #4285F4 0% 25%, #EA4335 25% 50%, #FBBC05 50% 75%, #34A853 75% 100%);
+    }
+
+    .google-auth-badge {
         display: inline-flex;
         align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        background: #EFF6FF;
+        border: 1px solid #BFDBFE;
+        color: #1D4ED8;
+        font-size: 0.74rem;
+        font-weight: 600;
+        border-radius: 9999px;
+        margin-bottom: 8px;
+    }
+
+    .google-gate-title {
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--ink);
+        letter-spacing: -0.2px;
+        margin: 0 0 4px 0;
+    }
+
+    .google-gate-desc {
+        font-size: 13.5px;
+        color: var(--muted);
+        margin: 0;
+        line-height: 1.5;
+        max-width: 490px;
+    }
+
+    .btn-google-single {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         gap: 12px;
         background: #FFFFFF;
         color: #3C4043;
@@ -79,16 +121,32 @@
         font-size: 14.5px;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.2s ease;
-        box-shadow: 0 2px 6px rgba(60, 64, 67, 0.08);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 1px 3px rgba(60, 64, 67, 0.08), 0 1px 2px rgba(60, 64, 67, 0.06);
+        white-space: nowrap;
     }
 
-    .btn-google:hover {
+    .btn-google-single:hover {
         background: #F8FAFC;
         border-color: #1A73E8;
-        box-shadow: 0 4px 12px rgba(26, 115, 232, 0.18);
-        color: #202124;
+        box-shadow: 0 4px 14px rgba(26, 115, 232, 0.18);
+        color: #1A73E8;
         transform: translateY(-1px);
+    }
+
+    .btn-google-single:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 2px rgba(60, 64, 67, 0.12);
+    }
+
+    .google-btn-pulse {
+        animation: pulse-ring 1.2s cubic-bezier(0.4, 0, 0.6, 1) 2;
+        border-color: #1A73E8 !important;
+    }
+
+    @keyframes pulse-ring {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(26, 115, 232, 0.45); }
+        50% { box-shadow: 0 0 0 8px rgba(26, 115, 232, 0.15); }
     }
 
     .google-verified-card {
@@ -103,25 +161,51 @@
         box-shadow: 0 2px 8px rgba(16, 185, 129, 0.08);
     }
 
-    /* LOCKED FORM NOTICE */
-    .locked-card {
-        padding: 52px 32px;
-        text-align: center;
-        background: #FAFBFB;
+    /* SMOOTH FORM GATING WRAPPER */
+    .form-gated-wrapper .gated-fields-area {
+        position: relative;
+        user-select: none;
     }
 
-    .locked-icon-bubble {
-        width: 62px;
-        height: 62px;
-        border-radius: 50%;
-        background: #F1F5F9;
-        border: 2px dashed #CBD5E1;
-        color: #64748B;
+    .form-gated-wrapper .gated-fields-area input,
+    .form-gated-wrapper .gated-fields-area select,
+    .form-gated-wrapper .gated-fields-area textarea,
+    .form-gated-wrapper .gated-fields-area button[type="submit"],
+    .form-gated-wrapper .gated-fields-area .resume-upload-box {
+        pointer-events: none;
+        opacity: 0.65;
+        background-color: #F8FAFC !important;
+        cursor: not-allowed !important;
+    }
+
+    .form-gated-wrapper .gated-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 10;
+        cursor: pointer;
+    }
+
+    /* FLOATING TOAST PILL */
+    .auth-toast-pill {
+        position: fixed;
+        top: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #0F172A;
+        color: #FFFFFF;
+        padding: 10px 22px;
+        border-radius: 9999px;
+        font-size: 13.5px;
+        font-weight: 500;
+        z-index: 99999;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25);
         display: flex;
         align-items: center;
-        justify-content: center;
-        font-size: 1.6rem;
-        margin: 0 auto 16px auto;
+        gap: 8px;
+        transition: opacity 0.3s ease, transform 0.3s ease;
     }
 
     /* TARGET POSITION BANNER (WHEN JOB ID IS PROVIDED) */
@@ -404,21 +488,23 @@
     <div class="sheet">
         <!-- 1. GOOGLE SIGN-IN STEP (MANDATORY GATEWAY) -->
         <div class="google-gate-box" id="googleGateSection">
+            <div class="google-accent-line"></div>
             <!-- Unsigned Initial State -->
             <div id="googleUnsignedState">
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
                     <div>
-                        <div class="d-flex align-items-center gap-2 mb-1.5">
-                            <span class="badge px-2 py-0.5 rounded text-white" style="background: #2563EB; font-size: 0.72rem; font-weight: 600;">STEP 1</span>
-                            <h5 class="fw-bold text-dark mb-0 fs-6">Sign in with Google to Unlock Application</h5>
+                        <div class="google-auth-badge">
+                            <i class="bi bi-shield-check"></i> Identity Verification
                         </div>
-                        <p class="text-muted small mb-0">
-                            Verify your profile with Google. Your name and verified email will be automatically prefilled into the form.
+                        <h5 class="google-gate-title">Sign up with Google to Apply</h5>
+                        <p class="google-gate-desc">
+                            Authenticate with your Google account. Your verified identity will pre-fill your application automatically.
                         </p>
                     </div>
                     <div>
-                        <button type="button" class="btn-google" id="googleSignInBtn" data-bs-toggle="modal" data-bs-target="#googleSignInModal">
-                            <svg width="20" height="20" viewBox="0 0 24 24">
+                        <!-- SINGLE GOOGLE BUTTON -->
+                        <button type="button" class="btn-google-single" id="googleSignInBtn" onclick="triggerGoogleAuth()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" style="flex-shrink: 0;">
                                 <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.87c2.26-2.09 3.675-5.17 3.675-9.15z"/>
                                 <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.87-3.05c-1.08.72-2.45 1.16-4.06 1.16-3.13 0-5.78-2.11-6.73-4.96H1.25v3.15C3.25 21.36 7.31 24 12 24z"/>
                                 <path fill="#FBBC05" d="M5.27 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.61H1.25C.45 8.22 0 10.05 0 12s.45 3.78 1.25 5.39l4.02-3.15z"/>
@@ -434,13 +520,13 @@
             <div id="googleSignedState" style="display: none;">
                 <div class="google-verified-card">
                     <div class="d-flex align-items-center gap-3">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm" id="googleAvatar" style="width: 42px; height: 42px; background: #0F766E; font-size: 1.1rem;">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm overflow-hidden" id="googleAvatar" style="width: 44px; height: 44px; background: #0F766E; font-size: 1.1rem;">
                             G
                         </div>
                         <div>
                             <div class="d-flex align-items-center gap-2">
                                 <span class="fw-bold text-dark fs-6" id="googleNameDisplay">Google User</span>
-                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill small" style="font-size: 0.72rem;">
+                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill small" style="font-size: 0.74rem;">
                                     <i class="bi bi-patch-check-fill me-1"></i> Google Verified Account
                                 </span>
                             </div>
@@ -449,30 +535,21 @@
                     </div>
                     <div>
                         <button type="button" class="btn btn-sm btn-outline-secondary px-3 py-1.5 fw-semibold" onclick="resetGoogleAuth()" style="font-size: 0.78rem; border-radius: 7px;">
-                            <i class="bi bi-arrow-repeat me-1"></i> Switch Account
+                            <i class="bi bi-box-arrow-right me-1"></i> Switch Account
                         </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- LOCKED NOTICE (VISIBLE UNTIL GOOGLE AUTHENTICATION) -->
-        <div id="lockedNoticeBox" class="locked-card">
-            <div class="locked-icon-bubble">
-                <i class="bi bi-lock-fill"></i>
-            </div>
-            <h5 class="fw-bold text-dark mb-1">Application Form is Locked</h5>
-            <p class="text-muted small mb-3" style="max-width: 480px; margin: 0 auto; line-height: 1.55;">
-                To fill out this official application, please sign in with your Google account above. Once authenticated, the application form will automatically unlock.
-            </p>
-            <button type="button" class="btn btn-sm btn-outline-primary px-3 py-1.5 fw-semibold rounded-pill" data-bs-toggle="modal" data-bs-target="#googleSignInModal">
-                <i class="bi bi-google me-1"></i> Unlock with Google
-            </button>
-        </div>
-
-        <!-- 2. APPLICATION FORM (UNLOCKED STRICTLY AFTER GOOGLE SIGN-IN) -->
-        <form method="POST" enctype="multipart/form-data" id="fastApplyForm" style="display: none;">
+        <!-- 2. APPLICATION FORM -->
+        <form method="POST" enctype="multipart/form-data" id="fastApplyForm" class="form-gated-wrapper">
             {% csrf_token %}
+            <input type="hidden" name="is_google_verified" value="false" id="isGoogleVerifiedInput">
+
+            <!-- GATED FIELDS AREA (UNLOCKED AFTER GOOGLE AUTH) -->
+            <div class="gated-fields-area" id="gatedFieldsArea">
+                <div class="gated-overlay" id="gatedOverlay" onclick="handleGatedFieldClick(event)"></div>
 
             <!-- ========================================================= -->
             <!-- POSITION SELECTION LOGIC                                   -->
@@ -648,6 +725,7 @@
                     <i class="bi bi-send-fill me-1.5"></i> Submit Application
                 </button>
             </div>
+            </div><!-- END GATED FIELDS AREA -->
         </form>
     </div>
 </div>
@@ -665,46 +743,41 @@
                     <path fill="#FBBC05" d="M5.27 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.61H1.25C.45 8.22 0 10.05 0 12s.45 3.78 1.25 5.39l4.02-3.15z"/>
                     <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.64 1.25 6.61l4.02 3.15c.95-2.85 3.6-4.96 6.73-4.96z"/>
                 </svg>
-                <h5 class="fw-bold text-dark mb-1">Sign in with Google</h5>
-                <p class="text-muted small mb-0">Choose an account to continue to Company HRMS Careers</p>
+                <h5 class="fw-bold text-dark mb-1">Sign up with Google</h5>
+                <p class="text-muted small mb-0">Choose an account to sign up for Company HRMS Careers</p>
             </div>
 
             <div class="p-3 bg-white">
+                <!-- GIS Button inside modal -->
+                <div class="text-center mb-3">
+                    <div id="googleModalGisSlot" class="d-inline-block"></div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2 mb-3 text-muted">
+                    <hr class="flex-grow-1 my-0">
+                    <span class="small text-uppercase fw-semibold" style="font-size: 0.68rem; letter-spacing: 0.05em;">Or choose test profile</span>
+                    <hr class="flex-grow-1 my-0">
+                </div>
+
                 <!-- Sample Accounts for Fast 1-Click Verification -->
                 <div class="list-group list-group-flush border rounded-3 mb-3 overflow-hidden">
-                    <button type="button" class="list-group-item list-group-item-action p-3 d-flex align-items-center gap-3" onclick="confirmGoogleAccount('Subhashree Mohapatra', 'subhashree.mohapatra@gmail.com')">
-                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px;">
+                    <button type="button" class="list-group-item list-group-item-action p-2.5 d-flex align-items-center gap-3" onclick="confirmGoogleAccount('Subhashree Mohapatra', 'subhashree.mohapatra@gmail.com')">
+                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold" style="width: 34px; height: 34px; font-size: 0.9rem;">
                             S
                         </div>
                         <div class="text-start">
                             <div class="fw-semibold text-dark small">Subhashree Mohapatra</div>
-                            <div class="text-muted" style="font-size: 0.78rem;">subhashree.mohapatra@gmail.com</div>
+                            <div class="text-muted" style="font-size: 0.76rem;">subhashree.mohapatra@gmail.com</div>
                         </div>
                     </button>
-                    <button type="button" class="list-group-item list-group-item-action p-3 d-flex align-items-center gap-3" onclick="confirmGoogleAccount('Soumya Ranjan Sahoo', 'soumya.sahoo@gmail.com')">
-                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px;">
+                    <button type="button" class="list-group-item list-group-item-action p-2.5 d-flex align-items-center gap-3" onclick="confirmGoogleAccount('Soumya Ranjan Sahoo', 'soumya.sahoo@gmail.com')">
+                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center fw-bold" style="width: 34px; height: 34px; font-size: 0.9rem;">
                             S
                         </div>
                         <div class="text-start">
                             <div class="fw-semibold text-dark small">Soumya Ranjan Sahoo</div>
-                            <div class="text-muted" style="font-size: 0.78rem;">soumya.sahoo@gmail.com</div>
+                            <div class="text-muted" style="font-size: 0.76rem;">soumya.sahoo@gmail.com</div>
                         </div>
-                    </button>
-                </div>
-
-                <!-- Custom Google Account Input -->
-                <div class="p-3 bg-light rounded-3 border">
-                    <div class="small fw-bold text-dark mb-2"><i class="bi bi-person-plus me-1"></i> Or enter your Google Account:</div>
-                    <div class="input-group input-group-sm mb-2">
-                        <span class="input-group-text"><i class="bi bi-person"></i></span>
-                        <input type="text" id="customGoogleName" class="form-control" placeholder="Your Full Name">
-                    </div>
-                    <div class="input-group input-group-sm mb-2">
-                        <span class="input-group-text">@</span>
-                        <input type="email" id="customGoogleEmail" class="form-control" placeholder="your.name@gmail.com">
-                    </div>
-                    <button type="button" class="btn btn-dark btn-sm w-100 fw-semibold" onclick="submitCustomGoogleAccount()">
-                        <i class="bi bi-check2-circle me-1"></i> Verify & Unlock Form
                     </button>
                 </div>
             </div>
@@ -719,68 +792,224 @@
 
 <script>
     const jobsData = {{ jobs_json|safe }};
+    const googleClientId = "{{ google_client_id }}";
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function sendGoogleAuthToServer(payload) {
+        return fetch("{% url 'recruitment:candidate_google_auth' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                applyGoogleIdentity(data.google_user, data.candidate_data, data.is_returning_candidate);
+            } else {
+                alert('Google Authentication Error: ' + (data.error || 'Failed to authenticate.'));
+            }
+            return data;
+        })
+        .catch(err => {
+            console.error('Google auth error:', err);
+        });
+    }
+
+    function handleGoogleCredentialResponse(response) {
+        if (response && response.credential) {
+            sendGoogleAuthToServer({ credential: response.credential });
+        }
+    }
 
     function confirmGoogleAccount(name, email) {
-        sessionStorage.setItem('google_auth_name', name);
-        sessionStorage.setItem('google_auth_email', email);
+        sendGoogleAuthToServer({ name: name, email: email });
+    }
 
-        document.getElementById('googleNameDisplay').textContent = name;
-        document.getElementById('googleEmailDisplay').textContent = email;
-        document.getElementById('googleAvatar').textContent = name.charAt(0).toUpperCase();
+    function showAuthToast(msg) {
+        let toast = document.getElementById('authToastPill');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'authToastPill';
+            toast.className = 'auth-toast-pill';
+            document.body.appendChild(toast);
+        }
+        toast.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.87c2.26-2.09 3.675-5.17 3.675-9.15z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.87-3.05c-1.08.72-2.45 1.16-4.06 1.16-3.13 0-5.78-2.11-6.73-4.96H1.25v3.15C3.25 21.36 7.31 24 12 24z"/><path fill="#FBBC05" d="M5.27 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.61H1.25C.45 8.22 0 10.05 0 12s.45 3.78 1.25 5.39l4.02-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.64 1.25 6.61l4.02 3.15c.95-2.85 3.6-4.96 6.73-4.96z"/></svg> <span>${msg}</span>`;
+        toast.style.display = 'flex';
+        toast.style.opacity = '1';
+        clearTimeout(window._toastTimeout);
+        window._toastTimeout = setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => { toast.style.display = 'none'; }, 300);
+        }, 3200);
+    }
+
+    function triggerGoogleAuth() {
+        if (window.google && google.accounts && google.accounts.id && googleClientId) {
+            try {
+                google.accounts.id.prompt((notification) => {
+                    if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                        openGoogleModal();
+                    }
+                });
+                setTimeout(() => {
+                    const modalEl = document.getElementById('googleSignInModal');
+                    if (modalEl && !modalEl.classList.contains('show') && !sessionStorage.getItem('google_auth_email')) {
+                        openGoogleModal();
+                    }
+                }, 500);
+                return;
+            } catch (err) {
+                console.warn('Google One Tap prompt error:', err);
+            }
+        }
+        openGoogleModal();
+    }
+
+    function openGoogleModal() {
+        const modalEl = document.getElementById('googleSignInModal');
+        if (modalEl) {
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        }
+    }
+
+    function handleGatedFieldClick(e) {
+        if (sessionStorage.getItem('google_auth_email')) return;
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        const btn = document.getElementById('googleSignInBtn');
+        if (btn) {
+            btn.classList.add('google-btn-pulse');
+            setTimeout(() => btn.classList.remove('google-btn-pulse'), 2400);
+        }
+        const gateSection = document.getElementById('googleGateSection');
+        if (gateSection) {
+            gateSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        showAuthToast('Please sign up with Google first to fill out this form.');
+        triggerGoogleAuth();
+    }
+
+    function applyGoogleIdentity(googleUser, candidateData, isReturning) {
+        sessionStorage.setItem('google_auth_name', googleUser.name);
+        sessionStorage.setItem('google_auth_email', googleUser.email);
+
+        document.getElementById('googleNameDisplay').textContent = googleUser.name;
+        document.getElementById('googleEmailDisplay').textContent = googleUser.email;
+        const avatarEl = document.getElementById('googleAvatar');
+        if (avatarEl) {
+            if (googleUser.picture) {
+                avatarEl.innerHTML = `<img src="${googleUser.picture}" alt="${googleUser.name}" class="w-100 h-100" style="object-fit: cover;">`;
+            } else {
+                avatarEl.textContent = googleUser.name.charAt(0).toUpperCase();
+            }
+        }
 
         const nameInput = document.getElementById('id_full_name');
         const emailInput = document.getElementById('id_email');
-        if (nameInput) nameInput.value = name;
+        if (nameInput) nameInput.value = googleUser.name;
         if (emailInput) {
-            emailInput.value = email;
+            emailInput.value = googleUser.email;
             emailInput.readOnly = true;
             emailInput.style.backgroundColor = '#F0FDF4';
             emailInput.style.borderColor = '#86EFAC';
+        }
+
+        // If returning candidate, auto-populate all profile fields!
+        if (isReturning && candidateData) {
+            const phoneInput = document.getElementById('id_phone');
+            const altPhoneInput = document.getElementById('id_alt_phone');
+            const addressInput = document.getElementById('id_current_address');
+            const cityInput = document.getElementById('id_city');
+            const stateInput = document.getElementById('id_state');
+            const postalInput = document.getElementById('id_postal_code');
+            const countryInput = document.getElementById('id_country');
+
+            if (phoneInput && candidateData.phone) phoneInput.value = candidateData.phone;
+            if (altPhoneInput && candidateData.alt_phone) altPhoneInput.value = candidateData.alt_phone;
+            if (addressInput && candidateData.current_address) addressInput.value = candidateData.current_address;
+            if (cityInput && candidateData.city) cityInput.value = candidateData.city;
+            if (stateInput && candidateData.state) stateInput.value = candidateData.state;
+            if (postalInput && candidateData.postal_code) postalInput.value = candidateData.postal_code;
+            if (countryInput && candidateData.country) countryInput.value = candidateData.country;
         }
 
         // Show signed state
         document.getElementById('googleUnsignedState').style.display = 'none';
         document.getElementById('googleSignedState').style.display = 'block';
 
-        // Unlock and display application form
-        const lockedNotice = document.getElementById('lockedNoticeBox');
+        // Unlock and activate application form
         const formEl = document.getElementById('fastApplyForm');
-        if (lockedNotice) lockedNotice.style.display = 'none';
-        if (formEl) formEl.style.display = 'block';
+        if (formEl) formEl.classList.remove('form-gated-wrapper');
+        const overlay = document.getElementById('gatedOverlay');
+        if (overlay) overlay.style.display = 'none';
+        const isGoogleInput = document.getElementById('isGoogleVerifiedInput');
+        if (isGoogleInput) isGoogleInput.value = 'true';
 
         const modalEl = document.getElementById('googleSignInModal');
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        if (modal) modal.hide();
-    }
-
-    function submitCustomGoogleAccount() {
-        const name = document.getElementById('customGoogleName').value.trim();
-        const email = document.getElementById('customGoogleEmail').value.trim();
-        if (!name || !email) {
-            alert('Please enter your full name and valid Google email address.');
-            return;
+        if (modalEl) {
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
         }
-        confirmGoogleAccount(name, email);
     }
 
     function resetGoogleAuth() {
-        sessionStorage.removeItem('google_auth_name');
-        sessionStorage.removeItem('google_auth_email');
+        fetch("{% url 'recruitment:candidate_google_logout' %}", {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') }
+        })
+        .finally(() => {
+            sessionStorage.removeItem('google_auth_name');
+            sessionStorage.removeItem('google_auth_email');
+            window.location.reload();
+        });
+    }
 
-        document.getElementById('googleUnsignedState').style.display = 'block';
-        document.getElementById('googleSignedState').style.display = 'none';
+    // Google Identity Services (GIS) Initializer
+    function initGoogleGIS() {
+        if (window.google && google.accounts && google.accounts.id) {
+            google.accounts.id.initialize({
+                client_id: googleClientId,
+                callback: handleGoogleCredentialResponse,
+                auto_select: false,
+                cancel_on_tap_outside: true
+            });
 
-        // Lock form again
-        const lockedNotice = document.getElementById('lockedNoticeBox');
-        const formEl = document.getElementById('fastApplyForm');
-        if (lockedNotice) lockedNotice.style.display = 'block';
-        if (formEl) formEl.style.display = 'none';
-
-        const emailInput = document.getElementById('id_email');
-        if (emailInput) {
-            emailInput.readOnly = false;
-            emailInput.style.backgroundColor = '#FFFFFF';
-            emailInput.style.borderColor = '#CBD5E1';
+            const modalSlot = document.getElementById("googleModalGisSlot");
+            if (modalSlot) {
+                modalSlot.innerHTML = '';
+                google.accounts.id.renderButton(
+                    modalSlot,
+                    {
+                        theme: "filled_blue",
+                        size: "large",
+                        type: "standard",
+                        text: "signup_with",
+                        shape: "rectangular",
+                        logo_alignment: "left",
+                        width: 300
+                    }
+                );
+            }
         }
     }
 
@@ -829,17 +1058,41 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        // Check if previously signed in with Google in session or if form has errors
-        const savedName = sessionStorage.getItem('google_auth_name');
-        const savedEmail = sessionStorage.getItem('google_auth_email');
-        const emailInput = document.getElementById('id_email');
-        const nameInput = document.getElementById('id_full_name');
+        // Initialize Google Identity Services SDK
+        initGoogleGIS();
+        let gisCheck = 0;
+        const gisInterval = setInterval(function () {
+            gisCheck++;
+            if (window.google && google.accounts) {
+                clearInterval(gisInterval);
+                initGoogleGIS();
+            } else if (gisCheck > 25) {
+                clearInterval(gisInterval);
+            }
+        }, 120);
 
-        if (savedName && savedEmail) {
-            confirmGoogleAccount(savedName, savedEmail);
-        } else if (emailInput && emailInput.value) {
-            confirmGoogleAccount(nameInput.value || 'Candidate', emailInput.value);
-        }
+        // Check if server session has verified Google user
+        {% if google_user %}
+            const serverUser = {
+                name: "{{ google_user.name|escapejs }}",
+                email: "{{ google_user.email|escapejs }}",
+                picture: "{{ google_user.picture|default:''|escapejs }}",
+                sub: "{{ google_user.sub|default:''|escapejs }}"
+            };
+            const existingData = {{ existing_candidate_data|safe }};
+            applyGoogleIdentity(serverUser, existingData, {% if returning_candidate %}true{% else %}false{% endif %});
+        {% else %}
+            const savedName = sessionStorage.getItem('google_auth_name');
+            const savedEmail = sessionStorage.getItem('google_auth_email');
+            const emailInput = document.getElementById('id_email');
+            const nameInput = document.getElementById('id_full_name');
+
+            if (savedName && savedEmail) {
+                confirmGoogleAccount(savedName, savedEmail);
+            } else if (emailInput && emailInput.value) {
+                confirmGoogleAccount(nameInput.value || 'Candidate', emailInput.value);
+            }
+        {% endif %}
 
         // Live position preview (if dropdown is active)
         const posSelect = document.getElementById('positionSelect');
@@ -915,11 +1168,17 @@
             }, false);
         }
 
-        // Submit button loading animation
+        // Submit button validation & loading animation
         const form = document.getElementById('fastApplyForm');
         const submitBtn = document.getElementById('submitBtn');
         if (form && submitBtn) {
-            form.addEventListener('submit', function () {
+            form.addEventListener('submit', function (e) {
+                const isGoogleInput = document.getElementById('isGoogleVerifiedInput');
+                if (!isGoogleInput || isGoogleInput.value !== 'true') {
+                    e.preventDefault();
+                    handleGatedFieldClick(e);
+                    return false;
+                }
                 submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Submitting...';
                 submitBtn.disabled = true;
                 setTimeout(function () {
