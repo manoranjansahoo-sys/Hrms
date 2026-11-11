@@ -9,15 +9,16 @@ from accounts.models import CustomUser
 class LoginForm(AuthenticationForm):
     username = forms.CharField(
         widget=forms.TextInput(attrs={
-            'class': 'form-control form-control-lg',
-            'placeholder': 'Enter username, email, or phone number',
-            'autofocus': True
+            'class': 'form-control',
+            'autocomplete': 'username',
+            'autocapitalize': 'none',
+            'spellcheck': 'false',
         })
     )
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={
-            'class': 'form-control form-control-lg',
-            'placeholder': 'Enter your password'
+            'class': 'form-control',
+            'autocomplete': 'current-password',
         })
     )
 
