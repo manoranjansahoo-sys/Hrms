@@ -1,61 +1,775 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block title %}Payroll Roster - {{ period.get_month_display }} {{ period.year }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Executive Light Theme Palette */
+    :root {
+        --roster-bg: #f8fafc;
+        --roster-card: #ffffff;
+        --roster-border: #e2e8f0;
+        --roster-border-subtle: #f1f5f9;
+        --roster-text-main: #0f172a;
+        --roster-text-muted: #64748b;
+        --roster-emerald: #059669;
+        --roster-emerald-bg: #ecfdf5;
+        --roster-amber: #d97706;
+        --roster-amber-bg: #fffbeb;
+        --roster-rose: #dc2626;
+        --roster-rose-bg: #fef2f2;
+        --roster-indigo: #4f46e5;
+        --roster-indigo-bg: #eef2ff;
+        --roster-sky: #0284c7;
+        --roster-sky-bg: #f0f9ff;
+    }
+
+    .roster-hero {
+        background: #ffffff;
+        border: 1px solid var(--roster-border);
+        border-radius: 14px;
+        padding: 1.5rem 1.75rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        margin-bottom: 1.5rem;
+    }
+
+    .roster-stat-card {
+        background: #ffffff;
+        border: 1px solid var(--roster-border);
+        border-radius: 12px;
+        padding: 1.25rem 1.35rem;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .roster-stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 14px rgba(0,0,0,0.04);
+    }
+
+    .stat-icon-pill {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+
+    .formula-summary-banner {
+        background: #f8fafc;
+        border: 1px solid var(--roster-border);
+        border-radius: 10px;
+        padding: 0.85rem 1.25rem;
+        margin-bottom: 1.5rem;
+        font-size: 0.84rem;
+        color: var(--roster-text-muted);
+    }
+
+    .filter-toolbar {
+        background: #ffffff;
+        border: 1px solid var(--roster-border);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.25rem;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    }
+
+    .roster-table-container {
+        background: #ffffff;
+        border: 1px solid var(--roster-border);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
+    .roster-table {
+        margin-bottom: 0;
+        vertical-align: middle;
+        font-size: 0.88rem;
+    }
+
+    .roster-table thead th {
+        background: #f8fafc;
+        color: var(--roster-text-muted);
+        font-weight: 600;
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid var(--roster-border);
+        padding: 0.9rem 1rem;
+        white-space: nowrap;
+    }
+
+    .roster-table tbody td {
+        padding: 1rem 1rem;
+        border-bottom: 1px solid var(--roster-border-subtle);
+    }
+
+    .roster-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .roster-table tbody tr:hover {
+        background-color: #fbfcfe;
+    }
+
+    .emp-avatar-circle {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #eef2ff;
+        color: #4f46e5;
+        font-weight: 700;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .badge-soft {
+        font-weight: 600;
+        font-size: 0.74rem;
+        padding: 0.35rem 0.65rem;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    .badge-soft-emerald {
+        background: var(--roster-emerald-bg);
+        color: var(--roster-emerald);
+        border: 1px solid rgba(5, 150, 105, 0.2);
+    }
+    .badge-soft-amber {
+        background: var(--roster-amber-bg);
+        color: var(--roster-amber);
+        border: 1px solid rgba(217, 119, 6, 0.2);
+    }
+    .badge-soft-rose {
+        background: var(--roster-rose-bg);
+        color: var(--roster-rose);
+        border: 1px solid rgba(220, 38, 38, 0.2);
+    }
+    .badge-soft-indigo {
+        background: var(--roster-indigo-bg);
+        color: var(--roster-indigo);
+        border: 1px solid rgba(79, 70, 229, 0.2);
+    }
+    .badge-soft-secondary {
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+    }
+
+    .action-btn-group {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        flex-wrap: nowrap;
+    }
+
+    .btn-action-view {
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        color: #0f172a;
+        font-weight: 500;
+        font-size: 0.78rem;
+        padding: 0.38rem 0.65rem;
+        border-radius: 7px;
+        transition: all 0.15s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    .btn-action-view:hover {
+        background: #f8fafc;
+        border-color: #94a3b8;
+        color: #0f172a;
+    }
+
+    .btn-action-condone {
+        background: var(--roster-indigo-bg);
+        border: 1px solid rgba(79, 70, 229, 0.25);
+        color: var(--roster-indigo);
+        font-weight: 600;
+        font-size: 0.78rem;
+        padding: 0.38rem 0.65rem;
+        border-radius: 7px;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    .btn-action-condone:hover {
+        background: #e0e7ff;
+        color: #3730a3;
+    }
+
+    .btn-action-pdf {
+        background: #ffffff;
+        border: 1px solid #fecaca;
+        color: #dc2626;
+        font-weight: 600;
+        font-size: 0.78rem;
+        padding: 0.38rem 0.65rem;
+        border-radius: 7px;
+        transition: all 0.15s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    .btn-action-pdf:hover {
+        background: var(--roster-rose-bg);
+        color: #b91c1c;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container-fluid p-0">
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-        <div>
-            <h3 class="fw-bold mb-1">Payroll Roster: {{ period.get_month_display }} {{ period.year }}</h3>
-            <p class="text-muted small mb-0">Total Net Outflow: <b>₹{{ period.total_net|floatformat:2 }}</b> &bull; Status: <span class="badge bg-success">{{ period.get_status_display }}</span></p>
+    <!-- Breadcrumb & Header Hero -->
+    <div class="roster-hero">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-1 small text-muted">
+                        <li class="breadcrumb-item"><a href="{% url 'payroll:dashboard' %}" class="text-decoration-none text-muted">Payroll</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Period Roster</li>
+                    </ol>
+                </nav>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <h3 class="fw-bold text-dark mb-0">Payroll Cycle: {{ period.get_month_display }} {{ period.year }}</h3>
+                    {% if period.status == 'APPROVED' %}
+                        <span class="badge-soft badge-soft-emerald"><i class="bi bi-check-circle-fill"></i> Approved & Authorized</span>
+                    {% elif period.status == 'SUBMITTED' %}
+                        <span class="badge-soft badge-soft-amber"><i class="bi bi-clock-fill"></i> Awaiting Head Sign-off</span>
+                    {% else %}
+                        <span class="badge-soft badge-soft-secondary"><i class="bi bi-pencil-fill"></i> {{ period.get_status_display }}</span>
+                    {% endif %}
+                </div>
+                <p class="text-muted small mb-0 mt-1">
+                    Processed by <b>{{ period.processed_by.get_full_name|default:period.processed_by.username }}</b>
+                    {% if period.approved_by %}
+                        &bull; Authorized by <b>{{ period.approved_by.get_full_name|default:period.approved_by.username }}</b> on {{ period.approved_at|date:"d M Y" }}
+                    {% endif %}
+                </p>
+            </div>
+
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <a href="{% url 'payroll:dashboard' %}" class="btn btn-outline-secondary btn-sm px-3 py-2 rounded-3">
+                    <i class="bi bi-arrow-left me-1"></i> Dashboard
+                </a>
+
+                <!-- Download Report Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-primary btn-sm px-3 py-2 rounded-3 dropdown-toggle shadow-sm d-flex align-items-center gap-2" type="button" id="downloadReportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-download"></i>
+                        <span class="fw-semibold">Download Report</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 p-2 mt-1" aria-labelledby="downloadReportDropdown" style="min-width: 250px; z-index: 1050;">
+                        <li><span class="dropdown-header text-uppercase text-muted fw-bold px-2 py-1" style="font-size: 0.72rem; letter-spacing: 0.05em;">Choose File Format</span></li>
+                        <li>
+                            <a class="dropdown-item rounded-2 py-2 px-2 d-flex align-items-center gap-2" href="{% url 'payroll:export_period_report' period_id=period.id format_type='csv' %}">
+                                <div class="bg-success bg-opacity-10 text-success rounded p-1 d-flex align-items-center justify-content-center" style="width: 28px; height: 28px;">
+                                    <i class="bi bi-filetype-csv fs-6"></i>
+                                </div>
+                                <div>
+                                    <span class="fw-semibold d-block text-dark small">CSV Spreadsheet (.csv)</span>
+                                    <span class="text-muted" style="font-size: 0.72rem;">Complete formula fields, UTF-8</span>
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item rounded-2 py-2 px-2 d-flex align-items-center gap-2" href="{% url 'payroll:export_period_report' period_id=period.id format_type='excel' %}">
+                                <div class="bg-success bg-opacity-10 text-success rounded p-1 d-flex align-items-center justify-content-center" style="width: 28px; height: 28px;">
+                                    <i class="bi bi-file-earmark-excel-fill fs-6"></i>
+                                </div>
+                                <div>
+                                    <span class="fw-semibold d-block text-dark small">Excel Workbook (.xlsx)</span>
+                                    <span class="text-muted" style="font-size: 0.72rem;">Color-coded sections & totals</span>
+                                </div>
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider my-1"></li>
+                        <li>
+                            <a class="dropdown-item rounded-2 py-2 px-2 d-flex align-items-center gap-2" href="{% url 'payroll:export_period_report' period_id=period.id format_type='pdf' %}">
+                                <div class="bg-danger bg-opacity-10 text-danger rounded p-1 d-flex align-items-center justify-content-center" style="width: 28px; height: 28px;">
+                                    <i class="bi bi-file-earmark-pdf-fill fs-6"></i>
+                                </div>
+                                <div>
+                                    <span class="fw-semibold d-block text-dark small">Executive PDF Summary (.pdf)</span>
+                                    <span class="text-muted" style="font-size: 0.72rem;">Printable landscape report</span>
+                                </div>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                {% if period.status == 'SUBMITTED' and request.user.is_head_role %}
+                    <form method="POST" action="{% url 'payroll:approve_payroll' period_id=period.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success btn-sm px-3 py-2 rounded-3 shadow-sm" onclick="return confirm('Authorize and disburse payroll for {{ period.get_month_display }} {{ period.year }}?');">
+                            <i class="bi bi-check-circle-fill me-1"></i> Sign & Authorize Payout
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
         </div>
-        <a href="{% url 'payroll:dashboard' %}" class="btn btn-outline-secondary btn-sm">
-            &larr; Back to Dashboard
-        </a>
     </div>
 
-    <div class="hrms-card">
+    <!-- Executive KPI Summary Cards -->
+    <div class="row g-3 mb-4">
+        <!-- Total Net Outflow -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="roster-stat-card">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="text-muted small fw-semibold text-uppercase letter-spacing-1">Net Disbursement</span>
+                    <div class="stat-icon-pill" style="background: var(--roster-emerald-bg); color: var(--roster-emerald);">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="fw-bold text-dark mb-0">₹{{ period.total_net|floatformat:2 }}</h3>
+                    <small class="text-success fw-medium">
+                        <i class="bi bi-check-lg me-1"></i>Final payable to {{ payslips|length }} employee{{ payslips|length|pluralize }}
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Part A: Total Leave Deductions -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="roster-stat-card">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="text-muted small fw-semibold text-uppercase letter-spacing-1">Part A: Leave Deductions</span>
+                    <div class="stat-icon-pill" style="background: var(--roster-rose-bg); color: var(--roster-rose);">
+                        <i class="bi bi-calendar-x"></i>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="fw-bold text-dark mb-0">₹{{ period.total_leave_deductions|default:"0.00"|floatformat:2 }}</h3>
+                    <small class="text-danger fw-medium">
+                        <i class="bi bi-dash-circle me-1"></i>Excess SL/CL & Unexcused Absences
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Part B: Total Shortfall Deductions -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="roster-stat-card">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="text-muted small fw-semibold text-uppercase letter-spacing-1">Part B: Shortfall Deductions</span>
+                    <div class="stat-icon-pill" style="background: var(--roster-amber-bg); color: var(--roster-amber);">
+                        <i class="bi bi-hourglass-split"></i>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="fw-bold text-dark mb-0">₹{{ period.total_shortfall_deductions|default:"0.00"|floatformat:2 }}</h3>
+                    <small class="text-warning fw-medium text-truncate d-block" style="color: #b45309 !important;">
+                        <i class="bi bi-clock-history me-1"></i>Net Late Minutes (after OT offset)
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Part C: Total HR Waivers -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="roster-stat-card">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="text-muted small fw-semibold text-uppercase letter-spacing-1">Part C: Deduction Waivers</span>
+                    <div class="stat-icon-pill" style="background: var(--roster-indigo-bg); color: var(--roster-indigo);">
+                        <i class="bi bi-shield-heart"></i>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="fw-bold text-dark mb-0">₹{{ period.total_condoned_amount|default:"0.00"|floatformat:2 }}</h3>
+                    <small class="text-primary fw-medium" style="color: #4f46e5 !important;">
+                        <i class="bi bi-heart-fill me-1"></i>Executive & HR waivers granted
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Unified Master Formula Governance Summary Banner -->
+    <div class="formula-summary-banner d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-dark text-white px-2 py-1"><i class="bi bi-cpu-fill me-1"></i>Unified Master Formula</span>
+            <span>
+                Base: <b>Salary / 30</b> &bull; Daily Shift: <b>{{ period.office_start_time|default:"09:30" }} - {{ period.office_end_time|default:"18:30" }}</b> ({{ period.required_daily_hours|default:"9.0" }}h) &bull;
+                Overtime Compensation:
+                {% if period.allow_overtime_compensation %}
+                    <span class="text-success fw-bold"><i class="bi bi-toggle-on"></i> Active (OT offsets late arrival)</span>
+                {% else %}
+                    <span class="text-secondary fw-bold"><i class="bi bi-toggle-off"></i> Strict</span>
+                {% endif %}
+            </span>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <span><i class="bi bi-calendar-event me-1 text-primary"></i>Working Days: <b>{{ period.working_days }}</b></span>
+            <span><i class="bi bi-info-circle me-1 text-muted"></i>Sundays & Public Holidays Auto-Excluded</span>
+        </div>
+    </div>
+
+    <!-- Filter & Search Bar -->
+    <div class="filter-toolbar">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" id="rosterSearchInput" class="form-control border-start-0 ps-0" placeholder="Search by employee name, ID, or designation...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select id="departmentFilter" class="form-select">
+                    <option value="">All Departments</option>
+                    {% for ps in payslips %}
+                        {% ifchanged ps.employee.department.code %}
+                            {% if ps.employee.department %}
+                                <option value="{{ ps.employee.department.code }}">{{ ps.employee.department.name }} ({{ ps.employee.department.code }})</option>
+                            {% endif %}
+                        {% endifchanged %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4 text-md-end text-muted small">
+                Showing <span id="visibleCount" class="fw-bold text-dark">{{ payslips|length }}</span> of <span class="fw-bold text-dark">{{ payslips|length }}</span> records
+            </div>
+        </div>
+    </div>
+
+    <!-- Master Payroll Table -->
+    <div class="roster-table-container">
         <div class="table-responsive">
-            <table class="table hrms-table">
+            <table class="table roster-table" id="rosterTable">
                 <thead>
                     <tr>
                         <th>Employee</th>
-                        <th>Payable Days</th>
-                        <th>Basic</th>
-                        <th>HRA</th>
-                        <th>Allowances</th>
-                        <th>Gross Earnings</th>
-                        <th>Total Deductions</th>
+                        <th>Base Salary</th>
+                        <th>Part A: Leave Ded</th>
+                        <th>Part B: Shortfall Ded</th>
+                        <th>Gross Ded</th>
+                        <th>HR Waiver</th>
                         <th>Net Payable</th>
-                        <th class="text-end">Official PDF</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for ps in payslips %}
-                        <tr>
+                        <tr class="roster-row" 
+                            data-emp-name="{{ ps.employee.full_name|lower }}" 
+                            data-emp-id="{{ ps.employee.emp_id|lower }}" 
+                            data-designation="{{ ps.employee.designation.title|lower|default:'' }}"
+                            data-dept="{{ ps.employee.department.code|default:'' }}"
+                            id="payslip-row-{{ ps.id }}">
+                            <!-- Employee Details -->
                             <td>
-                                <div class="fw-bold text-dark">{{ ps.employee.full_name }}</div>
-                                <small class="text-muted">{{ ps.employee.emp_id }} &bull; {{ ps.employee.department.code }}</small>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="emp-avatar-circle">
+                                        {{ ps.employee.full_name|first|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark">{{ ps.employee.full_name }}</div>
+                                        <div class="text-muted small">
+                                            <span class="badge bg-light text-dark border">{{ ps.employee.emp_id }}</span>
+                                            <span>{{ ps.employee.department.code|default:"-" }} &bull; {{ ps.employee.designation.title|default:"Staff" }}</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </td>
-                            <td>{{ ps.payable_days }} / {{ ps.total_working_days }}</td>
-                            <td class="font-monospace">₹{{ ps.basic_salary|floatformat:0 }}</td>
-                            <td class="font-monospace">₹{{ ps.hra|floatformat:0 }}</td>
-                            <td class="font-monospace">₹{{ ps.conveyance_allowance|add:ps.medical_allowance|add:ps.special_allowance|floatformat:0 }}</td>
-                            <td class="font-monospace fw-semibold text-dark">₹{{ ps.gross_earnings|floatformat:0 }}</td>
-                            <td class="font-monospace text-danger">₹{{ ps.total_deductions|floatformat:0 }}</td>
-                            <td class="font-monospace fw-bold text-success fs-6">₹{{ ps.net_payable|floatformat:2 }}</td>
+
+                            <!-- Base Salary -->
+                            <td>
+                                <div class="fw-bold text-dark font-monospace">₹{{ ps.basic_salary|floatformat:0 }}</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">₹{{ ps.per_day_rate|default:"0"|floatformat:0 }}/day</div>
+                            </td>
+
+                            <!-- Part A: Leave Deduction -->
+                            <td>
+                                {% if ps.leave_deduction > 0 %}
+                                    <div class="fw-bold text-danger font-monospace">₹{{ ps.leave_deduction|floatformat:2 }}</div>
+                                    <div class="text-muted" style="font-size: 0.75rem;">
+                                        {{ ps.unexcused_absences|default:0|floatformat:0 }} unexcused
+                                        {% if ps.excess_sl > 0 or ps.excess_cl > 0 %}
+                                            + excess lv
+                                        {% endif %}
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted small">₹0.00</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Part B: Shortfall Deduction -->
+                            <td>
+                                {% if ps.shortfall_deduction > 0 %}
+                                    <div class="fw-bold text-warning font-monospace" style="color: #b45309 !important;">
+                                        ₹{{ ps.shortfall_deduction|floatformat:2 }}
+                                    </div>
+                                    <div class="text-muted" style="font-size: 0.75rem;">
+                                        {{ ps.net_shortfall_minutes }} net mins
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted small">₹0.00</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Gross Deduction -->
+                            <td>
+                                <div class="font-monospace fw-semibold {% if ps.gross_deduction > 0 %}text-danger{% else %}text-muted{% endif %}">
+                                    ₹{{ ps.gross_deduction|default:ps.total_deductions|floatformat:2 }}
+                                </div>
+                            </td>
+
+                            <!-- HR Waiver -->
+                            <td>
+                                {% if ps.hr_condoned_amount > 0 %}
+                                    <span class="badge-soft badge-soft-indigo" title="{{ ps.condone_reason|default:'HR Deduction Waiver' }}">
+                                        <i class="bi bi-shield-check"></i> -₹{{ ps.hr_condoned_amount|floatformat:2 }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted small">-</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Net Payable -->
+                            <td>
+                                <div class="fw-bold text-success font-monospace fs-6" id="net-salary-val-{{ ps.id }}">
+                                    ₹{{ ps.net_payable|floatformat:2 }}
+                                </div>
+                            </td>
+
+                            <!-- Status -->
+                            <td>
+                                {% if ps.status == 'APPROVED' %}
+                                    <span class="badge-soft badge-soft-emerald"><i class="bi bi-check-circle-fill"></i> Approved</span>
+                                {% elif ps.status == 'GENERATED' %}
+                                    <span class="badge-soft badge-soft-amber"><i class="bi bi-clock"></i> Generated</span>
+                                {% else %}
+                                    <span class="badge-soft badge-soft-secondary">{{ ps.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Actions -->
                             <td class="text-end">
-                                <a href="{% url 'payroll:download_pdf' payslip_id=ps.id %}" class="btn btn-sm btn-outline-danger py-1 px-2">
-                                    <i class="bi bi-file-earmark-pdf-fill"></i> PDF
-                                </a>
+                                <div class="action-btn-group">
+                                    <a href="{% url 'payroll:payslip_detail' payslip_id=ps.id %}" class="btn-action-view" title="View Full Formula Breakdown">
+                                        <i class="bi bi-calculator"></i> Breakdown
+                                    </a>
+                                    {% if request.user.is_hr_role or request.user.is_head_role %}
+                                        <button type="button" class="btn-action-condone" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#condoneModal-{{ ps.id }}" 
+                                                title="Waive / Forgive Deductions">
+                                            <i class="bi bi-shield-check"></i> Waive
+                                        </button>
+                                    {% endif %}
+                                    <a href="{% url 'payroll:download_pdf' payslip_id=ps.id %}" class="btn-action-pdf" title="Download Official PDF">
+                                        <i class="bi bi-file-earmark-pdf"></i> PDF
+                                    </a>
+                                </div>
+
+                                <!-- HR Deduction Waiver Modal for this payslip -->
+                                <div class="modal fade" id="condoneModal-{{ ps.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered text-start">
+                                        <div class="modal-content border-0 shadow-lg" style="border-radius: 14px;">
+                                            <div class="modal-header border-bottom px-4 py-3 bg-light" style="border-radius: 14px 14px 0 0;">
+                                                <div>
+                                                    <h6 class="modal-title fw-bold text-dark mb-0">
+                                                        <i class="bi bi-shield-check text-primary me-1"></i> HR Deduction Waiver (Waive Shortfall)
+                                                    </h6>
+                                                    <small class="text-muted">{{ ps.employee.full_name }} ({{ ps.employee.emp_id }})</small>
+                                                </div>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <form method="POST" action="{% url 'payroll:condone_deduction' payslip_id=ps.id %}">
+                                                {% csrf_token %}
+                                                <div class="modal-body p-4">
+                                                    <!-- Live Overview Box -->
+                                                    <div class="p-3 mb-3 rounded-3" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                                                        <div class="row g-2 small">
+                                                            <div class="col-6">
+                                                                <span class="text-muted">Monthly Base:</span>
+                                                                <div class="fw-bold text-dark">₹{{ ps.basic_salary|floatformat:2 }}</div>
+                                                            </div>
+                                                            <div class="col-6">
+                                                                <span class="text-muted">Per-Minute Rate:</span>
+                                                                <div class="fw-bold text-dark">₹{{ ps.per_minute_rate|default:"0.00"|floatformat:4 }}/min</div>
+                                                            </div>
+                                                            <div class="col-6">
+                                                                <span class="text-muted">Leave Deduction (Part A):</span>
+                                                                <div class="fw-bold text-danger">₹{{ ps.leave_deduction|floatformat:2 }}</div>
+                                                            </div>
+                                                            <div class="col-6">
+                                                                <span class="text-muted">Shortfall Deduction (Part B):</span>
+                                                                <div class="fw-bold text-warning" style="color: #b45309 !important;">
+                                                                    ₹{{ ps.shortfall_deduction|floatformat:2 }} ({{ ps.net_shortfall_minutes }} mins)
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-12 pt-2 border-top">
+                                                                <div class="d-flex justify-content-between align-items-center">
+                                                                    <span class="fw-semibold text-dark">Gross Formula Deduction:</span>
+                                                                    <span class="fw-bold text-danger fs-6" id="modalGross-{{ ps.id }}">
+                                                                        ₹{{ ps.gross_deduction|default:ps.total_deductions|floatformat:2 }}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Waive Amount Input -->
+                                                    <div class="mb-3">
+                                                        <label class="form-label small fw-semibold text-dark">
+                                                            Deduction Amount to Waive (₹) *
+                                                        </label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text bg-white border-end-0">₹</span>
+                                                            <input type="number" 
+                                                                   step="0.01" 
+                                                                   min="0" 
+                                                                   max="{{ ps.gross_deduction|default:ps.total_deductions }}" 
+                                                                   name="condoned_amount" 
+                                                                   id="condonedAmountInput-{{ ps.id }}"
+                                                                   class="form-control border-start-0" 
+                                                                   value="{{ ps.hr_condoned_amount|default:'0.00' }}"
+                                                                   oninput="updateModalNetLive({{ ps.id }}, {{ ps.basic_salary }}, {{ ps.gross_deduction|default:ps.total_deductions }})">
+                                                        </div>
+                                                        <div class="d-flex gap-2 mt-2">
+                                                            <button type="button" class="btn btn-xs btn-outline-primary py-1 px-2" style="font-size: 0.75rem;" 
+                                                                    onclick="applyQuickCondone({{ ps.id }}, {{ ps.shortfall_deduction }}, {{ ps.basic_salary }}, {{ ps.gross_deduction|default:ps.total_deductions }})">
+                                                                Waive Shortfall (₹{{ ps.shortfall_deduction|floatformat:2 }})
+                                                            </button>
+                                                            <button type="button" class="btn btn-xs btn-outline-danger py-1 px-2" style="font-size: 0.75rem;" 
+                                                                    onclick="applyQuickCondone({{ ps.id }}, {{ ps.gross_deduction|default:ps.total_deductions }}, {{ ps.basic_salary }}, {{ ps.gross_deduction|default:ps.total_deductions }})">
+                                                                Waive All Deductions
+                                                            </button>
+                                                            <button type="button" class="btn btn-xs btn-outline-secondary py-1 px-2" style="font-size: 0.75rem;" 
+                                                                    onclick="applyQuickCondone({{ ps.id }}, 0, {{ ps.basic_salary }}, {{ ps.gross_deduction|default:ps.total_deductions }})">
+                                                                Remove Waiver
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Waiver Reason -->
+                                                    <div class="mb-3">
+                                                        <label class="form-label small fw-semibold text-dark">Waiver Reason / Justification *</label>
+                                                        <textarea name="condone_reason" class="form-control" rows="2" placeholder="e.g. Approved medical emergency, on-duty field visit, client travel">{{ ps.condone_reason }}</textarea>
+                                                    </div>
+
+                                                    <!-- Live Updated Net Payout Preview -->
+                                                    <div class="p-3 rounded-3" style="background: #ecfdf5; border: 1px solid #a7f3d0;">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div>
+                                                                <small class="text-success fw-bold text-uppercase" style="font-size: 0.72rem;">Estimated Net Payable</small>
+                                                                <div class="fw-bold text-success fs-5" id="modalNetPreview-{{ ps.id }}">
+                                                                    ₹{{ ps.net_payable|floatformat:2 }}
+                                                                </div>
+                                                            </div>
+                                                            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25 px-2 py-1 small">
+                                                                Auto-Recalculated
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer border-top px-4 py-3 bg-light" style="border-radius: 0 0 14px 14px;">
+                                                    <button type="button" class="btn btn-outline-secondary btn-sm px-3" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary btn-sm px-4">
+                                                        <i class="bi bi-check-lg me-1"></i> Save & Apply Waiver
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                     {% empty %}
-                        <tr><td colspan="9" class="text-center py-4 text-muted">No payslips recorded for this run.</td></tr>
+                        <tr>
+                            <td colspan="9" class="text-center py-5 text-muted">
+                                <div class="py-4">
+                                    <i class="bi bi-inbox text-muted display-4"></i>
+                                    <h6 class="fw-bold text-dark mt-3">No payslips recorded for this run</h6>
+                                    <p class="text-muted small">No active employee salary records found in this cycle.</p>
+                                </div>
+                            </td>
+                        </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
 </div>
-{% endblock %}
 
+<script>
+    // Live filter by search query & department
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('rosterSearchInput');
+        const deptFilter = document.getElementById('departmentFilter');
+        const rows = document.querySelectorAll('.roster-row');
+        const visibleCountSpan = document.getElementById('visibleCount');
+
+        function applyFilters() {
+            const query = (searchInput.value || '').trim().toLowerCase();
+            const dept = (deptFilter.value || '').trim();
+
+            let visible = 0;
+            rows.forEach(row => {
+                const name = row.getAttribute('data-emp-name') || '';
+                const empId = row.getAttribute('data-emp-id') || '';
+                const desig = row.getAttribute('data-designation') || '';
+                const rowDept = row.getAttribute('data-dept') || '';
+
+                const matchesQuery = !query || name.includes(query) || empId.includes(query) || desig.includes(query);
+                const matchesDept = !dept || rowDept === dept;
+
+                if (matchesQuery && matchesDept) {
+                    row.style.display = '';
+                    visible++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            if (visibleCountSpan) {
+                visibleCountSpan.textContent = visible;
+            }
+        }
+
+        if (searchInput) searchInput.addEventListener('input', applyFilters);
+        if (deptFilter) deptFilter.addEventListener('change', applyFilters);
+    });
+
+    // Modal Live Net calculation helper
+    function updateModalNetLive(id, baseSalary, grossDed) {
+        const input = document.getElementById('condonedAmountInput-' + id);
+        const preview = document.getElementById('modalNetPreview-' + id);
+        if (!input || !preview) return;
+
+        let condoned = parseFloat(input.value) || 0;
+        condoned = Math.max(0, Math.min(grossDed, condoned));
+        const finalDed = Math.max(0, grossDed - condoned);
+        const net = Math.max(0, baseSalary - finalDed);
+        preview.textContent = '₹' + net.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function applyQuickCondone(id, amount, baseSalary, grossDed) {
+        const input = document.getElementById('condonedAmountInput-' + id);
+        if (input) {
+            input.value = parseFloat(amount).toFixed(2);
+            updateModalNetLive(id, baseSalary, grossDed);
+        }
+    }
+</script>
+{% endblock %}

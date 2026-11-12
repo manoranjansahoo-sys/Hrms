@@ -100,28 +100,59 @@ def generate_payslip_pdf(payslip):
     elements.append(emp_table)
     elements.append(Spacer(1, 10))
 
-    # 3. Attendance Summary
+    # 3. Unified Master Formula & Attendance Summary
+    basic_salary = payslip.basic_salary or Decimal('0.00')
+    per_day_rate = payslip.per_day_rate or Decimal('0.00')
+    req_daily_hours = payslip.required_daily_hours or Decimal('9.0')
+    per_min_rate = payslip.per_minute_rate or Decimal('0.0000')
+    working_days = payslip.working_days_count or payslip.total_working_days or 26
+    payable_days = payslip.payable_days or Decimal('0.0')
+
+    excess_sl = payslip.excess_sl or Decimal('0.0')
+    excess_cl = payslip.excess_cl or Decimal('0.0')
+    unexcused_absences = payslip.unexcused_absences or Decimal('0.0')
+    total_deductible_days = excess_sl + excess_cl + unexcused_absences
+
+    leave_deduction = payslip.leave_deduction or Decimal('0.00')
+    net_shortfall_minutes = payslip.net_shortfall_minutes or 0
+    shortfall_deduction = payslip.shortfall_deduction or Decimal('0.00')
+    hr_waived_amount = payslip.hr_condoned_amount or Decimal('0.00')
+
+    hra = payslip.hra or Decimal('0.00')
+    conveyance = payslip.conveyance_allowance or Decimal('0.00')
+    medical = payslip.medical_allowance or Decimal('0.00')
+    special = payslip.special_allowance or Decimal('0.00')
+    bonus = payslip.bonus or Decimal('0.00')
+    pf = payslip.provident_fund or Decimal('0.00')
+    pt = payslip.professional_tax or Decimal('0.00')
+    tds = payslip.tds or Decimal('0.00')
+    gross_earnings = payslip.gross_earnings or Decimal('0.00')
+    total_deductions = payslip.total_deductions or Decimal('0.00')
+    net_payable = payslip.net_payable or Decimal('0.00')
+
     att_data = [
         [
-            Paragraph("<b>Total Month Days</b>", cell_bold),
-            Paragraph("<b>Present Days</b>", cell_bold),
-            Paragraph("<b>Paid Leaves</b>", cell_bold),
-            Paragraph("<b>Loss of Pay (LOP)</b>", cell_bold),
+            Paragraph("<b>Base Salary</b>", cell_bold),
+            Paragraph("<b>Per-Day Rate (Base/30)</b>", cell_bold),
+            Paragraph("<b>Daily Hours</b>", cell_bold),
+            Paragraph("<b>Per-Min Rate</b>", cell_bold),
+            Paragraph("<b>Working Days</b>", cell_bold),
             Paragraph("<b>Payable Days</b>", cell_bold),
         ],
         [
-            Paragraph(str(payslip.total_working_days), cell_normal),
-            Paragraph(str(payslip.present_days), cell_normal),
-            Paragraph(str(payslip.paid_leaves), cell_normal),
-            Paragraph(str(payslip.loss_of_pay_days), cell_normal),
-            Paragraph(f"<b>{payslip.payable_days}</b>", cell_bold),
+            Paragraph(f"₹{basic_salary:,.0f}", cell_normal),
+            Paragraph(f"₹{per_day_rate:,.2f}", cell_normal),
+            Paragraph(f"{req_daily_hours} hrs", cell_normal),
+            Paragraph(f"₹{per_min_rate:,.4f}", cell_normal),
+            Paragraph(f"{working_days} days", cell_normal),
+            Paragraph(f"<b>{payable_days} days</b>", cell_bold),
         ]
     ]
-    att_table = Table(att_data, colWidths=[108, 108, 108, 108, 108])
+    att_table = Table(att_data, colWidths=[90, 95, 80, 85, 95, 95])
     att_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#E8F5E9')),
-        ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor('#C8E6C9')),
-        ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E8F5E9')),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#F1F5F9')),
+        ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor('#CBD5E1')),
+        ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E2E8F0')),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('TOPPADDING', (0, 0), (-1, -1), 5),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
@@ -129,24 +160,24 @@ def generate_payslip_pdf(payslip):
     elements.append(att_table)
     elements.append(Spacer(1, 12))
 
-    # 4. Earnings & Deductions Comparison Table
+    # 4. Earnings & Deductions Comparison Table (Unified Master Formula)
     earn_ded_data = [
-        [Paragraph("<b>EARNINGS</b>", cell_bold), Paragraph("<b>AMOUNT (INR)</b>", cell_right_bold),
-         Paragraph("<b>DEDUCTIONS</b>", cell_bold), Paragraph("<b>AMOUNT (INR)</b>", cell_right_bold)],
-        [Paragraph("Basic Salary", cell_normal), Paragraph(f"₹{payslip.basic_salary:,.2f}", cell_right),
-         Paragraph("Provident Fund (PF)", cell_normal), Paragraph(f"₹{payslip.provident_fund:,.2f}", cell_right)],
-        [Paragraph("House Rent Allowance (HRA)", cell_normal), Paragraph(f"₹{payslip.hra:,.2f}", cell_right),
-         Paragraph("Professional Tax", cell_normal), Paragraph(f"₹{payslip.professional_tax:,.2f}", cell_right)],
-        [Paragraph("Conveyance Allowance", cell_normal), Paragraph(f"₹{payslip.conveyance_allowance:,.2f}", cell_right),
-         Paragraph("TDS / Income Tax", cell_normal), Paragraph(f"₹{payslip.tds:,.2f}", cell_right)],
-        [Paragraph("Medical Allowance", cell_normal), Paragraph(f"₹{payslip.medical_allowance:,.2f}", cell_right),
-         Paragraph("Other Deductions", cell_normal), Paragraph(f"₹{payslip.other_deductions:,.2f}", cell_right)],
-        [Paragraph("Special Allowance", cell_normal), Paragraph(f"₹{payslip.special_allowance:,.2f}", cell_right),
-         Paragraph("-", cell_normal), Paragraph("-", cell_right)],
-        [Paragraph("Performance Bonus / Incentives", cell_normal), Paragraph(f"₹{payslip.bonus:,.2f}", cell_right),
-         Paragraph("-", cell_normal), Paragraph("-", cell_right)],
-        [Paragraph("<b>TOTAL GROSS EARNINGS</b>", cell_bold), Paragraph(f"<b>₹{payslip.gross_earnings:,.2f}</b>", cell_right_bold),
-         Paragraph("<b>TOTAL DEDUCTIONS</b>", cell_bold), Paragraph(f"<b>₹{payslip.total_deductions:,.2f}</b>", cell_right_bold)],
+        [Paragraph("<b>EARNINGS & ALLOWANCES</b>", cell_bold), Paragraph("<b>AMOUNT (INR)</b>", cell_right_bold),
+         Paragraph("<b>DEDUCTIONS (MASTER FORMULA)</b>", cell_bold), Paragraph("<b>AMOUNT (INR)</b>", cell_right_bold)],
+        [Paragraph("Basic Salary", cell_normal), Paragraph(f"₹{basic_salary:,.2f}", cell_right),
+         Paragraph(f"Part A: Leave Deduction ({total_deductible_days:.1f} days)", cell_normal), Paragraph(f"₹{leave_deduction:,.2f}", cell_right)],
+        [Paragraph("House Rent Allowance (HRA)", cell_normal), Paragraph(f"₹{hra:,.2f}", cell_right),
+         Paragraph(f"Part B: Late/Shortfall ({net_shortfall_minutes} mins)", cell_normal), Paragraph(f"₹{shortfall_deduction:,.2f}", cell_right)],
+        [Paragraph("Conveyance Allowance", cell_normal), Paragraph(f"₹{conveyance:,.2f}", cell_right),
+         Paragraph("Part C: Less HR Deduction Waiver", cell_normal), Paragraph(f"-₹{hr_waived_amount:,.2f}", cell_right)],
+        [Paragraph("Medical Allowance", cell_normal), Paragraph(f"₹{medical:,.2f}", cell_right),
+         Paragraph("Provident Fund (PF)", cell_normal), Paragraph(f"₹{pf:,.2f}", cell_right)],
+        [Paragraph("Special Allowance", cell_normal), Paragraph(f"₹{special:,.2f}", cell_right),
+         Paragraph("Professional Tax (PT)", cell_normal), Paragraph(f"₹{pt:,.2f}", cell_right)],
+        [Paragraph("Performance Bonus / Incentives", cell_normal), Paragraph(f"₹{bonus:,.2f}", cell_right),
+         Paragraph("TDS / Income Tax", cell_normal), Paragraph(f"₹{tds:,.2f}", cell_right)],
+        [Paragraph("<b>TOTAL GROSS EARNINGS</b>", cell_bold), Paragraph(f"<b>₹{gross_earnings:,.2f}</b>", cell_right_bold),
+         Paragraph("<b>TOTAL DEDUCTIONS</b>", cell_bold), Paragraph(f"<b>₹{total_deductions:,.2f}</b>", cell_right_bold)],
     ]
 
     earn_table = Table(earn_ded_data, colWidths=[170, 100, 170, 100])

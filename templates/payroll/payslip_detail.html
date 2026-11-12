@@ -1,0 +1,596 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Payslip #{{ payslip.id }} - {{ employee.full_name }} ({{ period.get_month_display }} {{ payslip.year }}){% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Executive Light Theme Palette */
+    :root {
+        --payslip-bg: #f8fafc;
+        --payslip-card: #ffffff;
+        --payslip-border: #e2e8f0;
+        --payslip-text-main: #0f172a;
+        --payslip-text-muted: #64748b;
+        --accent-emerald: #059669;
+        --accent-emerald-bg: #ecfdf5;
+        --accent-amber: #d97706;
+        --accent-amber-bg: #fffbeb;
+        --accent-rose: #dc2626;
+        --accent-rose-bg: #fef2f2;
+        --accent-indigo: #4f46e5;
+        --accent-indigo-bg: #eef2ff;
+    }
+
+    .payslip-hero {
+        background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+        border: 1px solid var(--payslip-border);
+        border-radius: 14px;
+        padding: 1.75rem 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-pill-box {
+        background: #ffffff;
+        border: 1px solid var(--payslip-border);
+        border-radius: 12px;
+        padding: 1.25rem 1.4rem;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    }
+    .stat-pill-box:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+    }
+
+    .formula-card {
+        background: #ffffff;
+        border: 1px solid var(--payslip-border);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
+    .formula-header {
+        background: #f8fafc;
+        border-bottom: 1px solid var(--payslip-border);
+        padding: 1rem 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .formula-badge-step {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: #fff;
+    }
+
+    .math-formula-box {
+        background: #f8fafc;
+        border: 1px dashed #cbd5e1;
+        border-radius: 8px;
+        padding: 0.85rem 1.25rem;
+        font-family: var(--bs-font-monospace, monospace);
+        font-size: 0.88rem;
+        color: #334155;
+    }
+
+    .table-modern {
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+    }
+    .table-modern th {
+        background: #f8fafc;
+        color: #475569;
+        font-weight: 600;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 0.85rem 1rem;
+        border-bottom: 1px solid var(--payslip-border);
+    }
+    .table-modern td {
+        padding: 0.85rem 1rem;
+        border-bottom: 1px solid #f1f5f9;
+        color: #1e293b;
+        font-size: 0.86rem;
+    }
+    .table-modern tr:hover td {
+        background: #f8fafc;
+    }
+
+    .badge-soft-success {
+        background: var(--accent-emerald-bg);
+        color: var(--accent-emerald);
+        border: 1px solid #a7f3d0;
+    }
+    .badge-soft-warning {
+        background: var(--accent-amber-bg);
+        color: var(--accent-amber);
+        border: 1px solid #fde68a;
+    }
+    .badge-soft-danger {
+        background: var(--accent-rose-bg);
+        color: var(--accent-rose);
+        border: 1px solid #fecaca;
+    }
+    .badge-soft-indigo {
+        background: var(--accent-indigo-bg);
+        color: var(--accent-indigo);
+        border: 1px solid #c7d2fe;
+    }
+
+    .btn-smooth {
+        border-radius: 8px;
+        padding: 0.55rem 1.2rem;
+        font-weight: 600;
+        font-size: 0.86rem;
+        transition: all 0.15s ease;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 px-md-4 py-3">
+
+    <!-- BREADCRUMBS -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'portal:smart_dashboard' %}" class="text-decoration-none">Dashboard</a></li>
+            {% if is_hr_or_head %}
+                <li class="breadcrumb-item"><a href="{% url 'payroll:dashboard' %}" class="text-decoration-none">Payroll Operations</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'payroll:period_detail' period_id=period.id %}" class="text-decoration-none">{{ period.get_month_display }} {{ period.year }}</a></li>
+            {% else %}
+                <li class="breadcrumb-item"><a href="{% url 'payroll:my_payslips' %}" class="text-decoration-none">My Payslips</a></li>
+            {% endif %}
+            <li class="breadcrumb-item active fw-bold" aria-current="page">{{ employee.emp_id }} - {{ period.get_month_display }} {{ payslip.year }}</li>
+        </ol>
+    </nav>
+
+    <!-- HERO HEADER -->
+    <div class="payslip-hero">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center fw-bold fs-3" style="width: 58px; height: 58px;">
+                    {{ employee.full_name|slice:":1"|upper }}
+                </div>
+                <div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                        <h3 class="fw-bold mb-0 text-dark">{{ employee.full_name }}</h3>
+                        <span class="badge bg-light text-dark border font-monospace">{{ employee.emp_id }}</span>
+                        <span class="badge {% if payslip.status == 'APPROVED' %}badge-soft-success{% elif payslip.status == 'PAID' %}bg-success text-white{% else %}badge-soft-warning{% endif %} px-2.5 py-1">
+                            <i class="bi bi-shield-check me-1"></i>{{ payslip.get_status_display }}
+                        </span>
+                    </div>
+                    <div class="text-muted small">
+                        <span>{{ employee.designation.title|default:"Role" }} &bull; {{ employee.department.name|default:"General" }}</span>
+                        {% if employee.site %}<span class="ms-2"><i class="bi bi-geo-alt me-1"></i>{{ employee.site.name }}</span>{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+                {% if is_hr_or_head %}
+                    <button type="button" class="btn btn-outline-primary btn-smooth" data-bs-toggle="modal" data-bs-target="#condoneModal">
+                        <i class="bi bi-shield-check me-1"></i> Waive Deductions
+                    </button>
+                {% endif %}
+                <a href="{% url 'payroll:download_pdf' payslip_id=payslip.id %}" class="btn btn-success btn-smooth shadow-sm">
+                    <i class="bi bi-file-earmark-pdf-fill me-1"></i> Download Official PDF
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4 KPI SUMMARY CARDS -->
+    <div class="row g-3 mb-4">
+        <!-- 1. Monthly Base Salary -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stat-pill-box h-100">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="text-muted small fw-semibold text-uppercase">Monthly Base Salary</span>
+                    <span class="badge bg-light text-muted border">Base</span>
+                </div>
+                <div class="fs-3 fw-bold text-dark">₹{{ payslip.basic_salary|floatformat:2 }}</div>
+                <div class="small text-muted mt-1">
+                    Rate: <b>₹{{ payslip.per_day_rate|floatformat:2 }}</b>/day &bull; <b>₹{{ payslip.per_minute_rate|floatformat:4 }}</b>/min
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Part A: Leave Deduction -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stat-pill-box h-100 border-warning border-opacity-50">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="text-muted small fw-semibold text-uppercase">Part A: Leave Deductions</span>
+                    <span class="badge badge-soft-warning">Day-Based</span>
+                </div>
+                <div class="fs-3 fw-bold text-danger">₹{{ payslip.leave_deduction|floatformat:2 }}</div>
+                <div class="small text-muted mt-1">
+                    Excess SL: <b>{{ payslip.excess_sl }}d</b> &bull; CL: <b>{{ payslip.excess_cl }}d</b> &bull; Unexcused: <b>{{ payslip.unexcused_absences }}d</b>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Part B: Late / Shortfall -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stat-pill-box h-100 border-warning border-opacity-50">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="text-muted small fw-semibold text-uppercase">Part B: Shortfall Deductions</span>
+                    <span class="badge badge-soft-warning">Minute-Based</span>
+                </div>
+                <div class="fs-3 fw-bold text-danger">₹{{ payslip.shortfall_deduction|floatformat:2 }}</div>
+                <div class="small text-muted mt-1">
+                    Late: <b>{{ payslip.total_late_minutes }}m</b> &bull; Overtime: <b>{{ payslip.total_overtime_minutes }}m</b> &bull; Net: <b>{{ payslip.net_shortfall_minutes }}m</b>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Final Net Payable -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stat-pill-box h-100 border-success border-opacity-50" style="background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="text-success small fw-semibold text-uppercase">Net Payable Salary</span>
+                    <span class="badge badge-soft-success">Part C</span>
+                </div>
+                <div class="fs-3 fw-bold text-success">₹{{ payslip.net_payable|floatformat:2 }}</div>
+                <div class="small text-muted mt-1">
+                    {% if payslip.hr_condoned_amount > 0 %}
+                        <span class="text-success"><i class="bi bi-shield-check me-1"></i>HR Waived: <b>₹{{ payslip.hr_condoned_amount|floatformat:2 }}</b></span>
+                    {% else %}
+                        Final Deductions: <b>₹{{ payslip.final_deduction|floatformat:2 }}</b>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- UNIFIED MASTER FORMULA BREAKDOWN SECTION -->
+    <div class="formula-card">
+        <div class="formula-header">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-calculator-fill text-primary fs-5"></i>
+                <h5 class="fw-bold text-dark mb-0">Unified Master Formula Breakdown & Transparency</h5>
+            </div>
+            <span class="badge bg-light text-secondary border">Corporate Standard</span>
+        </div>
+        <div class="p-4">
+            <div class="row g-4">
+                <!-- 1. BASE RATES -->
+                <div class="col-12 col-lg-4">
+                    <div class="p-3 bg-light rounded-3 h-100 border">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="formula-badge-step bg-primary">1</span>
+                            <h6 class="fw-bold text-dark mb-0">Base Rate Formulations</h6>
+                        </div>
+                        <p class="small text-muted mb-3">Establishes daily and per-minute earnings from base compensation.</p>
+                        
+                        <div class="math-formula-box mb-2">
+                            Per-Day Rate = Base Salary / 30<br>
+                            = ₹{{ payslip.basic_salary|floatformat:2 }} / 30<br>
+                            = <strong>₹{{ payslip.per_day_rate|floatformat:2 }} / day</strong>
+                        </div>
+
+                        <div class="math-formula-box mb-3">
+                            Daily Hours = {{ period.office_end_time|time:"H:i" }} - {{ period.office_start_time|time:"H:i" }}<br>
+                            = <strong>{{ payslip.required_daily_hours }} hours</strong> ({{ payslip.required_daily_hours|floatformat:0|add:"0" }}h standard)
+                        </div>
+
+                        <div class="math-formula-box">
+                            Per-Minute Rate = Per-Day / (Hours &times; 60)<br>
+                            = ₹{{ payslip.per_day_rate }} / ({{ payslip.required_daily_hours }} &times; 60)<br>
+                            = <strong>₹{{ payslip.per_minute_rate|floatformat:4 }} / minute</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. PART A: LEAVE & ABSENCES -->
+                <div class="col-12 col-lg-4">
+                    <div class="p-3 bg-light rounded-3 h-100 border">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="formula-badge-step bg-warning text-dark">A</span>
+                            <h6 class="fw-bold text-dark mb-0">Part A: Leave & Absence Deductions</h6>
+                        </div>
+                        <p class="small text-muted mb-3">Excluded Public Holidays & Sundays; calculates excess leaves & unexcused absences.</p>
+                        
+                        <ul class="list-unstyled small mb-3">
+                            <li class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Total Calendar Days:</span>
+                                <b>{{ payslip.calendar_days_in_month }} days</b>
+                            </li>
+                            <li class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Public Holidays (Excluded):</span>
+                                <span class="badge badge-soft-success">{{ payslip.public_holidays_count }} days</span>
+                            </li>
+                            <li class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Weekly Offs / Sundays (Excluded):</span>
+                                <span class="badge badge-soft-indigo">{{ payslip.weekly_offs_count }} days</span>
+                            </li>
+                            <li class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Official Working Days:</span>
+                                <b>{{ payslip.working_days_count }} days</b>
+                            </li>
+                            <li class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Sick Leave (SL Taken / Quota):</span>
+                                <span>{{ payslip.approved_sl_taken }}d / {{ payslip.sl_limit }}d (Excess: <b class="text-danger">{{ payslip.excess_sl }}d</b>)</span>
+                            </li>
+                            <li class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Casual/Paid Leave (CL Taken / Quota):</span>
+                                <span>{{ payslip.approved_cl_taken }}d / {{ payslip.cl_limit }}d (Excess: <b class="text-danger">{{ payslip.excess_cl }}d</b>)</span>
+                            </li>
+                            <li class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Unexcused Absences:</span>
+                                <b class="text-danger">{{ payslip.unexcused_absences }} days</b>
+                            </li>
+                        </ul>
+
+                        <div class="math-formula-box bg-white">
+                            Leave Deduction = (Excess SL + Excess CL + Unexcused) &times; Per-Day Rate<br>
+                            = ({{ payslip.excess_sl }} + {{ payslip.excess_cl }} + {{ payslip.unexcused_absences }}) &times; ₹{{ payslip.per_day_rate|floatformat:2 }}<br>
+                            = <strong class="text-danger">₹{{ payslip.leave_deduction|floatformat:2 }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. PART B & C: SHORTFALL & NET -->
+                <div class="col-12 col-lg-4">
+                    <div class="p-3 bg-light rounded-3 h-100 border">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="formula-badge-step bg-success">B & C</span>
+                            <h6 class="fw-bold text-dark mb-0">Part B & C: Shortfall & Net Salary</h6>
+                        </div>
+                        <p class="small text-muted mb-3">Minute-based shortfall calculation with OT compensation & HR waiver.</p>
+                        
+                        <ul class="list-unstyled small mb-3">
+                            <li class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Total Late Arrival:</span>
+                                <b class="text-danger">{{ payslip.total_late_minutes }} minutes</b>
+                            </li>
+                            <li class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Total Overtime Worked:</span>
+                                <b class="text-success">{{ payslip.total_overtime_minutes }} minutes</b>
+                            </li>
+                            <li class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Overtime Compensation:</span>
+                                <span class="badge {% if payslip.allow_overtime_compensation %}badge-soft-success{% else %}badge-soft-warning{% endif %}">
+                                    {% if payslip.allow_overtime_compensation %}Enabled (OT offsets Late){% else %}Strict Mode{% endif %}
+                                </span>
+                            </li>
+                            <li class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Net Shortfall Minutes:</span>
+                                <b>{{ payslip.net_shortfall_minutes }} minutes</b>
+                            </li>
+                            <li class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Shortfall Deduction:</span>
+                                <b class="text-danger">₹{{ payslip.shortfall_deduction|floatformat:2 }}</b>
+                            </li>
+                            <li class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Gross Deduction (A + B):</span>
+                                <b>₹{{ payslip.gross_deduction|floatformat:2 }}</b>
+                            </li>
+                            <li class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Less HR Deduction Waiver:</span>
+                                <b class="text-success">- ₹{{ payslip.hr_condoned_amount|floatformat:2 }}</b>
+                            </li>
+                        </ul>
+
+                        <div class="math-formula-box bg-white">
+                            Net Payable = max(0, Base Salary - Final Deduction)<br>
+                            = ₹{{ payslip.basic_salary|floatformat:2 }} - ₹{{ payslip.final_deduction|floatformat:2 }}<br>
+                            = <strong class="text-success fs-6">₹{{ payslip.net_payable|floatformat:2 }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DAILY ATTENDANCE & SHORTFALL LEDGER -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="card-title fw-bold text-dark mb-0">
+                    <i class="bi bi-calendar3 me-2 text-primary"></i>Day-by-Day Attendance & Shortfall Ledger
+                </h5>
+                <span class="small text-muted">Complete audit trail for {{ period.get_month_display }} {{ payslip.year }} ({{ daily_breakdown|length }} calendar days)</span>
+            </div>
+            <span class="badge bg-light text-muted border">Daily Audit Record</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-modern align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="min-width: 110px;">Date</th>
+                        <th style="min-width: 100px;">Day</th>
+                        <th style="min-width: 160px;">Attendance Status</th>
+                        <th style="min-width: 120px;">Check-In</th>
+                        <th style="min-width: 120px;">Check-Out</th>
+                        <th style="min-width: 100px;">Late Arrival</th>
+                        <th style="min-width: 100px;">Overtime</th>
+                        <th style="min-width: 110px;">Net Shortfall</th>
+                        <th style="min-width: 110px;">Deduction</th>
+                        <th class="text-end" style="min-width: 120px;">Notes / Waiver</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in daily_breakdown %}
+                        <tr>
+                            <td class="font-monospace fw-semibold">{{ row.date }}</td>
+                            <td class="text-muted">{{ row.day }}</td>
+                            <td>
+                                {% if row.status == 'PRESENT' %}
+                                    {% if row.late_minutes == 0 %}
+                                        <span class="badge badge-soft-success"><i class="bi bi-check-circle me-1"></i>Present (On Time)</span>
+                                    {% elif row.waived %}
+                                        <span class="badge badge-soft-indigo"><i class="bi bi-arrow-left-right me-1"></i>Late (OT Offset)</span>
+                                    {% else %}
+                                        <span class="badge badge-soft-warning"><i class="bi bi-clock-history me-1"></i>Late Arrival</span>
+                                    {% endif %}
+                                {% elif row.status == 'PUBLIC_HOLIDAY' %}
+                                    <span class="badge badge-soft-success"><i class="bi bi-sun me-1"></i>{{ row.notes }}</span>
+                                {% elif row.status == 'WEEKLY_OFF' %}
+                                    <span class="badge badge-soft-indigo"><i class="bi bi-calendar-event me-1"></i>Sunday Off</span>
+                                {% elif row.status == 'APPROVED_LEAVE' %}
+                                    <span class="badge badge-soft-indigo"><i class="bi bi-envelope-paper me-1"></i>{{ row.status_label }}</span>
+                                {% elif row.status == 'UNEXCUSED_ABSENCE' %}
+                                    <span class="badge badge-soft-danger"><i class="bi bi-x-circle me-1"></i>Unexcused Absence</span>
+                                {% else %}
+                                    <span class="badge bg-light text-muted border">{{ row.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if row.punch_in %}
+                                    <span class="font-monospace text-dark">{{ row.punch_in }}</span>
+                                {% else %}
+                                    <span class="text-muted small">&mdash;</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if row.punch_out %}
+                                    <span class="font-monospace text-dark">{{ row.punch_out }}</span>
+                                {% else %}
+                                    <span class="text-muted small">&mdash;</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if row.late_minutes > 0 %}
+                                    <span class="text-danger fw-semibold">+{{ row.late_minutes }}m</span>
+                                {% else %}
+                                    <span class="text-muted small">0m</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if row.overtime_minutes > 0 %}
+                                    <span class="text-success fw-semibold">+{{ row.overtime_minutes }}m</span>
+                                {% else %}
+                                    <span class="text-muted small">0m</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if row.net_shortfall_minutes > 0 %}
+                                    <span class="badge badge-soft-warning fw-bold">{{ row.net_shortfall_minutes }}m</span>
+                                {% else %}
+                                    <span class="text-muted small">0m</span>
+                                {% endif %}
+                            </td>
+                            <td class="font-monospace">
+                                {% if row.shortfall_deduction != '0.00' %}
+                                    <span class="text-danger fw-bold">₹{{ row.shortfall_deduction }}</span>
+                                {% else %}
+                                    <span class="text-muted small">₹0.00</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end small">
+                                {% if row.waived %}
+                                    <span class="text-success"><i class="bi bi-check2-all me-1"></i>Auto-waived</span>
+                                {% else %}
+                                    <span class="text-muted">{{ row.notes }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="10" class="text-center py-4 text-muted">No attendance logs available for this cycle.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- HR DEDUCTION WAIVER MODAL (ONLY FOR HR / HEAD) -->
+    {% if is_hr_or_head %}
+    <div class="modal fade" id="condoneModal" tabindex="-1" aria-labelledby="condoneModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form method="POST" action="{% url 'payroll:condone_deduction' payslip_id=payslip.id %}">
+                    {% csrf_token %}
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold text-dark" id="condoneModalLabel">
+                            <i class="bi bi-shield-check text-primary me-2"></i>Waive Salary Deductions
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="alert alert-info small mb-3">
+                            <i class="bi bi-info-circle me-1"></i>
+                            HR Administrator can waive (forgive) all or part of the employee's shortfall deductions. The final net payable salary will recalculate automatically.
+                        </div>
+
+                        <div class="p-3 bg-light rounded mb-3 small">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-muted">Total Gross Deduction:</span>
+                                <b class="text-danger">₹{{ payslip.gross_deduction|floatformat:2 }}</b>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-muted">Current Waived Amount:</span>
+                                <b class="text-success">₹{{ payslip.hr_condoned_amount|floatformat:2 }}</b>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Current Net Payable:</span>
+                                <b class="text-dark">₹{{ payslip.net_payable|floatformat:2 }}</b>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-dark">Waiver Type *</label>
+                            <select name="action_type" id="condoneActionType" class="form-select" onchange="toggleCondoneAmount(this.value)">
+                                <option value="PARTIAL">Partial Waiver (Enter Custom Amount)</option>
+                                <option value="FULL">Full Waiver (Waive Entire ₹{{ payslip.gross_deduction|floatformat:2 }})</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="condoneAmountGroup">
+                            <label class="form-label small fw-semibold text-dark">Amount to Waive (₹) *</label>
+                            <input type="number" 
+                                   step="0.01" 
+                                   name="condoned_amount" 
+                                   id="condoneAmountInput" 
+                                   class="form-control" 
+                                   value="{{ payslip.hr_condoned_amount|default:'0.00' }}" 
+                                   max="{{ payslip.gross_deduction }}" 
+                                   min="0">
+                            <small class="text-muted">Maximum waiver possible: ₹{{ payslip.gross_deduction|floatformat:2 }}</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-dark">Reason / Justification *</label>
+                            <textarea name="condone_reason" class="form-control" rows="2" placeholder="e.g. Approved medical emergency, on-duty field visit, client travel">{{ payslip.condone_reason }}</textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success fw-bold px-4">
+                            <i class="bi bi-check2-circle me-1"></i> Save & Apply Waiver
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+        function toggleCondoneAmount(val) {
+            const grp = document.getElementById('condoneAmountGroup');
+            if (val === 'FULL') {
+                grp.style.display = 'none';
+            } else {
+                grp.style.display = 'block';
+            }
+        }
+    </script>
+    {% endif %}
+
+</div>
+{% endblock %}
+

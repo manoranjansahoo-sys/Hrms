@@ -1,42 +1,170 @@
 {% extends 'base.html' %}
-{% block title %}Generate Monthly Payroll{% endblock %}
+{% load static %}
+
+{% block title %}Generate Monthly Payroll - Company HRMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Executive Light Theme Palette */
+    :root {
+        --gen-bg: #f8fafc;
+        --gen-card: #ffffff;
+        --gen-border: #e2e8f0;
+        --gen-border-subtle: #f1f5f9;
+        --gen-text-main: #0f172a;
+        --gen-text-muted: #64748b;
+        --gen-emerald: #059669;
+        --gen-emerald-bg: #ecfdf5;
+        --gen-amber: #d97706;
+        --gen-amber-bg: #fffbeb;
+        --gen-rose: #dc2626;
+        --gen-rose-bg: #fef2f2;
+        --gen-indigo: #4f46e5;
+        --gen-indigo-bg: #eef2ff;
+    }
+
+    .gen-hero {
+        background: #ffffff;
+        border: 1px solid var(--gen-border);
+        border-radius: 14px;
+        padding: 1.75rem 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        margin-bottom: 1.5rem;
+    }
+
+    .gen-card {
+        background: #ffffff;
+        border: 1px solid var(--gen-border);
+        border-radius: 14px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
+    .master-data-info-box {
+        background: #f8fafc;
+        border: 1px solid var(--gen-border);
+        border-radius: 12px;
+        padding: 1.25rem 1.4rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-switch-custom {
+        background: #f8fafc;
+        border: 1px solid var(--gen-border);
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container-fluid p-0">
-    <div class="mb-4">
-        <h3 class="fw-bold mb-1">Generate Monthly Payroll Run</h3>
-        <p class="text-muted small mb-0">Calculates working days, verified attendance, and Loss of Pay (LOP) deductions for all employees.</p>
+    <!-- Header Hero -->
+    <div class="gen-hero">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-1 small text-muted">
+                        <li class="breadcrumb-item"><a href="{% url 'payroll:dashboard' %}" class="text-decoration-none text-muted">Payroll</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Run Payroll</li>
+                    </ol>
+                </nav>
+                <h3 class="fw-bold text-dark mb-1">Generate Monthly Payroll</h3>
+                <p class="text-muted small mb-0">
+                    Executes the Unified Master Formula across all active employee profiles with attendance, holiday exclusions, and overtime shortfalls.
+                </p>
+            </div>
+            <a href="{% url 'payroll:dashboard' %}" class="btn btn-outline-secondary btn-sm px-3 py-2 rounded-3">
+                <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+            </a>
+        </div>
     </div>
 
-    <div class="hrms-card p-4" style="max-width: 600px;">
-        <form method="POST">
-            {% csrf_token %}
-            <div class="mb-3">
-                <label class="form-label small fw-semibold">Payroll Month *</label>
-                <select name="month" class="form-select">
-                    {% for m_num, m_name in months %}
-                        <option value="{{ m_num }}" {% if m_num == current_month %}selected{% endif %}>{{ m_name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label small fw-semibold">Year *</label>
-                <input type="number" name="year" class="form-control" value="{{ current_year }}">
-            </div>
-            <div class="mb-4">
-                <label class="form-label small fw-semibold">Total Working Days in Month *</label>
-                <input type="number" name="working_days" class="form-control" value="26">
-                <small class="text-muted">Standard working calendar days excluding Sundays & company holidays.</small>
-            </div>
+    <div class="row g-4">
+        <!-- Main Form Card -->
+        <div class="col-12 col-lg-7">
+            <div class="gen-card">
+                <h5 class="fw-bold text-dark mb-3">
+                    <i class="bi bi-calculator-fill text-primary me-2"></i>Payroll Cycle Configuration
+                </h5>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-7">
+                            <label class="form-label small fw-semibold text-dark">Payroll Month *</label>
+                            <select name="month" class="form-select" id="payrollMonthSelect">
+                                {% for m_num, m_name in months %}
+                                    <option value="{{ m_num }}" {% if m_num == current_month %}selected{% endif %}>{{ m_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label small fw-semibold text-dark">Year *</label>
+                            <input type="number" name="year" class="form-control" value="{{ current_year }}" min="2020" max="2035">
+                        </div>
+                    </div>
 
-            <div class="d-flex justify-content-end gap-2 pt-3 border-top">
-                <a href="{% url 'payroll:dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
-                <button type="submit" class="btn btn-hrms px-4">
-                    <i class="bi bi-gear-fill me-1"></i> Compute & Generate Payroll
-                </button>
+                    <!-- Overtime Compensation Switch -->
+                    <div class="mb-4">
+                        <div class="form-switch-custom">
+                            <div>
+                                <label class="fw-bold text-dark mb-0 d-block" for="allow_ot">
+                                    <i class="bi bi-clock-history text-success me-1"></i> Overtime Compensation
+                                </label>
+                                <small class="text-muted">
+                                    Allows same-day overtime to compensate for late arrivals (Part B: <code>Net Shortfall = max(0, Late - OT)</code>).
+                                </small>
+                            </div>
+                            <div class="form-check form-switch fs-5 m-0">
+                                <input class="form-check-input" type="checkbox" name="allow_ot" id="allow_ot" checked>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                        <a href="{% url 'payroll:dashboard' %}" class="btn btn-outline-secondary px-3">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4 shadow-sm" onclick="return confirm('Run Unified Master Formula calculation for the selected month?');">
+                            <i class="bi bi-gear-wide-connected me-1"></i> Compute & Generate Payroll
+                        </button>
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
+
+        <!-- Master Data Synchronization Sidebar -->
+        <div class="col-12 col-lg-5">
+            <div class="gen-card" style="background: #f8fafc;">
+                <h6 class="fw-bold text-dark mb-3">
+                    <i class="bi bi-database-check text-success me-2"></i>Master Data Configuration
+                </h6>
+                <div class="p-3 bg-white rounded-3 border mb-3">
+                    <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.72rem;">Shift Schedule</small>
+                    <div class="fw-bold text-dark fs-6 mt-1">
+                        {{ office_info.start_time }} &mdash; {{ office_info.end_time }}
+                    </div>
+                    <small class="text-muted">Standard daily hours: <b>{{ office_info.daily_hours }} hours</b></small>
+                </div>
+
+                <div class="p-3 bg-white rounded-3 border mb-3">
+                    <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.72rem;">Punctuality Rules</small>
+                    <div class="fw-bold text-dark fs-6 mt-1">
+                        {{ office_info.grace_period_mins }} Minutes Grace Period
+                    </div>
+                    <small class="text-muted">Late minutes beyond grace period are deducted at Per-Minute Rate</small>
+                </div>
+
+                <div class="p-3 bg-white rounded-3 border">
+                    <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.72rem;">Exclusions</small>
+                    <div class="fw-bold text-dark fs-6 mt-1">
+                        Sundays & Public Holidays
+                    </div>
+                    <small class="text-muted">Sundays and official gazetted company holidays are fully excluded from working days and absence deductions.</small>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
-

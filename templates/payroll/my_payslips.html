@@ -1,77 +1,389 @@
 {% extends 'base.html' %}
-{% block title %}My Salary & Payslips{% endblock %}
+{% load static %}
+
+{% block title %}My Salary & Payslips - Company HRMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Executive Light Theme Palette */
+    :root {
+        --slip-bg: #f8fafc;
+        --slip-card: #ffffff;
+        --slip-border: #e2e8f0;
+        --slip-border-subtle: #f1f5f9;
+        --slip-text-main: #0f172a;
+        --slip-text-muted: #64748b;
+        --slip-emerald: #059669;
+        --slip-emerald-bg: #ecfdf5;
+        --slip-amber: #d97706;
+        --slip-amber-bg: #fffbeb;
+        --slip-rose: #dc2626;
+        --slip-rose-bg: #fef2f2;
+        --slip-indigo: #4f46e5;
+        --slip-indigo-bg: #eef2ff;
+        --slip-sky: #0284c7;
+        --slip-sky-bg: #f0f9ff;
+    }
+
+    .slip-hero {
+        background: #ffffff;
+        border: 1px solid var(--slip-border);
+        border-radius: 14px;
+        padding: 1.75rem 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        margin-bottom: 1.5rem;
+    }
+
+    .comp-structure-card {
+        background: #ffffff;
+        border: 1px solid var(--slip-border);
+        border-radius: 14px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        margin-bottom: 1.5rem;
+    }
+
+    .comp-metric-box {
+        background: #f8fafc;
+        border: 1px solid var(--slip-border);
+        border-radius: 10px;
+        padding: 1rem 1.15rem;
+        height: 100%;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .comp-metric-box:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        background: #ffffff;
+    }
+
+    .payslip-history-container {
+        background: #ffffff;
+        border: 1px solid var(--slip-border);
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
+    .history-header {
+        background: #f8fafc;
+        border-bottom: 1px solid var(--slip-border);
+        padding: 1rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .history-table {
+        margin-bottom: 0;
+        vertical-align: middle;
+        font-size: 0.88rem;
+    }
+
+    .history-table thead th {
+        background: #f8fafc;
+        color: var(--slip-text-muted);
+        font-weight: 600;
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid var(--slip-border);
+        padding: 0.9rem 1.25rem;
+        white-space: nowrap;
+    }
+
+    .history-table tbody td {
+        padding: 1.1rem 1.25rem;
+        border-bottom: 1px solid var(--slip-border-subtle);
+    }
+
+    .history-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .history-table tbody tr:hover {
+        background-color: #fbfcfe;
+    }
+
+    .badge-soft {
+        font-weight: 600;
+        font-size: 0.74rem;
+        padding: 0.35rem 0.65rem;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    .badge-soft-emerald {
+        background: var(--slip-emerald-bg);
+        color: var(--slip-emerald);
+        border: 1px solid rgba(5, 150, 105, 0.2);
+    }
+    .badge-soft-amber {
+        background: var(--slip-amber-bg);
+        color: var(--slip-amber);
+        border: 1px solid rgba(217, 119, 6, 0.2);
+    }
+    .badge-soft-indigo {
+        background: var(--slip-indigo-bg);
+        color: var(--slip-indigo);
+        border: 1px solid rgba(79, 70, 229, 0.2);
+    }
+
+    .btn-slip-view {
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        color: #0f172a;
+        font-weight: 600;
+        font-size: 0.78rem;
+        padding: 0.4rem 0.75rem;
+        border-radius: 7px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        transition: all 0.15s ease;
+    }
+    .btn-slip-view:hover {
+        background: #f1f5f9;
+        border-color: #94a3b8;
+        color: #0f172a;
+    }
+
+    .btn-slip-pdf {
+        background: #ffffff;
+        border: 1px solid #fecaca;
+        color: #dc2626;
+        font-weight: 600;
+        font-size: 0.78rem;
+        padding: 0.4rem 0.75rem;
+        border-radius: 7px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        transition: all 0.15s ease;
+    }
+    .btn-slip-pdf:hover {
+        background: var(--slip-rose-bg);
+        color: #b91c1c;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container-fluid p-0">
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-        <div>
-            <h3 class="fw-bold mb-1">My Salary & Monthly Payslips</h3>
-            <p class="text-muted small mb-0">Confidential personal compensation overview, allowance breakdowns, and downloadable PDF payslips.</p>
+    <!-- Top Hero Banner -->
+    <div class="slip-hero">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-1 small text-muted">
+                        <li class="breadcrumb-item"><a href="{% url 'portal:smart_dashboard' %}" class="text-decoration-none text-muted">Portal</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">My Salary</li>
+                    </ol>
+                </nav>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <h3 class="fw-bold text-dark mb-0">My Salary & Monthly Payslips</h3>
+                    <span class="badge-soft badge-soft-emerald">
+                        <i class="bi bi-shield-check"></i> Verified Employee
+                    </span>
+                </div>
+                <p class="text-muted small mb-0 mt-1">
+                    {{ employee.full_name }} &bull; <span class="badge bg-light text-dark border">{{ employee.emp_id }}</span> &bull;
+                    {{ employee.department.name|default:"Department" }} &bull; {{ employee.designation.title|default:"Staff" }}
+                </p>
+            </div>
+
+            <div class="text-md-end">
+                <span class="badge bg-light text-muted border px-3 py-2 small">
+                    <i class="bi bi-lock-fill me-1 text-primary"></i> Confidential Compensation Document
+                </span>
+            </div>
         </div>
     </div>
 
-    <!-- SALARY BREAKDOWN CARD -->
+    <!-- Compensation Master Structure & Formula Baseline Card -->
     {% if salary_struct %}
-        <div class="hrms-card mb-4 border-success border-opacity-25" style="background: linear-gradient(135deg, #F0FDF4, #DCFCE7);">
-            <div class="hrms-card-body p-4">
-                <div class="row align-items-center g-3">
-                    <div class="col-md-4">
-                        <small class="text-success text-uppercase fw-bold letter-spacing-1">Monthly Net Payable</small>
-                        <h2 class="fw-bold text-success mb-0">₹{{ salary_struct.net_salary|floatformat:2 }}</h2>
-                        <small class="text-muted">Gross: ₹{{ salary_struct.gross_salary|floatformat:2 }} &bull; Deductions: ₹{{ salary_struct.total_deductions|floatformat:2 }}</small>
+        <div class="comp-structure-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-dark mb-0">
+                    <i class="bi bi-calculator me-1 text-primary"></i> Compensation Structure & Unified Formula Baseline
+                </h6>
+                <small class="text-muted">Master Rates Governed by Company Operating Schedule</small>
+            </div>
+
+            <div class="row g-3">
+                <!-- Base Monthly Salary -->
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="comp-metric-box">
+                        <span class="text-muted small fw-semibold text-uppercase letter-spacing-1">Monthly Base Salary</span>
+                        <h4 class="fw-bold text-dark mt-1 mb-1">₹{{ salary_struct.basic_salary|floatformat:2 }}</h4>
+                        <small class="text-muted">Fixed monthly contract</small>
                     </div>
-                    <div class="col-md-8">
-                        <div class="row g-2 small text-dark">
-                            <div class="col-sm-4"><span class="text-muted">Basic Salary:</span> <span class="fw-bold">₹{{ salary_struct.basic_salary|floatformat:2 }}</span></div>
-                            <div class="col-sm-4"><span class="text-muted">HRA Allowance:</span> <span class="fw-bold">₹{{ salary_struct.hra|floatformat:2 }}</span></div>
-                            <div class="col-sm-4"><span class="text-muted">Conveyance:</span> <span class="fw-bold">₹{{ salary_struct.conveyance_allowance|floatformat:2 }}</span></div>
-                            <div class="col-sm-4"><span class="text-muted">Medical:</span> <span class="fw-bold">₹{{ salary_struct.medical_allowance|floatformat:2 }}</span></div>
-                            <div class="col-sm-4"><span class="text-muted">Special Allowance:</span> <span class="fw-bold">₹{{ salary_struct.special_allowance|floatformat:2 }}</span></div>
-                            <div class="col-sm-4"><span class="text-muted">PF Deduction:</span> <span class="fw-bold text-danger">₹{{ salary_struct.provident_fund|floatformat:2 }}</span></div>
-                        </div>
+                </div>
+
+                <!-- Per-Day Rate -->
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="comp-metric-box">
+                        <span class="text-muted small fw-semibold text-uppercase letter-spacing-1">Per-Day Rate</span>
+                        <h4 class="fw-bold text-dark mt-1 mb-1">
+                            ₹{{ salary_struct.basic_salary|default:0|floatformat:2 }}
+                        </h4>
+                        <small class="text-success fw-medium">
+                            <i class="bi bi-info-circle me-1"></i>Base / 30 Standard Days
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Allowances & HRA -->
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="comp-metric-box">
+                        <span class="text-muted small fw-semibold text-uppercase letter-spacing-1">Monthly Allowances</span>
+                        <h4 class="fw-bold text-dark mt-1 mb-1">
+                            ₹{{ salary_struct.hra|add:salary_struct.conveyance_allowance|add:salary_struct.medical_allowance|add:salary_struct.special_allowance|floatformat:2 }}
+                        </h4>
+                        <small class="text-muted">HRA, Travel & Medical</small>
+                    </div>
+                </div>
+
+                <!-- Fixed Statutory Deductions -->
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="comp-metric-box">
+                        <span class="text-muted small fw-semibold text-uppercase letter-spacing-1">Statutory Deductions</span>
+                        <h4 class="fw-bold text-danger mt-1 mb-1">
+                            ₹{{ salary_struct.provident_fund|add:salary_struct.professional_tax|add:salary_struct.tds|floatformat:2 }}
+                        </h4>
+                        <small class="text-muted">PF (₹{{ salary_struct.provident_fund|floatformat:0 }}), PT & Tax</small>
                     </div>
                 </div>
             </div>
         </div>
     {% endif %}
 
-    <!-- PAYSLIP ROSTER TABLE -->
-    <div class="hrms-card">
-        <div class="hrms-card-header">
-            <h6 class="fw-bold mb-0">Issued Monthly Payslips</h6>
+    <!-- Issued Monthly Payslips Table -->
+    <div class="payslip-history-container">
+        <div class="history-header">
+            <div>
+                <h6 class="fw-bold text-dark mb-0">Issued Monthly Payslips</h6>
+                <small class="text-muted">Interactive digital payslips computed with Unified Master Formula transparency</small>
+            </div>
+            <span class="badge bg-white text-dark border px-2 py-1 small">
+                {{ payslips.count }} Cycle{{ payslips.count|pluralize }} Recorded
+            </span>
         </div>
+
         <div class="table-responsive">
-            <table class="table hrms-table">
+            <table class="table history-table">
                 <thead>
                     <tr>
                         <th>Cycle Period</th>
-                        <th>Payable Days</th>
-                        <th>Gross Earnings</th>
-                        <th>Total Deductions</th>
+                        <th>Base Salary</th>
+                        <th>Part A: Leave Ded</th>
+                        <th>Part B: Shortfall Ded</th>
+                        <th>HR Waiver</th>
                         <th>Net Paid Amount</th>
-                        <th>Payment Status</th>
-                        <th>Disbursement Date</th>
-                        <th class="text-end">Download Document</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for ps in payslips %}
                         <tr>
-                            <td class="fw-bold text-dark fs-6">{{ ps.payroll_period.get_month_display }} {{ ps.year }}</td>
-                            <td>{{ ps.payable_days }} / {{ ps.total_working_days }} days</td>
-                            <td class="font-monospace text-dark">₹{{ ps.gross_earnings|floatformat:2 }}</td>
-                            <td class="font-monospace text-danger">₹{{ ps.total_deductions|floatformat:2 }}</td>
-                            <td class="font-monospace text-success fw-bold fs-6">₹{{ ps.net_payable|floatformat:2 }}</td>
-                            <td><span class="badge bg-success">{{ ps.get_status_display }}</span></td>
-                            <td><small class="text-muted">{{ ps.payment_date|date:"d M Y"|default:"Disbursed" }}</small></td>
+                            <!-- Cycle Period -->
+                            <td>
+                                <div class="fw-bold text-dark fs-6">{{ ps.payroll_period.get_month_display }} {{ ps.year }}</div>
+                                <div class="text-muted small">
+                                    {{ ps.payable_days }} / {{ ps.total_working_days }} working days
+                                </div>
+                            </td>
+
+                            <!-- Base Salary -->
+                            <td>
+                                <div class="fw-semibold text-dark font-monospace">₹{{ ps.basic_salary|floatformat:2 }}</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">₹{{ ps.per_day_rate|default:"0"|floatformat:0 }}/day</div>
+                            </td>
+
+                            <!-- Part A: Leave Deduction -->
+                            <td>
+                                {% if ps.leave_deduction > 0 %}
+                                    <div class="fw-bold text-danger font-monospace">₹{{ ps.leave_deduction|floatformat:2 }}</div>
+                                    <small class="text-muted" style="font-size: 0.75rem;">
+                                        {{ ps.unexcused_absences|default:0|floatformat:0 }} unexcused
+                                    </small>
+                                {% else %}
+                                    <span class="text-muted small">₹0.00</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Part B: Shortfall Deduction -->
+                            <td>
+                                {% if ps.shortfall_deduction > 0 %}
+                                    <div class="fw-bold text-warning font-monospace" style="color: #b45309 !important;">
+                                        ₹{{ ps.shortfall_deduction|floatformat:2 }}
+                                    </div>
+                                    <small class="text-muted" style="font-size: 0.75rem;">
+                                        {{ ps.net_shortfall_minutes }} net mins
+                                    </small>
+                                {% else %}
+                                    <span class="text-muted small">₹0.00</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- HR Waiver -->
+                            <td>
+                                {% if ps.hr_condoned_amount > 0 %}
+                                    <span class="badge-soft badge-soft-indigo" title="{{ ps.condone_reason|default:'HR Deduction Waiver' }}">
+                                        <i class="bi bi-shield-check"></i> -₹{{ ps.hr_condoned_amount|floatformat:2 }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted small">-</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Net Paid -->
+                            <td>
+                                <div class="fw-bold text-success font-monospace fs-6">
+                                    ₹{{ ps.net_payable|floatformat:2 }}
+                                </div>
+                                <small class="text-muted" style="font-size: 0.74rem;">
+                                    {{ ps.payment_date|date:"d M Y"|default:"Disbursed" }}
+                                </small>
+                            </td>
+
+                            <!-- Status -->
+                            <td>
+                                {% if ps.status == 'APPROVED' %}
+                                    <span class="badge-soft badge-soft-emerald"><i class="bi bi-check-circle-fill"></i> Disbursed</span>
+                                {% elif ps.status == 'GENERATED' %}
+                                    <span class="badge-soft badge-soft-amber"><i class="bi bi-clock"></i> In Verification</span>
+                                {% else %}
+                                    <span class="badge-soft badge-soft-emerald">{{ ps.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Actions -->
                             <td class="text-end">
-                                <a href="{% url 'payroll:download_pdf' payslip_id=ps.id %}" class="btn btn-sm btn-outline-danger shadow-sm">
-                                    <i class="bi bi-file-earmark-pdf-fill me-1"></i> Download PDF
-                                </a>
+                                <div class="d-inline-flex gap-2">
+                                    <a href="{% url 'payroll:payslip_detail' payslip_id=ps.id %}" class="btn-slip-view" title="View Detailed Interactive Breakdown">
+                                        <i class="bi bi-search"></i> Interactive Slip
+                                    </a>
+                                    <a href="{% url 'payroll:download_pdf' payslip_id=ps.id %}" class="btn-slip-pdf" title="Download Official Signed PDF">
+                                        <i class="bi bi-file-earmark-pdf-fill"></i> PDF
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     {% empty %}
-                        <tr><td colspan="8" class="text-center py-5 text-muted">No payslips generated for your profile yet.</td></tr>
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <div class="py-4">
+                                    <i class="bi bi-file-earmark-text text-muted display-4"></i>
+                                    <h6 class="fw-bold text-dark mt-3">No payslips issued yet</h6>
+                                    <p class="text-muted small">Your monthly payroll payslips will appear here once approved by HR & Finance.</p>
+                                </div>
+                            </td>
+                        </tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -79,4 +391,3 @@
     </div>
 </div>
 {% endblock %}
-

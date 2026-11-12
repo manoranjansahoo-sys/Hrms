@@ -72,6 +72,15 @@ class PayrollPeriod(models.Model):
     total_deductions = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
     total_net = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
 
+    # Master Formula Parameters
+    allow_overtime_compensation = models.BooleanField(default=True, help_text="Allow OT minutes to offset late arrival shortfall")
+    office_start_time = models.TimeField(default='09:30:00')
+    office_end_time = models.TimeField(default='18:30:00')
+    required_daily_hours = models.DecimalField(max_digits=4, decimal_places=2, default=Decimal('9.00'))
+    total_leave_deductions = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    total_shortfall_deductions = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    total_condoned_amount = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+
     processed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='processed_payrolls')
     approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_payrolls')
 
@@ -113,7 +122,48 @@ class Payslip(models.Model):
     bonus = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     gross_earnings = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
 
-    # Deductions
+    # Unified Master Formula: Base Rates
+    per_day_rate = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'), help_text="Monthly Base Salary / 30")
+    required_daily_hours = models.DecimalField(max_digits=4, decimal_places=2, default=Decimal('9.00'), help_text="Office End Time - Office Start Time")
+    per_minute_rate = models.DecimalField(max_digits=12, decimal_places=4, default=Decimal('0.0000'), help_text="Per-Day Rate / (Daily Hours * 60)")
+
+    # Calendar Breakdown (Excluded Holidays and Sundays)
+    calendar_days_in_month = models.PositiveIntegerField(default=30)
+    public_holidays_count = models.PositiveIntegerField(default=0)
+    weekly_offs_count = models.PositiveIntegerField(default=0)
+    working_days_count = models.PositiveIntegerField(default=26)
+
+    # Part A: Leave & Absence Deduction (Day-Based)
+    approved_sl_taken = models.DecimalField(max_digits=5, decimal_places=1, default=Decimal('0.0'), help_text="Approved Sick Leave days in month")
+    sl_limit = models.DecimalField(max_digits=5, decimal_places=1, default=Decimal('1.0'), help_text="Monthly Sick Leave limit quota")
+    excess_sl = models.DecimalField(max_digits=5, decimal_places=1, default=Decimal('0.0'), help_text="max(0, Approved SL - SL Limit)")
+
+    approved_cl_taken = models.DecimalField(max_digits=5, decimal_places=1, default=Decimal('0.0'), help_text="Approved Casual / Paid Leave days in month")
+    cl_limit = models.DecimalField(max_digits=5, decimal_places=1, default=Decimal('1.0'), help_text="Monthly Casual / Paid Leave limit quota")
+    excess_cl = models.DecimalField(max_digits=5, decimal_places=1, default=Decimal('0.0'), help_text="max(0, Approved CL - CL Limit)")
+
+    unexcused_absences = models.DecimalField(max_digits=5, decimal_places=1, default=Decimal('0.0'), help_text="Working days with no check-in and no approved leave")
+    leave_deduction = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'), help_text="(Excess SL + Excess CL + Unexcused Absences) * Per-Day Rate")
+
+    # Part B: Late & Overtime Shortfall Deduction (Minute-Based)
+    total_late_minutes = models.PositiveIntegerField(default=0, help_text="Total late arrival minutes beyond grace period")
+    total_overtime_minutes = models.PositiveIntegerField(default=0, help_text="Total overtime minutes beyond shift end")
+    net_shortfall_minutes = models.PositiveIntegerField(default=0, help_text="Net shortfall minutes after OT compensation")
+    shortfall_deduction = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'), help_text="Net Shortfall Minutes * Per-Minute Rate")
+    allow_overtime_compensation = models.BooleanField(default=True, help_text="Whether OT offset late minutes")
+
+    # Part C: Gross Deduction & HR Condonation
+    gross_deduction = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'), help_text="Leave Deduction + Shortfall Deduction")
+    hr_condoned_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'), help_text="Amount waived / condoned by HR")
+    final_deduction = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'), help_text="max(0, Gross Deduction - HR Condoned Amount)")
+    condone_reason = models.TextField(blank=True, help_text="HR reason for condoning/waiving deductions")
+    condoned_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='condoned_payslips')
+    condoned_at = models.DateTimeField(null=True, blank=True)
+
+    # Day-by-Day Detailed Log for Modal Inspector
+    daily_breakdown_json = models.JSONField(default=list, blank=True)
+
+    # Standard / Statutory Deductions
     provident_fund = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     professional_tax = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     tds = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))

@@ -743,7 +743,7 @@
             <p class="text-muted small mb-0">In-person registered candidates for interview evaluation and pipeline management.</p>
         </div>
         <div class="d-flex flex-wrap gap-2 align-items-center">
-            <button type="button" class="btn btn-success btn-sm shadow-sm fw-semibold" onclick="copyUniversalRegistrationLink(this)" data-url="{{ universal_apply_url }}" title="Copy Public Candidate Registration Link">
+            <button type="button" class="btn btn-success btn-sm shadow-sm fw-semibold" onclick="copyUniversalRegistrationLink(this)" data-url="{{ fast_apply_url }}" title="Copy Public Candidate Job Application Link">
                 <i class="bi bi-clipboard-check me-1"></i> Copy Link
             </button>
             <a href="{% url 'recruitment:jobs_list' %}" class="btn btn-outline-secondary btn-sm shadow-sm">
@@ -1882,7 +1882,7 @@
     }
 
     function copyUniversalRegistrationLink(btn) {
-        const url = btn.getAttribute('data-url') || (window.location.origin + '/candidate/apply/');
+        const url = btn.getAttribute('data-url') || (window.location.origin + '/candidate/fast-apply/');
         navigator.clipboard.writeText(url).then(() => {
             const originalHTML = btn.innerHTML;
             btn.innerHTML = '<i class="bi bi-check2"></i> Copied!';

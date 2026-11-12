@@ -1,76 +1,355 @@
 {% extends 'base.html' %}
-{% block title %}Payroll & Compensation Operations{% endblock %}
+{% load static %}
+
+{% block title %}Payroll & Compensation Operations - Company HRMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Executive Light Theme Palette */
+    :root {
+        --dash-bg: #f8fafc;
+        --dash-card: #ffffff;
+        --dash-border: #e2e8f0;
+        --dash-border-subtle: #f1f5f9;
+        --dash-text-main: #0f172a;
+        --dash-text-muted: #64748b;
+        --dash-emerald: #059669;
+        --dash-emerald-bg: #ecfdf5;
+        --dash-amber: #d97706;
+        --dash-amber-bg: #fffbeb;
+        --dash-rose: #dc2626;
+        --dash-rose-bg: #fef2f2;
+        --dash-indigo: #4f46e5;
+        --dash-indigo-bg: #eef2ff;
+        --dash-sky: #0284c7;
+        --dash-sky-bg: #f0f9ff;
+    }
+
+    .dash-hero {
+        background: #ffffff;
+        border: 1px solid var(--dash-border);
+        border-radius: 14px;
+        padding: 1.75rem 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        margin-bottom: 1.5rem;
+    }
+
+    .dash-stat-card {
+        background: #ffffff;
+        border: 1px solid var(--dash-border);
+        border-radius: 12px;
+        padding: 1.35rem 1.45rem;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .dash-stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+    }
+
+    .stat-icon-box {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .formula-explainer-card {
+        background: #ffffff;
+        border: 1px solid var(--dash-border);
+        border-radius: 14px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
+    .formula-step-pill {
+        background: #f8fafc;
+        border: 1px solid var(--dash-border);
+        border-radius: 10px;
+        padding: 1rem 1.15rem;
+        height: 100%;
+    }
+
+    .table-container-card {
+        background: #ffffff;
+        border: 1px solid var(--dash-border);
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
+    .card-header-clean {
+        background: #f8fafc;
+        border-bottom: 1px solid var(--dash-border);
+        padding: 1rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .dash-table {
+        margin-bottom: 0;
+        vertical-align: middle;
+        font-size: 0.88rem;
+    }
+
+    .dash-table thead th {
+        background: #f8fafc;
+        color: var(--dash-text-muted);
+        font-weight: 600;
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid var(--dash-border);
+        padding: 0.95rem 1.25rem;
+        white-space: nowrap;
+    }
+
+    .dash-table tbody td {
+        padding: 1.1rem 1.25rem;
+        border-bottom: 1px solid var(--dash-border-subtle);
+    }
+
+    .dash-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .dash-table tbody tr:hover {
+        background-color: #fbfcfe;
+    }
+
+    .badge-soft {
+        font-weight: 600;
+        font-size: 0.74rem;
+        padding: 0.35rem 0.65rem;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    .badge-soft-emerald {
+        background: var(--dash-emerald-bg);
+        color: var(--dash-emerald);
+        border: 1px solid rgba(5, 150, 105, 0.2);
+    }
+    .badge-soft-amber {
+        background: var(--dash-amber-bg);
+        color: var(--dash-amber);
+        border: 1px solid rgba(217, 119, 6, 0.2);
+    }
+    .badge-soft-indigo {
+        background: var(--dash-indigo-bg);
+        color: var(--dash-indigo);
+        border: 1px solid rgba(79, 70, 229, 0.2);
+    }
+    .badge-soft-secondary {
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container-fluid p-0">
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-        <div>
-            <h3 class="fw-bold mb-1">Payroll & Compensation Management</h3>
-            <p class="text-muted small mb-0">Automated monthly payroll generation based on verified attendance, loss-of-pay deductions, and executive authorization.</p>
+    <!-- Hero Header -->
+    <div class="dash-hero">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-1 small text-muted">
+                        <li class="breadcrumb-item"><a href="{% url 'portal:smart_dashboard' %}" class="text-decoration-none text-muted">Portal</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Payroll Operations</li>
+                    </ol>
+                </nav>
+                <h3 class="fw-bold text-dark mb-1">Payroll & Compensation Management</h3>
+                <p class="text-muted small mb-0">
+                    Governed by the Unified Master Formula: Base Rates, Holiday/Sunday-excluded leaves, Late-Overtime minute shortfalls & HR waivers.
+                </p>
+            </div>
+
+            {% if request.user.is_hr_role or request.user.is_head_role %}
+                <a href="{% url 'payroll:generate_payroll' %}" class="btn btn-primary px-3 py-2 rounded-3 shadow-sm d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-calculator-fill"></i>
+                    <span>Generate Monthly Payroll</span>
+                </a>
+            {% endif %}
         </div>
-        {% if request.user.is_hr_role or request.user.is_head_role %}
-            <a href="{% url 'payroll:generate_payroll' %}" class="btn btn-hrms btn-sm shadow-sm">
-                <i class="bi bi-calculator-fill me-1"></i> Generate Monthly Payroll
-            </a>
-        {% endif %}
     </div>
 
-    <!-- STRIP STATS -->
+    <!-- Executive Stat Cards -->
     <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="stat-card">
-                <div class="stat-icon stat-icon-green"><i class="bi bi-currency-rupee"></i></div>
-                <div>
-                    <div class="stat-label">Total Authorized Expenditure</div>
-                    <div class="stat-value text-success">₹{{ total_expenditure|floatformat:0 }}</div>
-                    <small class="text-muted">Total Net Salary Outflow</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="stat-card">
-                <div class="stat-icon stat-icon-blue"><i class="bi bi-calendar2-month"></i></div>
-                <div>
-                    <div class="stat-label">Processed Cycles</div>
-                    <div class="stat-value text-primary">{{ payroll_periods.count }}</div>
-                    <small class="text-muted">Historical payroll runs</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="stat-card">
-                <div class="stat-icon stat-icon-amber"><i class="bi bi-shield-check"></i></div>
-                <div>
-                    <div class="stat-label">Latest Cycle Status</div>
-                    <div class="fw-bold fs-5 text-dark mt-1">
-                        {% if recent_period %}
-                            <span class="badge {% if recent_period.status == 'APPROVED' %}bg-success{% else %}bg-warning text-dark{% endif %}">
-                                {{ recent_period.get_month_display }} {{ recent_period.year }} ({{ recent_period.get_status_display }})
-                            </span>
-                        {% else %}
-                            <span class="badge bg-secondary">No runs</span>
-                        {% endif %}
+        <!-- Total Authorized Outflow -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="dash-stat-card">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="text-muted small fw-semibold text-uppercase letter-spacing-1">Authorized Outflow</span>
+                    <div class="stat-icon-box" style="background: var(--dash-emerald-bg); color: var(--dash-emerald);">
+                        <i class="bi bi-currency-rupee"></i>
                     </div>
                 </div>
+                <div>
+                    <h3 class="fw-bold text-dark mb-0">₹{{ total_expenditure|floatformat:2 }}</h3>
+                    <small class="text-success fw-medium">
+                        <i class="bi bi-check-circle me-1"></i>Approved net disbursement
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Payroll Cycles -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="dash-stat-card">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="text-muted small fw-semibold text-uppercase letter-spacing-1">Processed Cycles</span>
+                    <div class="stat-icon-box" style="background: var(--dash-indigo-bg); color: var(--dash-indigo);">
+                        <i class="bi bi-calendar2-check"></i>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="fw-bold text-dark mb-0">{{ payroll_periods.count }}</h3>
+                    <small class="text-muted">Historical monthly payroll runs</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formula Engine Status -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="dash-stat-card">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="text-muted small fw-semibold text-uppercase letter-spacing-1">Master Formula Engine</span>
+                    <div class="stat-icon-box" style="background: var(--dash-sky-bg); color: var(--dash-sky);">
+                        <i class="bi bi-cpu"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="fw-bold text-dark fs-5 mt-1">Unified v2.0</div>
+                    <small class="text-success fw-medium">
+                        <i class="bi bi-check-lg me-1"></i>Active & Master Data Synchronized
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Latest Cycle Status -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="dash-stat-card">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="text-muted small fw-semibold text-uppercase letter-spacing-1">Latest Cycle Status</span>
+                    <div class="stat-icon-box" style="background: var(--dash-amber-bg); color: var(--dash-amber);">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                </div>
+                <div>
+                    {% if recent_period %}
+                        <div class="fw-bold text-dark fs-6 mt-1 text-truncate">
+                            {{ recent_period.get_month_display }} {{ recent_period.year }}
+                        </div>
+                        <div class="mt-1">
+                            {% if recent_period.status == 'APPROVED' %}
+                                <span class="badge-soft badge-soft-emerald"><i class="bi bi-check-circle-fill"></i> Approved</span>
+                            {% elif recent_period.status == 'SUBMITTED' %}
+                                <span class="badge-soft badge-soft-amber"><i class="bi bi-clock-fill"></i> Pending Sign-off</span>
+                            {% else %}
+                                <span class="badge-soft badge-soft-secondary">{{ recent_period.get_status_display }}</span>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <span class="badge-soft badge-soft-secondary">No cycles yet</span>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- PAYROLL CYCLES TABLE -->
-    <div class="hrms-card">
-        <div class="hrms-card-header">
-            <h6 class="fw-bold mb-0">Monthly Payroll Cycles</h6>
+    <!-- Unified Master Formula Explainer Architecture Card -->
+    <div class="formula-explainer-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-dark text-white px-2 py-1"><i class="bi bi-diagram-3-fill me-1"></i>Master Formula</span>
+                <h6 class="fw-bold text-dark mb-0">Unified Salary Calculation Architecture</h6>
+            </div>
+            <small class="text-muted">Master Data Governed</small>
         </div>
+
+        <div class="row g-3">
+            <!-- Base Rates -->
+            <div class="col-12 col-md-4">
+                <div class="formula-step-pill">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="badge bg-primary text-white rounded-pill px-2 py-0.5 small">1</span>
+                        <span class="fw-bold text-dark small text-uppercase">Base Rates</span>
+                    </div>
+                    <ul class="list-unstyled small text-muted mb-0 lh-lg">
+                        <li>&bull; <code class="text-dark">Per-Day Rate = Base Salary / 30</code></li>
+                        <li>&bull; <code class="text-dark">Daily Hours = End Time - Start Time</code></li>
+                        <li>&bull; <code class="text-dark">Per-Min Rate = Per-Day / (Hours &times; 60)</code></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Part A -->
+            <div class="col-12 col-md-4">
+                <div class="formula-step-pill">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="badge bg-danger text-white rounded-pill px-2 py-0.5 small">2</span>
+                        <span class="fw-bold text-dark small text-uppercase">Part A: Leave Deductions</span>
+                    </div>
+                    <ul class="list-unstyled small text-muted mb-0 lh-lg">
+                        <li>&bull; Excludes Public Holidays & Sundays</li>
+                        <li>&bull; <code class="text-dark">Excess SL/CL = max(0, Taken - Limit)</code></li>
+                        <li>&bull; Unexcused Absences &times; Per-Day Rate</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Part B & C -->
+            <div class="col-12 col-md-4">
+                <div class="formula-step-pill">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="badge bg-success text-white rounded-pill px-2 py-0.5 small">3</span>
+                        <span class="fw-bold text-dark small text-uppercase">Part B & C: Shortfall & Deduction Waiver</span>
+                    </div>
+                    <ul class="list-unstyled small text-muted mb-0 lh-lg">
+                        <li>&bull; Late Mins beyond grace &minus; Overtime Mins</li>
+                        <li>&bull; <code class="text-dark">Gross Ded = Leave Ded + Shortfall Ded</code></li>
+                        <li>&bull; <code class="text-success fw-bold">Net = Base &minus; (Gross &minus; HR Waiver)</code></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Payroll Cycles Table -->
+    <div class="table-container-card">
+        <div class="card-header-clean">
+            <div>
+                <h6 class="fw-bold text-dark mb-0">Monthly Payroll Cycles</h6>
+                <small class="text-muted">Historical cycles with sign-off status and net payable summary</small>
+            </div>
+            <span class="badge bg-white text-dark border px-2 py-1 small">
+                {{ payroll_periods.count }} Cycle{{ payroll_periods.count|pluralize }}
+            </span>
+        </div>
+
         <div class="table-responsive">
-            <table class="table hrms-table">
+            <table class="table dash-table">
                 <thead>
                     <tr>
                         <th>Cycle Period</th>
                         <th>Working Days</th>
-                        <th>Total Gross Payout</th>
-                        <th>Total Deductions (PF/Tax)</th>
                         <th>Total Net Payable</th>
-                        <th>Processed By</th>
+                        <th>Leave Deductions</th>
+                        <th>Shortfall Deductions</th>
+                        <th>HR Waiver</th>
                         <th>Approval Status</th>
                         <th class="text-end">Actions</th>
                     </tr>
@@ -78,37 +357,115 @@
                 <tbody>
                     {% for p in payroll_periods %}
                         <tr>
-                            <td class="fw-bold text-dark fs-6">{{ p.get_month_display }} {{ p.year }}</td>
-                            <td>{{ p.working_days }} days</td>
-                            <td class="font-monospace text-dark">₹{{ p.total_gross|floatformat:2 }}</td>
-                            <td class="font-monospace text-danger">₹{{ p.total_deductions|floatformat:2 }}</td>
-                            <td class="font-monospace text-success fw-bold fs-6">₹{{ p.total_net|floatformat:2 }}</td>
-                            <td><small class="text-muted">{{ p.processed_by.get_full_name|default:p.processed_by.username }}</small></td>
+                            <!-- Period -->
                             <td>
-                                {% if p.status == 'APPROVED' %}
-                                    <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i> Approved by Head</span>
-                                {% elif p.status == 'SUBMITTED' %}
-                                    <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i> Awaiting Head Approval</span>
+                                <div class="fw-bold text-dark fs-6">{{ p.get_month_display }} {{ p.year }}</div>
+                                <small class="text-muted">By {{ p.processed_by.get_full_name|default:p.processed_by.username }}</small>
+                            </td>
+
+                            <!-- Working Days -->
+                            <td>
+                                <span class="fw-semibold text-dark">{{ p.working_days }} days</span>
+                                <div class="text-muted" style="font-size: 0.74rem;">{{ p.required_daily_hours|default:"9.0" }}h/day</div>
+                            </td>
+
+                            <!-- Total Net Payable -->
+                            <td>
+                                <div class="font-monospace text-success fw-bold fs-6">
+                                    ₹{{ p.total_net|floatformat:2 }}
+                                </div>
+                            </td>
+
+                            <!-- Leave Deductions -->
+                            <td>
+                                <div class="font-monospace text-danger fw-semibold">
+                                    ₹{{ p.total_leave_deductions|default:"0.00"|floatformat:2 }}
+                                </div>
+                            </td>
+
+                            <!-- Shortfall Deductions -->
+                            <td>
+                                <div class="font-monospace text-warning fw-semibold" style="color: #b45309 !important;">
+                                    ₹{{ p.total_shortfall_deductions|default:"0.00"|floatformat:2 }}
+                                </div>
+                            </td>
+
+                            <!-- HR Waiver -->
+                            <td>
+                                {% if p.total_condoned_amount > 0 %}
+                                    <span class="badge-soft badge-soft-indigo">
+                                        <i class="bi bi-shield-check"></i> ₹{{ p.total_condoned_amount|floatformat:2 }}
+                                    </span>
                                 {% else %}
-                                    <span class="badge bg-secondary">{{ p.get_status_display }}</span>
+                                    <span class="text-muted small">-</span>
                                 {% endif %}
                             </td>
-                            <td class="text-end">
-                                <a href="{% url 'payroll:period_detail' period_id=p.id %}" class="btn btn-sm btn-outline-success py-1 px-2">
-                                    <i class="bi bi-eye"></i> View Payslips
-                                </a>
-                                {% if p.status == 'SUBMITTED' and request.user.is_head_role %}
-                                    <form method="POST" action="{% url 'payroll:approve_payroll' period_id=p.id %}" class="d-inline">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-success py-1 px-2 ms-1">
-                                            <i class="bi bi-check-lg"></i> Sign & Authorize
-                                        </button>
-                                    </form>
+
+                            <!-- Approval Status -->
+                            <td>
+                                {% if p.status == 'APPROVED' %}
+                                    <span class="badge-soft badge-soft-emerald"><i class="bi bi-check-circle-fill"></i> Approved by Head</span>
+                                {% elif p.status == 'SUBMITTED' %}
+                                    <span class="badge-soft badge-soft-amber"><i class="bi bi-clock-fill"></i> Awaiting Head Approval</span>
+                                {% else %}
+                                    <span class="badge-soft badge-soft-secondary">{{ p.get_status_display }}</span>
                                 {% endif %}
+                            </td>
+
+                            <!-- Actions -->
+                            <td class="text-end">
+                                <div class="d-inline-flex gap-2">
+                                    <a href="{% url 'payroll:period_detail' period_id=p.id %}" class="btn btn-outline-secondary btn-sm px-3 py-1 rounded-3">
+                                        <i class="bi bi-people me-1"></i> View Roster
+                                    </a>
+
+                                    <!-- Download Report Dropdown -->
+                                    <div class="dropdown d-inline-block">
+                                        <button class="btn btn-outline-primary btn-sm px-2 py-1 rounded-3 dropdown-toggle d-inline-flex align-items-center gap-1" type="button" id="dlDropdown{{ p.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-download"></i> Download
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 p-1 mt-1" aria-labelledby="dlDropdown{{ p.id }}" style="min-width: 190px;">
+                                            <li><span class="dropdown-header text-uppercase text-muted fw-bold px-2 py-1" style="font-size: 0.7rem;">Download Report</span></li>
+                                            <li>
+                                                <a class="dropdown-item rounded py-1 px-2 d-flex align-items-center gap-2 small" href="{% url 'payroll:export_period_report' period_id=p.id format_type='csv' %}">
+                                                    <i class="bi bi-filetype-csv text-success"></i> CSV (.csv)
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item rounded py-1 px-2 d-flex align-items-center gap-2 small" href="{% url 'payroll:export_period_report' period_id=p.id format_type='excel' %}">
+                                                    <i class="bi bi-file-earmark-excel-fill text-success"></i> Excel (.xlsx)
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider my-1"></li>
+                                            <li>
+                                                <a class="dropdown-item rounded py-1 px-2 d-flex align-items-center gap-2 small" href="{% url 'payroll:export_period_report' period_id=p.id format_type='pdf' %}">
+                                                    <i class="bi bi-file-earmark-pdf-fill text-danger"></i> PDF Summary (.pdf)
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    {% if p.status == 'SUBMITTED' and request.user.is_head_role %}
+                                        <form method="POST" action="{% url 'payroll:approve_payroll' period_id=p.id %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-success btn-sm px-3 py-1 rounded-3" onclick="return confirm('Authorize payroll disbursement for {{ p.get_month_display }} {{ p.year }}?');">
+                                                <i class="bi bi-check-lg me-1"></i> Sign & Authorize
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
                             </td>
                         </tr>
                     {% empty %}
-                        <tr><td colspan="8" class="text-center py-5 text-muted">No payroll cycles created yet.</td></tr>
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <div class="py-4">
+                                    <i class="bi bi-calendar-x text-muted display-4"></i>
+                                    <h6 class="fw-bold text-dark mt-3">No payroll cycles created yet</h6>
+                                    <p class="text-muted small">Click "Generate Monthly Payroll" to compute the first payroll cycle.</p>
+                                </div>
+                            </td>
+                        </tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -116,4 +473,3 @@
     </div>
 </div>
 {% endblock %}
-
