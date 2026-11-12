@@ -302,6 +302,31 @@
         transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
+    .input-group {
+        display: flex;
+        width: 100%;
+    }
+
+    .input-group .input-group-text {
+        background-color: #F8FAFC !important;
+        border: 1.5px solid #CBD5E1 !important;
+        border-right: none !important;
+        border-top-left-radius: 8px !important;
+        border-bottom-left-radius: 8px !important;
+        border-top-right-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        padding: 10px 14px !important;
+        font-size: 13.5px !important;
+        font-weight: 700 !important;
+        color: #475569 !important;
+        white-space: nowrap;
+    }
+
+    .input-group > .form-control {
+        border-top-left-radius: 0 !important;
+        border-bottom-left-radius: 0 !important;
+    }
+
     .form-control:hover, .form-select:hover {
         border-color: #94A3B8 !important;
     }
@@ -637,43 +662,19 @@
                         <label class="reg-label" for="id_phone">
                             <i class="bi bi-telephone-fill text-secondary me-1"></i> Phone Number <b>*</b>
                         </label>
-                        {{ form.phone }}
+                        <div class="input-group">
+                            <span class="input-group-text">🇮🇳 +91</span>
+                            {{ form.phone }}
+                        </div>
                     </div>
                     <div>
                         <label class="reg-label" for="id_alt_phone">
                             <i class="bi bi-telephone text-secondary me-1"></i> Alternative Phone Number <span class="text-muted fw-normal small">(Optional)</span>
                         </label>
-                        {{ form.alt_phone }}
-                    </div>
-                    <div class="reg-full">
-                        <label class="reg-label" for="id_current_address">
-                            <i class="bi bi-geo-alt-fill text-danger me-1"></i> Current Residential Address (House No, Building, Street) <b>*</b>
-                        </label>
-                        {{ form.current_address }}
-                    </div>
-                    <div>
-                        <label class="reg-label" for="id_city">
-                            <i class="bi bi-buildings-fill text-secondary me-1"></i> City <b>*</b>
-                        </label>
-                        {{ form.city }}
-                    </div>
-                    <div>
-                        <label class="reg-label" for="id_state">
-                            <i class="bi bi-map-fill text-secondary me-1"></i> State / Province <b>*</b>
-                        </label>
-                        {{ form.state }}
-                    </div>
-                    <div>
-                        <label class="reg-label" for="id_postal_code">
-                            <i class="bi bi-mailbox2 text-secondary me-1"></i> PIN / Postal Code <b>*</b>
-                        </label>
-                        {{ form.postal_code }}
-                    </div>
-                    <div>
-                        <label class="reg-label" for="id_country">
-                            <i class="bi bi-globe-americas text-secondary me-1"></i> Country / Nationality <b>*</b>
-                        </label>
-                        {{ form.country }}
+                        <div class="input-group">
+                            <span class="input-group-text">🇮🇳 +91</span>
+                            {{ form.alt_phone }}
+                        </div>
                     </div>
                 </div>
             </section>
@@ -938,19 +939,17 @@
         if (isReturning && candidateData) {
             const phoneInput = document.getElementById('id_phone');
             const altPhoneInput = document.getElementById('id_alt_phone');
-            const addressInput = document.getElementById('id_current_address');
-            const cityInput = document.getElementById('id_city');
-            const stateInput = document.getElementById('id_state');
-            const postalInput = document.getElementById('id_postal_code');
-            const countryInput = document.getElementById('id_country');
 
-            if (phoneInput && candidateData.phone) phoneInput.value = candidateData.phone;
-            if (altPhoneInput && candidateData.alt_phone) altPhoneInput.value = candidateData.alt_phone;
-            if (addressInput && candidateData.current_address) addressInput.value = candidateData.current_address;
-            if (cityInput && candidateData.city) cityInput.value = candidateData.city;
-            if (stateInput && candidateData.state) stateInput.value = candidateData.state;
-            if (postalInput && candidateData.postal_code) postalInput.value = candidateData.postal_code;
-            if (countryInput && candidateData.country) countryInput.value = candidateData.country;
+            if (phoneInput && candidateData.phone) {
+                let p = candidateData.phone.replace(/\D/g, '');
+                if (p.startsWith('91') && p.length === 12) p = p.slice(2);
+                phoneInput.value = p.slice(0, 10);
+            }
+            if (altPhoneInput && candidateData.alt_phone) {
+                let ap = candidateData.alt_phone.replace(/\D/g, '');
+                if (ap.startsWith('91') && ap.length === 12) ap = ap.slice(2);
+                altPhoneInput.value = ap.slice(0, 10);
+            }
         }
 
         // Show signed state
@@ -1017,11 +1016,6 @@
     function handleClearForm() {
         const phoneInput = document.getElementById('id_phone');
         const altPhoneInput = document.getElementById('id_alt_phone');
-        const addressInput = document.getElementById('id_current_address');
-        const cityInput = document.getElementById('id_city');
-        const stateInput = document.getElementById('id_state');
-        const postalCodeInput = document.getElementById('id_postal_code');
-        const countryInput = document.getElementById('id_country');
         const resumeInput = document.getElementById('id_resume');
         const fileSelectedBadge = document.getElementById('fileSelectedBadge');
         const posSelect = document.getElementById('positionSelect');
@@ -1029,11 +1023,6 @@
 
         if (phoneInput) phoneInput.value = '';
         if (altPhoneInput) altPhoneInput.value = '';
-        if (addressInput) addressInput.value = '';
-        if (cityInput) cityInput.value = '';
-        if (stateInput) stateInput.value = '';
-        if (postalCodeInput) postalCodeInput.value = '';
-        if (countryInput) countryInput.value = 'India';
         if (resumeInput) resumeInput.value = '';
         if (fileSelectedBadge) fileSelectedBadge.style.display = 'none';
         if (posSelect) {

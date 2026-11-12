@@ -144,12 +144,13 @@ class RecruitmentTests(TestCase):
         self.assertEqual(resp.status_code, 200)
 
     def test_public_pre_interview_registration_page_view(self):
-        """Public pre-interview registration page loads with minimal required fields."""
+        """Public pre-interview registration page loads with required fields."""
         reg_url = reverse('recruitment:candidate_register', kwargs={'token': self.link.token})
         resp = self.client.get(reg_url)
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'Senior Backend Engineer')
         self.assertContains(resp, 'Candidate Registration & Job Application')
+        self.assertContains(resp, 'Current Residential Address')
         self.assertContains(resp, 'Submit Application')
 
     def test_public_registration_expired_link(self):
@@ -175,7 +176,12 @@ class RecruitmentTests(TestCase):
             'full_name': 'Ananya Sengupta',
             'email': 'ananya.sengupta@example.com',
             'phone': '+91 91234 56789',
+            'alt_phone': '+91 91234 56780',
+            'current_address': 'Flat 201, Maple Heights, HSR Layout',
             'city': 'Bengaluru',
+            'state': 'Karnataka',
+            'postal_code': '560102',
+            'country': 'India',
             'highest_qualification': 'B.Tech in Information Technology',
             'institution': 'IIT Kharagpur',
             'experience_type': 'EXPERIENCED',
@@ -197,7 +203,12 @@ class RecruitmentTests(TestCase):
         candidate = Candidate.objects.filter(email='ananya.sengupta@example.com').first()
         self.assertIsNotNone(candidate)
         self.assertEqual(candidate.full_name, 'Ananya Sengupta')
+        self.assertEqual(candidate.alt_phone, '+91 91234 56780')
+        self.assertEqual(candidate.current_address, 'Flat 201, Maple Heights, HSR Layout')
         self.assertEqual(candidate.city, 'Bengaluru')
+        self.assertEqual(candidate.state, 'Karnataka')
+        self.assertEqual(candidate.postal_code, '560102')
+        self.assertEqual(candidate.country, 'India')
         self.assertEqual(candidate.education.highest_qualification, 'B.Tech in Information Technology')
         self.assertEqual(candidate.experience.total_experience_years, 4)
         self.assertIn('Django', candidate.skills.technical_skills)
@@ -311,13 +322,13 @@ class RecruitmentTests(TestCase):
         self.assertEqual(resp2.status_code, 200)
         self.assertContains(resp2, 'Official Employee Onboarding Portal')
         self.assertContains(resp2, 'Salary Bank Details')
+        # Section 5 Create Portal Credentials removed from candidate onboarding form
+        self.assertNotContains(resp2, '5. Create HRMS Portal Login Credentials')
+        self.assertNotContains(resp2, 'chinmayee_mohanty_ux')
 
-        # Candidate submits full onboarding details with Portal Credentials and PF UAN
+        # Candidate submits full onboarding details with documents and statutory PF UAN (No login credentials)
         dummy_cert = SimpleUploadedFile("degree.pdf", b"%PDF-1.4 Degree Cert", content_type="application/pdf")
         onboarding_post_data = {
-            'username': 'sneha_reddy',
-            'portal_password': 'MyPassword@123',
-            'confirm_password': 'MyPassword@123',
             'date_of_birth': '1997-06-25',
             'gender': 'FEMALE',
             'father_name': 'K. V. Reddy',
@@ -350,23 +361,129 @@ class RecruitmentTests(TestCase):
 
         resp3 = self.client.post(onboarding_url, onboarding_post_data)
         self.assertEqual(resp3.status_code, 200)
-        self.assertContains(resp3, 'Onboarding Completed Successfully!')
-        self.assertContains(resp3, 'sneha_reddy')
+        self.assertContains(resp3, 'Onboarding Documents Submitted Successfully!')
+        self.assertContains(resp3, 'Pending HR Document Verification & Appointment')
 
         app.refresh_from_db()
         candidate.refresh_from_db()
         self.assertTrue(app.is_onboarding_completed)
-        self.assertEqual(app.status, JobApplication.Status.HIRED)
+        self.assertEqual(app.status, JobApplication.Status.ONBOARDING_COMPLETED)
+        self.assertEqual(app.document_verification_status, JobApplication.DocumentVerificationStatus.PENDING)
         self.assertEqual(candidate.father_name, 'K. V. Reddy')
         self.assertEqual(candidate.bank_name, 'HDFC Bank')
         self.assertEqual(candidate.pan_number, 'ABCDE1234F')
         self.assertEqual(candidate.pf_uan_number, '101234567890')
 
-        # Verify active user account was created with chosen credentials
+        # -------------------------------------------------------------
+        # STEP 2: HR Document Verification & Error Handling
+        # -------------------------------------------------------------
+        self.client.login(username='test_hr', password='password123')
+
+        # HR views onboarding candidates list
+        onboarding_list_url = reverse('recruitment:onboarding_candidates_list')
+        list_resp = self.client.get(onboarding_list_url)
+        self.assertEqual(list_resp.status_code, 200)
+        self.assertContains(list_resp, 'Sneha Reddy')
+        self.assertContains(list_resp, 'Pending Review')
+
+        # Scenario A: HR finds documentation error and rejects documents with feedback
+        reject_url = reverse('recruitment:verify_candidate_documents', kwargs={'application_id': app.application_id})
+        reject_resp = self.client.post(reject_url, {
+            'action': 'REJECT',
+            'rejection_reason': 'Degree certificate is blurry. Please re-upload clear marksheet.'
+        })
+        self.assertEqual(reject_resp.status_code, 302)
+        app.refresh_from_db()
+        self.assertEqual(app.document_verification_status, JobApplication.DocumentVerificationStatus.REJECTED)
+        self.assertEqual(app.document_rejection_reason, 'Degree certificate is blurry. Please re-upload clear marksheet.')
+
+        # Candidate opens onboarding link and sees the rejection error alert
+        cand_reopen_resp = self.client.get(onboarding_url)
+        self.assertEqual(cand_reopen_resp.status_code, 200)
+        self.assertContains(cand_reopen_resp, 'Documentation Error — Re-upload / Correction Requested')
+        self.assertContains(cand_reopen_resp, 'Degree certificate is blurry. Please re-upload clear marksheet.')
+
+        # Scenario B: HR reviews re-uploaded documents and marks as VERIFIED
+        verify_resp = self.client.post(reject_url, {'action': 'VERIFY'})
+        self.assertEqual(verify_resp.status_code, 302)
+        app.refresh_from_db()
+        self.assertEqual(app.document_verification_status, JobApplication.DocumentVerificationStatus.VERIFIED)
+
+        # -------------------------------------------------------------
+        # STEP 3: Auto-Fetch Candidate by Phone or Email AJAX Endpoint
+        # -------------------------------------------------------------
+        fetch_url = reverse('recruitment:fetch_onboarding_candidate_ajax')
+        # Fetch by phone
+        fetch_resp_phone = self.client.get(f"{fetch_url}?q=9888877777")
+        self.assertEqual(fetch_resp_phone.status_code, 200)
+        phone_data = fetch_resp_phone.json()
+        self.assertTrue(phone_data['success'])
+        self.assertEqual(phone_data['candidate']['full_name'], 'Sneha Reddy')
+        self.assertEqual(phone_data['candidate']['document_status'], 'VERIFIED')
+        self.assertTrue(phone_data['candidate']['suggested_username'].startswith('sneha_reddy'))
+
+        # Fetch by email
+        fetch_resp_email = self.client.get(f"{fetch_url}?q=sneha.reddy@example.com")
+        self.assertEqual(fetch_resp_email.status_code, 200)
+        email_data = fetch_resp_email.json()
+        self.assertTrue(email_data['success'])
+        self.assertEqual(email_data['candidate']['full_name'], 'Sneha Reddy')
+
+        # -------------------------------------------------------------
+        # STEP 4: HR Appoints Candidate as Official Employee
+        # -------------------------------------------------------------
+        appoint_url = reverse('recruitment:appoint_employee')
+
+        # GET page loads cleanly with prefill or form
+        appoint_get = self.client.get(f"{appoint_url}?app_id={app.application_id}")
+        self.assertEqual(appoint_get.status_code, 200)
+        self.assertContains(appoint_get, 'Candidate Identification & Profile Lookup')
+        self.assertContains(appoint_get, 'Create Official HRMS Portal Login Credentials')
+
+        # HR submits appointment with official username and password
+        appoint_post_data = {
+            'lookup_query': 'sneha.reddy@example.com',
+            'application_id': app.application_id,
+            'candidate_id': str(candidate.id),
+            'department': self.dept.id,
+            'designation_title': 'Senior Backend Engineer',
+            'site': self.site.id,
+            'joining_date': '2026-11-15',
+            'employment_type': 'FULL_TIME',
+            'offered_ctc': '720000.00',
+            'basic_salary': '30000.00',
+            'username': 'sneha_reddy',
+            'password': 'MyPassword@123',
+            'confirm_password': 'MyPassword@123',
+            'confirm_appointment': 'on',
+        }
+        appoint_post_resp = self.client.post(appoint_url, appoint_post_data)
+        self.assertEqual(appoint_post_resp.status_code, 302)
+
+        app.refresh_from_db()
+        self.assertEqual(app.status, JobApplication.Status.HIRED)
+        self.assertIsNotNone(app.hired_employee)
+
+        # Verify CustomUser was created with the specified credentials
         created_employee_user = CustomUser.objects.filter(email='sneha.reddy@example.com').first()
         self.assertIsNotNone(created_employee_user)
         self.assertEqual(created_employee_user.role, CustomUser.Role.EMPLOYEE)
         self.assertEqual(created_employee_user.username, 'sneha_reddy')
+
+        # Verify Employee Profile created
+        self.assertEqual(created_employee_user.employee_profile.department, self.dept)
+        self.assertEqual(str(created_employee_user.employee_profile.joining_date), '2026-11-15')
+
+        # Verify Payroll Salary Structure created
+        from payroll.models import SalaryStructure
+        sal_struct = SalaryStructure.objects.filter(employee=created_employee_user.employee_profile).first()
+        self.assertIsNotNone(sal_struct)
+        self.assertEqual(sal_struct.basic_salary, 30000.00)
+
+        # Employee logs into HRMS with their new HR-created credentials
+        self.client.logout()
+        login_ok = self.client.login(username='sneha_reddy', password='MyPassword@123')
+        self.assertTrue(login_ok)
 
         # Employee logs in with their new credentials and views profile
         login_ok = self.client.login(username='sneha_reddy', password='MyPassword@123')
@@ -417,7 +534,11 @@ class RecruitmentTests(TestCase):
             'full_name': 'Karan Mehra',
             'email': 'karan.mehra@example.com',
             'phone': '+91 98888 77777',
+            'current_address': 'Flat 12, Ocean View, Bandra West',
             'city': 'Mumbai',
+            'state': 'Maharashtra',
+            'postal_code': '400050',
+            'country': 'India',
             'highest_qualification': 'MCA (Master of Computer Applications)',
             'institution': 'Mumbai University',
             'experience_type': 'EXPERIENCED',
@@ -449,7 +570,7 @@ class RecruitmentTests(TestCase):
         self.assertContains(resp_get, 'Sign up with Google')
         self.assertNotContains(resp_get, '<span>Sign in with Google</span>')
         self.assertContains(resp_get, 'Alternative Phone Number')
-        self.assertContains(resp_get, 'Current Residential Address')
+        self.assertNotContains(resp_get, 'Current Residential Address')
         self.assertContains(resp_get, 'Clear form')
         self.assertNotContains(resp_get, 'Quick Application • LinkedIn & Website Fast Portal')
         self.assertNotContains(resp_get, 'Equal Opportunity Employer')
@@ -466,23 +587,17 @@ class RecruitmentTests(TestCase):
             'email': 'aarav.patel@gmail.com',
             'phone': '+91 98765 43210',
             'alt_phone': '+91 98765 43211',
-            'current_address': 'Flat 402, Sunrise Towers, Indiranagar',
-            'city': 'Bengaluru',
-            'state': 'Karnataka',
-            'postal_code': '560038',
-            'country': 'India',
             'resume': dummy_resume,
         }
         resp_post = self.client.post(fast_apply_url, post_data)
         self.assertEqual(resp_post.status_code, 302)
 
-        # 3. Verify Candidate created with alt_phone and current_address
+        # 3. Verify Candidate created with alt_phone
         cand = Candidate.objects.filter(email='aarav.patel@gmail.com').first()
         self.assertIsNotNone(cand)
         self.assertEqual(cand.full_name, 'Aarav Patel')
         self.assertEqual(cand.phone, '+91 98765 43210')
         self.assertEqual(cand.alt_phone, '+91 98765 43211')
-        self.assertIn('Sunrise Towers', cand.current_address)
 
         # 4. Verify JobApplication created as online fast-apply
         app = JobApplication.objects.filter(candidate=cand, job=self.job).first()
@@ -498,7 +613,11 @@ class RecruitmentTests(TestCase):
             'full_name': 'Aarav Patel',
             'email': 'aarav.patel@gmail.com',
             'phone': '+91 98765 43210',
+            'current_address': 'Flat 402, Sunrise Towers, Indiranagar',
             'city': 'Bengaluru',
+            'state': 'Karnataka',
+            'postal_code': '560038',
+            'country': 'India',
             'highest_qualification': 'B.Tech / B.E.',
             'experience_type': 'EXPERIENCED',
             'technical_skills': 'Python, Django, AWS',
@@ -509,6 +628,8 @@ class RecruitmentTests(TestCase):
         app.refresh_from_db()
         self.assertTrue(app.is_office_registered)
         self.assertEqual(app.application_type, JobApplication.ApplicationType.OFFICE_REGISTRATION)
+        cand.refresh_from_db()
+        self.assertIn('Sunrise Towers', cand.current_address)
 
         # 5. Check links_list view includes fast-apply link and table pagination/search controls
         self.client.login(username='test_hr', password='password123')
@@ -560,7 +681,7 @@ class RecruitmentTests(TestCase):
         self.assertContains(resp, 'Actions')
 
         # 2. Verify row content: Applied on DD/MM/YYYY subtext in ID column, candidate details
-        today_formatted = app.applied_at.strftime('%d/%m/%Y')
+        today_formatted = timezone.localtime(app.applied_at).strftime('%d/%m/%Y')
         self.assertContains(resp, f'Applied on {today_formatted}')
         self.assertContains(resp, 'Aarav Sharma')
         self.assertContains(resp, 'aarav.sharma@gmail.com')
@@ -634,11 +755,6 @@ class RecruitmentTests(TestCase):
                 'email': 'priya.nair@gmail.com',
                 'phone': '9876543210',
                 'alt_phone': '9876543211',
-                'current_address': 'Flat 302, Palm Grove, Koramangala',
-                'city': 'Bengaluru',
-                'state': 'Karnataka',
-                'postal_code': '560034',
-                'country': 'India',
                 'resume': resume_file,
                 'is_google_verified': 'true'
             }
@@ -650,7 +766,7 @@ class RecruitmentTests(TestCase):
         candidate = Candidate.objects.get(email='priya.nair@gmail.com')
         self.assertTrue(candidate.is_google_verified)
         self.assertEqual(candidate.google_sub, 'google-oauth2-1029384756')
-        self.assertEqual(candidate.city, 'Bengaluru')
+        self.assertEqual(candidate.city, self.job.location)
 
         # Add education and skills for this candidate
         CandidateEducation.objects.create(
@@ -687,7 +803,9 @@ class RecruitmentTests(TestCase):
         c_data = re_auth_data['candidate_data']
         self.assertEqual(c_data['full_name'], 'Priya Nair')
         self.assertEqual(c_data['phone'], '9876543210')
-        self.assertEqual(c_data['city'], 'Bengaluru')
+        self.assertEqual(c_data['alt_phone'], '9876543211')
+        self.assertEqual(c_data['applied_job_id'], self.job.id)
+        self.assertEqual(c_data['city'], self.job.location)
         self.assertEqual(c_data['highest_qualification'], 'M.Tech Computer Science')
         self.assertEqual(c_data['current_company'], 'Tech Innovations Ltd')
         self.assertEqual(c_data['technical_skills'], 'Python, Django, AWS, Kubernetes')
@@ -700,6 +818,7 @@ class RecruitmentTests(TestCase):
         self.assertContains(reg_resp, 'Priya Nair')
         self.assertContains(reg_resp, 'priya.nair@gmail.com')
         self.assertContains(reg_resp, '9876543210')
+        self.assertContains(reg_resp, '9876543211')
         self.assertContains(reg_resp, 'Google Verified')
 
         # 5. Verify Talent Roster displays candidate (Google Verified badge removed from table per requirement)
@@ -750,4 +869,173 @@ class RecruitmentTests(TestCase):
         self.assertContains(table_resp, 'status-open')
         self.assertContains(table_resp, 'status-closed')
         self.assertContains(table_resp, 'Position is not open - application link is disabled')
+
+    def test_bulk_candidate_status_update(self):
+        """
+        Verify HR bulk and 1-click status updates for candidate applications,
+        auditing in ApplicationStatusHistory, and AJAX response.
+        """
+        import json
+        self.client.force_login(self.hr_user)
+
+        # Create two candidate applications
+        cand1 = Candidate.objects.create(full_name='Rahul Varma', email='rahul.varma@example.com', phone='9876543211')
+        app1 = JobApplication.objects.create(
+            candidate=cand1,
+            job=self.job,
+            application_type=JobApplication.ApplicationType.ONLINE_FAST_APPLY,
+            status=JobApplication.Status.SUBMITTED
+        )
+
+        cand2 = Candidate.objects.create(full_name='Ananya Sen', email='ananya.sen@example.com', phone='9876543212')
+        app2 = JobApplication.objects.create(
+            candidate=cand2,
+            job=self.job,
+            application_type=JobApplication.ApplicationType.OFFICE_REGISTRATION,
+            status=JobApplication.Status.SUBMITTED
+        )
+
+        # 1. Bulk update to SHORTLISTED via JSON AJAX
+        payload = {
+            'application_ids': [app1.id, app2.id],
+            'status': JobApplication.Status.SHORTLISTED,
+            'notes': 'Selected by HR in initial screening round'
+        }
+        resp = self.client.post(
+            reverse('recruitment:bulk_update_status'),
+            data=json.dumps(payload),
+            content_type='application/json',
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data['success'])
+        self.assertEqual(data['updated_count'], 2)
+        self.assertEqual(data['new_status'], 'SHORTLISTED')
+
+        app1.refresh_from_db()
+        app2.refresh_from_db()
+        self.assertEqual(app1.status, JobApplication.Status.SHORTLISTED)
+        self.assertEqual(app2.status, JobApplication.Status.SHORTLISTED)
+
+        # Verify audit history
+        hist1 = ApplicationStatusHistory.objects.filter(application=app1, new_status=JobApplication.Status.SHORTLISTED).first()
+        self.assertIsNotNone(hist1)
+        self.assertEqual(hist1.old_status, JobApplication.Status.SUBMITTED)
+        self.assertEqual(hist1.changed_by, self.hr_user)
+
+        # 2. Single 1-click inline status update to INTERVIEW_SCHEDULED
+        single_payload = {
+            'application_ids': [app1.id],
+            'status': JobApplication.Status.INTERVIEW_SCHEDULED,
+            'notes': 'Scheduled interview round'
+        }
+        resp_single = self.client.post(
+            reverse('recruitment:bulk_update_status'),
+            data=json.dumps(single_payload),
+            content_type='application/json',
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        self.assertEqual(resp_single.status_code, 200)
+        app1.refresh_from_db()
+        self.assertEqual(app1.status, JobApplication.Status.INTERVIEW_SCHEDULED)
+
+        # 3. Candidates table renders checkbox, bulk toolbar, and 1-click status dropdown
+        table_resp = self.client.get(reverse('recruitment:candidates_list'))
+        self.assertEqual(table_resp.status_code, 200)
+        self.assertContains(table_resp, 'id="selectAllCandidates"')
+        self.assertContains(table_resp, 'candidate-select-checkbox')
+        self.assertContains(table_resp, 'id="bulkActionsToolbar"')
+        self.assertContains(table_resp, 'id="statusBtn_' + str(app1.id) + '"')
+        self.assertContains(table_resp, 'quickUpdateCandidateStatus')
+        self.assertContains(table_resp, 'applyBulkStatus')
+
+    def test_schedule_interview_round_section_and_endpoint(self):
+        """Verify the Schedule Interview Round section on candidates_list and scheduling endpoint."""
+        self.client.login(username='test_hr', password='password123')
+
+        candidate = Candidate.objects.create(
+            full_name='Vikram Seth',
+            email='vikram.seth@example.com',
+            phone='9812345678'
+        )
+        app = JobApplication.objects.create(
+            candidate=candidate,
+            job=self.job,
+            status=JobApplication.Status.UNDER_REVIEW,
+            is_office_registered=True
+        )
+
+        # 1. Page renders Schedule Interview Round section and all form controls
+        resp = self.client.get(reverse('recruitment:candidates_list'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'id="scheduleInterviewSection"')
+        self.assertContains(resp, 'Schedule Interview Round')
+        self.assertContains(resp, 'id="schedInterviewDate"')
+        self.assertContains(resp, 'id="schedInterviewTime"')
+        self.assertContains(resp, 'id="schedInterviewMode"')
+        self.assertContains(resp, 'id="schedInterviewLocation"')
+        self.assertContains(resp, 'id="schedInterviewNotes"')
+        self.assertContains(resp, 'id="scheduleCandidatePicker"')
+        self.assertContains(resp, 'Upcoming Scheduled Interviews')
+
+        # 2. Schedule interview via schedule_candidate_interview endpoint
+        schedule_data = {
+            'application_ids': [app.id],
+            'interview_date': '2026-11-20',
+            'interview_time': '14:30',
+            'interview_mode': 'VIRTUAL',
+            'interview_location_link': 'https://meet.google.com/xyz-abcd-efg',
+            'interview_notes': 'Round 1 technical coding assessment'
+        }
+        post_resp = self.client.post(
+            reverse('recruitment:schedule_candidate_interview'),
+            data=schedule_data
+        )
+        self.assertEqual(post_resp.status_code, 302)
+
+        app.refresh_from_db()
+        self.assertEqual(app.status, JobApplication.Status.INTERVIEW_SCHEDULED)
+        self.assertEqual(str(app.interview_date), '2026-11-20')
+        self.assertEqual(str(app.interview_time), '14:30:00')
+        self.assertEqual(app.interview_mode, 'VIRTUAL')
+        self.assertEqual(app.interview_location_link, 'https://meet.google.com/xyz-abcd-efg')
+        self.assertEqual(app.interview_notes, 'Round 1 technical coding assessment')
+
+        # Verify status history log was created
+        history_entry = app.status_history.first()
+        self.assertIsNotNone(history_entry)
+        self.assertEqual(history_entry.new_status, JobApplication.Status.INTERVIEW_SCHEDULED)
+
+        # 3. Verify past dates (yesterday or earlier) are rejected with validation error
+        yesterday_str = (timezone.localdate() - timedelta(days=1)).strftime('%Y-%m-%d')
+        past_resp = self.client.post(
+            reverse('recruitment:schedule_candidate_interview'),
+            data={
+                'application_ids': [app.id],
+                'interview_date': yesterday_str,
+                'interview_time': '10:00',
+                'interview_mode': 'VIRTUAL',
+                'interview_location_link': 'https://meet.google.com/xyz',
+            },
+            headers={'x-requested-with': 'XMLHttpRequest'}
+        )
+        self.assertEqual(past_resp.status_code, 400)
+        self.assertIn("cannot be in the past", past_resp.json().get('message', ''))
+
+        # 4. Verify past time for today's date is rejected with validation error
+        today_str = timezone.localdate().strftime('%Y-%m-%d')
+        past_time_resp = self.client.post(
+            reverse('recruitment:schedule_candidate_interview'),
+            data={
+                'application_ids': [app.id],
+                'interview_date': today_str,
+                'interview_time': '00:01',
+                'interview_mode': 'VIRTUAL',
+                'interview_location_link': 'https://meet.google.com/xyz',
+            },
+            headers={'x-requested-with': 'XMLHttpRequest'}
+        )
+        self.assertEqual(past_time_resp.status_code, 400)
+        self.assertIn("interview time cannot be in the past", past_time_resp.json().get('message', ''))
 

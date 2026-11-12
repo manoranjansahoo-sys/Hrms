@@ -52,6 +52,8 @@ class LoginForm(AuthenticationForm):
         return self.cleaned_data
 
 
+import re
+
 class UserProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = CustomUser
@@ -60,7 +62,28 @@ class UserProfileUpdateForm(forms.ModelForm):
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'phone': forms.TextInput(attrs={
+                'class': 'form-control',
+                'id': 'id_phone',
+                'placeholder': '10-digit mobile number',
+                'maxlength': '10',
+                'inputmode': 'numeric',
+                'pattern': '[6-9][0-9]{9}',
+                'oninput': "this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);"
+            }),
             'theme_preference': forms.Select(attrs={'class': 'form-select'}),
             'avatar': forms.FileInput(attrs={'class': 'form-control'}),
         }
+
+    def clean_phone(self):
+        phone = self.cleaned_data.get('phone', '').strip()
+        if not phone:
+            return ''
+        digits = re.sub(r'\D', '', phone)
+        if digits.startswith('91') and len(digits) == 12:
+            digits = digits[2:]
+        elif digits.startswith('0') and len(digits) == 11:
+            digits = digits[1:]
+        if not re.match(r'^[6-9]\d{9}$', digits):
+            raise forms.ValidationError("Mobile phone number must be exactly 10 digits starting with 6, 7, 8, or 9.")
+        return digits

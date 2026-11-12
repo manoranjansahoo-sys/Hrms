@@ -212,3 +212,122 @@ class PolicyAcknowledgement(models.Model):
 
     class Meta:
         unique_together = ('policy', 'user')
+
+
+class OperatingSchedule(models.Model):
+    DAY_CHOICES = [
+        (0, 'Monday'),
+        (1, 'Tuesday'),
+        (2, 'Wednesday'),
+        (3, 'Thursday'),
+        (4, 'Friday'),
+        (5, 'Saturday'),
+        (6, 'Sunday'),
+    ]
+
+    day_of_week = models.IntegerField(choices=DAY_CHOICES, unique=True)
+    day_name = models.CharField(max_length=20)
+    is_working_day = models.BooleanField(
+        default=True,
+        help_text="Designates whether this day is a working day or weekly off."
+    )
+    opening_time = models.TimeField(default='09:30:00')
+    closing_time = models.TimeField(default='18:30:00')
+    grace_period_minutes = models.PositiveIntegerField(default=15)
+    notes = models.CharField(max_length=255, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['day_of_week']
+        verbose_name = 'Operating Schedule'
+        verbose_name_plural = 'Operating Schedules'
+
+    def __str__(self):
+        status = "Working Day" if self.is_working_day else "Weekly Off"
+        op_str = self.opening_time.strftime('%I:%M %p') if hasattr(self.opening_time, 'strftime') else str(self.opening_time)
+        cl_str = self.closing_time.strftime('%I:%M %p') if hasattr(self.closing_time, 'strftime') else str(self.closing_time)
+        return f"{self.day_name}: {status} ({op_str} - {cl_str})"
+
+    @classmethod
+    def get_weekly_schedule(cls):
+        """Returns 7 days schedule, automatically seeding defaults if not present."""
+        if cls.objects.count() < 7:
+            day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+            for d_idx, d_name in enumerate(day_names):
+                is_work = (d_idx != 6)  # Sunday is weekly off
+                cls.objects.get_or_create(
+                    day_of_week=d_idx,
+                    defaults={
+                        'day_name': d_name,
+                        'is_working_day': is_work,
+                        'opening_time': '09:30:00',
+                        'closing_time': '18:30:00',
+                        'grace_period_minutes': 15,
+                        'notes': 'Company standard business hours' if is_work else 'Sunday Company Weekly Off'
+                    }
+                )
+        return cls.objects.all().order_by('day_of_week')
+
+
+class MasterDataPermission(models.Model):
+    """
+    Controls access to the unified Master Data Control Center.
+    By default only Admin (Head / Superuser) has access.
+    Admin can toggle access to all HR or assign specific users/positions.
+    """
+    singleton_id = models.IntegerField(default=1, unique=True)
+    allow_all_hr = models.BooleanField(
+        default=False,
+        help_text="When enabled, any user with HR Administrator role can view and update Master Data."
+    )
+    allowed_users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        related_name='master_data_delegations',
+        help_text="Specific users/employees delegated access to Master Data."
+    )
+    can_manage_holidays = models.BooleanField(default=True, help_text="Delegated users can manage holiday calendar.")
+    can_manage_timings = models.BooleanField(default=True, help_text="Delegated users can manage opening/closing hours.")
+    can_manage_locations = models.BooleanField(default=True, help_text="Delegated users can add/update/delete company sites.")
+    can_manage_leave_policy = models.BooleanField(default=True, help_text="Delegated users can update Sick & Paid leave quotas.")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Master Data Permission'
+        verbose_name_plural = 'Master Data Permissions'
+
+    def __str__(self):
+        return f"Master Data Permissions (HR Access: {'Enabled' if self.allow_all_hr else 'Disabled'})"
+
+    @classmethod
+    def get_settings(cls):
+        obj, _ = cls.objects.get_or_create(singleton_id=1)
+        return obj
+
+    @classmethod
+    def can_user_access(cls, user, section=None):
+        if not user or not user.is_authenticated:
+            return False
+        # Head / Super Admin always has full access
+        if user.is_superuser or getattr(user, 'role', None) == 'head':
+            return True
+
+        settings_obj = cls.get_settings()
+
+        has_role_access = (getattr(user, 'role', None) == 'hr' and settings_obj.allow_all_hr)
+        has_user_access = settings_obj.allowed_users.filter(id=user.id).exists()
+
+        if not (has_role_access or has_user_access):
+            return False
+
+        if section == 'holidays' and not settings_obj.can_manage_holidays:
+            return False
+        if section == 'timings' and not settings_obj.can_manage_timings:
+            return False
+        if section == 'locations' and not settings_obj.can_manage_locations:
+            return False
+        if section == 'leave_policy' and not settings_obj.can_manage_leave_policy:
+            return False
+
+        return True
+

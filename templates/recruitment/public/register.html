@@ -328,6 +328,31 @@
         transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
+    .input-group {
+        display: flex;
+        width: 100%;
+    }
+
+    .input-group .input-group-text {
+        background-color: #F8FAFC !important;
+        border: 1.5px solid #CBD5E1 !important;
+        border-right: none !important;
+        border-top-left-radius: 8px !important;
+        border-bottom-left-radius: 8px !important;
+        border-top-right-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        padding: 9px 12px !important;
+        font-size: 13.5px !important;
+        font-weight: 700 !important;
+        color: #475569 !important;
+        white-space: nowrap;
+    }
+
+    .input-group > .form-control {
+        border-top-left-radius: 0 !important;
+        border-bottom-left-radius: 0 !important;
+    }
+
     .form-control:hover, .form-select:hover {
         border-color: #94A3B8 !important;
     }
@@ -715,12 +740,25 @@
                     </div>
                     <div>
                         <label class="reg-label" for="id_phone">Mobile number <b>*</b></label>
-                        {{ form.phone }}
+                        <div class="input-group">
+                            <span class="input-group-text">🇮🇳 +91</span>
+                            {{ form.phone }}
+                        </div>
                         {% if form.phone.errors %}
                             <div class="error-msg">{{ form.phone.errors.0 }}</div>
                         {% endif %}
                     </div>
                     <div>
+                        <label class="reg-label" for="id_alt_phone">Alternative phone number <span class="text-muted fw-normal small">(Optional)</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">🇮🇳 +91</span>
+                            {{ form.alt_phone }}
+                        </div>
+                        {% if form.alt_phone.errors %}
+                            <div class="error-msg">{{ form.alt_phone.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="reg-full">
                         <label class="reg-label" for="id_email">Email address <b>*</b></label>
                         {{ form.email }}
                         {% if form.email.errors %}
@@ -728,10 +766,38 @@
                         {% endif %}
                     </div>
                     <div class="reg-full">
-                        <label class="reg-label" for="id_city">Current city / locality <b>*</b></label>
+                        <label class="reg-label" for="id_current_address">Current Residential Address (House No, Building, Street) <b>*</b></label>
+                        {{ form.current_address }}
+                        {% if form.current_address.errors %}
+                            <div class="error-msg">{{ form.current_address.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="reg-label" for="id_city">City <b>*</b></label>
                         {{ form.city }}
                         {% if form.city.errors %}
                             <div class="error-msg">{{ form.city.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="reg-label" for="id_state">State / Province <b>*</b></label>
+                        {{ form.state }}
+                        {% if form.state.errors %}
+                            <div class="error-msg">{{ form.state.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="reg-label" for="id_postal_code">PIN / Postal Code <b>*</b></label>
+                        {{ form.postal_code }}
+                        {% if form.postal_code.errors %}
+                            <div class="error-msg">{{ form.postal_code.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="reg-label" for="id_country">Country / Nationality <b>*</b></label>
+                        {{ form.country }}
+                        {% if form.country.errors %}
+                            <div class="error-msg">{{ form.country.errors.0 }}</div>
                         {% endif %}
                     </div>
                 </div>
@@ -1114,9 +1180,36 @@
         // 2. Auto-fill from candidateData if returning candidate
         if (isReturning && candidateData) {
             const phoneInput = document.getElementById('id_phone');
+            const altPhoneInput = document.getElementById('id_alt_phone');
+            const addressInput = document.getElementById('id_current_address');
             const cityInput = document.getElementById('id_city');
-            if (phoneInput && candidateData.phone) phoneInput.value = candidateData.phone;
+            const stateInput = document.getElementById('id_state');
+            const postalInput = document.getElementById('id_postal_code');
+            const countryInput = document.getElementById('id_country');
+
+            if (phoneInput && candidateData.phone) {
+                let p = candidateData.phone.replace(/\D/g, '');
+                if (p.startsWith('91') && p.length === 12) p = p.slice(2);
+                phoneInput.value = p.slice(0, 10);
+            }
+            if (altPhoneInput && candidateData.alt_phone) {
+                let ap = candidateData.alt_phone.replace(/\D/g, '');
+                if (ap.startsWith('91') && ap.length === 12) ap = ap.slice(2);
+                altPhoneInput.value = ap.slice(0, 10);
+            }
+            if (addressInput && candidateData.current_address) addressInput.value = candidateData.current_address;
             if (cityInput && candidateData.city) cityInput.value = candidateData.city;
+            if (stateInput && candidateData.state) stateInput.value = candidateData.state;
+            if (postalInput && candidateData.postal_code) postalInput.value = candidateData.postal_code;
+            if (countryInput && candidateData.country) countryInput.value = candidateData.country;
+
+            // Auto-fetch position from 1st form details
+            const posSelect = document.getElementById('positionSelect');
+            const targetJobId = candidateData.applied_job_id || candidateData.job_id || candidateData.job;
+            if (posSelect && targetJobId && (!posSelect.value || posSelect.value === '')) {
+                posSelect.value = String(targetJobId);
+                posSelect.dispatchEvent(new Event('change'));
+            }
 
             // Education
             const qualInput = document.getElementById('id_highest_qualification');

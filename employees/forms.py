@@ -25,7 +25,7 @@ class EmployeeCreateForm(forms.ModelForm):
         max_length=20,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Primary mobile number',
+            'placeholder': '10-digit mobile number',
             'required': True,
             'maxlength': '10',
             'inputmode': 'numeric',
@@ -88,7 +88,7 @@ class EmployeeCreateForm(forms.ModelForm):
             'emergency_contact_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Emergency contact person'}),
             'emergency_contact_phone': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Emergency phone number',
+                'placeholder': '10-digit emergency number',
                 'maxlength': '10',
                 'inputmode': 'numeric',
                 'pattern': '[6-9][0-9]{9}',

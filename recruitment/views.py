@@ -1,9 +1,13 @@
 import os
+import re
 import csv
 import base64
 import json
+from decimal import Decimal
+from datetime import datetime
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
@@ -25,7 +29,7 @@ from recruitment.forms import (
     PreInterviewApplicationForm, CandidateRegistrationStepForm,
     QuickSocialApplicationForm,
     CandidateOnboardingForm, ApplicationReviewForm,
-    ScheduleInterviewForm
+    ScheduleInterviewForm, AppointEmployeeForm
 )
 from notifications.models import create_notification
 
@@ -397,8 +401,27 @@ def candidates_list(request):
     page_title = "Candidate Applications & Talent Roster" if is_office else "Candidate Job Applications (Online)"
     page_subtitle = "In-person registered candidates who completed full pre-interview verification." if is_office else "Online fast-apply applications submitted via website and social channels."
 
+    # Scheduled interviews pipeline for the scheduling section
+    scheduled_interviews = JobApplication.objects.filter(
+        status=JobApplication.Status.INTERVIEW_SCHEDULED
+    ).select_related('candidate', 'job').order_by('-interview_date', '-interview_time')[:15]
+
+    # Candidates with INTERVIEW_SCHEDULED status available for the interview round schedule picker
+    candidates_to_schedule = JobApplication.objects.filter(
+        is_office_registered=is_office,
+        status=JobApplication.Status.INTERVIEW_SCHEDULED
+    ).select_related('candidate', 'job').order_by('candidate__full_name')
+
+    interview_form = ScheduleInterviewForm()
+    interview_modes = [
+        ('VIRTUAL', 'Virtual (Google Meet / Microsoft Teams)'),
+        ('IN_PERSON', 'In-Person (Office Campus)'),
+        ('TELEPHONIC', 'Telephonic Round')
+    ]
+
     return render(request, 'recruitment/candidates_list.html', {
         'page_obj': page_obj,
+        'candidates_to_schedule': candidates_to_schedule,
         'jobs': jobs,
         'selected_job': job_id,
         'selected_status': status_filter,
@@ -420,6 +443,10 @@ def candidates_list(request):
         'online_apps_count': online_apps_count,
         'page_title': page_title,
         'page_subtitle': page_subtitle,
+        'scheduled_interviews': scheduled_interviews,
+        'interview_form': interview_form,
+        'interview_modes': interview_modes,
+        'today_date': (timezone.localdate() if hasattr(timezone, 'localdate') else timezone.now().date()).strftime('%Y-%m-%d'),
     })
 
 
@@ -515,6 +542,301 @@ def export_candidates_csv(request):
         ])
 
     return response
+
+
+@login_required
+@hr_required
+def bulk_update_candidate_status(request):
+    """
+    Bulk or inline status updater for candidate applications.
+    Allows HR to update status of multiple or individual candidates
+    directly from candidates_list without opening each profile.
+    Supports both AJAX (JSON) and traditional POST redirect.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+
+    is_ajax = (
+        request.headers.get('x-requested-with') == 'XMLHttpRequest' or
+        request.content_type == 'application/json' or
+        'application/json' in request.headers.get('Accept', '')
+    )
+
+    if request.content_type == 'application/json':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+        except Exception:
+            data = {}
+        application_ids = data.get('application_ids', [])
+        new_status = data.get('status')
+        notes = data.get('notes', 'Bulk status update by HR')
+    else:
+        application_ids = request.POST.getlist('application_ids') or request.POST.getlist('selected_candidates')
+        new_status = request.POST.get('status')
+        notes = request.POST.get('notes', 'Bulk status update by HR')
+
+    if isinstance(application_ids, str):
+        application_ids = [s.strip() for s in application_ids.split(',') if s.strip()]
+
+    valid_statuses = dict(JobApplication.Status.choices)
+    if not new_status or new_status not in valid_statuses:
+        if is_ajax:
+            return JsonResponse({'success': False, 'error': f'Invalid status: {new_status}'}, status=400)
+        messages.error(request, 'Invalid application status selected.')
+        return redirect('recruitment:candidates_list')
+
+    if not application_ids:
+        if is_ajax:
+            return JsonResponse({'success': False, 'error': 'No candidates were selected.'}, status=400)
+        messages.warning(request, 'No candidates were selected for status update.')
+        return redirect('recruitment:candidates_list')
+
+    applications = JobApplication.objects.filter(id__in=application_ids).select_related('candidate', 'job')
+    updated_count = 0
+    updated_ids = []
+
+    for app in applications:
+        old_status = app.status
+        if old_status != new_status:
+            app.status = new_status
+            app.save(update_fields=['status'])
+
+            ApplicationStatusHistory.objects.create(
+                application=app,
+                old_status=old_status,
+                new_status=new_status,
+                changed_by=request.user,
+                notes=notes
+            )
+
+            log_audit_trail(
+                'UPDATE',
+                'Recruitment',
+                f"Candidate status updated for {app.candidate.full_name} ({app.application_id}) from {old_status} to {new_status}",
+                request.user,
+                request
+            )
+            updated_count += 1
+            updated_ids.append(app.id)
+        else:
+            # Already in target status, count as processed
+            updated_ids.append(app.id)
+
+    status_display = valid_statuses.get(new_status, new_status)
+
+    if is_ajax:
+        return JsonResponse({
+            'success': True,
+            'updated_count': updated_count,
+            'new_status': new_status,
+            'status_display': status_display,
+            'updated_ids': updated_ids,
+            'message': f"Updated {updated_count} candidate(s) to '{status_display}'."
+        })
+
+    messages.success(request, f"Updated {updated_count} candidate(s) to '{status_display}'.")
+    return redirect('recruitment:candidates_list')
+
+
+@login_required
+@hr_required
+def schedule_candidate_interview(request):
+    """
+    Schedule an interview round for one or multiple candidates directly from the Candidate Applications page.
+    Updates application status to INTERVIEW_SCHEDULED, saves date/time/mode/venue/notes,
+    creates status audit history, and sends candidate email notifications.
+    Supports both standard form POST and AJAX requests.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Method not allowed.'}, status=405)
+
+    is_ajax = (
+        request.headers.get('x-requested-with') == 'XMLHttpRequest' or
+        request.content_type == 'application/json' or
+        'application/json' in request.headers.get('Accept', '')
+    )
+
+    app_ids = []
+    interview_date = None
+    interview_time = None
+    interview_mode = 'VIRTUAL'
+    interview_location_link = ''
+    interview_notes = ''
+    active_tab = 'office'
+
+    if request.content_type == 'application/json':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            app_ids = data.get('application_ids', [])
+            if not app_ids and data.get('application_id'):
+                app_ids = [data.get('application_id')]
+            interview_date = data.get('interview_date')
+            interview_time = data.get('interview_time')
+            interview_mode = data.get('interview_mode', 'VIRTUAL')
+            interview_location_link = data.get('interview_location_link', '')
+            interview_notes = data.get('interview_notes', '')
+            active_tab = data.get('tab', 'office')
+        except Exception:
+            return JsonResponse({'success': False, 'message': 'Invalid JSON data.'}, status=400)
+    else:
+        app_ids = request.POST.getlist('application_ids')
+        if not app_ids:
+            raw_single = request.POST.get('application_id')
+            if raw_single:
+                app_ids = [raw_single]
+            elif request.POST.get('candidate_ids'):
+                app_ids = [x.strip() for x in request.POST.get('candidate_ids').split(',') if x.strip()]
+        interview_date = request.POST.get('interview_date')
+        interview_time = request.POST.get('interview_time')
+        interview_mode = request.POST.get('interview_mode', 'VIRTUAL')
+        interview_location_link = request.POST.get('interview_location_link', '').strip()
+        interview_notes = request.POST.get('interview_notes', '').strip()
+        active_tab = request.POST.get('tab', 'office')
+
+    if not app_ids:
+        err_msg = "Please select at least one candidate to schedule an interview."
+        if is_ajax:
+            return JsonResponse({'success': False, 'message': err_msg}, status=400)
+        messages.error(request, err_msg)
+        return redirect(f"{reverse('recruitment:candidates_list')}?tab={active_tab}#scheduleInterviewSection")
+
+    if not interview_date or not interview_time:
+        err_msg = "Interview Date and Time are required fields."
+        if is_ajax:
+            return JsonResponse({'success': False, 'message': err_msg}, status=400)
+        messages.error(request, err_msg)
+        return redirect(f"{reverse('recruitment:candidates_list')}?tab={active_tab}#scheduleInterviewSection")
+
+    # Validate that interview date cannot be in the past (yesterday or earlier)
+    try:
+        if isinstance(interview_date, str):
+            parsed_interview_date = datetime.strptime(interview_date.strip(), '%Y-%m-%d').date()
+        else:
+            parsed_interview_date = interview_date
+    except (ValueError, TypeError):
+        err_msg = "Invalid interview date format. Please choose a valid date (YYYY-MM-DD)."
+        if is_ajax:
+            return JsonResponse({'success': False, 'message': err_msg}, status=400)
+        messages.error(request, err_msg)
+        return redirect(f"{reverse('recruitment:candidates_list')}?tab={active_tab}#scheduleInterviewSection")
+
+    today_date = timezone.localdate() if hasattr(timezone, 'localdate') else timezone.now().date()
+    if parsed_interview_date < today_date:
+        err_msg = f"Invalid interview date ({parsed_interview_date}). Interview date cannot be in the past (yesterday or earlier). Please choose today or a future date."
+        if is_ajax:
+            return JsonResponse({'success': False, 'message': err_msg}, status=400)
+        messages.error(request, err_msg)
+        return redirect(f"{reverse('recruitment:candidates_list')}?tab={active_tab}#scheduleInterviewSection")
+
+    # If interview is scheduled for today, time cannot be in the past
+    if parsed_interview_date == today_date and interview_time:
+        try:
+            time_str = str(interview_time).strip()
+            parts = time_str.split(':')
+            if len(parts) >= 2:
+                parsed_interview_time = datetime.strptime(f"{parts[0].zfill(2)}:{parts[1].zfill(2)}", '%H:%M').time()
+                current_time = timezone.localtime().time()
+                if parsed_interview_time < current_time.replace(second=0, microsecond=0):
+                    err_msg = f"Invalid interview time ({parsed_interview_time.strftime('%I:%M %p')}). For today's date, interview time cannot be in the past. Please choose a future time slot."
+                    if is_ajax:
+                        return JsonResponse({'success': False, 'message': err_msg}, status=400)
+                    messages.error(request, err_msg)
+                    return redirect(f"{reverse('recruitment:candidates_list')}?tab={active_tab}#scheduleInterviewSection")
+        except (ValueError, TypeError):
+            pass
+
+    applications = JobApplication.objects.filter(id__in=app_ids).select_related('candidate', 'job')
+    if not applications.exists():
+        err_msg = "Selected candidate applications were not found."
+        if is_ajax:
+            return JsonResponse({'success': False, 'message': err_msg}, status=404)
+        messages.error(request, err_msg)
+        return redirect(f"{reverse('recruitment:candidates_list')}?tab={active_tab}#scheduleInterviewSection")
+
+    scheduled_names = []
+    for app in applications:
+        old_status = app.status
+        app.interview_date = interview_date
+        app.interview_time = interview_time
+        app.interview_mode = interview_mode
+        app.interview_location_link = interview_location_link
+        app.interview_notes = interview_notes
+        app.status = JobApplication.Status.INTERVIEW_SCHEDULED
+        app.save()
+
+        mode_display = app.get_interview_mode_display()
+
+        ApplicationStatusHistory.objects.create(
+            application=app,
+            old_status=old_status,
+            new_status=JobApplication.Status.INTERVIEW_SCHEDULED,
+            changed_by=request.user,
+            notes=f"Interview scheduled on {interview_date} at {interview_time} ({mode_display})"
+        )
+
+        try:
+            log_audit_trail(
+                request.user,
+                'UPDATE',
+                'Recruitment',
+                f"Scheduled interview for {app.candidate.full_name} ({app.application_id}) on {interview_date} at {interview_time}",
+                request
+            )
+        except Exception:
+            pass
+
+        # Email invitation to candidate
+        try:
+            formatted_date = str(interview_date)
+            formatted_time = str(interview_time)
+            try:
+                dt_obj = datetime.strptime(f"{interview_date} {interview_time}", "%Y-%m-%d %H:%M")
+                formatted_date = dt_obj.strftime("%A, %d %B %Y")
+                formatted_time = dt_obj.strftime("%I:%M %p")
+            except Exception:
+                pass
+
+            subject = f"Interview Scheduled: {app.job.title} at Company HRMS"
+            message = (
+                f"Dear {app.candidate.full_name},\n\n"
+                f"We are pleased to invite you for an interview round for the position of {app.job.title}.\n\n"
+                f"Interview Details:\n"
+                f"- Date: {formatted_date}\n"
+                f"- Time: {formatted_time}\n"
+                f"- Mode: {mode_display}\n"
+                f"- Location / Meeting Link: {app.interview_location_link or 'Will be shared by HR coordinator'}\n\n"
+                f"Candidate Guidelines / Agenda:\n"
+                f"{app.interview_notes or 'Please be ready with your portfolio and technical setup 5 minutes prior to the scheduled slot.'}\n\n"
+                f"Track your application status live at:\n"
+                f"{request.scheme}://{request.get_host()}/candidate/track/{app.application_id}/\n\n"
+                f"Best regards,\n"
+                f"HR & Talent Acquisition Team\n"
+            )
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [app.candidate.email],
+                fail_silently=True
+            )
+        except Exception:
+            pass
+
+        scheduled_names.append(app.candidate.full_name)
+
+    names_summary = ", ".join(scheduled_names)
+    success_msg = f"Interview round successfully scheduled for {names_summary} on {interview_date} at {interview_time}!"
+
+    if is_ajax:
+        return JsonResponse({
+            'success': True,
+            'count': len(scheduled_names),
+            'names': scheduled_names,
+            'message': success_msg
+        })
+
+    messages.success(request, success_msg)
+    return redirect(f"{reverse('recruitment:candidates_list')}?tab={active_tab}#scheduleInterviewSection")
 
 
 @login_required
@@ -684,6 +1006,10 @@ def serialize_candidate_data(candidate):
     exp = getattr(candidate, 'experience', None)
     skl = getattr(candidate, 'skills', None)
 
+    latest_app = candidate.applications.select_related('job').order_by('-applied_at').first()
+    applied_job_id = latest_app.job_id if latest_app else None
+    applied_job_title = latest_app.job.title if (latest_app and latest_app.job) else ''
+
     return {
         'full_name': candidate.full_name or '',
         'email': candidate.email or '',
@@ -694,6 +1020,10 @@ def serialize_candidate_data(candidate):
         'state': candidate.state or '',
         'postal_code': candidate.postal_code or '',
         'country': candidate.country or 'India',
+        'job': applied_job_id,
+        'job_id': applied_job_id,
+        'applied_job_id': applied_job_id,
+        'applied_job_title': applied_job_title,
         # Education
         'highest_qualification': edu.highest_qualification if edu else '',
         'institution': edu.institution if edu else '',
@@ -878,6 +1208,14 @@ def candidate_register(request, token=None):
             email__iexact=google_auth['email']
         ).first()
 
+    # Automatically fetch position from returning candidate's previous application (e.g. from 1st form Fast-Apply) if not already set
+    if not job and returning_candidate:
+        latest_app = returning_candidate.applications.select_related('job').filter(
+            job__status=RecruitmentJob.Status.OPEN
+        ).order_by('-applied_at').first()
+        if latest_app:
+            job = latest_app.job
+
     if request.method == 'POST':
         form = PreInterviewApplicationForm(request.POST, request.FILES, default_job=job)
         if form.is_valid():
@@ -909,19 +1247,36 @@ def candidate_register(request, token=None):
 
             try:
                 with transaction.atomic():
-                    # 1. Candidate record (Pre-interview contact info)
+                    # 1. Candidate record (Pre-interview contact info & Address)
+                    addr = cd.get('current_address', '').strip()
+                    city = cd.get('city', '').strip() or 'Not Specified'
+                    state = cd.get('state', '').strip()
+                    postal_code = cd.get('postal_code', '').strip()
+                    country = cd.get('country', '').strip() or 'India'
+                    alt_phone = cd.get('alt_phone', '').strip()
+
                     candidate, _ = Candidate.objects.get_or_create(
                         email=email,
                         defaults={
                             'full_name': cd['full_name'],
                             'phone': cd['phone'],
-                            'city': cd['city'],
-                            'country': 'India',
+                            'alt_phone': alt_phone,
+                            'current_address': addr,
+                            'city': city,
+                            'state': state,
+                            'postal_code': postal_code,
+                            'country': country,
                         }
                     )
                     candidate.full_name = cd['full_name']
                     candidate.phone = cd['phone']
-                    candidate.city = cd['city']
+                    if alt_phone:
+                        candidate.alt_phone = alt_phone
+                    candidate.current_address = addr
+                    candidate.city = city
+                    candidate.state = state
+                    candidate.postal_code = postal_code
+                    candidate.country = country
 
                     # Attach Google identity verification
                     if google_auth and google_auth.get('email') == email:
@@ -1054,11 +1409,15 @@ def candidate_register(request, token=None):
         initial_data = {}
         if returning_candidate:
             initial_data = serialize_candidate_data(returning_candidate)
+            if job and not initial_data.get('job'):
+                initial_data['job'] = job.id
         elif google_auth:
             initial_data = {
                 'full_name': google_auth.get('name', ''),
                 'email': google_auth.get('email', ''),
             }
+            if job:
+                initial_data['job'] = job.id
         form = PreInterviewApplicationForm(initial=initial_data, default_job=job, selected_job=job)
 
     # Serialize job metadata to JSON for live client-side preview in the Google Form
@@ -1166,11 +1525,7 @@ def candidate_fast_apply(request, job_id=None):
 
             try:
                 with transaction.atomic():
-                    addr = cd['current_address'].strip()
-                    city = cd.get('city', '').strip() or 'Not Specified'
-                    state = cd.get('state', '').strip()
-                    postal_code = cd.get('postal_code', '').strip()
-                    country = cd.get('country', '').strip() or 'India'
+                    default_city = (selected_job.location if selected_job and selected_job.location else '') or 'Not Specified'
 
                     candidate, _ = Candidate.objects.get_or_create(
                         email=email,
@@ -1178,21 +1533,16 @@ def candidate_fast_apply(request, job_id=None):
                             'full_name': cd['full_name'],
                             'phone': cd['phone'],
                             'alt_phone': cd.get('alt_phone', ''),
-                            'current_address': addr,
-                            'city': city,
-                            'state': state,
-                            'postal_code': postal_code,
-                            'country': country,
+                            'city': default_city,
+                            'country': 'India',
                         }
                     )
                     candidate.full_name = cd['full_name']
                     candidate.phone = cd['phone']
-                    candidate.alt_phone = cd.get('alt_phone', '')
-                    candidate.current_address = addr
-                    candidate.city = city
-                    candidate.state = state
-                    candidate.postal_code = postal_code
-                    candidate.country = country
+                    if cd.get('alt_phone'):
+                        candidate.alt_phone = cd['alt_phone']
+                    if not candidate.city:
+                        candidate.city = default_city
 
                     # Attach Google identity verification
                     if google_auth and google_auth.get('email') == email:
@@ -1268,11 +1618,6 @@ def candidate_fast_apply(request, job_id=None):
                 'email': returning_candidate.email,
                 'phone': returning_candidate.phone,
                 'alt_phone': returning_candidate.alt_phone,
-                'current_address': returning_candidate.current_address,
-                'city': returning_candidate.city,
-                'state': returning_candidate.state,
-                'postal_code': returning_candidate.postal_code,
-                'country': returning_candidate.country,
             }
         elif google_auth:
             initial_data = {
@@ -1438,139 +1783,26 @@ def candidate_onboarding(request, application_id):
                             file=cd['id_proof']
                         )
 
-                    # 5. Create / Update Active CustomUser & EmployeeProfile
-                    username = cd.get('username', '').strip()
-                    if not username:
-                        username = candidate.email.split('@')[0].replace('.', '_').replace('-', '_')
-
-                    user = CustomUser.objects.filter(email__iexact=candidate.email).first()
-                    if not user:
-                        base_u = username
-                        cnt = 1
-                        while CustomUser.objects.filter(username__iexact=username).exists():
-                            username = f"{base_u}{cnt}"
-                            cnt += 1
-
-                        name_parts = candidate.full_name.split()
-                        first_name = name_parts[0] if name_parts else 'Employee'
-                        last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ''
-                        user = CustomUser.objects.create_user(
-                            username=username,
-                            email=candidate.email,
-                            password=cd['portal_password'],
-                            first_name=first_name,
-                            last_name=last_name,
-                            role=CustomUser.Role.EMPLOYEE,
-                            phone=candidate.phone,
-                        )
-                    else:
-                        user.set_password(cd['portal_password'])
-                        user.role = CustomUser.Role.EMPLOYEE
-                        user.is_active = True
-                        if not user.phone:
-                            user.phone = candidate.phone
-                        user.save()
-
-                    # Create / link EmployeeProfile
-                    from employees.models import EmployeeProfile, EmployeeDocument
-                    from organization.models import Designation
-
-                    designation = None
-                    if app.job and app.job.department:
-                        designation = Designation.objects.filter(
-                            department=app.job.department,
-                            title__icontains=app.job.title[:30]
-                        ).first()
-                        if not designation:
-                            designation = Designation.objects.create(
-                                department=app.job.department,
-                                title=app.job.title[:150],
-                                grade_level='L2 - Professional'
-                            )
-
-                    # Auto generate EMP ID
-                    emp_profile = EmployeeProfile.objects.filter(user=user).first()
-                    if not emp_profile:
-                        last_emp = EmployeeProfile.objects.order_by('-id').first()
-                        next_num = 101
-                        if last_emp and last_emp.emp_id.startswith('EMP'):
-                            try:
-                                next_num = max(101, int(last_emp.emp_id.replace('EMP', '')) + 1)
-                            except ValueError:
-                                next_num = (last_emp.id + 105)
-                        new_emp_id = f"EMP{next_num}"
-                        while EmployeeProfile.objects.filter(emp_id=new_emp_id).exists():
-                            next_num += 1
-                            new_emp_id = f"EMP{next_num}"
-
-                        emp_profile = EmployeeProfile.objects.create(
-                            user=user,
-                            emp_id=new_emp_id,
-                            department=app.job.department if app.job else None,
-                            designation=designation,
-                            site=app.job.site if app.job else None,
-                            joining_date=timezone.localdate(),
-                            employment_type='FULL_TIME',
-                            status=EmployeeProfile.Status.ACTIVE,
-                            date_of_birth=candidate.date_of_birth,
-                            gender=candidate.gender if candidate.gender in ['MALE', 'FEMALE', 'OTHER'] else 'MALE',
-                            marital_status=candidate.marital_status if candidate.marital_status in ['SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED'] else 'SINGLE',
-                            blood_group=candidate.blood_group,
-                            personal_email=candidate.email,
-                            address=candidate.permanent_address or candidate.current_address,
-                            city=candidate.city,
-                            state=candidate.state,
-                            postal_code=candidate.postal_code,
-                            emergency_contact_name=candidate.emergency_contact_name or 'Emergency Contact',
-                            emergency_contact_relation=candidate.emergency_contact_relation or 'Parent',
-                            emergency_contact_phone=candidate.emergency_contact_phone or candidate.phone,
-                            bank_name=candidate.bank_name,
-                            bank_account_number=candidate.bank_account_number,
-                            ifsc_code=candidate.bank_ifsc_code,
-                            pan_number=candidate.pan_number,
-                            uan_number=candidate.pf_uan_number,
-                        )
-                    else:
-                        emp_profile.bank_name = candidate.bank_name
-                        emp_profile.bank_account_number = candidate.bank_account_number
-                        emp_profile.ifsc_code = candidate.bank_ifsc_code
-                        emp_profile.pan_number = candidate.pan_number
-                        emp_profile.uan_number = candidate.pf_uan_number
-                        emp_profile.status = EmployeeProfile.Status.ACTIVE
-                        emp_profile.save()
-
-                    # Copy uploaded documents to EmployeeDocument
-                    for doc in candidate.documents.all():
-                        EmployeeDocument.objects.get_or_create(
-                            employee=emp_profile,
-                            title=doc.title,
-                            defaults={
-                                'file': doc.file,
-                                'doc_type': 'CERTIFICATE' if doc.doc_type == 'CERTIFICATE' else 'ID_PROOF' if doc.doc_type == 'AADHAAR_CARD' else 'OTHER'
-                            }
-                        )
-
-                    # 6. Update Application Status to HIRED
+                    # 5. Mark Application as ONBOARDING_COMPLETED and PENDING HR Document Review
                     old_status = app.status
                     app.is_onboarding_completed = True
                     app.onboarding_completed_at = timezone.now()
-                    app.status = JobApplication.Status.HIRED
+                    app.status = JobApplication.Status.ONBOARDING_COMPLETED
+                    app.document_verification_status = JobApplication.DocumentVerificationStatus.PENDING
                     app.save()
 
-                    # 7. Audit History
+                    # 6. Audit History
                     ApplicationStatusHistory.objects.create(
                         application=app,
                         old_status=old_status,
-                        new_status=JobApplication.Status.HIRED,
-                        notes=f"Candidate completed full onboarding, set portal credentials (Username: {user.username}), and was activated as Employee #{emp_profile.emp_id}."
+                        new_status=JobApplication.Status.ONBOARDING_COMPLETED,
+                        notes="Candidate submitted onboarding profile and verification documents. Awaiting HR document review and appointment."
                     )
 
                 return render(request, 'recruitment/public/onboarding_success.html', {
                     'application': app,
                     'candidate': candidate,
                     'job': app.job,
-                    'user': user,
-                    'employee_profile': emp_profile,
                 })
 
             except Exception as e:
@@ -1580,7 +1812,6 @@ def candidate_onboarding(request, application_id):
     else:
         # Pre-populate form with existing candidate data
         initial_data = {
-            'username': candidate.email.split('@')[0].replace('.', '_').replace('-', '_'),
             'date_of_birth': candidate.date_of_birth,
             'gender': candidate.gender if candidate.gender != 'UNDISCLOSED' else '',
             'father_name': candidate.father_name,
@@ -1776,3 +2007,519 @@ def convert_to_employee(request, application_id):
         return redirect('recruitment:candidate_detail', application_id=app.id)
 
     return redirect('recruitment:candidate_detail', application_id=app.id)
+
+
+# =========================================================================
+# ONBOARDING VERIFICATION, DOCUMENT REVIEW & EMPLOYEE APPOINTMENT
+# =========================================================================
+
+@login_required
+@hr_required
+def onboarding_candidates_list(request):
+    """
+    Dedicated HR Command Center for Onboarding Employees:
+    1. Inspects submitted onboarding records and uploaded documents (Degree, PAN, Aadhaar, Bank, Payslips).
+    2. Allows HR to Approve / Verify documents or Reject with error notes for candidate re-upload.
+    3. Quick action to configure salary and appoint candidate as official employee with HRMS credentials.
+    """
+    search_query = request.GET.get('q', '').strip()
+    status_filter = request.GET.get('status', '').strip().upper()
+    if status_filter == 'ALL':
+        status_filter = ''
+
+    applications = JobApplication.objects.filter(
+        status__in=[
+            JobApplication.Status.ONBOARDING_COMPLETED,
+            JobApplication.Status.SELECTED,
+            JobApplication.Status.HIRED
+        ]
+    ).select_related(
+        'candidate', 'job', 'job__department', 'job__site', 'hired_employee', 'hired_employee__user'
+    ).prefetch_related('candidate__documents').order_by('-onboarding_completed_at', '-updated_at')
+
+    if search_query:
+        applications = applications.filter(
+            Q(candidate__full_name__icontains=search_query) |
+            Q(candidate__email__icontains=search_query) |
+            Q(candidate__phone__icontains=search_query) |
+            Q(application_id__icontains=search_query) |
+            Q(job__title__icontains=search_query)
+        )
+
+    if status_filter == 'PENDING':
+        applications = applications.filter(
+            status=JobApplication.Status.ONBOARDING_COMPLETED,
+            document_verification_status=JobApplication.DocumentVerificationStatus.PENDING
+        )
+    elif status_filter == 'VERIFIED':
+        applications = applications.filter(
+            document_verification_status=JobApplication.DocumentVerificationStatus.VERIFIED
+        )
+    elif status_filter == 'REJECTED':
+        applications = applications.filter(
+            document_verification_status=JobApplication.DocumentVerificationStatus.REJECTED
+        )
+    elif status_filter == 'HIRED':
+        applications = applications.filter(status=JobApplication.Status.HIRED)
+
+    # Metric counters
+    total_onboarding = JobApplication.objects.filter(status__in=[JobApplication.Status.ONBOARDING_COMPLETED, JobApplication.Status.HIRED]).count()
+    pending_docs = JobApplication.objects.filter(status=JobApplication.Status.ONBOARDING_COMPLETED, document_verification_status='PENDING').count()
+    verified_docs = JobApplication.objects.filter(document_verification_status='VERIFIED').count()
+    rejected_docs = JobApplication.objects.filter(document_verification_status='REJECTED').count()
+    hired_count = JobApplication.objects.filter(status=JobApplication.Status.HIRED).count()
+
+    departments = Department.objects.all().order_by('name')
+    sites = Site.objects.filter(is_active=True).order_by('name')
+
+    return render(request, 'recruitment/admin_onboarding_list.html', {
+        'applications': applications,
+        'search_query': search_query,
+        'status_filter': status_filter,
+        'total_onboarding': total_onboarding,
+        'pending_docs': pending_docs,
+        'verified_docs': verified_docs,
+        'rejected_docs': rejected_docs,
+        'hired_count': hired_count,
+        'departments': departments,
+        'sites': sites,
+        'today': timezone.localdate(),
+    })
+
+
+@login_required
+@hr_required
+def verify_candidate_documents(request, application_id):
+    """
+    Action for HR to inspect uploaded candidate documents.
+    If valid: marks document_verification_status = 'VERIFIED'.
+    If documentation error: marks document_verification_status = 'REJECTED' with reason,
+    allowing the candidate to correct and re-upload through their onboarding portal.
+    """
+    app = get_object_or_404(
+        JobApplication.objects.select_related('candidate', 'job'),
+        application_id=application_id
+    )
+
+    if request.method == 'POST':
+        action = request.POST.get('action', '').upper()
+        if action == 'VERIFY':
+            app.document_verification_status = JobApplication.DocumentVerificationStatus.VERIFIED
+            app.document_rejection_reason = ''
+            app.documents_verified_at = timezone.now()
+            app.documents_verified_by = request.user
+            app.save()
+
+            messages.success(
+                request,
+                f"Documents for {app.candidate.full_name} ({app.application_id}) have been verified successfully! "
+                "You can now set salary and appoint them as an employee."
+            )
+        elif action == 'REJECT':
+            reason = request.POST.get('rejection_reason', '').strip()
+            if not reason:
+                reason = "Documentation error identified. Please re-upload clear and authentic documents."
+            app.document_verification_status = JobApplication.DocumentVerificationStatus.REJECTED
+            app.document_rejection_reason = reason
+            app.save()
+
+            messages.warning(
+                request,
+                f"Documents for {app.candidate.full_name} marked with error: '{reason}'. "
+                "The candidate can now log back into their onboarding link and re-upload the required files."
+            )
+
+    return redirect('recruitment:onboarding_candidates_list')
+
+
+@login_required
+@hr_required
+def fetch_onboarding_candidate_ajax(request):
+    """
+    Auto-fetch candidate details by Phone Number or Email address
+    for the Employee Appointment & Credential Creation interface.
+    """
+    q = request.GET.get('q', '').strip()
+    if not q:
+        return JsonResponse({'success': False, 'message': 'Please provide a phone number or email.'})
+
+    # Normalize phone: extract numbers
+    digits_q = re.sub(r'\D', '', q)
+    if digits_q.startswith('91') and len(digits_q) == 12:
+        digits_q = digits_q[2:]
+    elif digits_q.startswith('0') and len(digits_q) == 11:
+        digits_q = digits_q[1:]
+
+    # Search JobApplication
+    applications = JobApplication.objects.select_related(
+        'candidate', 'job', 'job__department', 'job__site'
+    ).prefetch_related('candidate__documents')
+
+    app = None
+    if '@' in q:
+        app = applications.filter(candidate__email__iexact=q).first()
+    elif digits_q:
+        app = applications.filter(
+            Q(candidate__phone__icontains=digits_q) |
+            Q(candidate__alt_phone__icontains=digits_q) |
+            Q(candidate__phone__icontains=q)
+        ).first()
+        if not app:
+            # Match stripped digits (handles spaces and country codes)
+            for a in applications:
+                c_phone = re.sub(r'\D', '', a.candidate.phone or '')
+                c_alt = re.sub(r'\D', '', a.candidate.alt_phone or '')
+                if digits_q and (digits_q in c_phone or c_phone.endswith(digits_q) or digits_q in c_alt or c_alt.endswith(digits_q)):
+                    app = a
+                    break
+
+    if not app:
+        # Fallback to search by application_id or candidate name
+        app = applications.filter(
+            Q(application_id__iexact=q) |
+            Q(candidate__full_name__icontains=q)
+        ).first()
+
+    if not app:
+        return JsonResponse({
+            'success': False,
+            'message': f"No candidate application found matching '{q}'. Please check the mobile number or email."
+        })
+
+    candidate = app.candidate
+    # Auto-generate a clean suggested username: e.g. "chinmayee_mohanty_ux" or email prefix
+    base_name = re.sub(r'[^a-zA-Z0-9]', '_', candidate.full_name.strip().lower())
+    clean_role = ''
+    if app.job and app.job.title:
+        role_words = [w.lower() for w in re.findall(r'[a-zA-Z0-9]+', app.job.title)]
+        if role_words:
+            clean_role = f"_{role_words[0]}"
+            if len(role_words) > 1 and len(clean_role) < 8:
+                clean_role += f"_{role_words[1]}"
+    suggested_username = f"{base_name}{clean_role}"[:30]
+    suggested_username = re.sub(r'_+', '_', suggested_username).strip('_')
+
+    temp_u = suggested_username
+    counter = 1
+    while CustomUser.objects.filter(username__iexact=temp_u).exclude(email__iexact=candidate.email).exists():
+        temp_u = f"{suggested_username}_{counter}"
+        counter += 1
+    suggested_username = temp_u
+
+    # Documents summary
+    docs_list = []
+    for d in candidate.documents.all():
+        docs_list.append({
+            'title': d.title,
+            'doc_type': d.get_doc_type_display(),
+            'url': d.file.url if d.file else ''
+        })
+
+    return JsonResponse({
+        'success': True,
+        'candidate': {
+            'application_id': app.application_id,
+            'candidate_id': candidate.id,
+            'full_name': candidate.full_name,
+            'email': candidate.email,
+            'phone': candidate.phone,
+            'city': candidate.city,
+            'pan_number': candidate.pan_number,
+            'aadhaar_number': candidate.aadhaar_number,
+            'bank_name': candidate.bank_name,
+            'bank_account_number': candidate.bank_account_number,
+            'bank_ifsc_code': candidate.bank_ifsc_code,
+            'pf_uan_number': candidate.pf_uan_number,
+            'job_title': app.job.title if app.job else 'General Role',
+            'department_id': app.job.department.id if app.job and app.job.department else '',
+            'department_name': app.job.department.name if app.job and app.job.department else '',
+            'site_id': app.job.site.id if app.job and app.job.site else '',
+            'site_name': app.job.site.name if app.job and app.job.site else '',
+            'document_status': app.document_verification_status,
+            'document_status_display': app.get_document_verification_status_display(),
+            'suggested_username': suggested_username,
+            'offered_ctc': str(app.offered_ctc) if app.offered_ctc else '600000.00',
+            'basic_salary': str(app.offered_basic_salary) if app.offered_basic_salary else '25000.00',
+            'joining_date': str(app.offered_joining_date or timezone.localdate()),
+            'documents': docs_list,
+            'documents_count': len(docs_list),
+            'is_hired': (app.status == JobApplication.Status.HIRED)
+        }
+    })
+
+
+@login_required
+@hr_required
+def appoint_employee(request):
+    """
+    Dedicated Interface for Appointing Onboarded Candidates as Official Employees:
+    1. HR fills Phone No. or Email -> Candidate Name and Details are Auto-Fetched.
+    2. HR verifies/edits Salary & Designation particulars.
+    3. HR creates official HRMS Login Credentials (Username, Password, Confirm Password).
+    4. HR clicks confirmation checkbox and submits -> Candidate is appointed as Active Employee!
+    """
+    from employees.models import EmployeeProfile, EmployeeDocument
+    from organization.models import Designation
+    from payroll.models import SalaryStructure
+
+    app_id = request.GET.get('app_id', '').strip()
+    prefill_app = None
+    if app_id:
+        prefill_app = JobApplication.objects.filter(application_id=app_id).select_related('candidate', 'job', 'job__department', 'job__site').first()
+
+    departments = Department.objects.all().order_by('name')
+    sites = Site.objects.filter(is_active=True).order_by('name')
+
+    if request.method == 'POST':
+        form = AppointEmployeeForm(request.POST)
+        if form.is_valid():
+            cd = form.cleaned_data
+            lookup_query = cd['lookup_query'].strip()
+            username = cd['username'].strip()
+            password = cd['password']
+            joining_date = cd['joining_date']
+            dept = cd.get('department')
+            site_obj = cd.get('site')
+            designation_title = cd.get('designation_title', '').strip()
+            employment_type = cd.get('employment_type', 'FULL_TIME')
+            offered_ctc = cd.get('offered_ctc') or Decimal('600000.00')
+            basic_salary = cd.get('basic_salary') or Decimal('25000.00')
+
+            digits_q = re.sub(r'\D', '', lookup_query)
+            if digits_q.startswith('91') and len(digits_q) == 12:
+                digits_q = digits_q[2:]
+            elif digits_q.startswith('0') and len(digits_q) == 11:
+                digits_q = digits_q[1:]
+
+            apps_q = JobApplication.objects.select_related('candidate', 'job', 'job__department', 'job__site')
+            app = None
+            if cd.get('application_id'):
+                app = apps_q.filter(application_id=cd['application_id']).first()
+            if not app:
+                if '@' in lookup_query:
+                    app = apps_q.filter(candidate__email__iexact=lookup_query).first()
+                elif digits_q:
+                    app = apps_q.filter(
+                        Q(candidate__phone__icontains=digits_q) |
+                        Q(candidate__alt_phone__icontains=digits_q) |
+                        Q(candidate__phone__icontains=lookup_query)
+                    ).first()
+                    if not app:
+                        for a in apps_q:
+                            c_phone = re.sub(r'\D', '', a.candidate.phone or '')
+                            c_alt = re.sub(r'\D', '', a.candidate.alt_phone or '')
+                            if digits_q and (digits_q in c_phone or c_phone.endswith(digits_q) or digits_q in c_alt or c_alt.endswith(digits_q)):
+                                app = a
+                                break
+            if not app:
+                messages.error(request, f"No candidate found for '{lookup_query}'. Please verify mobile number or email.")
+                return render(request, 'recruitment/admin_appoint_employee.html', {
+                    'form': form,
+                    'departments': departments,
+                    'sites': sites,
+                    'prefill_app': prefill_app,
+                })
+
+            candidate = app.candidate
+
+            if CustomUser.objects.filter(username__iexact=username).exclude(email__iexact=candidate.email).exists():
+                form.add_error('username', f"Username '{username}' is already taken. Please choose another username.")
+                return render(request, 'recruitment/admin_appoint_employee.html', {
+                    'form': form,
+                    'departments': departments,
+                    'sites': sites,
+                    'prefill_app': prefill_app,
+                })
+
+            try:
+                with transaction.atomic():
+                    # 1. Create or Update CustomUser
+                    user = CustomUser.objects.filter(email__iexact=candidate.email).first()
+                    name_parts = candidate.full_name.split()
+                    first_name = name_parts[0] if name_parts else 'Employee'
+                    last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ''
+
+                    if not user:
+                        user = CustomUser.objects.create_user(
+                            username=username,
+                            email=candidate.email,
+                            password=password,
+                            first_name=first_name,
+                            last_name=last_name,
+                            role=CustomUser.Role.EMPLOYEE,
+                            phone=candidate.phone,
+                        )
+                    else:
+                        user.username = username
+                        user.set_password(password)
+                        user.first_name = first_name
+                        user.last_name = last_name
+                        user.phone = candidate.phone
+                        user.role = CustomUser.Role.EMPLOYEE
+                        user.is_active = True
+                        user.save()
+
+                    # 2. Designation Setup
+                    final_dept = dept or (app.job.department if app.job else None)
+                    designation = None
+                    final_title = designation_title or (app.job.title if app.job else 'Software Engineer')
+                    if final_dept:
+                        designation = Designation.objects.filter(
+                            department=final_dept,
+                            title__iexact=final_title
+                        ).first()
+                        if not designation:
+                            designation = Designation.objects.create(
+                                department=final_dept,
+                                title=final_title[:150],
+                                grade_level='L2 - Professional'
+                            )
+
+                    # 3. Generate Next EMP ID
+                    emp_profile = EmployeeProfile.objects.filter(user=user).first()
+                    if not emp_profile:
+                        last_emp = EmployeeProfile.objects.order_by('-id').first()
+                        next_num = 101
+                        if last_emp and last_emp.emp_id.startswith('EMP'):
+                            try:
+                                next_num = max(101, int(last_emp.emp_id.replace('EMP', '')) + 1)
+                            except ValueError:
+                                next_num = (last_emp.id + 105)
+                        new_emp_id = f"EMP{next_num}"
+                        while EmployeeProfile.objects.filter(emp_id=new_emp_id).exists():
+                            next_num += 1
+                            new_emp_id = f"EMP{next_num}"
+
+                        final_site = site_obj or (app.job.site if app.job else None)
+                        emp_profile = EmployeeProfile.objects.create(
+                            user=user,
+                            emp_id=new_emp_id,
+                            department=final_dept,
+                            designation=designation,
+                            site=final_site,
+                            joining_date=joining_date,
+                            employment_type=employment_type,
+                            status=EmployeeProfile.Status.ACTIVE,
+                            date_of_birth=candidate.date_of_birth,
+                            gender=candidate.gender if candidate.gender in ['MALE', 'FEMALE', 'OTHER'] else 'MALE',
+                            marital_status=candidate.marital_status if candidate.marital_status in ['SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED'] else 'SINGLE',
+                            blood_group=candidate.blood_group,
+                            personal_email=candidate.email,
+                            address=candidate.permanent_address or candidate.current_address,
+                            city=candidate.city,
+                            state=candidate.state,
+                            postal_code=candidate.postal_code,
+                            emergency_contact_name=candidate.emergency_contact_name or 'Emergency Contact',
+                            emergency_contact_relation=candidate.emergency_contact_relation or 'Parent',
+                            emergency_contact_phone=candidate.emergency_contact_phone or candidate.phone,
+                            bank_name=candidate.bank_name,
+                            bank_account_number=candidate.bank_account_number,
+                            ifsc_code=candidate.bank_ifsc_code,
+                            pan_number=candidate.pan_number,
+                            uan_number=candidate.pf_uan_number,
+                        )
+                    else:
+                        emp_profile.department = final_dept
+                        emp_profile.designation = designation
+                        emp_profile.joining_date = joining_date
+                        emp_profile.bank_name = candidate.bank_name
+                        emp_profile.bank_account_number = candidate.bank_account_number
+                        emp_profile.ifsc_code = candidate.bank_ifsc_code
+                        emp_profile.pan_number = candidate.pan_number
+                        emp_profile.uan_number = candidate.pf_uan_number
+                        emp_profile.status = EmployeeProfile.Status.ACTIVE
+                        emp_profile.save()
+
+                    # 4. Salary Structure in Payroll
+                    hra_amt = round(basic_salary * Decimal('0.40'), 2)
+                    monthly_gross = round(offered_ctc / Decimal('12.0'), 2)
+                    special_all = max(Decimal('0.00'), monthly_gross - basic_salary - hra_amt)
+
+                    SalaryStructure.objects.update_or_create(
+                        employee=emp_profile,
+                        defaults={
+                            'basic_salary': basic_salary,
+                            'hra': hra_amt,
+                            'special_allowance': special_all,
+                            'is_active': True
+                        }
+                    )
+
+                    # 5. Copy candidate documents to EmployeeDocument
+                    for doc in candidate.documents.all():
+                        EmployeeDocument.objects.get_or_create(
+                            employee=emp_profile,
+                            title=doc.title,
+                            defaults={
+                                'file': doc.file,
+                                'doc_type': 'CERTIFICATE' if doc.doc_type == 'CERTIFICATE' else 'ID_PROOF' if doc.doc_type == 'AADHAAR_CARD' else 'OTHER'
+                            }
+                        )
+
+                    # 6. Update Application status to HIRED
+                    old_status = app.status
+                    app.status = JobApplication.Status.HIRED
+                    app.document_verification_status = JobApplication.DocumentVerificationStatus.VERIFIED
+                    app.hired_employee = emp_profile
+                    app.offered_ctc = offered_ctc
+                    app.offered_basic_salary = basic_salary
+                    app.offered_joining_date = joining_date
+                    app.save()
+
+                    # 7. Audit History
+                    ApplicationStatusHistory.objects.create(
+                        application=app,
+                        old_status=old_status,
+                        new_status=JobApplication.Status.HIRED,
+                        notes=f"Candidate successfully appointed as Employee #{emp_profile.emp_id}. Official HRMS Login User ID issued: '{user.username}'."
+                    )
+
+                messages.success(
+                    request,
+                    f"Candidate {candidate.full_name} is now officially appointed as an Employee (#{emp_profile.emp_id})! "
+                    f"HRMS Portal Login Credentials created (User ID: '{user.username}')."
+                )
+                return redirect('recruitment:onboarding_candidates_list')
+
+            except Exception as e:
+                messages.error(request, f"Error completing employee appointment: {str(e)}")
+        else:
+            messages.error(request, "Please review and correct the errors below.")
+    else:
+        initial = {}
+        if prefill_app:
+            cand = prefill_app.candidate
+            base_name = re.sub(r'[^a-zA-Z0-9]', '_', cand.full_name.strip().lower())
+            clean_role = ''
+            if prefill_app.job and prefill_app.job.title:
+                role_words = [w.lower() for w in re.findall(r'[a-zA-Z0-9]+', prefill_app.job.title)]
+                if role_words:
+                    clean_role = f"_{role_words[0]}"
+            suggested_u = f"{base_name}{clean_role}"[:30].strip('_')
+            cnt = 1
+            temp_u = suggested_u
+            while CustomUser.objects.filter(username__iexact=temp_u).exists():
+                temp_u = f"{suggested_u}_{cnt}"
+                cnt += 1
+
+            initial = {
+                'application_id': prefill_app.application_id,
+                'lookup_query': cand.phone or cand.email,
+                'username': temp_u,
+                'designation_title': prefill_app.job.title if prefill_app.job else '',
+                'department': prefill_app.job.department if prefill_app.job else None,
+                'site': prefill_app.job.site if prefill_app.job else None,
+                'joining_date': prefill_app.offered_joining_date or timezone.localdate(),
+                'offered_ctc': prefill_app.offered_ctc or Decimal('650000.00'),
+                'basic_salary': prefill_app.offered_basic_salary or Decimal('27000.00'),
+            }
+        form = AppointEmployeeForm(initial=initial)
+
+    return render(request, 'recruitment/admin_appoint_employee.html', {
+        'form': form,
+        'departments': departments,
+        'sites': sites,
+        'prefill_app': prefill_app,
+        'today': timezone.localdate(),
+    })
+

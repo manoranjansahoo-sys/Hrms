@@ -1,7 +1,9 @@
 import os
 import re
 from django import forms
+from django.utils import timezone
 from django.core.exceptions import ValidationError
+from organization.models import Department, Site
 from recruitment.models import (
     RecruitmentJob, CandidateRegistrationLink, JobApplication,
     Candidate, CandidateEducation, CandidateExperience, CandidateSkill,
@@ -125,12 +127,83 @@ class PreInterviewApplicationForm(forms.Form):
     phone = forms.CharField(
         max_length=20,
         label="Mobile Phone Number",
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+91 9876543210', 'required': True})
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'id': 'id_phone',
+            'placeholder': '10-digit mobile number',
+            'maxlength': '10',
+            'inputmode': 'numeric',
+            'pattern': '[6-9][0-9]{9}',
+            'oninput': "this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);",
+            'required': True
+        })
+    )
+    alt_phone = forms.CharField(
+        max_length=20,
+        required=False,
+        label="Alternative Phone Number",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'id': 'id_alt_phone',
+            'placeholder': '10-digit alternative number',
+            'maxlength': '10',
+            'inputmode': 'numeric',
+            'pattern': '[6-9][0-9]{9}',
+            'oninput': "this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);"
+        })
+    )
+    current_address = forms.CharField(
+        label="Current Residential Address (House No, Building, Street)",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'id': 'id_current_address',
+            'placeholder': 'House/Flat No., Street, Locality',
+            'required': True
+        })
     )
     city = forms.CharField(
         max_length=100,
-        label="Current City / Location",
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Bengaluru', 'required': True})
+        label="City",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'id': 'id_city',
+            'placeholder': 'e.g. Bengaluru',
+            'required': True
+        })
+    )
+    state = forms.CharField(
+        max_length=100,
+        label="State / Province",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'id': 'id_state',
+            'placeholder': 'e.g. Karnataka',
+            'required': True
+        })
+    )
+    postal_code = forms.CharField(
+        max_length=20,
+        label="PIN / Postal Code",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'id': 'id_postal_code',
+            'placeholder': 'e.g. 560103',
+            'required': True,
+            'maxlength': '10',
+            'inputmode': 'numeric',
+            'oninput': "this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);"
+        })
+    )
+    country = forms.CharField(
+        max_length=100,
+        initial='India',
+        label="Country / Nationality",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'id': 'id_country',
+            'placeholder': 'India',
+            'required': True
+        })
     )
 
     # 2. Highest Qualification Summary
@@ -252,6 +325,9 @@ class PreInterviewApplicationForm(forms.Form):
             raise ValidationError("Mobile phone number must be exactly 10 digits starting with 6, 7, 8, or 9 (no letters or negative numbers).")
         return digits
 
+    def clean_alt_phone(self):
+        return self.cleaned_data.get('alt_phone', '').strip()
+
     def clean_total_experience_years(self):
         exp_type = self.cleaned_data.get('experience_type')
         years = self.cleaned_data.get('total_experience_years')
@@ -271,7 +347,7 @@ CandidateRegistrationStepForm = PreInterviewApplicationForm
 class QuickSocialApplicationForm(forms.Form):
     """
     LinkedIn & Website Direct Fast-Apply Form with Google Sign-In Verification.
-    Contains: Position, Name, Email ID, Phone No, Alternative Phone No, Address, and Resume Upload.
+    Contains: Position, Name, Email ID, Phone No, Alternative Phone No, and Resume Upload.
     """
     job = forms.ModelChoiceField(
         queryset=RecruitmentJob.objects.filter(status=RecruitmentJob.Status.OPEN),
@@ -308,7 +384,11 @@ class QuickSocialApplicationForm(forms.Form):
         widget=forms.TextInput(attrs={
             'class': 'form-control',
             'id': 'id_phone',
-            'placeholder': '+91 9876543210',
+            'placeholder': '10-digit mobile number',
+            'maxlength': '10',
+            'inputmode': 'numeric',
+            'pattern': '[6-9][0-9]{9}',
+            'oninput': "this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);",
             'required': True
         })
     )
@@ -319,60 +399,11 @@ class QuickSocialApplicationForm(forms.Form):
         widget=forms.TextInput(attrs={
             'class': 'form-control',
             'id': 'id_alt_phone',
-            'placeholder': 'e.g. +91 9876543211 (Optional)'
-        })
-    )
-    current_address = forms.CharField(
-        label="Current Residential Address / Street",
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'id': 'id_current_address',
-            'placeholder': 'House/Flat No., Street, Locality',
-            'required': True
-        })
-    )
-    city = forms.CharField(
-        max_length=100,
-        label="City",
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'id': 'id_city',
-            'placeholder': 'e.g. Bengaluru',
-            'required': True
-        })
-    )
-    state = forms.CharField(
-        max_length=100,
-        label="State / Province",
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'id': 'id_state',
-            'placeholder': 'e.g. Karnataka',
-            'required': True
-        })
-    )
-    postal_code = forms.CharField(
-        max_length=20,
-        label="PIN / Postal Code",
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'id': 'id_postal_code',
-            'placeholder': 'e.g. 560103',
-            'required': True,
+            'placeholder': '10-digit alternative number',
             'maxlength': '10',
             'inputmode': 'numeric',
-            'oninput': "this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);"
-        })
-    )
-    country = forms.CharField(
-        max_length=100,
-        initial='India',
-        label="Country / Nationality",
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'id': 'id_country',
-            'placeholder': 'e.g. India',
-            'required': True
+            'pattern': '[6-9][0-9]{9}',
+            'oninput': "this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);"
         })
     )
     resume = forms.FileField(
@@ -407,6 +438,9 @@ class QuickSocialApplicationForm(forms.Form):
         if not job:
             self.add_error('job', "Please select the position you are applying for from the dropdown.")
         return cleaned_data
+
+
+
 
 
 # -------------------------------------------------------------
@@ -459,7 +493,16 @@ class CandidateOnboardingForm(forms.Form):
     emergency_contact_phone = forms.CharField(
         max_length=20,
         label="Emergency Contact Number",
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+91 98765 43210', 'required': True})
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'id': 'id_emergency_contact_phone',
+            'placeholder': '10-digit emergency number',
+            'maxlength': '10',
+            'inputmode': 'numeric',
+            'pattern': '[6-9][0-9]{9}',
+            'oninput': "this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);",
+            'required': True
+        })
     )
     current_address = forms.CharField(
         label="Current Residential Address",
@@ -643,38 +686,7 @@ class CandidateOnboardingForm(forms.Form):
         widget=forms.FileInput(attrs={'class': 'form-control', 'accept': '.pdf,.jpg,.jpeg,.png'})
     )
 
-    # 5. HRMS Portal Account Credentials
-    username = forms.CharField(
-        max_length=150,
-        label="HRMS Login Username / User ID",
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Your chosen username or email prefix',
-            'required': True
-        })
-    )
-    portal_password = forms.CharField(
-        max_length=128,
-        label="Create HRMS Account Password",
-        widget=forms.PasswordInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Create secure password (min 6 characters)',
-            'required': True,
-            'minlength': '6'
-        })
-    )
-    confirm_password = forms.CharField(
-        max_length=128,
-        label="Confirm HRMS Account Password",
-        widget=forms.PasswordInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Re-enter same password',
-            'required': True,
-            'minlength': '6'
-        })
-    )
-
-    # 6. Declaration
+    # 5. Declaration
     accuracy_declaration = forms.BooleanField(
         required=True,
         label="I declare that all submitted personal, academic, and statutory details are authentic and accurate.",
@@ -728,13 +740,120 @@ class CandidateOnboardingForm(forms.Form):
             return digits
         return ''
 
+
+class AppointEmployeeForm(forms.Form):
+    """
+    Dedicated HR form for finalizing employee appointment,
+    setting department/salary, and issuing HRMS portal login credentials.
+    """
+    application_id = forms.CharField(widget=forms.HiddenInput(), required=False)
+    candidate_id = forms.CharField(widget=forms.HiddenInput(), required=False)
+
+    lookup_query = forms.CharField(
+        label="Candidate Phone No. or Registered Email",
+        max_length=150,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control form-control-lg',
+            'id': 'lookupQueryInput',
+            'placeholder': 'Enter 10-digit mobile number or candidate email address...',
+            'autocomplete': 'off'
+        })
+    )
+    username = forms.CharField(
+        label="Login User ID / Username",
+        max_length=150,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control font-monospace fw-bold',
+            'id': 'appointUsernameInput',
+            'placeholder': 'e.g. chinmayee_mohanty_ux'
+        })
+    )
+    password = forms.CharField(
+        label="Create Password",
+        max_length=128,
+        required=True,
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'id': 'appointPassInput',
+            'placeholder': 'Create secure password (min 6 characters)',
+            'minlength': '6'
+        })
+    )
+    confirm_password = forms.CharField(
+        label="Confirm Password",
+        max_length=128,
+        required=True,
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'id': 'appointConfirmPassInput',
+            'placeholder': 'Re-enter same password',
+            'minlength': '6'
+        })
+    )
+
+    department = forms.ModelChoiceField(
+        queryset=Department.objects.all(),
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select', 'id': 'appointDeptSelect'})
+    )
+    designation_title = forms.CharField(
+        max_length=150,
+        required=False,
+        label="Designation / Position Title",
+        widget=forms.TextInput(attrs={'class': 'form-control', 'id': 'appointDesignationInput', 'placeholder': 'e.g. Senior Software Engineer'})
+    )
+    site = forms.ModelChoiceField(
+        queryset=Site.objects.filter(is_active=True),
+        required=False,
+        label="Work Site / Location",
+        widget=forms.Select(attrs={'class': 'form-select', 'id': 'appointSiteSelect'})
+    )
+    joining_date = forms.DateField(
+        label="Official Joining Date",
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date', 'id': 'appointJoiningDateInput'}),
+        required=True
+    )
+    employment_type = forms.ChoiceField(
+        choices=[
+            ('FULL_TIME', 'Full-time Permanent'),
+            ('PROBATION', 'Probationary Period'),
+            ('CONTRACT', 'Fixed Term Contract'),
+            ('INTERN', 'Internship')
+        ],
+        initial='FULL_TIME',
+        label="Employment Category",
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    offered_ctc = forms.DecimalField(
+        label="Annual CTC (INR)",
+        max_digits=12,
+        decimal_places=2,
+        required=False,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'id': 'appointCtcInput', 'placeholder': 'e.g. 650000'})
+    )
+    basic_salary = forms.DecimalField(
+        label="Monthly Basic Salary (INR)",
+        max_digits=12,
+        decimal_places=2,
+        required=False,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'id': 'appointBasicSalaryInput', 'placeholder': 'e.g. 27000'})
+    )
+    confirm_appointment = forms.BooleanField(
+        required=True,
+        label="I confirm that all candidate documents are verified, compensation is approved, and this candidate is hereby appointed as an active company employee.",
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input', 'id': 'appointCheckbox', 'required': True}),
+        error_messages={'required': 'You must check the confirmation checkbox to appoint as an employee.'}
+    )
+
     def clean(self):
         cleaned_data = super().clean()
-        p1 = cleaned_data.get('portal_password')
+        p1 = cleaned_data.get('password')
         p2 = cleaned_data.get('confirm_password')
         if p1 and p2:
             if len(p1) < 6:
-                self.add_error('portal_password', "Password must be at least 6 characters long.")
+                self.add_error('password', "Password must be at least 6 characters long.")
             if p1 != p2:
                 self.add_error('confirm_password', "Passwords do not match. Please ensure both passwords match.")
         return cleaned_data
@@ -792,3 +911,27 @@ class ScheduleInterviewForm(forms.ModelForm):
                 'placeholder': 'Interview round agenda, guidelines for candidate, technical prep notes...'
             }),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        today = timezone.localdate() if hasattr(timezone, 'localdate') else timezone.now().date()
+        self.fields['interview_date'].widget.attrs['min'] = today.strftime('%Y-%m-%d')
+
+    def clean_interview_date(self):
+        interview_date = self.cleaned_data.get('interview_date')
+        if interview_date:
+            today = timezone.localdate() if hasattr(timezone, 'localdate') else timezone.now().date()
+            if interview_date < today:
+                raise forms.ValidationError("Invalid interview date. Date cannot be in the past (yesterday or earlier). Please choose today or a future date.")
+        return interview_date
+
+    def clean(self):
+        cleaned_data = super().clean()
+        interview_date = cleaned_data.get('interview_date')
+        interview_time = cleaned_data.get('interview_time')
+        today = timezone.localdate() if hasattr(timezone, 'localdate') else timezone.now().date()
+        if interview_date and interview_date == today and interview_time:
+            current_time = timezone.localtime().time() if hasattr(timezone, 'localtime') else timezone.now().time()
+            if interview_time < current_time.replace(second=0, microsecond=0):
+                self.add_error('interview_time', "Invalid interview time. For today's date, interview time cannot be in the past. Please select a future time slot.")
+        return cleaned_data

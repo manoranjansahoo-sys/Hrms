@@ -19,9 +19,17 @@ urlpatterns = [
 
     # HR Candidate Applications Review & Interview Scheduling
     path('hr/candidates/', views.candidates_list, name='candidates_list'),
+    path('hr/candidates/bulk-status-update/', views.bulk_update_candidate_status, name='bulk_update_status'),
+    path('hr/candidates/schedule-interview/', views.schedule_candidate_interview, name='schedule_candidate_interview'),
     path('hr/candidates/export-csv/', views.export_candidates_csv, name='export_candidates_csv'),
     path('hr/candidates/<int:application_id>/', views.candidate_detail, name='candidate_detail'),
     path('hr/candidates/<int:application_id>/convert-employee/', views.convert_to_employee, name='convert_to_employee'),
+
+    # HR Onboarding Verification, Document Review & Appointment Pipeline
+    path('hr/onboarding/', views.onboarding_candidates_list, name='onboarding_candidates_list'),
+    path('hr/onboarding/appoint-employee/', views.appoint_employee, name='appoint_employee'),
+    path('hr/onboarding/fetch-candidate/', views.fetch_onboarding_candidate_ajax, name='fetch_onboarding_candidate_ajax'),
+    path('hr/onboarding/<str:application_id>/verify-documents/', views.verify_candidate_documents, name='verify_candidate_documents'),
 
     # 2. Public Candidate Registration Portal (No Login Required - Google Form Style)
     path('candidate/api/google-auth/', views.candidate_google_auth, name='candidate_google_auth'),

@@ -1,39 +1,261 @@
 {% extends 'recruitment/public/base_public.html' %}
-{% block title %}Employee Onboarding & Document Verification | {{ candidate.full_name }} | Company HRMS{% endblock %}
+{% block title %}Official Employee Onboarding Portal | {{ candidate.full_name }} | Company HRMS{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Enterprise Add-Employee Style Alignment */
+.onboarding-container {
+    max-width: 1020px;
+    margin: 0 auto;
+}
+
+.hrms-card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 14px;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+}
+
+.form-label {
+    color: #334155;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+    font-size: 0.85rem;
+}
+
+.form-control, .form-select {
+    border: 1.5px solid #CBD5E1;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    padding: 0.55rem 0.85rem;
+    background-color: #FFFFFF;
+    color: #0F172A;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-control:hover, .form-select:hover {
+    border-color: #94A3B8;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #16A34A;
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
+    outline: none;
+    background-color: #FFFFFF;
+}
+
+::placeholder {
+    color: #94A3B8 !important;
+    font-size: 0.84rem;
+    font-weight: 400;
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Input group with country code */
+.input-group {
+    display: flex;
+    width: 100%;
+}
+
+.input-group .input-group-text {
+    background-color: #F8FAFC;
+    border: 1.5px solid #CBD5E1;
+    border-right: none;
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    padding: 0.55rem 0.85rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #475569;
+    white-space: nowrap;
+}
+
+.input-group > .form-control {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+}
+
+.input-group-append-btn {
+    border: 1.5px solid #CBD5E1 !important;
+    border-left: none !important;
+    background-color: #F8FAFC !important;
+    border-top-right-radius: 8px !important;
+    border-bottom-right-radius: 8px !important;
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    color: #64748B !important;
+}
+
+.input-group-append-btn:hover {
+    background-color: #E2E8F0 !important;
+    color: #0F172A !important;
+}
+
+/* Document upload shell */
+.doc-upload-card {
+    background: #F8FAFC;
+    border: 1.5px dashed #CBD5E1;
+    border-radius: 10px;
+    padding: 1.1rem 1.25rem;
+    transition: all 0.2s ease;
+}
+
+.doc-upload-card:hover {
+    border-color: #16A34A;
+    background: #F0FDF4;
+}
+
+/* Button style */
+.btn-hrms {
+    background: #16A34A;
+    border: none;
+    color: #FFFFFF;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 0.65rem 1.5rem;
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.25);
+    transition: all 0.2s ease;
+}
+
+.btn-hrms:hover {
+    background: #15803D;
+    color: #FFFFFF;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
+}
+
+.badge-qualified {
+    background: #DCFCE7;
+    color: #166534;
+    border: 1px solid #BBF7D0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    letter-spacing: 0.02em;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.candidate-summary-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.85rem;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    font-size: 0.82rem;
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 950px;">
-    <!-- HERO CELEBRATION HEADER -->
-    <div class="card-custom mb-4 border-0" style="background: linear-gradient(135deg, #1B5E20, #0D47A1); color: white;">
-        <div class="p-4 p-md-5">
-            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
-                <div>
-                    <span class="badge bg-warning text-dark px-3 py-1 fw-bold mb-2">
-                        <i class="bi bi-patch-check-fill me-1"></i> Interview Cleared & Qualified
-                    </span>
-                    <h2 class="fw-bold mb-1">Official Employee Onboarding Portal</h2>
-                    <p class="text-white-75 mb-0">
-                        Candidate: <b>{{ candidate.full_name }}</b> &bull; Applied Role: <b>{{ job.title }}</b>
-                    </p>
-                </div>
+<div class="onboarding-container pb-5">
 
-                <div class="text-md-end">
-                    <div class="d-inline-flex align-items-center rounded-2 overflow-hidden shadow-sm" style="background: rgba(255,255,255,0.95);">
-                        <span class="text-primary font-monospace fw-bold px-3 py-1 fs-6">{% if application.application_id|slice:":4" == "APP-" %}{{ application.application_id|slice:"4:" }}{% else %}{{ application.application_id }}{% endif %}</span>
-                    </div>
-                    <div class="small text-white-75 mt-1">
-                        Site: {{ job.site.name|default:"Bengaluru HQ" }}
-                    </div>
+    <!-- TOP BREADCRUMB / BACK LINK -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1" style="color: #0F172A;">Official Employee Onboarding Portal</h3>
+            <p class="text-muted small mb-0">Submit verified statutory records, educational credentials, salary bank details, and portal password to formalize your employment.</p>
+        </div>
+        <a href="{% url 'recruitment:candidate_track' %}?application_id={{ application.application_id }}" class="btn btn-outline-secondary btn-sm" style="border-radius: 8px;">
+            <i class="bi bi-arrow-left me-1"></i> Back to Tracking
+        </a>
+    </div>
+
+    <!-- CANDIDATE QUALIFICATION DOSSIER CARD (MATCHING ADD-EMPLOYEE ENTERPRISE STYLE) -->
+    {% if application.document_verification_status == 'REJECTED' %}
+    <div class="alert alert-danger border-danger shadow-sm mb-4 p-3.5" style="border-radius: 12px; border-left: 5px solid #DC2626 !important;">
+        <div class="d-flex align-items-start gap-3">
+            <div class="rounded-circle bg-danger-subtle text-danger p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-size: 1.25rem;">
+                <i class="bi bi-exclamation-octagon-fill"></i>
+            </div>
+            <div>
+                <h5 class="fw-bold text-danger mb-1">Documentation Error — Re-upload / Correction Requested</h5>
+                <p class="mb-2 small text-dark">
+                    Our HR team reviewed your submitted documents and noted the following issues that require correction:
+                </p>
+                {% if application.document_rejection_reason %}
+                <div class="p-3 rounded-2 bg-white border border-danger-subtle text-dark fw-semibold mb-2">
+                    <i class="bi bi-chat-left-text-fill text-danger me-1"></i> HR Remarks / Required Corrections:
+                    <div class="mt-1 text-danger font-monospace fs-6">{{ application.document_rejection_reason }}</div>
+                </div>
+                {% endif %}
+                <div class="small text-muted">
+                    Please review your particulars, replace the highlighted documents below, and click <strong>Submit Documents for Re-Verification</strong>.
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="hrms-card p-4 mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+            <div>
+                <span class="badge-qualified mb-2">
+                    <i class="bi bi-patch-check-fill"></i> Interview Cleared & Qualified
+                </span>
+                <h4 class="fw-bold mb-1" style="color: #0F172A;">{{ candidate.full_name }}</h4>
+                <div class="text-muted small">
+                    Position: <b class="text-dark">{{ job.title }}</b> &bull; Department: <b class="text-dark">{{ job.department.name|default:"General" }}</b>
                 </div>
             </div>
 
-            <div class="mt-3 p-3 rounded" style="background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.2);">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-stars fs-4 text-warning"></i>
-                    <div class="small">
-                        <b>Congratulations!</b> You have successfully qualified all technical and managerial interview rounds.
-                        Please provide your complete statutory, academic, banking, and address verification proofs below to finalize your formal appointment.
+            <div class="text-md-end">
+                <span class="badge bg-light text-primary border font-monospace px-3 py-1.5 fs-6 shadow-sm">
+                    APP ID: {% if application.application_id|slice:":4" == "APP-" %}{{ application.application_id|slice:"4:" }}{% else %}{{ application.application_id }}{% endif %}
+                </span>
+                <div class="small text-muted mt-1">
+                    Work Location: <span class="fw-semibold text-dark">{{ job.site.name|default:"Bengaluru HQ" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- QUICK PARTICULARS STRIP -->
+        <div class="row g-2 mt-3 pt-3 border-top">
+            <div class="col-md-4">
+                <div class="candidate-summary-chip">
+                    <i class="bi bi-envelope text-primary"></i>
+                    <div class="text-truncate">
+                        <span class="text-muted d-block" style="font-size: 0.72rem;">Email ID</span>
+                        <strong class="text-dark">{{ candidate.email }}</strong>
                     </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="candidate-summary-chip">
+                    <i class="bi bi-telephone text-success"></i>
+                    <div class="text-truncate">
+                        <span class="text-muted d-block" style="font-size: 0.72rem;">Contact Number</span>
+                        <strong class="text-dark">🇮🇳 +91 {{ candidate.phone }}</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="candidate-summary-chip">
+                    <i class="bi bi-building text-info"></i>
+                    <div class="text-truncate">
+                        <span class="text-muted d-block" style="font-size: 0.72rem;">Company Assignment</span>
+                        <strong class="text-dark">Company HRMS Enterprise</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONGRATULATIONS CALLOUT BANNER -->
+        <div class="p-3 mt-3 rounded-2 small text-dark" style="background: #F0FDF4; border: 1px solid #BBF7D0;">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-stars fs-5 text-success"></i>
+                <div>
+                    <strong>Congratulations {{ candidate.full_name }}!</strong> You have successfully qualified all technical and managerial interview rounds. Please provide your complete statutory, academic, banking, and address verification proofs below to finalize your formal appointment.
                 </div>
             </div>
         </div>
@@ -42,14 +264,14 @@
     <!-- FLASH MESSAGES -->
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm mb-4" role="alert">
                 <i class="bi bi-info-circle-fill me-2"></i> {{ message }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         {% endfor %}
     {% endif %}
 
-    <!-- VALIDATION ERRORS BANNER -->
+    <!-- SERVER-SIDE VALIDATION ERRORS BANNER -->
     {% if form.errors %}
         <div class="alert alert-danger alert-dismissible fade show shadow-sm mb-4" role="alert">
             <div class="d-flex align-items-start gap-2">
@@ -69,297 +291,320 @@
         </div>
     {% endif %}
 
+    <!-- CLIENT-SIDE VALIDATION SUMMARY BANNER (HIDDEN INITIALLY) -->
+    <div id="validationSummaryBanner" class="alert alert-danger shadow-sm mb-4" style="display: none;">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-triangle-fill fs-5 text-danger"></i>
+            <div>
+                <strong>Cannot Complete Onboarding:</strong> Please fill in all required fields correctly before submitting.
+            </div>
+        </div>
+    </div>
+
     <!-- ONBOARDING FORM CARD -->
-    <div class="card-custom p-4 p-md-5 mb-5">
+    <div class="hrms-card p-4 p-md-5 mb-5">
         <form method="POST" enctype="multipart/form-data" id="onboardingForm" novalidate>
             {% csrf_token %}
 
             <!-- SECTION 1: PERSONAL & STATUTORY PARTICULARS -->
-            <div class="mb-4">
-                <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
-                    <i class="bi bi-person-lines-fill text-success me-2"></i>1. Personal & Statutory Particulars
+            <div class="border-bottom pb-2 mb-3">
+                <h5 class="fw-bold text-success mb-0">
+                    <i class="bi bi-person-lines-fill me-2"></i>1. Personal & Statutory Particulars
                 </h5>
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label small fw-semibold">Date of Birth <span class="text-danger">*</span></label>
-                        {{ form.date_of_birth }}
-                        {% if form.date_of_birth.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.date_of_birth.errors.0 }}</div>{% endif %}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-semibold">Gender <span class="text-danger">*</span></label>
-                        {{ form.gender }}
-                        {% if form.gender.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.gender.errors.0 }}</div>{% endif %}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-semibold">Father's / Guardian's Full Name <span class="text-danger">*</span></label>
-                        {{ form.father_name }}
-                        {% if form.father_name.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.father_name.errors.0 }}</div>{% endif %}
-                    </div>
+            </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label small fw-semibold">Blood Group</label>
-                        {{ form.blood_group }}
-                        {% if form.blood_group.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.blood_group.errors.0 }}</div>{% endif %}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-semibold">Marital Status</label>
-                        {{ form.marital_status }}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-semibold">Passport Photo Upload (Optional)</label>
-                        {{ form.photo }}
-                    </div>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold" for="id_date_of_birth">Date of Birth <span class="text-danger">*</span></label>
+                    {{ form.date_of_birth }}
+                    {% if form.date_of_birth.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.date_of_birth.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold" for="id_gender">Gender <span class="text-danger">*</span></label>
+                    {{ form.gender }}
+                    {% if form.gender.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.gender.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold" for="id_father_name">Father's / Guardian's Full Name <span class="text-danger">*</span></label>
+                    {{ form.father_name }}
+                    {% if form.father_name.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.father_name.errors.0 }}</div>{% endif %}
+                </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label small fw-semibold">Emergency Contact Person <span class="text-danger">*</span></label>
-                        {{ form.emergency_contact_name }}
-                        {% if form.emergency_contact_name.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.emergency_contact_name.errors.0 }}</div>{% endif %}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-semibold">Relationship <span class="text-danger">*</span></label>
-                        {{ form.emergency_contact_relation }}
-                        {% if form.emergency_contact_relation.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.emergency_contact_relation.errors.0 }}</div>{% endif %}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-semibold">Emergency Phone Number <span class="text-danger">*</span></label>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold" for="id_blood_group">Blood Group</label>
+                    {{ form.blood_group }}
+                    {% if form.blood_group.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.blood_group.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold" for="id_marital_status">Marital Status</label>
+                    {{ form.marital_status }}
+                    {% if form.marital_status.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.marital_status.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold" for="id_photo">Passport Photo Upload <span class="text-muted fw-normal">(Optional)</span></label>
+                    {{ form.photo }}
+                    {% if form.photo.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.photo.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold" for="id_emergency_contact_name">Emergency Contact Person <span class="text-danger">*</span></label>
+                    {{ form.emergency_contact_name }}
+                    {% if form.emergency_contact_name.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.emergency_contact_name.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold" for="id_emergency_contact_relation">Relationship <span class="text-danger">*</span></label>
+                    {{ form.emergency_contact_relation }}
+                    {% if form.emergency_contact_relation.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.emergency_contact_relation.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold" for="id_emergency_contact_phone">Emergency Phone Number <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text">🇮🇳 +91</span>
                         {{ form.emergency_contact_phone }}
-                        {% if form.emergency_contact_phone.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.emergency_contact_phone.errors.0 }}</div>{% endif %}
-                        <div class="form-text text-muted" style="font-size: 0.74rem;">10-digit mobile number starting with 6, 7, 8, or 9 (numbers only)</div>
                     </div>
+                    {% if form.emergency_contact_phone.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.emergency_contact_phone.errors.0 }}</div>{% endif %}
+                    <div class="form-text text-muted" style="font-size: 0.74rem;">10-digit emergency contact number</div>
+                </div>
 
-                    <div class="col-12">
-                        <label class="form-label small fw-semibold">Current Residential Address <span class="text-danger">*</span></label>
-                        {{ form.current_address }}
-                        {% if form.current_address.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.current_address.errors.0 }}</div>{% endif %}
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label small fw-semibold">Permanent Home Address <span class="text-danger">*</span></label>
-                        {{ form.permanent_address }}
-                        {% if form.permanent_address.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.permanent_address.errors.0 }}</div>{% endif %}
-                    </div>
+                <div class="col-12">
+                    <label class="form-label small fw-semibold" for="id_current_address">Current Residential Address <span class="text-danger">*</span></label>
+                    {{ form.current_address }}
+                    {% if form.current_address.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.current_address.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-12">
+                    <label class="form-label small fw-semibold" for="id_permanent_address">Permanent Home Address <span class="text-danger">*</span></label>
+                    {{ form.permanent_address }}
+                    {% if form.permanent_address.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.permanent_address.errors.0 }}</div>{% endif %}
+                </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold">State / Province <span class="text-danger">*</span></label>
-                        {{ form.state }}
-                        {% if form.state.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.state.errors.0 }}</div>{% endif %}
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold">Postal / PIN Code <span class="text-danger">*</span></label>
-                        {{ form.postal_code }}
-                        {% if form.postal_code.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.postal_code.errors.0 }}</div>{% endif %}
-                    </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold" for="id_state">State / Province <span class="text-danger">*</span></label>
+                    {{ form.state }}
+                    {% if form.state.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.state.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold" for="id_postal_code">Postal / PIN Code <span class="text-danger">*</span></label>
+                    {{ form.postal_code }}
+                    {% if form.postal_code.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.postal_code.errors.0 }}</div>{% endif %}
                 </div>
             </div>
 
             <!-- SECTION 2: ACADEMIC VERIFICATION & MARKSHEETS -->
-            <div class="mb-4 pt-3">
-                <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
-                    <i class="bi bi-mortarboard-fill text-success me-2"></i>2. Academic Verification & Degree Certificates
+            <div class="border-bottom pb-2 mb-3">
+                <h5 class="fw-bold text-success mb-0">
+                    <i class="bi bi-mortarboard-fill me-2"></i>2. Academic Verification & Degree Certificates
                 </h5>
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold">Exact Degree / Course Name <span class="text-danger">*</span></label>
-                        {{ form.degree_name }}
-                        {% if form.degree_name.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.degree_name.errors.0 }}</div>{% endif %}
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold">Specialization / Stream</label>
-                        {{ form.specialization }}
-                    </div>
+            </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold">College / University Name <span class="text-danger">*</span></label>
-                        {{ form.institution }}
-                        {% if form.institution.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.institution.errors.0 }}</div>{% endif %}
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label small fw-semibold">Graduation Year <span class="text-danger">*</span></label>
-                        {{ form.passing_year }}
-                        {% if form.passing_year.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.passing_year.errors.0 }}</div>{% endif %}
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label small fw-semibold">Aggregate CGPA / % <span class="text-danger">*</span></label>
-                        {{ form.percentage_cgpa }}
-                        {% if form.percentage_cgpa.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.percentage_cgpa.errors.0 }}</div>{% endif %}
-                    </div>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold" for="id_degree_name">Exact Degree / Course Name <span class="text-danger">*</span></label>
+                    {{ form.degree_name }}
+                    {% if form.degree_name.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.degree_name.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold" for="id_specialization">Specialization / Stream</label>
+                    {{ form.specialization }}
+                    {% if form.specialization.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.specialization.errors.0 }}</div>{% endif %}
+                </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold">10th Class (Board, School, Year & Score) <span class="text-danger">*</span></label>
-                        {{ form.details_10th }}
-                        {% if form.details_10th.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.details_10th.errors.0 }}</div>{% endif %}
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold">12th / Intermediate / Diploma Details <span class="text-danger">*</span></label>
-                        {{ form.details_12th }}
-                        {% if form.details_12th.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.details_12th.errors.0 }}</div>{% endif %}
-                    </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold" for="id_institution">College / University Name <span class="text-danger">*</span></label>
+                    {{ form.institution }}
+                    {% if form.institution.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.institution.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold" for="id_passing_year">Graduation Year <span class="text-danger">*</span></label>
+                    {{ form.passing_year }}
+                    {% if form.passing_year.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.passing_year.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold" for="id_percentage_cgpa">Aggregate CGPA / % <span class="text-danger">*</span></label>
+                    {{ form.percentage_cgpa }}
+                    {% if form.percentage_cgpa.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.percentage_cgpa.errors.0 }}</div>{% endif %}
+                </div>
 
-                    <div class="col-12">
-                        <div class="p-3 border rounded bg-light">
-                            <label class="form-label small fw-bold mb-1">Upload Degree Certificate / Consolidated Marksheet</label>
-                            <small class="text-muted d-block mb-2">Accepted formats: PDF or JPG/PNG (Max 5MB)</small>
-                            {{ form.educational_certificate }}
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold" for="id_details_10th">10th Class (Board, School, Year & Score) <span class="text-danger">*</span></label>
+                    {{ form.details_10th }}
+                    {% if form.details_10th.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.details_10th.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold" for="id_details_12th">12th / Intermediate / Diploma Details <span class="text-danger">*</span></label>
+                    {{ form.details_12th }}
+                    {% if form.details_12th.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.details_12th.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="col-12">
+                    <div class="doc-upload-card">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-file-earmark-pdf-fill text-danger fs-5"></i>
+                            <div>
+                                <label class="form-label small fw-bold mb-0" for="id_educational_certificate">Upload Degree Certificate / Consolidated Marksheet</label>
+                                <span class="text-muted d-block" style="font-size: 0.76rem;">Accepted formats: PDF or JPG/PNG (Max 5MB)</span>
+                            </div>
                         </div>
+                        {{ form.educational_certificate }}
+                        {% if form.educational_certificate.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.educational_certificate.errors.0 }}</div>{% endif %}
                     </div>
                 </div>
             </div>
 
-            <!-- SECTION 3: EMPLOYMENT & EXPERIENCE VERIFICATION -->
-            <div class="mb-4 pt-3">
-                <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
-                    <i class="bi bi-briefcase-fill text-success me-2"></i>3. Prior Employment Verification (If Applicable)
+            <!-- SECTION 3: PRIOR EMPLOYMENT VERIFICATION (IF APPLICABLE) -->
+            <div class="border-bottom pb-2 mb-3">
+                <h5 class="fw-bold text-success mb-0">
+                    <i class="bi bi-briefcase-fill me-2"></i>3. Prior Employment Verification (If Applicable)
                 </h5>
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold">Previous Employer Name</label>
-                        {{ form.previous_company }}
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label small fw-semibold">Prior Experience Summary</label>
-                        {{ form.previous_experience_details }}
-                    </div>
+            </div>
 
-                    <div class="col-md-6">
-                        <div class="p-3 border rounded bg-light">
-                            <label class="form-label small fw-bold mb-1">Upload Relieving / Experience Letter</label>
-                            <small class="text-muted d-block mb-2">Service letter or formal relieving certificate.</small>
-                            {{ form.experience_letter }}
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold" for="id_previous_company">Previous Employer Name</label>
+                    {{ form.previous_company }}
+                    {% if form.previous_company.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.previous_company.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-12">
+                    <label class="form-label small fw-semibold" for="id_previous_experience_details">Prior Experience Summary</label>
+                    {{ form.previous_experience_details }}
+                    {% if form.previous_experience_details.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.previous_experience_details.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="col-md-6">
+                    <div class="doc-upload-card h-100">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-file-earmark-check-fill text-success fs-5"></i>
+                            <div>
+                                <label class="form-label small fw-bold mb-0" for="id_experience_letter">Upload Relieving / Experience Letter</label>
+                                <span class="text-muted d-block" style="font-size: 0.76rem;">Service letter or formal relieving certificate.</span>
+                            </div>
                         </div>
+                        {{ form.experience_letter }}
+                        {% if form.experience_letter.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.experience_letter.errors.0 }}</div>{% endif %}
                     </div>
-                    <div class="col-md-6">
-                        <div class="p-3 border rounded bg-light">
-                            <label class="form-label small fw-bold mb-1">Upload Recent Payslip / Form 16</label>
-                            <small class="text-muted d-block mb-2">Most recent salary slip or annual statement.</small>
-                            {{ form.payslip }}
+                </div>
+                <div class="col-md-6">
+                    <div class="doc-upload-card h-100">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-file-earmark-ruled-fill text-primary fs-5"></i>
+                            <div>
+                                <label class="form-label small fw-bold mb-0" for="id_payslip">Upload Recent Payslip / Form 16</label>
+                                <span class="text-muted d-block" style="font-size: 0.76rem;">Most recent salary slip or annual statement.</span>
+                            </div>
                         </div>
+                        {{ form.payslip }}
+                        {% if form.payslip.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.payslip.errors.0 }}</div>{% endif %}
                     </div>
                 </div>
             </div>
 
-            <!-- SECTION 4: BANK ACCOUNT & STATUTORY TAX IDS -->
-            <div class="mb-4 pt-3">
-                <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
-                    <i class="bi bi-bank2 text-success me-2"></i>4. Salary Bank Details & Statutory Tax Identification
+            <!-- SECTION 4: SALARY BANK DETAILS & STATUTORY TAX IDS -->
+            <div class="border-bottom pb-2 mb-3">
+                <h5 class="fw-bold text-success mb-0">
+                    <i class="bi bi-bank2 me-2"></i>4. Salary Bank Details & Statutory Tax Identification
                 </h5>
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold">Salary Bank Name <span class="text-danger">*</span></label>
-                        {{ form.bank_name }}
-                        {% if form.bank_name.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.bank_name.errors.0 }}</div>{% endif %}
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold">Bank Branch <span class="text-danger">*</span></label>
-                        {{ form.bank_branch }}
-                        {% if form.bank_branch.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.bank_branch.errors.0 }}</div>{% endif %}
-                    </div>
+            </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold">Bank Account Number <span class="text-danger">*</span></label>
-                        {{ form.bank_account_number }}
-                        {% if form.bank_account_number.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.bank_account_number.errors.0 }}</div>{% endif %}
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold">Bank IFSC Code <span class="text-danger">*</span></label>
-                        {{ form.bank_ifsc_code }}
-                        {% if form.bank_ifsc_code.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.bank_ifsc_code.errors.0 }}</div>{% endif %}
-                    </div>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold" for="id_bank_name">Salary Bank Name <span class="text-danger">*</span></label>
+                    {{ form.bank_name }}
+                    {% if form.bank_name.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.bank_name.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold" for="id_bank_branch">Bank Branch <span class="text-danger">*</span></label>
+                    {{ form.bank_branch }}
+                    {% if form.bank_branch.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.bank_branch.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold" for="id_bank_account_number">Bank Account Number <span class="text-danger">*</span></label>
+                    {{ form.bank_account_number }}
+                    {% if form.bank_account_number.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.bank_account_number.errors.0 }}</div>{% endif %}
+                </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold">Income Tax PAN Number <span class="text-danger">*</span></label>
-                        {{ form.pan_number }}
-                        {% if form.pan_number.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.pan_number.errors.0 }}</div>{% endif %}
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold">Aadhaar / National ID Number <span class="text-danger">*</span></label>
-                        {{ form.aadhaar_number }}
-                        {% if form.aadhaar_number.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.aadhaar_number.errors.0 }}</div>{% endif %}
-                    </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold" for="id_bank_ifsc_code">Bank IFSC Code <span class="text-danger">*</span></label>
+                    {{ form.bank_ifsc_code }}
+                    {% if form.bank_ifsc_code.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.bank_ifsc_code.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold" for="id_pan_number">Income Tax PAN Number <span class="text-danger">*</span></label>
+                    {{ form.pan_number }}
+                    {% if form.pan_number.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.pan_number.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold" for="id_aadhaar_number">Aadhaar / National ID Number <span class="text-danger">*</span></label>
+                    {{ form.aadhaar_number }}
+                    {% if form.aadhaar_number.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.aadhaar_number.errors.0 }}</div>{% endif %}
+                </div>
 
-                    <div class="col-md-12">
-                        <label class="form-label small fw-semibold">
-                            <span>PF UAN Number</span> <span class="text-muted fw-normal">(Optional)</span>
-                        </label>
-                        {{ form.pf_uan_number }}
-                        {% if form.pf_uan_number.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.pf_uan_number.errors.0 }}</div>{% endif %}
-                    </div>
+                <div class="col-12">
+                    <label class="form-label small fw-semibold" for="id_pf_uan_number">
+                        <span>PF UAN Number</span> <span class="text-muted fw-normal">(Optional)</span>
+                    </label>
+                    {{ form.pf_uan_number }}
+                    {% if form.pf_uan_number.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.pf_uan_number.errors.0 }}</div>{% endif %}
+                </div>
 
-                    <div class="col-md-6">
-                        <div class="p-3 border rounded bg-light">
-                            <label class="form-label small fw-bold mb-1">Upload Cancelled Cheque / Bank Passbook</label>
-                            <small class="text-muted d-block mb-2">Used for electronic payroll verification.</small>
-                            {{ form.bank_proof }}
+                <div class="col-md-6">
+                    <div class="doc-upload-card h-100">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-wallet2 text-success fs-5"></i>
+                            <div>
+                                <label class="form-label small fw-bold mb-0" for="id_bank_proof">Upload Cancelled Cheque / Bank Passbook</label>
+                                <span class="text-muted d-block" style="font-size: 0.76rem;">Used for electronic payroll verification.</span>
+                            </div>
                         </div>
+                        {{ form.bank_proof }}
+                        {% if form.bank_proof.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.bank_proof.errors.0 }}</div>{% endif %}
                     </div>
-                    <div class="col-md-6">
-                        <div class="p-3 border rounded bg-light">
-                            <label class="form-label small fw-bold mb-1">Upload Aadhaar / PAN Card Document</label>
-                            <small class="text-muted d-block mb-2">Government identity document copy.</small>
-                            {{ form.id_proof }}
+                </div>
+                <div class="col-md-6">
+                    <div class="doc-upload-card h-100">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-person-vcard-fill text-primary fs-5"></i>
+                            <div>
+                                <label class="form-label small fw-bold mb-0" for="id_id_proof">Upload Aadhaar / PAN Card Document</label>
+                                <span class="text-muted d-block" style="font-size: 0.76rem;">Government identity document copy.</span>
+                            </div>
                         </div>
+                        {{ form.id_proof }}
+                        {% if form.id_proof.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.id_proof.errors.0 }}</div>{% endif %}
                     </div>
                 </div>
             </div>
 
-            <!-- SECTION 5: HRMS PORTAL ACCOUNT CREDENTIALS -->
-            <div class="mb-4 pt-3">
-                <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
-                    <i class="bi bi-shield-lock-fill text-success me-2"></i>5. Create HRMS Portal Login Credentials
+            <!-- SECTION 5: ACCURACY DECLARATION -->
+            <div class="border-bottom pb-2 mb-3">
+                <h5 class="fw-bold text-success mb-0">
+                    <i class="bi bi-clipboard-check-fill me-2"></i>5. Accuracy Declaration & Attestation
                 </h5>
-                <div class="p-3 mb-3 rounded-2 small text-dark" style="background: #F0FDF4; border: 1px solid #BBF7D0;">
-                    <i class="bi bi-info-circle-fill text-success me-1"></i>
-                    <b>Set up your personal employee login:</b> You will use this exact User ID and Password to sign into Company HRMS at <span class="font-monospace fw-bold text-primary">/accounts/login/</span> and access your Employee Profile, attendance, and payslips.
-                </div>
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label small fw-semibold">Login User ID / Username <span class="text-danger">*</span></label>
-                        {{ form.username }}
-                        {% if form.username.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.username.errors.0 }}</div>{% endif %}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-semibold">Create Password <span class="text-danger">*</span></label>
-                        {{ form.portal_password }}
-                        {% if form.portal_password.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.portal_password.errors.0 }}</div>{% endif %}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-semibold">Confirm Password <span class="text-danger">*</span></label>
-                        {{ form.confirm_password }}
-                        {% if form.confirm_password.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.confirm_password.errors.0 }}</div>{% endif %}
-                    </div>
-                </div>
             </div>
 
-            <!-- SECTION 6: ACCURACY DECLARATION -->
-            <div class="mb-4 pt-3">
-                <div class="p-3 border rounded" style="background-color: #FEFCE8; border-color: #FEF08A !important;">
-                    <div class="form-check">
-                        {{ form.accuracy_declaration }}
-                        <label class="form-check-label small fw-semibold text-dark" for="{{ form.accuracy_declaration.id_for_label }}">
-                            I hereby confirm and declare that all details, academic certificates, bank accounts, and statutory records provided herein are true, complete, and authentic to the best of my knowledge.
-                        </label>
-                    </div>
-                    {% if form.accuracy_declaration.errors %}
-                        <div class="text-danger small mt-1 fw-bold">{{ form.accuracy_declaration.errors.0 }}</div>
-                    {% endif %}
+            <div class="p-3 mb-4 rounded-2" style="background-color: #FEFCE8; border: 1px solid #FEF08A;">
+                <div class="form-check d-flex align-items-start gap-2">
+                    {{ form.accuracy_declaration }}
+                    <label class="form-check-label small fw-semibold text-dark" for="{{ form.accuracy_declaration.id_for_label }}">
+                        I hereby confirm and declare that all details, academic certificates, bank accounts, and statutory records provided herein are true, complete, and authentic to the best of my knowledge.
+                    </label>
                 </div>
+                {% if form.accuracy_declaration.errors %}
+                    <div class="text-danger small mt-1 fw-bold">{{ form.accuracy_declaration.errors.0 }}</div>
+                {% endif %}
             </div>
 
-            <!-- CLIENT-SIDE VALIDATION SUMMARY BANNER (HIDDEN INITIALLY) -->
-            <div id="clientValidationAlert" class="alert alert-danger shadow-sm mb-3" style="display: none;">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-exclamation-triangle-fill fs-5 text-danger"></i>
-                    <div>
-                        <b>Cannot Submit Onboarding:</b> Please fill in all required highlighted fields ("shells") correctly before submitting.
-                    </div>
+            <!-- ACTION BUTTONS (MATCHING ADD-EMPLOYEE FOOTER) -->
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                <div class="text-muted small">
+                    <i class="bi bi-shield-check text-success me-1"></i>
+                    All required verification fields must be completed. Documents will be reviewed by HR.
                 </div>
-            </div>
-
-            <!-- SUBMIT BUTTON -->
-            <div class="d-grid gap-2 pt-2">
-                <button type="submit" id="completeOnboardingBtn" class="btn btn-brand btn-lg py-3 shadow-sm fw-bold">
-                    <i class="bi bi-check2-circle me-2"></i> Complete Onboarding & Activate My Profile
-                </button>
-                <div class="text-center text-muted small mt-2">
-                    <i class="bi bi-lock-fill text-muted me-1"></i> Submissions are strictly verified by Company HR Operations & Payroll.
+                <div class="d-flex gap-2">
+                    <a href="{% url 'recruitment:candidate_track' %}?application_id={{ application.application_id }}" class="btn btn-outline-secondary px-3" style="border-radius: 8px;">
+                        Cancel
+                    </a>
+                    <button type="submit" id="completeOnboardingBtn" class="btn btn-hrms px-4 py-2 fw-semibold">
+                        <i class="bi bi-send-check-fill me-1"></i> {% if application.document_verification_status == 'REJECTED' %}Resubmit Documents for HR Verification{% else %}Submit Onboarding Documents for HR Review{% endif %}
+                    </button>
                 </div>
             </div>
         </form>
@@ -369,38 +614,39 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('onboardingForm');
-    const alertBox = document.getElementById('clientValidationAlert');
+    const alertBox = document.getElementById('validationSummaryBanner');
 
-    function showError(input, message) {
-        input.classList.add('is-invalid');
-        let errorDiv = input.parentElement.querySelector('.client-error-feedback');
-        if (!errorDiv) {
-            errorDiv = document.createElement('div');
-            errorDiv.className = 'client-error-feedback text-danger small mt-1 fw-bold';
-            input.parentElement.appendChild(errorDiv);
+    // Dynamic field feedback
+    function setFieldError(field, errorMsg) {
+        field.classList.add('is-invalid');
+        const container = field.parentElement.classList.contains('input-group') ? field.parentElement.parentElement : field.parentElement;
+        let fb = container.querySelector('.client-feedback-msg');
+        if (!fb) {
+            fb = document.createElement('div');
+            fb.className = 'client-feedback-msg text-danger small mt-1 fw-bold';
+            container.appendChild(fb);
         }
-        errorDiv.textContent = message;
+        fb.textContent = errorMsg;
     }
 
-    function clearError(input) {
-        input.classList.remove('is-invalid');
-        const errorDiv = input.parentElement.querySelector('.client-error-feedback');
-        if (errorDiv) {
-            errorDiv.remove();
-        }
+    function removeFieldError(field) {
+        field.classList.remove('is-invalid');
+        const container = field.parentElement.classList.contains('input-group') ? field.parentElement.parentElement : field.parentElement;
+        const fb = container.querySelector('.client-feedback-msg');
+        if (fb) fb.remove();
     }
 
-    // Live sanitization
+    // Real-time live sanitization
     const phoneInput = document.getElementById('id_emergency_contact_phone');
     if (phoneInput) {
         phoneInput.addEventListener('input', function() {
             this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
             if (this.value && !/^[6-9]/.test(this.value)) {
-                showError(this, 'Mobile number must start with 6, 7, 8, or 9.');
+                setFieldError(this, 'Mobile number must start with 6, 7, 8, or 9.');
             } else if (this.value && this.value.length < 10) {
-                showError(this, 'Must be exactly 10 digits (currently ' + this.value.length + ').');
+                setFieldError(this, 'Must be exactly 10 digits (currently ' + this.value.length + ').');
             } else {
-                clearError(this);
+                removeFieldError(this);
             }
         });
     }
@@ -410,9 +656,9 @@ document.addEventListener('DOMContentLoaded', function() {
         accInput.addEventListener('input', function() {
             this.value = this.value.replace(/[^0-9]/g, '').slice(0, 18);
             if (this.value && this.value.length < 9) {
-                showError(this, 'Bank account must be between 9 and 18 digits.');
+                setFieldError(this, 'Bank account must be between 9 and 18 digits.');
             } else {
-                clearError(this);
+                removeFieldError(this);
             }
         });
     }
@@ -422,9 +668,9 @@ document.addEventListener('DOMContentLoaded', function() {
         ifscInput.addEventListener('input', function() {
             this.value = this.value.toUpperCase().slice(0, 11);
             if (this.value && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(this.value)) {
-                showError(this, 'IFSC must be 11 characters (e.g. HDFC0001234: 4 letters, 0, 6 characters).');
+                setFieldError(this, 'IFSC must be 11 characters (e.g. HDFC0001234: 4 letters, 0, 6 characters).');
             } else {
-                clearError(this);
+                removeFieldError(this);
             }
         });
     }
@@ -434,9 +680,9 @@ document.addEventListener('DOMContentLoaded', function() {
         panInput.addEventListener('input', function() {
             this.value = this.value.toUpperCase().slice(0, 10);
             if (this.value && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(this.value)) {
-                showError(this, 'PAN must be 10 characters in format ABCDE1234F.');
+                setFieldError(this, 'PAN must be 10 characters in format ABCDE1234F.');
             } else {
-                clearError(this);
+                removeFieldError(this);
             }
         });
     }
@@ -446,9 +692,9 @@ document.addEventListener('DOMContentLoaded', function() {
         aadhaarInput.addEventListener('input', function() {
             this.value = this.value.replace(/[^0-9]/g, '').slice(0, 12);
             if (this.value && this.value.length < 12) {
-                showError(this, 'Aadhaar must be exactly 12 numeric digits.');
+                setFieldError(this, 'Aadhaar must be exactly 12 numeric digits.');
             } else {
-                clearError(this);
+                removeFieldError(this);
             }
         });
     }
@@ -458,131 +704,136 @@ document.addEventListener('DOMContentLoaded', function() {
         uanInput.addEventListener('input', function() {
             this.value = this.value.replace(/[^0-9]/g, '').slice(0, 12);
             if (this.value && this.value.length < 12) {
-                showError(this, 'If provided, PF UAN must be exactly 12 numeric digits.');
+                setFieldError(this, 'If provided, PF UAN must be exactly 12 numeric digits.');
             } else {
-                clearError(this);
+                removeFieldError(this);
             }
         });
     }
 
-    // Form submission validation
-    form.addEventListener('submit', function(e) {
-        let isValid = true;
-        let firstInvalid = null;
+    // Client-side form submission validation
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+            let firstInvalid = null;
 
-        // Check all required inputs
-        const requiredFields = form.querySelectorAll('input[required], select[required], textarea[required]');
-        requiredFields.forEach(function(field) {
-            if (field.type === 'checkbox') {
-                if (!field.checked) {
+            // Clear previous errors
+            form.querySelectorAll('.is-invalid').forEach(removeFieldError);
+
+            const requiredSelectors = [
+                '#id_date_of_birth', '#id_gender', '#id_father_name',
+                '#id_emergency_contact_name', '#id_emergency_contact_relation', '#id_emergency_contact_phone',
+                '#id_current_address', '#id_permanent_address', '#id_state', '#id_postal_code',
+                '#id_degree_name', '#id_institution', '#id_passing_year', '#id_percentage_cgpa',
+                '#id_details_10th', '#id_details_12th',
+                '#id_bank_name', '#id_bank_branch', '#id_bank_account_number', '#id_bank_ifsc_code',
+                '#id_pan_number', '#id_aadhaar_number',
+                '#id_username', '#id_portal_password', '#id_confirm_password'
+            ];
+
+            requiredSelectors.forEach(function(sel) {
+                const el = document.querySelector(sel);
+                if (el && !el.value.trim()) {
                     isValid = false;
-                    showError(field, 'This declaration must be checked to submit.');
-                    if (!firstInvalid) firstInvalid = field;
-                } else {
-                    clearError(field);
+                    setFieldError(el, 'This field is required.');
+                    if (!firstInvalid) firstInvalid = el;
+                }
+            });
+
+            // Declaration checkbox check
+            const decl = document.getElementById('id_accuracy_declaration');
+            if (decl && !decl.checked) {
+                isValid = false;
+                setFieldError(decl, 'You must acknowledge the accuracy declaration to submit.');
+                if (!firstInvalid) firstInvalid = decl;
+            }
+
+            // Emergency phone validation (strictly 10 digits starting with 6-9)
+            if (phoneInput && phoneInput.value.trim()) {
+                const val = phoneInput.value.trim();
+                if (!/^[6-9]\d{9}$/.test(val)) {
+                    isValid = false;
+                    setFieldError(phoneInput, 'Emergency phone number must be exactly 10 digits starting with 6, 7, 8, or 9.');
+                    if (!firstInvalid) firstInvalid = phoneInput;
+                }
+            }
+
+            // Bank account validation
+            if (accInput && accInput.value.trim()) {
+                const val = accInput.value.trim();
+                if (!/^\d{9,18}$/.test(val)) {
+                    isValid = false;
+                    setFieldError(accInput, 'Bank account number must be between 9 and 18 numeric digits.');
+                    if (!firstInvalid) firstInvalid = accInput;
+                }
+            }
+
+            // IFSC validation
+            if (ifscInput && ifscInput.value.trim()) {
+                const val = ifscInput.value.trim().toUpperCase();
+                if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(val)) {
+                    isValid = false;
+                    setFieldError(ifscInput, 'IFSC code must be 11 characters (e.g. HDFC0001234).');
+                    if (!firstInvalid) firstInvalid = ifscInput;
+                }
+            }
+
+            // PAN validation
+            if (panInput && panInput.value.trim()) {
+                const val = panInput.value.trim().toUpperCase();
+                if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(val)) {
+                    isValid = false;
+                    setFieldError(panInput, 'Income Tax PAN must be 10 characters (e.g. ABCDE1234F).');
+                    if (!firstInvalid) firstInvalid = panInput;
+                }
+            }
+
+            // Aadhaar validation
+            if (aadhaarInput && aadhaarInput.value.trim()) {
+                const val = aadhaarInput.value.trim();
+                if (!/^\d{12}$/.test(val)) {
+                    isValid = false;
+                    setFieldError(aadhaarInput, 'Aadhaar number must be exactly 12 numeric digits.');
+                    if (!firstInvalid) firstInvalid = aadhaarInput;
+                }
+            }
+
+            // PF UAN validation (optional)
+            if (uanInput && uanInput.value.trim()) {
+                const val = uanInput.value.trim();
+                if (!/^\d{12}$/.test(val)) {
+                    isValid = false;
+                    setFieldError(uanInput, 'If provided, PF UAN must be exactly 12 numeric digits.');
+                    if (!firstInvalid) firstInvalid = uanInput;
+                }
+            }
+
+            // Password matching & length
+            if (passInput && confirmInput) {
+                if (passInput.value.length < 6) {
+                    isValid = false;
+                    setFieldError(passInput, 'Password must be at least 6 characters long.');
+                    if (!firstInvalid) firstInvalid = passInput;
+                }
+                if (passInput.value !== confirmInput.value) {
+                    isValid = false;
+                    setFieldError(confirmInput, 'Passwords do not match.');
+                    if (!firstInvalid) firstInvalid = confirmInput;
+                }
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+                if (alertBox) alertBox.style.display = 'block';
+                if (firstInvalid) {
+                    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstInvalid.focus();
                 }
             } else {
-                if (!field.value.trim()) {
-                    isValid = false;
-                    showError(field, 'This field is required and cannot be left empty.');
-                    if (!firstInvalid) firstInvalid = field;
-                } else {
-                    clearError(field);
-                }
+                if (alertBox) alertBox.style.display = 'none';
             }
         });
-
-        // Validate emergency phone strictly
-        if (phoneInput) {
-            const val = phoneInput.value.trim();
-            if (!/^[6-9]\d{9}$/.test(val)) {
-                isValid = false;
-                showError(phoneInput, 'Emergency phone number must be exactly 10 digits starting with 6, 7, 8, or 9 (no alphabets or negative numbers).');
-                if (!firstInvalid) firstInvalid = phoneInput;
-            }
-        }
-
-        // Validate bank account
-        if (accInput) {
-            const val = accInput.value.trim();
-            if (!/^\d{9,18}$/.test(val)) {
-                isValid = false;
-                showError(accInput, 'Bank account number must be between 9 and 18 numeric digits.');
-                if (!firstInvalid) firstInvalid = accInput;
-            }
-        }
-
-        // Validate IFSC
-        if (ifscInput) {
-            const val = ifscInput.value.trim().toUpperCase();
-            if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(val)) {
-                isValid = false;
-                showError(ifscInput, 'IFSC code must be 11 characters (e.g. HDFC0001234: 4 letters, 0, 6 characters).');
-                if (!firstInvalid) firstInvalid = ifscInput;
-            }
-        }
-
-        // Validate PAN
-        if (panInput) {
-            const val = panInput.value.trim().toUpperCase();
-            if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(val)) {
-                isValid = false;
-                showError(panInput, 'Income Tax PAN must be 10 characters in the format ABCDE1234F.');
-                if (!firstInvalid) firstInvalid = panInput;
-            }
-        }
-
-        // Validate Aadhaar
-        if (aadhaarInput) {
-            const val = aadhaarInput.value.trim();
-            if (!/^\d{12}$/.test(val)) {
-                isValid = false;
-                showError(aadhaarInput, 'Aadhaar number must be exactly 12 numeric digits.');
-                if (!firstInvalid) firstInvalid = aadhaarInput;
-            }
-        }
-
-        // Validate PF UAN (Optional - only if non-empty)
-        if (uanInput && uanInput.value.trim()) {
-            const val = uanInput.value.trim();
-            if (!/^\d{12}$/.test(val)) {
-                isValid = false;
-                showError(uanInput, 'If provided, PF UAN must be exactly 12 numeric digits.');
-                if (!firstInvalid) firstInvalid = uanInput;
-            }
-        }
-
-        // Validate Passwords match and min length
-        const p1 = document.getElementById('id_portal_password');
-        const p2 = document.getElementById('id_confirm_password');
-        if (p1 && p2) {
-            if (p1.value.length < 6) {
-                isValid = false;
-                showError(p1, 'Password must be at least 6 characters long.');
-                if (!firstInvalid) firstInvalid = p1;
-            }
-            if (p1.value !== p2.value) {
-                isValid = false;
-                showError(p2, 'Passwords do not match. Please ensure both passwords match.');
-                if (!firstInvalid) firstInvalid = p2;
-            }
-        }
-
-        if (!isValid) {
-            e.preventDefault();
-            if (alertBox) alertBox.style.display = 'block';
-            if (firstInvalid) {
-                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                firstInvalid.focus();
-            }
-        } else {
-            if (alertBox) alertBox.style.display = 'none';
-        }
-    });
+    }
 });
 </script>
-        </form>
-    </div>
-</div>
 {% endblock %}
-

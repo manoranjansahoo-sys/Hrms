@@ -62,6 +62,15 @@ def employee_required(view_func):
 def log_audit_trail(action, module, description, user=None, ip_address=None):
     from accounts.models import AuditLog
     try:
+        if hasattr(ip_address, 'META'):
+            req = ip_address
+            ip = req.META.get('HTTP_X_FORWARDED_FOR', req.META.get('REMOTE_ADDR', ''))
+            if ip and ',' in ip:
+                ip = ip.split(',')[0].strip()
+            ip_address = ip or None
+        elif ip_address:
+            ip_address = str(ip_address)[:45]
+
         AuditLog.objects.create(
             user=user if user and user.is_authenticated else None,
             action=action,

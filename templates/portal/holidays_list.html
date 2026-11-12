@@ -3,14 +3,42 @@
 
 {% block content %}
 <div class="container-fluid p-0">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
             <h3 class="fw-bold mb-1">Company Declared Holidays ({{ selected_year }})</h3>
             <p class="text-muted small mb-0">Official annual public, festival, and corporate holidays recognized across all branches.</p>
         </div>
-        <div class="btn-group">
-            <a href="?year=2026" class="btn btn-sm {% if selected_year == 2026 %}btn-success{% else %}btn-outline-secondary{% endif %}">2026</a>
-            <a href="?year=2027" class="btn btn-sm {% if selected_year == 2027 %}btn-success{% else %}btn-outline-secondary{% endif %}">2027</a>
+        <div class="d-flex flex-wrap gap-2">
+            <div class="btn-group shadow-sm">
+                <a href="?year=2025" class="btn btn-sm {% if selected_year == 2025 %}btn-success{% else %}btn-outline-secondary bg-white{% endif %}">2025</a>
+                <a href="?year=2026" class="btn btn-sm {% if selected_year == 2026 %}btn-success{% else %}btn-outline-secondary bg-white{% endif %}">2026</a>
+                <a href="?year=2027" class="btn btn-sm {% if selected_year == 2027 %}btn-success{% else %}btn-outline-secondary bg-white{% endif %}">2027</a>
+            </div>
+            {% if can_manage_master_data %}
+                <a href="{% url 'organization:master_data' %}?tab=holidays&year={{ selected_year }}" class="btn btn-primary btn-sm shadow-sm">
+                    <i class="bi bi-database-fill-gear me-1"></i> Manage in Master Data
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- SUNDAY WEEKLY OFF POLICY BANNER -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); border-left: 5px solid #F59E0B !important;">
+        <div class="card-body p-3.5 d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center bg-warning text-white" style="width: 44px; height: 44px; font-size: 1.35rem;">
+                    <i class="bi bi-sun-fill"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold text-dark mb-0.5">Company Weekly Off Policy: Every Sunday is an Official Holiday</h6>
+                    <p class="text-muted small mb-0">
+                        In addition to the {{ holidays|length }} declared calendar holidays below, <strong>all Sundays</strong> are company weekly offs / non-working holidays across all office branches.
+                    </p>
+                </div>
+            </div>
+            <span class="badge bg-warning-subtle text-dark border border-warning px-3 py-1.5 fw-bold">
+                <i class="bi bi-check-circle-fill text-warning me-1"></i> Sunday Weekly Off
+            </span>
         </div>
     </div>
 
@@ -19,10 +47,10 @@
             <table class="table hrms-table">
                 <thead>
                     <tr>
-                        <th style="width: 120px;">Date</th>
-                        <th>Day</th>
+                        <th style="width: 130px;">Date</th>
+                        <th style="width: 140px;">Day</th>
                         <th>Holiday Name</th>
-                        <th>Classification</th>
+                        <th style="width: 160px;">Classification</th>
                         <th>Description</th>
                     </tr>
                 </thead>
@@ -30,8 +58,20 @@
                     {% for h in holidays %}
                         <tr>
                             <td class="font-monospace fw-bold text-success">{{ h.date|date:"d M Y" }}</td>
-                            <td class="fw-semibold text-secondary">{{ h.date|date:"l" }}</td>
-                            <td class="fw-bold text-dark">{{ h.title }}</td>
+                            <td>
+                                <span class="fw-semibold {% if h.date|date:'l' == 'Sunday' %}text-warning-emphasis fw-bold{% else %}text-secondary{% endif %}">
+                                    {{ h.date|date:"l" }}
+                                    {% if h.date|date:'l' == 'Sunday' %}
+                                        <i class="bi bi-sun-fill text-warning ms-1" title="Falls on Sunday Weekly Off"></i>
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td class="fw-bold text-dark">
+                                {{ h.title }}
+                                {% if h.is_optional %}
+                                    <span class="badge bg-secondary-subtle text-secondary ms-1 small">Optional</span>
+                                {% endif %}
+                            </td>
                             <td>
                                 <span class="badge 
                                     {% if h.holiday_type == 'PUBLIC' %}bg-primary
@@ -41,7 +81,7 @@
                                     {{ h.get_holiday_type_display }}
                                 </span>
                             </td>
-                            <td class="text-muted small">{{ h.description|default:"Annual holiday" }}</td>
+                            <td class="text-muted small">{{ h.description|default:"Annual company holiday" }}</td>
                         </tr>
                     {% empty %}
                         <tr><td colspan="5" class="text-center py-4 text-muted">No holidays recorded for this year.</td></tr>
@@ -52,4 +92,3 @@
     </div>
 </div>
 {% endblock %}
-

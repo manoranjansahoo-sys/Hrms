@@ -1,0 +1,1821 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Master Data Control Center | Company HRMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* MASTER DATA DESIGN SYSTEM */
+    :root {
+        --md-primary: #2563EB;
+        --md-primary-dark: #1D4ED8;
+        --md-surface: #FFFFFF;
+        --md-bg: #F8FAFC;
+        --md-border: #E2E8F0;
+        --md-text: #0F172A;
+        --md-text-muted: #64748B;
+    }
+
+    /* KPI OVERVIEW TILES */
+    .kpi-tile {
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 14px;
+        padding: 1.15rem 1.25rem;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    .kpi-tile:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+        border-color: #CBD5E1;
+    }
+    .kpi-tile.active-kpi {
+        border-color: #2563EB;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+    }
+    .kpi-icon-wrap {
+        width: 46px;
+        height: 46px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+    }
+
+    /* NAVIGATION TABS */
+    .master-nav-pills {
+        background: #F1F5F9;
+        padding: 0.35rem;
+        border-radius: 14px;
+        display: inline-flex;
+        gap: 0.3rem;
+    }
+    .master-nav-pills .nav-link {
+        font-weight: 600;
+        font-size: 0.88rem;
+        color: #475569;
+        border-radius: 10px;
+        padding: 0.6rem 1.15rem;
+        transition: all 0.2s ease;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .master-nav-pills .nav-link:hover {
+        color: #0F172A;
+        background: rgba(255, 255, 255, 0.7);
+    }
+    .master-nav-pills .nav-link.active {
+        background: #FFFFFF !important;
+        color: #2563EB !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    /* FILTER PILLS & CHIPS */
+    .filter-chip {
+        border: 1px solid #E2E8F0;
+        background: #FFFFFF;
+        color: #475569;
+        font-size: 0.80rem;
+        font-weight: 600;
+        border-radius: 50rem;
+        padding: 0.35rem 0.85rem;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .filter-chip:hover, .filter-chip.active {
+        background: #EFF6FF;
+        border-color: #BFDBFE;
+        color: #1D4ED8;
+    }
+
+    /* SUNDAY BANNER */
+    .sunday-policy-card {
+        background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+        border: 1px solid #FDE68A;
+        border-left: 5px solid #F59E0B !important;
+        border-radius: 14px;
+    }
+
+    /* MONTHLY VISUAL CARDS */
+    .holiday-month-card {
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.2s ease;
+    }
+    .holiday-month-card:hover {
+        border-color: #93C5FD;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    }
+    .holiday-date-badge {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        line-height: 1.1;
+    }
+
+    /* LOCATION CARDS */
+    .location-card {
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 14px;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
+    }
+    .location-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+        border-color: #CBD5E1;
+    }
+
+    /* TIME PRESET PILLS */
+    .preset-pill {
+        border: 1px solid #CBD5E1;
+        background: #F8FAFC;
+        color: #334155;
+        font-size: 0.78rem;
+        font-weight: 600;
+        border-radius: 8px;
+        padding: 0.35rem 0.75rem;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .preset-pill:hover {
+        background: #2563EB;
+        border-color: #2563EB;
+        color: #FFFFFF;
+    }
+
+    /* BADGES */
+    .badge-sunday-off {
+        background: #FEF3C7;
+        color: #92400E;
+        border: 1px solid #FCD34D;
+        font-weight: 600;
+        font-size: 0.74rem;
+        border-radius: 50rem;
+        padding: 0.25rem 0.65rem;
+    }
+    .badge-working-day {
+        background: #ECFDF5;
+        color: #065F46;
+        border: 1px solid #A7F3D0;
+        font-weight: 600;
+        font-size: 0.74rem;
+        border-radius: 50rem;
+        padding: 0.25rem 0.65rem;
+    }
+
+    /* SIMULATOR CARD */
+    .simulator-card {
+        background: linear-gradient(145deg, #1E293B 0%, #0F172A 100%);
+        color: #FFFFFF;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+    <!-- PAGE HERO HEADER (Portal Home removed, sleek interactive controls added) -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                {% if is_admin %}
+                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill small px-2.5 py-1">
+                        <i class="bi bi-shield-lock-fill me-1"></i> Admin Master Control
+                    </span>
+                {% else %}
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill small px-2.5 py-1">
+                        <i class="bi bi-person-check-fill me-1"></i> HR Delegated Authority
+                    </span>
+                {% endif %}
+                <h3 class="fw-bold text-dark mb-0">Master Data Control Center</h3>
+            </div>
+            <p class="text-muted small mb-0">
+                Company official policies for holidays, separated & uniform work timings, branches, and leave entitlements.
+            </p>
+        </div>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <a href="{% url 'portal:holidays_list' %}" class="btn btn-outline-secondary btn-sm shadow-sm" target="_blank">
+                <i class="bi bi-calendar3 me-1"></i> Public Calendar View
+            </a>
+            <div class="btn-group shadow-sm">
+                {% for y in available_years %}
+                    <a href="?tab={{ active_tab }}&year={{ y }}" class="btn btn-sm {% if selected_year == y %}btn-primary fw-bold{% else %}btn-outline-secondary bg-white{% endif %}">
+                        {{ y }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- FLASH MESSAGES -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm mb-4" role="alert">
+                <i class="bi bi-info-circle-fill me-2"></i> {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- INTERACTIVE KPI TILES (Clickable quick switchers to tabs) -->
+    <div class="row g-3 mb-4">
+        <!-- 1. Holidays KPI -->
+        <div class="col-xl-3 col-sm-6">
+            <div class="kpi-tile {% if active_tab == 'holidays' %}active-kpi{% endif %}" onclick="switchMasterTab('holidays')">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="text-muted small fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">Annual Holidays</div>
+                        <h3 class="fw-bold text-dark my-1">{{ holidays_count }} <span class="fs-6 fw-normal text-muted">Days</span></h3>
+                        <div class="small text-warning-emphasis fw-semibold">
+                            <i class="bi bi-sun-fill me-1 text-warning"></i> + 52 Sundays Off
+                        </div>
+                    </div>
+                    <div class="kpi-icon-wrap bg-danger-subtle text-danger">
+                        <i class="bi bi-calendar-heart-fill"></i>
+                    </div>
+                </div>
+                <div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-center small text-muted">
+                    <span>Year {{ selected_year }}</span>
+                    <span class="text-primary fw-semibold">Manage <i class="bi bi-chevron-right small"></i></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Timings KPI -->
+        <div class="col-xl-3 col-sm-6">
+            <div class="kpi-tile {% if active_tab == 'timings' %}active-kpi{% endif %}" onclick="switchMasterTab('timings')">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="text-muted small fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">Operating Hours</div>
+                        <h3 class="fw-bold text-dark my-1">6 <span class="fs-6 fw-normal text-muted">Days/Week</span></h3>
+                        <div class="small text-muted fw-semibold">
+                            <i class="bi bi-clock-fill me-1 text-primary"></i> 09:30 AM - 06:30 PM
+                        </div>
+                    </div>
+                    <div class="kpi-icon-wrap bg-warning-subtle text-warning">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                </div>
+                <div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-center small text-muted">
+                    <span>Mon–Sat Schedule</span>
+                    <span class="text-primary fw-semibold">Configure <i class="bi bi-chevron-right small"></i></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Locations KPI -->
+        <div class="col-xl-3 col-sm-6">
+            <div class="kpi-tile {% if active_tab == 'locations' %}active-kpi{% endif %}" onclick="switchMasterTab('locations')">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="text-muted small fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">Company Locations</div>
+                        <h3 class="fw-bold text-dark my-1">{{ locations_data|length }} <span class="fs-6 fw-normal text-muted">Sites</span></h3>
+                        <div class="small text-success fw-semibold">
+                            <i class="bi bi-building-check me-1"></i> Active Across India
+                        </div>
+                    </div>
+                    <div class="kpi-icon-wrap bg-info-subtle text-info">
+                        <i class="bi bi-geo-alt-fill"></i>
+                    </div>
+                </div>
+                <div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-center small text-muted">
+                    <span>Work Sites & Mappings</span>
+                    <span class="text-primary fw-semibold">View Sites <i class="bi bi-chevron-right small"></i></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Leave Policies KPI -->
+        <div class="col-xl-3 col-sm-6">
+            <div class="kpi-tile {% if active_tab == 'leaves' %}active-kpi{% endif %}" onclick="switchMasterTab('leaves')">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="text-muted small fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">Leave Policies</div>
+                        <h3 class="fw-bold text-dark my-1">{{ leave_data|length }} <span class="fs-6 fw-normal text-muted">Types</span></h3>
+                        <div class="small text-muted fw-semibold">
+                            <i class="bi bi-card-checklist me-1 text-success"></i> Sick & Paid Leave
+                        </div>
+                    </div>
+                    <div class="kpi-icon-wrap bg-success-subtle text-success">
+                        <i class="bi bi-clipboard-pulse"></i>
+                    </div>
+                </div>
+                <div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-center small text-muted">
+                    <span>Annual & Monthly Quotas</span>
+                    <span class="text-primary fw-semibold">Update <i class="bi bi-chevron-right small"></i></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN TAB NAVIGATION BAR -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
+        <div class="card-body p-2 d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <ul class="nav master-nav-pills flex-wrap" id="masterDataTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {% if active_tab == 'holidays' %}active{% endif %}" id="pills-holidays-tab" data-bs-toggle="pill" data-bs-target="#pills-holidays" type="button" role="tab">
+                        <i class="bi bi-calendar2-heart-fill text-danger"></i>
+                        <span>Holidays & Sunday Offs</span>
+                        <span class="badge rounded-pill bg-light text-dark border ms-1">{{ holidays_count }}</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {% if active_tab == 'timings' %}active{% endif %}" id="pills-timings-tab" data-bs-toggle="pill" data-bs-target="#pills-timings" type="button" role="tab">
+                        <i class="bi bi-clock-history text-warning"></i>
+                        <span>Operating Hours & Timings</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {% if active_tab == 'locations' %}active{% endif %}" id="pills-locations-tab" data-bs-toggle="pill" data-bs-target="#pills-locations" type="button" role="tab">
+                        <i class="bi bi-geo-alt-fill text-info"></i>
+                        <span>Company Locations</span>
+                        <span class="badge rounded-pill bg-light text-dark border ms-1">{{ locations_data|length }}</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {% if active_tab == 'leaves' %}active{% endif %}" id="pills-leaves-tab" data-bs-toggle="pill" data-bs-target="#pills-leaves" type="button" role="tab">
+                        <i class="bi bi-card-checklist text-success"></i>
+                        <span>Leave Policies (SL / PL)</span>
+                        <span class="badge rounded-pill bg-light text-dark border ms-1">{{ leave_data|length }}</span>
+                    </button>
+                </li>
+                {% if is_admin %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {% if active_tab == 'access' %}active{% endif %}" id="pills-access-tab" data-bs-toggle="pill" data-bs-target="#pills-access" type="button" role="tab">
+                        <i class="bi bi-shield-check text-primary"></i>
+                        <span>Access Delegation (HR)</span>
+                        {% if permission_settings.allow_all_hr %}
+                            <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle ms-1">HR Enabled</span>
+                        {% else %}
+                            <span class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle ms-1">Restricted</span>
+                        {% endif %}
+                    </button>
+                </li>
+                {% endif %}
+            </ul>
+
+            <!-- QUICK ACTIONS IN HEADER -->
+            <div class="d-flex align-items-center gap-2 pe-2">
+                <span class="badge bg-light text-secondary border px-2.5 py-1.5 small">
+                    <i class="bi bi-clock me-1"></i> Today: {{ today|date:"d M Y" }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB CONTENTS -->
+    <div class="tab-content" id="masterDataTabsContent">
+
+        <!-- ================================================================= -->
+        <!-- TAB 1: HOLIDAYS & SUNDAY OFFS                                     -->
+        <!-- ================================================================= -->
+        <div class="tab-pane fade {% if active_tab == 'holidays' %}show active{% endif %}" id="pills-holidays" role="tabpanel">
+            
+            <!-- SUNDAY WEEKLY OFF POLICY BANNER -->
+            <div class="card border-0 shadow-sm mb-4 sunday-policy-card">
+                <div class="card-body p-3.5 d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-warning text-white shadow-sm" style="width: 48px; height: 48px; font-size: 1.45rem;">
+                            <i class="bi bi-sun-fill"></i>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2">
+                                <h6 class="fw-bold text-dark mb-0">Company Weekly Off Policy: Every Sunday is an Official Holiday</h6>
+                                <span class="badge bg-warning text-dark rounded-pill fw-bold" style="font-size: 0.70rem;">Non-Working Day</span>
+                            </div>
+                            <p class="text-muted small mb-0 mt-0.5">
+                                Every Sunday (52 calendar weeks) is recognized as a company weekly off across all branches in addition to the <strong>{{ holidays_count }} official festival & national holidays</strong> below.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-white text-dark border shadow-sm px-3 py-2 fw-bold">
+                            <i class="bi bi-check2-circle text-success me-1"></i> 52 Sundays Off
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INTERACTIVE SEARCH, FILTER CHIPS & VIEW SWITCHER -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 14px;">
+                <div class="card-body p-3 d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <!-- Real-time search -->
+                    <div class="input-group shadow-sm" style="max-width: 320px;">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                        <input type="text" id="holidaySearchInput" class="form-control border-start-0 ps-0" placeholder="Search holiday name, day, or type..." oninput="filterHolidays()">
+                    </div>
+
+                    <!-- Category Filter Chips -->
+                    <div class="d-flex flex-wrap align-items-center gap-1.5" id="holidayFilterChips">
+                        <span class="filter-chip active" onclick="setHolidayFilter('ALL', this)">All ({{ holidays_count }})</span>
+                        <span class="filter-chip" onclick="setHolidayFilter('PUBLIC', this)"><i class="bi bi-flag-fill text-primary"></i> Public</span>
+                        <span class="filter-chip" onclick="setHolidayFilter('FESTIVAL', this)"><i class="bi bi-stars text-warning"></i> Festival</span>
+                        <span class="filter-chip" onclick="setHolidayFilter('SUNDAY', this)"><i class="bi bi-sun-fill text-warning"></i> On Sunday</span>
+                    </div>
+
+                    <!-- View Switcher & Add Button -->
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="btn-group shadow-sm">
+                            <button type="button" class="btn btn-sm btn-white border active" id="btnViewTable" onclick="toggleHolidayView('table')" title="Table View">
+                                <i class="bi bi-table"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-white border" id="btnViewCards" onclick="toggleHolidayView('cards')" title="Monthly Visual Cards">
+                                <i class="bi bi-grid"></i>
+                            </button>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm shadow-sm px-3" data-bs-toggle="modal" data-bs-target="#addHolidayModal">
+                            <i class="bi bi-plus-lg me-1"></i> Add Holiday
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW A: DETAILED TABLE VIEW -->
+            <div id="holidayTableView" class="card border-0 shadow-sm mb-4" style="border-radius: 14px; overflow: hidden;">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="holidaysTable">
+                        <thead class="table-light text-muted small text-uppercase fw-bold" style="font-size: 0.78rem;">
+                            <tr>
+                                <th style="width: 150px;" class="ps-4">Date</th>
+                                <th style="width: 140px;">Day of Week</th>
+                                <th>Holiday Name</th>
+                                <th style="width: 170px;">Classification</th>
+                                <th>Description / Scope</th>
+                                <th style="width: 110px;" class="text-end pe-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for h in holidays %}
+                                <tr class="holiday-row" data-type="{{ h.holiday_type }}" data-day="{{ h.date|date:'l' }}" data-title="{{ h.title|lower }}" data-desc="{{ h.description|lower }}">
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="rounded-3 bg-primary-subtle text-primary p-2 text-center" style="width: 38px; height: 38px; font-weight: 700; line-height: 1;">
+                                                <div style="font-size: 0.85rem;">{{ h.date|date:"d" }}</div>
+                                                <div style="font-size: 0.60rem; text-transform: uppercase;">{{ h.date|date:"M" }}</div>
+                                            </div>
+                                            <span class="font-monospace fw-bold text-dark">{{ h.date|date:"d M Y" }}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if h.date|date:'l' == 'Sunday' %}
+                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill fw-bold">
+                                                <i class="bi bi-sun-fill me-1 text-warning"></i> Sunday Off
+                                            </span>
+                                        {% else %}
+                                            <span class="fw-semibold text-secondary">{{ h.date|date:"l" }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold text-dark fs-6">{{ h.title }}</span>
+                                        {% if h.is_optional %}
+                                            <span class="badge bg-secondary-subtle text-secondary ms-1 small">Optional</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if h.holiday_type == 'PUBLIC' %}
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1">
+                                                <i class="bi bi-flag-fill me-1"></i> Public Holiday
+                                            </span>
+                                        {% elif h.holiday_type == 'FESTIVAL' %}
+                                            <span class="badge bg-warning-subtle text-dark border border-warning-subtle rounded-pill px-2.5 py-1">
+                                                <i class="bi bi-stars me-1 text-warning"></i> Festival Holiday
+                                            </span>
+                                        {% elif h.holiday_type == 'COMPANY' %}
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1">
+                                                <i class="bi bi-building me-1"></i> Company Declared
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2.5 py-1">Restricted</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-muted small">
+                                        {{ h.description|default:"Official recognized company holiday across all offices." }}
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <div class="d-inline-flex gap-1">
+                                            <button type="button" class="btn btn-outline-secondary btn-sm p-1 px-2" data-bs-toggle="modal" data-bs-target="#editHolidayModal{{ h.id }}" title="Edit Holiday">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </button>
+                                            <form method="POST" action="{% url 'organization:holiday_delete' h.id %}" class="d-inline" onsubmit="return confirm('Delete holiday {{ h.title }} ({{ h.date|date:'d M Y' }})?');">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-outline-danger btn-sm p-1 px-2" title="Delete Holiday">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+
+                                        <!-- EDIT HOLIDAY MODAL -->
+                                        <div class="modal fade" id="editHolidayModal{{ h.id }}" tabindex="-1" aria-hidden="true" style="text-align: left;">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content border-0 shadow">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title fw-bold">Edit Holiday: {{ h.title }}</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <form method="POST" action="{% url 'organization:holiday_edit' h.id %}">
+                                                        {% csrf_token %}
+                                                        <div class="modal-body">
+                                                            <div class="mb-3">
+                                                                <label class="form-label small fw-bold">Holiday Name <span class="text-danger">*</span></label>
+                                                                <input type="text" name="title" class="form-control" value="{{ h.title }}" required>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label small fw-bold">Holiday Date <span class="text-danger">*</span></label>
+                                                                <input type="date" name="date" class="form-control" value="{{ h.date|date:'Y-m-d' }}" required>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label small fw-bold">Classification</label>
+                                                                <select name="holiday_type" class="form-select">
+                                                                    <option value="PUBLIC" {% if h.holiday_type == 'PUBLIC' %}selected{% endif %}>Public Holiday</option>
+                                                                    <option value="FESTIVAL" {% if h.holiday_type == 'FESTIVAL' %}selected{% endif %}>Festival Holiday</option>
+                                                                    <option value="COMPANY" {% if h.holiday_type == 'COMPANY' %}selected{% endif %}>Company Declared Holiday</option>
+                                                                    <option value="RESTRICTED" {% if h.holiday_type == 'RESTRICTED' %}selected{% endif %}>Restricted Holiday</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label small fw-bold">Description</label>
+                                                                <textarea name="description" class="form-control" rows="2">{{ h.description }}</textarea>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" name="is_optional" id="opt{{ h.id }}" {% if h.is_optional %}checked{% endif %}>
+                                                                <label class="form-check-label small" for="opt{{ h.id }}">Optional / Restricted Holiday</label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                            <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-5 text-muted">
+                                        <i class="bi bi-calendar-x fs-1 d-block mb-2 text-muted"></i>
+                                        No holidays recorded for year {{ selected_year }}. Click <strong>Add Holiday</strong> above.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- VIEW B: MONTHLY VISUAL CARDS (Hidden by default, toggleable) -->
+            <div id="holidayCardsView" class="row g-3 mb-4 d-none">
+                {% for h in holidays %}
+                    <div class="col-md-6 col-xl-4 holiday-card-col" data-type="{{ h.holiday_type }}" data-day="{{ h.date|date:'l' }}" data-title="{{ h.title|lower }}" data-desc="{{ h.description|lower }}">
+                        <div class="holiday-month-card p-3 h-100 d-flex flex-column justify-content-between">
+                            <div class="d-flex align-items-start gap-3 mb-3">
+                                <div class="holiday-date-badge {% if h.date|date:'l' == 'Sunday' %}bg-warning-subtle text-dark border border-warning{% elif h.holiday_type == 'PUBLIC' %}bg-primary-subtle text-primary border border-primary-subtle{% else %}bg-success-subtle text-success border border-success-subtle{% endif %}">
+                                    <span style="font-size: 1.15rem;">{{ h.date|date:"d" }}</span>
+                                    <span style="font-size: 0.65rem; text-transform: uppercase;">{{ h.date|date:"M" }}</span>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <h6 class="fw-bold text-dark mb-0.5">{{ h.title }}</h6>
+                                    </div>
+                                    <div class="small {% if h.date|date:'l' == 'Sunday' %}text-warning-emphasis fw-bold{% else %}text-muted{% endif %}">
+                                        {{ h.date|date:"l, Y" }}
+                                        {% if h.date|date:'l' == 'Sunday' %}
+                                            <span class="badge bg-warning text-dark ms-1 small">Sunday Off</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="text-muted small mb-3 flex-grow-1" style="font-size: 0.82rem;">
+                                {{ h.description|default:"Official recognized company holiday across all office branches." }}
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                <div>
+                                    {% if h.holiday_type == 'PUBLIC' %}
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">Public</span>
+                                    {% elif h.holiday_type == 'FESTIVAL' %}
+                                        <span class="badge bg-warning-subtle text-dark border border-warning-subtle rounded-pill">Festival</span>
+                                    {% else %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">Company</span>
+                                    {% endif %}
+                                </div>
+                                <div class="d-flex gap-1">
+                                    <button type="button" class="btn btn-sm btn-light border py-0 px-2" data-bs-toggle="modal" data-bs-target="#editHolidayModal{{ h.id }}" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- TAB 2: OPERATING HOURS & TIMINGS                                  -->
+        <!-- ================================================================= -->
+        <div class="tab-pane fade {% if active_tab == 'timings' %}show active{% endif %}" id="pills-timings" role="tabpanel">
+            
+            <div class="row g-4 mb-4">
+                <!-- BATCH UPDATE FOR ALL WORKING DAYS -->
+                <div class="col-lg-5">
+                    <div class="card border-0 shadow-sm h-100" style="border-radius: 14px; border-top: 4px solid #2563EB !important;">
+                        <div class="p-3.5 bg-white border-bottom">
+                            <h5 class="fw-bold text-dark mb-0">
+                                <i class="bi bi-sliders text-primary me-2"></i>Apply Timings to All Working Days
+                            </h5>
+                            <small class="text-muted">Set uniform opening and closing hours for all standard working days at once.</small>
+                        </div>
+                        <div class="p-4 bg-white">
+                            <!-- Quick Timing Presets -->
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted text-uppercase mb-1.5" style="font-size: 0.72rem;">Quick Presets (Click to Auto-fill):</label>
+                                <div class="d-flex flex-wrap gap-1.5">
+                                    <button type="button" class="preset-pill" onclick="setTimingPreset('09:30', '18:30')">09:30 AM - 06:30 PM (Default)</button>
+                                    <button type="button" class="preset-pill" onclick="setTimingPreset('09:00', '18:00')">09:00 AM - 06:00 PM</button>
+                                    <button type="button" class="preset-pill" onclick="setTimingPreset('10:00', '19:00')">10:00 AM - 07:00 PM</button>
+                                    <button type="button" class="preset-pill" onclick="setTimingPreset('08:30', '17:30')">08:30 AM - 05:30 PM</button>
+                                </div>
+                            </div>
+
+                            <form method="POST" action="{% url 'organization:timing_batch_update' %}" id="batchTimingForm">
+                                {% csrf_token %}
+                                <div class="row g-3 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label small fw-bold">Company Opening Time <span class="text-danger">*</span></label>
+                                        <input type="time" name="opening_time" id="batchOpenTime" class="form-control" value="09:30" oninput="calculateDuration()" required>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small fw-bold">Company Closing Time <span class="text-danger">*</span></label>
+                                        <input type="time" name="closing_time" id="batchCloseTime" class="form-control" value="18:30" oninput="calculateDuration()" required>
+                                    </div>
+                                </div>
+
+                                <div class="p-2.5 bg-light rounded-3 mb-3 d-flex justify-content-between align-items-center">
+                                    <span class="small text-muted">Daily Work Duration:</span>
+                                    <span class="badge bg-primary fs-6 font-monospace" id="batchDurationBadge">9.0 hrs / day</span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Check-in Grace Period (Minutes)</label>
+                                    <div class="input-group">
+                                        <input type="number" name="grace_period_minutes" class="form-control" value="15" min="0" max="60" required>
+                                        <span class="input-group-text bg-white small text-muted">mins</span>
+                                    </div>
+                                    <div class="form-text small">Arrivals after this buffer window are marked as Late Check-in.</div>
+                                </div>
+
+                                <div class="form-check mb-4 p-3 bg-light rounded-3 border">
+                                    <input class="form-check-input ms-0 me-2" type="checkbox" name="sync_shift" id="syncShiftCheck" checked>
+                                    <label class="form-check-label small text-dark fw-bold" for="syncShiftCheck">
+                                        Synchronize with Default Shift in Daily Attendance System
+                                    </label>
+                                    <div class="form-text small">Updates standard shift rules for biometric and web check-in.</div>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary w-100 shadow-sm py-2 fw-semibold">
+                                    <i class="bi bi-check2-all me-1"></i> Apply to All Working Days
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OVERVIEW & SEPARATED DAYS SUMMARY -->
+                <div class="col-lg-7">
+                    <div class="card border-0 shadow-sm h-100" style="border-radius: 14px; background: #FFFFFF;">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill small">Schedule Policy</span>
+                                <h6 class="fw-bold text-dark mb-0">Separated Day Customization & Attendance Sync</h6>
+                            </div>
+                            <p class="text-muted small mb-3">
+                                You can set uniform hours for all days on the left, or customize individual days in the table below (e.g. <strong>Saturday half-day</strong> or alternate timings).
+                            </p>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-sm-6">
+                                    <div class="p-3 rounded-3 bg-light border">
+                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                            <i class="bi bi-calendar-check text-success fs-5"></i>
+                                            <span class="fw-bold text-dark">Mon – Sat</span>
+                                        </div>
+                                        <div class="small text-muted">Regular Working Days (09:30 AM – 06:30 PM)</div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="p-3 rounded-3 bg-warning-subtle border border-warning-subtle">
+                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                            <i class="bi bi-sun-fill text-warning fs-5"></i>
+                                            <span class="fw-bold text-dark">Sunday</span>
+                                        </div>
+                                        <div class="small text-muted">Official Weekly Off / Company Holiday</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-3 rounded-3 border bg-white small">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="fw-bold text-dark">Default Attendance Shift:</span>
+                                    <span class="badge bg-primary">{{ default_shift.name|default:"Office Hours" }}</span>
+                                </div>
+                                <div class="text-muted">
+                                    Active Hours: <span class="font-monospace text-dark fw-bold">{{ default_shift.start_time|time:"h:i A" }} – {{ default_shift.end_time|time:"h:i A" }}</span> (Grace: {{ default_shift.grace_period_minutes }} mins)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEPARATED 7-DAY SCHEDULE TABLE -->
+            <div class="card border-0 shadow-sm" style="border-radius: 14px; overflow: hidden;">
+                <div class="p-3.5 bg-white border-bottom d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold text-dark mb-0">
+                            <i class="bi bi-calendar-week text-primary me-2"></i>Separated Day-Wise Operating Schedule
+                        </h5>
+                        <small class="text-muted">Manage working day status, opening, closing times, and grace periods for each day of the week.</small>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light text-muted small text-uppercase fw-bold" style="font-size: 0.78rem;">
+                            <tr>
+                                <th style="width: 150px;" class="ps-4">Day of Week</th>
+                                <th style="width: 160px;">Status</th>
+                                <th style="width: 160px;">Opening Time</th>
+                                <th style="width: 160px;">Closing Time</th>
+                                <th style="width: 130px;">Grace Period</th>
+                                <th>Schedule Notes</th>
+                                <th style="width: 110px;" class="text-end pe-4">Edit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in schedules %}
+                                <tr {% if not s.is_working_day %}style="background-color: #FFFDF5;"{% endif %}>
+                                    <td class="ps-4">
+                                        <span class="fw-bold text-dark fs-6">{{ s.day_name }}</span>
+                                    </td>
+                                    <td>
+                                        {% if s.is_working_day %}
+                                            <span class="badge-working-day">
+                                                <i class="bi bi-check-circle-fill me-1"></i> Working Day
+                                            </span>
+                                        {% else %}
+                                            <span class="badge-sunday-off">
+                                                <i class="bi bi-sun-fill me-1"></i> Weekly Off
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if s.is_working_day %}
+                                            <span class="font-monospace fw-bold text-dark">{{ s.opening_time|time:"h:i A" }}</span>
+                                        {% else %}
+                                            <span class="text-muted small">— Closed —</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if s.is_working_day %}
+                                            <span class="font-monospace fw-bold text-dark">{{ s.closing_time|time:"h:i A" }}</span>
+                                        {% else %}
+                                            <span class="text-muted small">— Closed —</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if s.is_working_day %}
+                                            <span class="small text-secondary">{{ s.grace_period_minutes }} mins</span>
+                                        {% else %}
+                                            <span class="text-muted small">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-muted small">
+                                        {{ s.notes|default:"Standard Schedule" }}
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <button type="button" class="btn btn-outline-primary btn-sm px-2.5 py-1" data-bs-toggle="modal" data-bs-target="#editDayModal{{ s.id }}">
+                                            <i class="bi bi-pencil-square me-1"></i> Edit
+                                        </button>
+
+                                        <!-- EDIT DAY MODAL -->
+                                        <div class="modal fade" id="editDayModal{{ s.id }}" tabindex="-1" aria-hidden="true" style="text-align: left;">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content border-0 shadow">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title fw-bold">Edit Timing: {{ s.day_name }}</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <form method="POST" action="{% url 'organization:timing_day_update' s.id %}">
+                                                        {% csrf_token %}
+                                                        <div class="modal-body">
+                                                            <div class="form-check form-switch mb-3 p-3 bg-light rounded-3">
+                                                                <input class="form-check-input ms-0 me-2" type="checkbox" name="is_working_day" id="workingSwitch{{ s.id }}" {% if s.is_working_day %}checked{% endif %}>
+                                                                <label class="form-check-label fw-bold text-dark" for="workingSwitch{{ s.id }}">
+                                                                    Mark {{ s.day_name }} as a Working Day
+                                                                </label>
+                                                                <div class="form-text small">Turn off to designate as Company Weekly Off / Non-working day.</div>
+                                                            </div>
+                                                            <div class="row g-3 mb-3">
+                                                                <div class="col-6">
+                                                                    <label class="form-label small fw-bold">Opening Time</label>
+                                                                    <input type="time" name="opening_time" class="form-control" value="{{ s.opening_time|time:'H:i' }}">
+                                                                </div>
+                                                                <div class="col-6">
+                                                                    <label class="form-label small fw-bold">Closing Time</label>
+                                                                    <input type="time" name="closing_time" class="form-control" value="{{ s.closing_time|time:'H:i' }}">
+                                                                </div>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label small fw-bold">Grace Period (Minutes)</label>
+                                                                <input type="number" name="grace_period_minutes" class="form-control" value="{{ s.grace_period_minutes }}" min="0" max="60">
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label small fw-bold">Schedule Notes</label>
+                                                                <input type="text" name="notes" class="form-control" value="{{ s.notes }}" placeholder="e.g. Standard working day, Half day, or Weekly Off">
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                            <button type="submit" class="btn btn-primary btn-sm">Save Day Schedule</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- TAB 3: COMPANY LOCATIONS                                          -->
+        <!-- ================================================================= -->
+        <div class="tab-pane fade {% if active_tab == 'locations' %}show active{% endif %}" id="pills-locations" role="tabpanel">
+            
+            <!-- CONTROLS & SEARCH -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 14px;">
+                <div class="card-body p-3 d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div class="input-group shadow-sm" style="max-width: 320px;">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                        <input type="text" id="locationSearchInput" class="form-control border-start-0 ps-0" placeholder="Search branch, city, or manager..." oninput="filterLocations()">
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="btn-group shadow-sm">
+                            <button type="button" class="btn btn-sm btn-white border active" id="btnLocCards" onclick="toggleLocationView('cards')" title="Cards Grid">
+                                <i class="bi bi-grid"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-white border" id="btnLocTable" onclick="toggleLocationView('table')" title="Table View">
+                                <i class="bi bi-table"></i>
+                            </button>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm shadow-sm px-3" data-bs-toggle="modal" data-bs-target="#addLocationModal">
+                            <i class="bi bi-plus-lg me-1"></i> Add Location
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW A: LOCATION CARDS GRID -->
+            <div id="locationCardsView" class="row g-4 mb-4">
+                {% for item in locations_data %}
+                    {% with s=item.site %}
+                        <div class="col-md-6 col-xl-4 location-card-col" data-name="{{ s.name|lower }}" data-city="{{ s.city|lower }}" data-code="{{ s.code|lower }}">
+                            <div class="location-card p-4 h-100 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="rounded-3 bg-primary-subtle text-primary p-2 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; font-size: 1.25rem;">
+                                                <i class="bi bi-building"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="fw-bold text-dark mb-0">{{ s.name }}</h6>
+                                                <span class="badge bg-light text-secondary border font-monospace small">{{ s.code }}</span>
+                                            </div>
+                                        </div>
+                                        {% if s.is_active %}
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill">Inactive</span>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3 small text-muted">
+                                        <div class="d-flex align-items-center gap-1.5 mb-1">
+                                            <i class="bi bi-geo-alt text-danger"></i>
+                                            <span class="text-dark fw-semibold">{{ s.city }}</span>
+                                            {% if s.address %}<span class="text-muted text-truncate" title="{{ s.address }}">· {{ s.address }}</span>{% endif %}
+                                        </div>
+                                        {% if s.contact_phone %}
+                                            <div class="d-flex align-items-center gap-1.5">
+                                                <i class="bi bi-telephone text-primary"></i>
+                                                <span>{{ s.contact_phone }}</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="p-2.5 bg-light rounded-3 mb-3 small d-flex justify-content-between align-items-center">
+                                        <span class="text-muted">Site Manager:</span>
+                                        {% if s.site_manager %}
+                                            <span class="fw-semibold text-dark">
+                                                <i class="bi bi-person-circle text-info me-1"></i>{{ s.site_manager.get_full_name|default:s.site_manager.username }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted fst-italic">Not assigned</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                                        <div class="d-flex gap-2">
+                                            <span class="badge bg-primary-subtle text-primary">{{ item.positions_count }} open jobs</span>
+                                            <span class="badge bg-secondary-subtle text-secondary">{{ item.employees_count }} staff</span>
+                                        </div>
+                                        <div class="d-flex gap-1">
+                                            <button type="button" class="btn btn-outline-secondary btn-sm p-1 px-2" data-bs-toggle="modal" data-bs-target="#editLocationModal{{ s.id }}" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <form method="POST" action="{% url 'organization:location_delete' s.id %}" class="d-inline" onsubmit="return confirm('Delete or deactivate location {{ s.name }}?');">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-outline-danger btn-sm p-1 px-2" title="Delete">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endwith %}
+                {% endfor %}
+            </div>
+
+            <!-- VIEW B: DETAILED TABLE VIEW (Hidden by default) -->
+            <div id="locationTableView" class="card border-0 shadow-sm d-none" style="border-radius: 14px; overflow: hidden;">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="locationsTable">
+                        <thead class="table-light text-muted small text-uppercase fw-bold" style="font-size: 0.78rem;">
+                            <tr>
+                                <th style="width: 200px;" class="ps-4">Location Name</th>
+                                <th style="width: 120px;">City</th>
+                                <th style="width: 110px;">Code</th>
+                                <th style="width: 180px;">Site Manager</th>
+                                <th style="width: 110px;">Status</th>
+                                <th style="width: 130px;">Open Jobs</th>
+                                <th style="width: 110px;">Employees</th>
+                                <th style="width: 120px;" class="text-end pe-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in locations_data %}
+                                {% with s=item.site %}
+                                    <tr class="loc-table-row" data-name="{{ s.name|lower }}" data-city="{{ s.city|lower }}" data-code="{{ s.code|lower }}">
+                                        <td class="ps-4">
+                                            <span class="fw-bold text-dark">{{ s.name }}</span>
+                                        </td>
+                                        <td><span class="badge bg-light text-dark border">{{ s.city }}</span></td>
+                                        <td><span class="badge bg-secondary-subtle text-secondary font-monospace">{{ s.code }}</span></td>
+                                        <td>
+                                            {% if s.site_manager %}
+                                                <span class="fw-semibold text-dark small">{{ s.site_manager.get_full_name|default:s.site_manager.username }}</span>
+                                            {% else %}
+                                                <span class="text-muted small">Unassigned</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if s.is_active %}<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">Active</span>{% else %}<span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill">Inactive</span>{% endif %}
+                                        </td>
+                                        <td><span class="badge bg-primary-subtle text-primary">{{ item.positions_count }} open</span></td>
+                                        <td><span class="badge bg-secondary-subtle text-secondary">{{ item.employees_count }} staff</span></td>
+                                        <td class="text-end pe-4">
+                                            <button type="button" class="btn btn-outline-secondary btn-sm p-1 px-2" data-bs-toggle="modal" data-bs-target="#editLocationModal{{ s.id }}">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                {% endwith %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- MODALS FOR LOCATIONS -->
+            {% for item in locations_data %}
+                {% with s=item.site %}
+                    <div class="modal fade" id="editLocationModal{{ s.id }}" tabindex="-1" aria-hidden="true" style="text-align: left;">
+                        <div class="modal-dialog">
+                            <div class="modal-content border-0 shadow">
+                                <div class="modal-header">
+                                    <h5 class="modal-title fw-bold">Edit Location: {{ s.name }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form method="POST" action="{% url 'organization:location_edit' s.id %}">
+                                    {% csrf_token %}
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold">Location Name <span class="text-danger">*</span></label>
+                                            <input type="text" name="name" class="form-control" value="{{ s.name }}" required>
+                                        </div>
+                                        <div class="row g-3 mb-3">
+                                            <div class="col-6">
+                                                <label class="form-label small fw-bold">City <span class="text-danger">*</span></label>
+                                                <input type="text" name="city" class="form-control" value="{{ s.city }}" required>
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label small fw-bold">Unique Code</label>
+                                                <input type="text" name="code" class="form-control" value="{{ s.code }}">
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold">Address / Street</label>
+                                            <textarea name="address" class="form-control" rows="2">{{ s.address }}</textarea>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold">Contact Phone</label>
+                                            <input type="text" name="contact_phone" class="form-control" value="{{ s.contact_phone }}">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold">Assigned Site Manager</label>
+                                            <select name="site_manager" class="form-select">
+                                                <option value="">-- No Manager Assigned --</option>
+                                                {% for mgr in eligible_managers %}
+                                                    <option value="{{ mgr.id }}" {% if s.site_manager_id == mgr.id %}selected{% endif %}>
+                                                        {{ mgr.get_full_name|default:mgr.username }} ({{ mgr.get_role_display }})
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="is_active" id="activeSite{{ s.id }}" {% if s.is_active %}checked{% endif %}>
+                                            <label class="form-check-label small" for="activeSite{{ s.id }}">Active Location (Available for jobs and employees)</label>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endwith %}
+            {% endfor %}
+
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- TAB 4: LEAVE POLICIES (SICK LEAVE & PAID LEAVE)                   -->
+        <!-- ================================================================= -->
+        <div class="tab-pane fade {% if active_tab == 'leaves' %}show active{% endif %}" id="pills-leaves" role="tabpanel">
+            
+            <div class="row g-4 mb-4">
+                <!-- LEAVE POLICY CARDS -->
+                <div class="col-lg-8">
+                    <div class="row g-4">
+                        {% for item in leave_data %}
+                            {% with lt=item.leave_type %}
+                                <div class="col-md-6">
+                                    <div class="card border-0 shadow-sm h-100" style="border-radius: 14px; border-top: 4px solid {% if lt.code == 'SL' %}#EF4444{% elif lt.code == 'PL' %}#10B981{% else %}#3B82F6{% endif %} !important;">
+                                        <div class="p-3.5 bg-white border-bottom d-flex justify-content-between align-items-center">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="badge font-monospace px-2.5 py-1.5 fs-6 {% if lt.code == 'SL' %}bg-danger text-white{% elif lt.code == 'PL' %}bg-success text-white{% else %}bg-primary text-white{% endif %}">
+                                                    {{ lt.code }}
+                                                </span>
+                                                <div>
+                                                    <h5 class="fw-bold text-dark mb-0">{{ lt.name }}</h5>
+                                                    <small class="text-muted">{{ lt.description|default:"Standard leave entitlement" }}</small>
+                                                </div>
+                                            </div>
+                                            <button type="button" class="btn btn-outline-primary btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#editLeaveModal{{ lt.id }}">
+                                                <i class="bi bi-pencil-square me-1"></i> Edit Quota
+                                            </button>
+                                        </div>
+                                        <div class="p-4 bg-white">
+                                            <div class="row g-3 text-center mb-3">
+                                                <div class="col-6">
+                                                    <div class="p-3 rounded-3 bg-light border">
+                                                        <div class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.70rem;">Annual Quota</div>
+                                                        <div class="fs-4 fw-bold text-primary">{{ lt.days_per_year }} <small class="text-muted fs-6">days/yr</small></div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="p-3 rounded-3 bg-light border">
+                                                        <div class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.70rem;">Monthly Accrual</div>
+                                                        <div class="fs-4 fw-bold text-success">{{ item.monthly_equiv }} <small class="text-muted fs-6">days/mo</small></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center small text-muted">
+                                                <div class="d-flex gap-2">
+                                                    {% if lt.is_paid %}
+                                                        <span class="badge bg-success-subtle text-success border border-success-subtle">Paid Leave</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Unpaid</span>
+                                                    {% endif %}
+                                                    {% if lt.requires_attachment %}
+                                                        <span class="badge bg-warning-subtle text-dark border border-warning-subtle">Medical Certificate</span>
+                                                    {% endif %}
+                                                </div>
+                                                <span>Active Balances: <strong class="text-dark">{{ item.active_balances_count }}</strong></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- EDIT LEAVE QUOTA MODAL -->
+                                <div class="modal fade" id="editLeaveModal{{ lt.id }}" tabindex="-1" aria-hidden="true" style="text-align: left;">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content border-0 shadow">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title fw-bold">Edit Quota: {{ lt.name }} ({{ lt.code }})</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form method="POST" action="{% url 'organization:leave_policy_update' lt.id %}">
+                                                {% csrf_token %}
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <label class="form-label small fw-bold">Allocation Mode (Annual or Monthly)</label>
+                                                        <div class="d-flex gap-3">
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="allocation_mode" id="modeAnnual{{ lt.id }}" value="annual" checked onchange="toggleLeaveCalc({{ lt.id }}, 'annual')">
+                                                                <label class="form-check-label small" for="modeAnnual{{ lt.id }}">Annual Quota (days/year)</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="radio" name="allocation_mode" id="modeMonthly{{ lt.id }}" value="monthly" onchange="toggleLeaveCalc({{ lt.id }}, 'monthly')">
+                                                                <label class="form-check-label small" for="modeMonthly{{ lt.id }}">Monthly Accrual (days/month)</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row g-3 mb-3">
+                                                        <div class="col-6">
+                                                            <label class="form-label small fw-bold">Annual Days (Total/Year)</label>
+                                                            <input type="number" step="0.5" name="days_per_year" id="annualInput{{ lt.id }}" class="form-control" value="{{ lt.days_per_year }}" oninput="syncFromAnnual({{ lt.id }})" required>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <label class="form-label small fw-bold">Monthly Rate (Days/Month)</label>
+                                                            <input type="number" step="0.01" name="monthly_rate" id="monthlyInput{{ lt.id }}" class="form-control" value="{{ item.monthly_equiv }}" oninput="syncFromMonthly({{ lt.id }})">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label class="form-label small fw-bold">Policy Description</label>
+                                                        <textarea name="description" class="form-control" rows="2">{{ lt.description }}</textarea>
+                                                    </div>
+
+                                                    <div class="d-flex gap-4 mb-3 p-2.5 bg-light rounded-3">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" name="is_paid" id="paid{{ lt.id }}" {% if lt.is_paid %}checked{% endif %}>
+                                                            <label class="form-check-label small fw-semibold" for="paid{{ lt.id }}">Is Paid Leave</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" name="requires_attachment" id="att{{ lt.id }}" {% if lt.requires_attachment %}checked{% endif %}>
+                                                            <label class="form-check-label small fw-semibold" for="att{{ lt.id }}">Requires Medical Proof</label>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="p-3 bg-primary-subtle border border-primary-subtle rounded-3">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" name="sync_balances" id="syncBal{{ lt.id }}" checked>
+                                                            <label class="form-check-label small fw-bold text-primary" for="syncBal{{ lt.id }}">
+                                                                Synchronize all active employee leave balances for {{ selected_year }}
+                                                            </label>
+                                                            <div class="form-text small text-muted">
+                                                                Updates {{ item.active_balances_count }} active employee accounts to reflect this new annual allocation immediately.
+                                                            </div>
+                                                        </div>
+                                                        <input type="hidden" name="sync_year" value="{{ selected_year }}">
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary btn-sm">Update Leave Quota</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endwith %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- INTERACTIVE LEAVE SIMULATOR / CALCULATOR WIDGET -->
+                <div class="col-lg-4">
+                    <div class="simulator-card p-4 h-100 d-flex flex-column justify-content-between shadow-sm">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi bi-calculator-fill text-warning fs-5"></i>
+                                <h6 class="fw-bold text-white mb-0">Leave Quota Calculator</h6>
+                            </div>
+                            <p class="text-white-50 small mb-4">
+                                Test how monthly accrual rates translate into annual quotas for staff members.
+                            </p>
+
+                            <div class="mb-3">
+                                <label class="form-label small text-white-50">Accrual Slider (Days per Month):</label>
+                                <input type="range" class="form-range" id="simMonthlySlider" min="0.25" max="3.0" step="0.25" value="1.5" oninput="runLeaveSimFromSlider()">
+                                <div class="d-flex justify-content-between text-white-50" style="font-size: 0.70rem;">
+                                    <span>0.25 /mo</span>
+                                    <span>1.5 /mo</span>
+                                    <span>3.0 /mo</span>
+                                </div>
+                            </div>
+
+                            <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-white-50 small">Monthly Rate:</span>
+                                    <span class="fw-bold font-monospace text-warning fs-5" id="simMonthlyVal">1.50 <small class="text-white-50 fs-6">days/mo</small></span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-white-50 small">Annual Total:</span>
+                                    <span class="fw-bold font-monospace text-success fs-4" id="simAnnualVal">18.0 <small class="text-white-50 fs-6">days/yr</small></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-top border-secondary">
+                            <button type="button" class="btn btn-outline-light btn-sm w-100" data-bs-toggle="modal" data-bs-target="#addLeaveTypeModal">
+                                <i class="bi bi-plus-lg me-1"></i> Add Custom Leave Category
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- TAB 5: ACCESS DELEGATION (ADMIN ONLY)                             -->
+        <!-- ================================================================= -->
+        {% if is_admin %}
+        <div class="tab-pane fade {% if active_tab == 'access' %}show active{% endif %}" id="pills-access" role="tabpanel">
+            <div class="card border-0 shadow-sm" style="border-radius: 14px; border-top: 4px solid #4F46E5 !important;">
+                <div class="p-3.5 bg-white border-bottom">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill small">Admin Access Center</span>
+                        <h5 class="fw-bold text-dark mb-0">Master Data Access Delegation to HR & Staff</h5>
+                    </div>
+                    <small class="text-muted">By default, Master Data is only visible to Admin. Grant delegated access to all HR or specific staff members below.</small>
+                </div>
+                <div class="p-4 bg-white">
+                    <form method="POST" action="{% url 'organization:permissions_update' %}">
+                        {% csrf_token %}
+                        
+                        <!-- OPTION 1: GRANT TO ALL HR -->
+                        <div class="p-3.5 mb-4 rounded-3 border {% if permission_settings.allow_all_hr %}bg-success-subtle border-success-subtle{% else %}bg-light{% endif %}">
+                            <div class="form-check form-switch d-flex align-items-center gap-3">
+                                <input class="form-check-input ms-0" type="checkbox" name="allow_all_hr" id="allowAllHRSwitch" style="width: 2.5em; height: 1.35em;" {% if permission_settings.allow_all_hr %}checked{% endif %}>
+                                <div>
+                                    <label class="form-check-label fw-bold text-dark fs-6" for="allowAllHRSwitch">
+                                        Grant Master Data Access to All HR Administrators
+                                    </label>
+                                    <div class="text-muted small">
+                                        When toggled on, every staff member with the HR Administrator role ({{ hr_users.count }} users) can view Master Data in their sidebar and modify enabled sections.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- OPTION 2: GRANULAR SECTION PERMISSIONS -->
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold text-uppercase text-muted">Authorized Master Data Sections for Delegated Users:</label>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <div class="p-3 border rounded-3 bg-white">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="can_manage_holidays" id="chkHolidays" {% if permission_settings.can_manage_holidays %}checked{% endif %}>
+                                            <label class="form-check-label small fw-bold" for="chkHolidays">
+                                                <i class="bi bi-calendar-event text-danger me-1"></i> Holiday Calendar
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="p-3 border rounded-3 bg-white">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="can_manage_timings" id="chkTimings" {% if permission_settings.can_manage_timings %}checked{% endif %}>
+                                            <label class="form-check-label small fw-bold" for="chkTimings">
+                                                <i class="bi bi-clock-history text-warning me-1"></i> Operating Hours
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="p-3 border rounded-3 bg-white">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="can_manage_locations" id="chkLocations" {% if permission_settings.can_manage_locations %}checked{% endif %}>
+                                            <label class="form-check-label small fw-bold" for="chkLocations">
+                                                <i class="bi bi-geo-alt-fill text-info me-1"></i> Company Locations
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="p-3 border rounded-3 bg-white">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="can_manage_leave_policy" id="chkLeaves" {% if permission_settings.can_manage_leave_policy %}checked{% endif %}>
+                                            <label class="form-check-label small fw-bold" for="chkLeaves">
+                                                <i class="bi bi-card-checklist text-success me-1"></i> Leave Policies
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- OPTION 3: SPECIFIC INDIVIDUAL EMPLOYEES / POSITIONS -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label small fw-bold text-uppercase text-muted mb-0">Grant Delegated Access to Specific Employees / Positions:</label>
+                                <input type="text" id="userFilterInput" class="form-control form-control-sm" placeholder="Quick find user..." style="max-width: 220px;" oninput="filterStaffList()">
+                            </div>
+                            <div class="border rounded-3 p-3 bg-white" style="max-height: 220px; overflow-y: auto;">
+                                <div class="row g-2" id="staffUserList">
+                                    {% for u in all_eligible_users %}
+                                        <div class="col-md-4 col-sm-6 staff-user-item" data-name="{{ u.get_full_name|lower }}" data-username="{{ u.username|lower }}" data-role="{{ u.get_role_display|lower }}">
+                                            <div class="form-check small">
+                                                <input class="form-check-input" type="checkbox" name="allowed_users" value="{{ u.id }}" id="u{{ u.id }}" {% if u in permission_settings.allowed_users.all %}checked{% endif %}>
+                                                <label class="form-check-label text-truncate d-block" for="u{{ u.id }}" title="{{ u.get_full_name }} ({{ u.get_role_display }})">
+                                                    <strong>{{ u.get_full_name|default:u.username }}</strong>
+                                                    <span class="text-muted">({{ u.get_role_display }})</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    {% empty %}
+                                        <div class="text-muted small p-2">No other staff accounts found.</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="form-text small">Selected users will see the Master Data link and can edit permitted modules even if they do not have the full Admin role.</div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary px-4 py-2 shadow-sm fw-semibold">
+                            <i class="bi bi-shield-check me-1"></i> Save Access Delegations
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- ADD HOLIDAY MODAL (With real-time Day-of-week detector)                   -->
+<!-- ========================================================================= -->
+<div class="modal fade" id="addHolidayModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-plus-circle text-primary me-2"></i>Add Declared Holiday
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{% url 'organization:holiday_create' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Holiday Name <span class="text-danger">*</span></label>
+                        <input type="text" name="title" class="form-control" placeholder="e.g. Makar Sankranti, Diwali, Republic Day" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Date <span class="text-danger">*</span></label>
+                        <input type="date" name="date" id="addHolidayDateInput" class="form-control" value="{{ selected_year }}-01-14" onchange="detectHolidayDayOfWeek(this)" required>
+                        <div id="dayOfWeekPreview" class="small mt-1 text-primary fw-semibold"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Classification</label>
+                        <select name="holiday_type" class="form-select">
+                            <option value="PUBLIC">Public Holiday</option>
+                            <option value="FESTIVAL" selected>Festival Holiday</option>
+                            <option value="COMPANY">Company Declared Holiday</option>
+                            <option value="RESTRICTED">Restricted Holiday</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Description / Notes</label>
+                        <textarea name="description" class="form-control" rows="2" placeholder="Brief note on holiday celebration..."></textarea>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="is_optional" id="addOptional">
+                        <label class="form-check-label small" for="addOptional">Optional / Restricted Holiday</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Add Holiday</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- ADD LOCATION MODAL                                                        -->
+<!-- ========================================================================= -->
+<div class="modal fade" id="addLocationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-geo-alt-fill text-primary me-2"></i>Add Company Location / Branch
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{% url 'organization:location_create' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Location / Branch Name <span class="text-danger">*</span></label>
+                        <input type="text" name="name" id="locNameInput" class="form-control" placeholder="e.g. Bhubaneswar Development Center" oninput="suggestLocationCode()" required>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">City <span class="text-danger">*</span></label>
+                            <input type="text" name="city" id="locCityInput" class="form-control" placeholder="e.g. Bhubaneswar" oninput="suggestLocationCode()" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Unique Code</label>
+                            <input type="text" name="code" id="locCodeInput" class="form-control text-uppercase" placeholder="e.g. BBI-01">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Address / Street</label>
+                        <textarea name="address" class="form-control" rows="2" placeholder="Full street or office park address"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Contact Phone</label>
+                        <input type="text" name="contact_phone" class="form-control" placeholder="+91 98765 43210">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Assigned Site Manager</label>
+                        <select name="site_manager" class="form-select">
+                            <option value="">-- No Manager Assigned --</option>
+                            {% for mgr in eligible_managers %}
+                                <option value="{{ mgr.id }}">{{ mgr.get_full_name|default:mgr.username }} ({{ mgr.get_role_display }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Create Location</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- ADD LEAVE TYPE MODAL                                                      -->
+<!-- ========================================================================= -->
+<div class="modal fade" id="addLeaveTypeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-plus-circle text-primary me-2"></i>Add Custom Leave Policy
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{% url 'organization:leave_type_create' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Leave Name <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control" placeholder="e.g. Casual Leave, Maternity Leave" required>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Short Code <span class="text-danger">*</span></label>
+                            <input type="text" name="code" class="form-control text-uppercase" placeholder="e.g. CL, ML" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Annual Quota (Days) <span class="text-danger">*</span></label>
+                            <input type="number" step="0.5" name="days_per_year" class="form-control" value="12.0" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Description</label>
+                        <textarea name="description" class="form-control" rows="2" placeholder="Policy details..."></textarea>
+                    </div>
+                    <div class="d-flex gap-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="is_paid" id="newIsPaid" checked>
+                            <label class="form-check-label small" for="newIsPaid">Is Paid Leave</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="requires_attachment" id="newReqAtt">
+                            <label class="form-check-label small" for="newReqAtt">Requires Document Proof</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Create Leave Policy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 1. KPI Tile Quick Switcher
+    function switchMasterTab(tabName) {
+        const triggerEl = document.querySelector(`#masterDataTabs button[data-bs-target="#pills-${tabName}"]`);
+        if (triggerEl) {
+            const tab = new bootstrap.Tab(triggerEl);
+            tab.show();
+        }
+    }
+
+    // 2. Real-time Search & Filter for Holidays
+    let currentHolidayFilter = 'ALL';
+
+    function setHolidayFilter(type, chipEl) {
+        currentHolidayFilter = type;
+        document.querySelectorAll('#holidayFilterChips .filter-chip').forEach(c => c.classList.remove('active'));
+        if (chipEl) chipEl.classList.add('active');
+        filterHolidays();
+    }
+
+    function filterHolidays() {
+        const q = (document.getElementById('holidaySearchInput')?.value || '').toLowerCase().trim();
+        
+        // Filter table rows
+        const rows = document.querySelectorAll('.holiday-row');
+        rows.forEach(r => {
+            const title = r.getAttribute('data-title') || '';
+            const desc = r.getAttribute('data-desc') || '';
+            const day = r.getAttribute('data-day') || '';
+            const type = r.getAttribute('data-type') || '';
+
+            const matchesText = !q || title.includes(q) || desc.includes(q) || day.toLowerCase().includes(q) || type.toLowerCase().includes(q);
+            let matchesType = true;
+            if (currentHolidayFilter === 'PUBLIC') matchesType = (type === 'PUBLIC');
+            else if (currentHolidayFilter === 'FESTIVAL') matchesType = (type === 'FESTIVAL');
+            else if (currentHolidayFilter === 'SUNDAY') matchesType = (day === 'Sunday');
+
+            r.style.display = (matchesText && matchesType) ? '' : 'none';
+        });
+
+        // Filter cards view
+        const cards = document.querySelectorAll('.holiday-card-col');
+        cards.forEach(c => {
+            const title = c.getAttribute('data-title') || '';
+            const desc = c.getAttribute('data-desc') || '';
+            const day = c.getAttribute('data-day') || '';
+            const type = c.getAttribute('data-type') || '';
+
+            const matchesText = !q || title.includes(q) || desc.includes(q) || day.toLowerCase().includes(q) || type.toLowerCase().includes(q);
+            let matchesType = true;
+            if (currentHolidayFilter === 'PUBLIC') matchesType = (type === 'PUBLIC');
+            else if (currentHolidayFilter === 'FESTIVAL') matchesType = (type === 'FESTIVAL');
+            else if (currentHolidayFilter === 'SUNDAY') matchesType = (day === 'Sunday');
+
+            c.style.display = (matchesText && matchesType) ? '' : 'none';
+        });
+    }
+
+    // 3. Holiday View Switcher (Table vs Monthly Cards)
+    function toggleHolidayView(mode) {
+        const tblView = document.getElementById('holidayTableView');
+        const cardView = document.getElementById('holidayCardsView');
+        const btnTbl = document.getElementById('btnViewTable');
+        const btnCard = document.getElementById('btnViewCards');
+
+        if (mode === 'cards') {
+            tblView?.classList.add('d-none');
+            cardView?.classList.remove('d-none');
+            btnCard?.classList.add('active', 'btn-primary', 'text-white');
+            btnCard?.classList.remove('btn-white');
+            btnTbl?.classList.remove('active', 'btn-primary', 'text-white');
+            btnTbl?.classList.add('btn-white');
+        } else {
+            cardView?.classList.add('d-none');
+            tblView?.classList.remove('d-none');
+            btnTbl?.classList.add('active', 'btn-primary', 'text-white');
+            btnTbl?.classList.remove('btn-white');
+            btnCard?.classList.remove('active', 'btn-primary', 'text-white');
+            btnCard?.classList.add('btn-white');
+        }
+    }
+
+    // 4. Location Search & View Toggle
+    function filterLocations() {
+        const q = (document.getElementById('locationSearchInput')?.value || '').toLowerCase().trim();
+        const cards = document.querySelectorAll('.location-card-col');
+        cards.forEach(c => {
+            const name = c.getAttribute('data-name') || '';
+            const city = c.getAttribute('data-city') || '';
+            const code = c.getAttribute('data-code') || '';
+            const matches = !q || name.includes(q) || city.includes(q) || code.includes(q);
+            c.style.display = matches ? '' : 'none';
+        });
+
+        const rows = document.querySelectorAll('.loc-table-row');
+        rows.forEach(r => {
+            const name = r.getAttribute('data-name') || '';
+            const city = r.getAttribute('data-city') || '';
+            const code = r.getAttribute('data-code') || '';
+            const matches = !q || name.includes(q) || city.includes(q) || code.includes(q);
+            r.style.display = matches ? '' : 'none';
+        });
+    }
+
+    function toggleLocationView(mode) {
+        const cardView = document.getElementById('locationCardsView');
+        const tblView = document.getElementById('locationTableView');
+        const btnCard = document.getElementById('btnLocCards');
+        const btnTbl = document.getElementById('btnLocTable');
+
+        if (mode === 'table') {
+            cardView?.classList.add('d-none');
+            tblView?.classList.remove('d-none');
+            btnTbl?.classList.add('active', 'btn-primary', 'text-white');
+            btnTbl?.classList.remove('btn-white');
+            btnCard?.classList.remove('active', 'btn-primary', 'text-white');
+            btnCard?.classList.add('btn-white');
+        } else {
+            tblView?.classList.add('d-none');
+            cardView?.classList.remove('d-none');
+            btnCard?.classList.add('active', 'btn-primary', 'text-white');
+            btnCard?.classList.remove('btn-white');
+            btnTbl?.classList.remove('active', 'btn-primary', 'text-white');
+            btnTbl?.classList.add('btn-white');
+        }
+    }
+
+    // 5. Auto Location Code Suggester
+    function suggestLocationCode() {
+        const city = document.getElementById('locCityInput')?.value || '';
+        const name = document.getElementById('locNameInput')?.value || '';
+        const codeInput = document.getElementById('locCodeInput');
+        if (codeInput && !codeInput.value && (city || name)) {
+            const cClean = city.replace(/[^a-zA-Z]/g, '').substring(0, 3).toUpperCase();
+            const nClean = name.replace(/[^a-zA-Z]/g, '').substring(0, 3).toUpperCase();
+            codeInput.value = `${cClean || 'LOC'}-${nClean || '01'}`;
+        }
+    }
+
+    // 6. Day of Week Detector for Add Holiday
+    function detectHolidayDayOfWeek(input) {
+        const preview = document.getElementById('dayOfWeekPreview');
+        if (!input.value || !preview) return;
+        const d = new Date(input.value + 'T00:00:00');
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const dayName = days[d.getDay()];
+        if (dayName === 'Sunday') {
+            preview.innerHTML = `<span class="text-warning-emphasis"><i class="bi bi-sun-fill text-warning me-1"></i> Falls on Sunday (Company Weekly Off)</span>`;
+        } else {
+            preview.innerHTML = `<span class="text-primary"><i class="bi bi-calendar-check me-1"></i> Falls on ${dayName}</span>`;
+        }
+    }
+
+    // 7. Timing Quick Presets & Duration Calculator
+    function setTimingPreset(open, close) {
+        const openInp = document.getElementById('batchOpenTime');
+        const closeInp = document.getElementById('batchCloseTime');
+        if (openInp && closeInp) {
+            openInp.value = open;
+            closeInp.value = close;
+            calculateDuration();
+        }
+    }
+
+    function calculateDuration() {
+        const openVal = document.getElementById('batchOpenTime')?.value;
+        const closeVal = document.getElementById('batchCloseTime')?.value;
+        const badge = document.getElementById('batchDurationBadge');
+        if (openVal && closeVal && badge) {
+            const [oH, oM] = openVal.split(':').map(Number);
+            const [cH, cM] = closeVal.split(':').map(Number);
+            let diffM = (cH * 60 + cM) - (oH * 60 + oM);
+            if (diffM < 0) diffM += 24 * 60;
+            const hours = (diffM / 60).toFixed(1);
+            badge.innerText = `${hours} hrs / day`;
+        }
+    }
+
+    // 8. Leave Quota Real-Time Calculator & Simulator
+    function syncFromAnnual(leaveId) {
+        const annualInput = document.getElementById('annualInput' + leaveId);
+        const monthlyInput = document.getElementById('monthlyInput' + leaveId);
+        if (annualInput && monthlyInput && annualInput.value) {
+            const annual = parseFloat(annualInput.value);
+            monthlyInput.value = (annual / 12.0).toFixed(2);
+        }
+    }
+
+    function syncFromMonthly(leaveId) {
+        const annualInput = document.getElementById('annualInput' + leaveId);
+        const monthlyInput = document.getElementById('monthlyInput' + leaveId);
+        if (annualInput && monthlyInput && monthlyInput.value) {
+            const monthly = parseFloat(monthlyInput.value);
+            annualInput.value = (monthly * 12.0).toFixed(1);
+        }
+    }
+
+    function toggleLeaveCalc(leaveId, mode) {
+        const annualInput = document.getElementById('annualInput' + leaveId);
+        const monthlyInput = document.getElementById('monthlyInput' + leaveId);
+        if (mode === 'monthly') monthlyInput?.focus();
+        else annualInput?.focus();
+    }
+
+    function runLeaveSimFromSlider() {
+        const slider = document.getElementById('simMonthlySlider');
+        const mVal = document.getElementById('simMonthlyVal');
+        const aVal = document.getElementById('simAnnualVal');
+        if (slider && mVal && aVal) {
+            const m = parseFloat(slider.value);
+            mVal.innerHTML = `${m.toFixed(2)} <small class="text-white-50 fs-6">days/mo</small>`;
+            aVal.innerHTML = `${(m * 12).toFixed(1)} <small class="text-white-50 fs-6">days/yr</small>`;
+        }
+    }
+
+    // 9. Staff User Filter for Access Delegation
+    function filterStaffList() {
+        const q = (document.getElementById('userFilterInput')?.value || '').toLowerCase().trim();
+        const items = document.querySelectorAll('.staff-user-item');
+        items.forEach(it => {
+            const name = it.getAttribute('data-name') || '';
+            const username = it.getAttribute('data-username') || '';
+            const role = it.getAttribute('data-role') || '';
+            const match = !q || name.includes(q) || username.includes(q) || role.includes(q);
+            it.style.display = match ? '' : 'none';
+        });
+    }
+
+    // 10. URL Sync on Tab Change
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabButtons = document.querySelectorAll('#masterDataTabs button[data-bs-toggle="pill"]');
+        tabButtons.forEach(btn => {
+            btn.addEventListener('shown.bs.tab', function(e) {
+                const targetId = e.target.getAttribute('data-bs-target');
+                let tabName = 'holidays';
+                if (targetId === '#pills-timings') tabName = 'timings';
+                else if (targetId === '#pills-locations') tabName = 'locations';
+                else if (targetId === '#pills-leaves') tabName = 'leaves';
+                else if (targetId === '#pills-access') tabName = 'access';
+
+                const url = new URL(window.location);
+                url.searchParams.set('tab', tabName);
+                window.history.replaceState({}, '', url);
+
+                // Sync active KPI tile highlight
+                document.querySelectorAll('.kpi-tile').forEach(k => k.classList.remove('active-kpi'));
+                const kpis = {
+                    'holidays': 0,
+                    'timings': 1,
+                    'locations': 2,
+                    'leaves': 3
+                };
+                const idx = kpis[tabName];
+                const tiles = document.querySelectorAll('.kpi-tile');
+                if (idx !== undefined && tiles[idx]) {
+                    tiles[idx].classList.add('active-kpi');
+                }
+            });
+        });
+
+        // Initialize Add Holiday Day-of-week detector
+        const addHDate = document.getElementById('addHolidayDateInput');
+        if (addHDate) detectHolidayDayOfWeek(addHDate);
+
+        // Initialize duration calculation
+        calculateDuration();
+    });
+</script>
+{% endblock %}

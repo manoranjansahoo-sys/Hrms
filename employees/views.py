@@ -118,7 +118,12 @@ def employee_detail(request, emp_id):
     Detailed employee profile with strict RBAC:
     Confidential salary and bank details are ONLY visible to the employee themselves, HR, or Head.
     """
-    emp = get_object_or_404(EmployeeProfile.objects.select_related('user', 'department', 'designation', 'site', 'reporting_manager'), emp_id=emp_id)
+    emp_filter = Q(emp_id=emp_id)
+    if str(emp_id).isdigit():
+        emp_filter |= Q(id=int(emp_id))
+    emp = EmployeeProfile.objects.select_related('user', 'department', 'designation', 'site', 'reporting_manager').filter(emp_filter).first()
+    if not emp:
+        emp = get_object_or_404(EmployeeProfile.objects.select_related('user', 'department', 'designation', 'site', 'reporting_manager'), emp_id=emp_id)
     user = request.user
 
     # Confidentiality check

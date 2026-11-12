@@ -1,0 +1,731 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Appoint Candidate as Employee | HRMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .appoint-hero {
+        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+        color: #fff;
+        border-radius: 12px;
+        padding: 1.75rem 2rem;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.2);
+        margin-bottom: 1.75rem;
+    }
+    .step-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .step-card:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    }
+    .step-header {
+        padding: 1.1rem 1.5rem;
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+    }
+    .step-number {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #0d6efd;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+    .step-body {
+        padding: 1.5rem;
+    }
+    .candidate-preview-box {
+        background: #f0fdf4;
+        border: 1.5px solid #86efac;
+        border-radius: 10px;
+        padding: 1.25rem 1.5rem;
+        transition: all 0.25s ease;
+    }
+    .candidate-preview-box.warning-state {
+        background: #fffbeb;
+        border-color: #fde68a;
+    }
+    .candidate-preview-box.error-state {
+        background: #fef2f2;
+        border-color: #fca5a5;
+    }
+    .pill-badge {
+        font-size: 0.78rem;
+        padding: 0.35rem 0.65rem;
+        border-radius: 6px;
+        font-family: var(--bs-font-monospace, monospace);
+        background: #e2e8f0;
+        color: #334155;
+    }
+    .salary-calc-preview {
+        background: #f8fafc;
+        border: 1px dashed #cbd5e1;
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+    }
+    .password-toggle-btn {
+        cursor: pointer;
+        background: transparent;
+        border: none;
+        color: #64748b;
+    }
+    .password-toggle-btn:hover {
+        color: #0d6efd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 px-md-4 py-3">
+
+    <!-- BREADCRUMBS -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'portal:dashboard_hr' %}" class="text-decoration-none">HR Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'recruitment:onboarding_candidates_list' %}" class="text-decoration-none">Onboarding Employees</a></li>
+            <li class="breadcrumb-item active fw-bold" aria-current="page">Appoint Employee</li>
+        </ol>
+    </nav>
+
+    <!-- HERO HEADER -->
+    <div class="appoint-hero">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge bg-primary bg-opacity-25 text-white border border-primary border-opacity-50 px-2 py-1 small">
+                        <i class="bi bi-person-check-fill me-1"></i> Official Appointment & Credential Issuance
+                    </span>
+                    <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 px-2 py-1 small">
+                        HR Administration
+                    </span>
+                </div>
+                <h2 class="h3 fw-bold mb-1 text-white">Appoint Candidate as Official Employee</h2>
+                <p class="text-white-50 mb-0 small">
+                    Enter the candidate's registered phone number or email to auto-fetch profile details, set salary & designation, and issue official HRMS portal login credentials.
+                </p>
+            </div>
+            <div>
+                <a href="{% url 'recruitment:onboarding_candidates_list' %}" class="btn btn-outline-light px-3 py-2">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Onboarding List
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN FORM -->
+    <form method="POST" action="{% url 'recruitment:appoint_employee' %}" id="appointEmployeeForm">
+        {% csrf_token %}
+        {{ form.application_id }}
+        {{ form.candidate_id }}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger shadow-sm mb-4">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                {% for err in form.non_field_errors %}
+                    <div>{{ err }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- STEP 1: CANDIDATE LOOKUP & AUTO-FETCH -->
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">1</div>
+                <div>
+                    <h5 class="fw-bold text-dark mb-0">Candidate Identification & Profile Lookup</h5>
+                    <div class="small text-muted">Enter phone number or email to automatically fetch candidate information.</div>
+                </div>
+            </div>
+            <div class="step-body">
+                <div class="row g-3 align-items-end">
+                    <div class="col-12 col-md-8">
+                        <label for="lookupQueryInput" class="form-label fw-bold text-dark">
+                            Candidate Mobile Phone No. or Registered Email <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text bg-light text-muted"><i class="bi bi-search"></i></span>
+                            <input type="text" 
+                                   name="lookup_query" 
+                                   id="lookupQueryInput" 
+                                   class="form-control {% if form.lookup_query.errors %}is-invalid{% endif %}" 
+                                   value="{{ form.lookup_query.value|default:'' }}" 
+                                   placeholder="e.g. 9876543210 or chinmayee@example.com" 
+                                   autocomplete="off" 
+                                   required>
+                            <button type="button" class="btn btn-primary px-4 fw-semibold" id="fetchCandidateBtn">
+                                <span class="spinner-border spinner-border-sm me-1 d-none" id="fetchSpinner" role="status"></span>
+                                <i class="bi bi-arrow-clockwise me-1" id="fetchIcon"></i> Auto Fetch
+                            </button>
+                        </div>
+                        {% if form.lookup_query.errors %}
+                            <div class="text-danger small mt-1">{{ form.lookup_query.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-text text-muted small mt-1">
+                            <i class="bi bi-info-circle me-1"></i>Type 10-digit mobile number or candidate email address. System will auto-search as you type.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AUTO-FETCHED CANDIDATE SUMMARY CARD -->
+                <div class="mt-4 {% if not prefill_app %}d-none{% endif %}" id="candidateProfileCard">
+                    <div class="candidate-preview-box {% if prefill_app and prefill_app.document_verification_status == 'REJECTED' %}error-state{% elif prefill_app and prefill_app.document_verification_status != 'VERIFIED' %}warning-state{% endif %}" id="candidateCardBox">
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center fw-bold fs-4" style="width: 55px; height: 55px;" id="avatarInitial">
+                                    {{ prefill_app.candidate.full_name|slice:":1"|default:"C" }}
+                                </div>
+                                <div>
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                        <h4 class="fw-bold text-dark mb-0" id="cardCandName">{{ prefill_app.candidate.full_name|default:"Candidate Name" }}</h4>
+                                        <span class="badge bg-light text-dark border font-monospace" id="cardAppId">{{ prefill_app.application_id|default:"" }}</span>
+                                        <span class="badge" id="cardDocStatusBadge">
+                                            {% if prefill_app and prefill_app.document_verification_status == 'VERIFIED' %}
+                                                <span class="badge bg-success"><i class="bi bi-patch-check-fill me-1"></i>Documents Verified</span>
+                                            {% elif prefill_app and prefill_app.document_verification_status == 'REJECTED' %}
+                                                <span class="badge bg-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>Documentation Error</span>
+                                            {% else %}
+                                                <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Pending Review</span>
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    <div class="text-muted small mt-1">
+                                        <span class="me-3"><i class="bi bi-envelope me-1"></i><span id="cardCandEmail">{{ prefill_app.candidate.email|default:"" }}</span></span>
+                                        <span class="me-3"><i class="bi bi-telephone me-1"></i><span id="cardCandPhone">{{ prefill_app.candidate.phone|default:"" }}</span></span>
+                                        <span><i class="bi bi-geo-alt me-1"></i><span id="cardCandCity">{{ prefill_app.candidate.city|default:"Not Specified" }}</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-md-end">
+                                <div class="small text-muted">Applied Job Opening:</div>
+                                <div class="fw-bold text-dark fs-6" id="cardJobTitle">{{ prefill_app.job.title|default:"General Opening" }}</div>
+                                <div class="small text-secondary" id="cardJobDept">{{ prefill_app.job.department.name|default:"General" }}</div>
+                            </div>
+                        </div>
+
+                        <!-- Statutory and banking chips -->
+                        <div class="border-top pt-3 mt-3 d-flex flex-wrap gap-2 align-items-center">
+                            <span class="small fw-semibold text-muted me-1">Statutory Details:</span>
+                            <span class="pill-badge">PAN: <b class="text-dark" id="cardPan">{{ prefill_app.candidate.pan_number|default:"Not Provided" }}</b></span>
+                            <span class="pill-badge">Aadhaar: <b class="text-dark" id="cardAadhaar">{{ prefill_app.candidate.aadhaar_number|default:"Not Provided" }}</b></span>
+                            <span class="pill-badge">Bank: <b class="text-dark" id="cardBank">{{ prefill_app.candidate.bank_name|default:"Not Provided" }}</b></span>
+                            <span class="pill-badge">A/C: <b class="text-dark" id="cardAccount">{{ prefill_app.candidate.bank_account_number|default:"Not Provided" }}</b></span>
+                            <span class="pill-badge">IFSC: <b class="text-dark" id="cardIfsc">{{ prefill_app.candidate.bank_ifsc_code|default:"Not Provided" }}</b></span>
+                            <span class="pill-badge">Docs Attached: <b class="text-primary" id="cardDocsCount">{{ prefill_app.candidate.documents.count|default:0 }}</b></span>
+                        </div>
+
+                        <!-- Verification Warning Banner if Not Verified -->
+                        <div class="mt-3 d-none" id="verificationWarningAlert">
+                            <div class="alert alert-warning py-2 px-3 mb-0 small d-flex align-items-center gap-2">
+                                <i class="bi bi-exclamation-triangle-fill fs-6 text-warning"></i>
+                                <span id="verificationWarningMsg">Note: Candidate documents are not yet verified by HR. You can still proceed if authorized, or review documents in the Onboarding table first.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Not Found Message -->
+                <div class="alert alert-danger d-none mt-3" id="lookupErrorAlert">
+                    <i class="bi bi-x-circle-fill me-2"></i><span id="lookupErrorMsg">No candidate found.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 2: SALARY & JOB CONFIGURATION -->
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">2</div>
+                <div>
+                    <h5 class="fw-bold text-dark mb-0">Designation, Placement & Compensation Structure</h5>
+                    <div class="small text-muted">Verify corporate placement and configure payroll CTC structure for the new employee.</div>
+                </div>
+            </div>
+            <div class="step-body">
+                <div class="row g-3">
+                    <!-- Department -->
+                    <div class="col-12 col-md-4">
+                        <label for="appointDeptSelect" class="form-label fw-bold text-dark">
+                            Assigned Department <span class="text-danger">*</span>
+                        </label>
+                        <select name="department" id="appointDeptSelect" class="form-select {% if form.department.errors %}is-invalid{% endif %}">
+                            <option value="">-- Select Department --</option>
+                            {% for dept in departments %}
+                                <option value="{{ dept.id }}" {% if form.department.value|stringformat:"s" == dept.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ dept.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {% if form.department.errors %}
+                            <div class="text-danger small mt-1">{{ form.department.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Designation -->
+                    <div class="col-12 col-md-4">
+                        <label for="appointDesignationInput" class="form-label fw-bold text-dark">
+                            Designation / Position Title <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" 
+                               name="designation_title" 
+                               id="appointDesignationInput" 
+                               class="form-control {% if form.designation_title.errors %}is-invalid{% endif %}" 
+                               value="{{ form.designation_title.value|default:'' }}" 
+                               placeholder="e.g. Senior Software Engineer" 
+                               required>
+                        {% if form.designation_title.errors %}
+                            <div class="text-danger small mt-1">{{ form.designation_title.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Site / Location -->
+                    <div class="col-12 col-md-4">
+                        <label for="appointSiteSelect" class="form-label fw-bold text-dark">
+                            Work Site / Location
+                        </label>
+                        <select name="site" id="appointSiteSelect" class="form-select">
+                            <option value="">-- Select Work Site --</option>
+                            {% for s in sites %}
+                                <option value="{{ s.id }}" {% if form.site.value|stringformat:"s" == s.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ s.name }} ({{ s.city }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Joining Date -->
+                    <div class="col-12 col-md-4">
+                        <label for="appointJoiningDateInput" class="form-label fw-bold text-dark">
+                            Official Joining Date <span class="text-danger">*</span>
+                        </label>
+                        <input type="date" 
+                               name="joining_date" 
+                               id="appointJoiningDateInput" 
+                               class="form-control {% if form.joining_date.errors %}is-invalid{% endif %}" 
+                               value="{{ form.joining_date.value|default:today|date:'Y-m-d' }}" 
+                               required>
+                        {% if form.joining_date.errors %}
+                            <div class="text-danger small mt-1">{{ form.joining_date.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Employment Category -->
+                    <div class="col-12 col-md-4">
+                        <label for="id_employment_type" class="form-label fw-bold text-dark">
+                            Employment Category
+                        </label>
+                        <select name="employment_type" id="id_employment_type" class="form-select">
+                            <option value="FULL_TIME" {% if form.employment_type.value == 'FULL_TIME' or not form.employment_type.value %}selected{% endif %}>Full-time Permanent</option>
+                            <option value="PROBATION" {% if form.employment_type.value == 'PROBATION' %}selected{% endif %}>Probationary Period</option>
+                            <option value="CONTRACT" {% if form.employment_type.value == 'CONTRACT' %}selected{% endif %}>Fixed Term Contract</option>
+                            <option value="INTERN" {% if form.employment_type.value == 'INTERN' %}selected{% endif %}>Internship</option>
+                        </select>
+                    </div>
+
+                    <!-- Annual CTC -->
+                    <div class="col-12 col-md-4">
+                        <label for="appointCtcInput" class="form-label fw-bold text-dark">
+                            Offered Annual CTC (₹) <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">₹</span>
+                            <input type="number" 
+                                   name="offered_ctc" 
+                                   id="appointCtcInput" 
+                                   class="form-control {% if form.offered_ctc.errors %}is-invalid{% endif %}" 
+                                   value="{{ form.offered_ctc.value|default:'650000' }}" 
+                                   step="1000" 
+                                   min="0" 
+                                   required>
+                        </div>
+                        {% if form.offered_ctc.errors %}
+                            <div class="text-danger small mt-1">{{ form.offered_ctc.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Monthly Basic Salary -->
+                    <div class="col-12 col-md-4">
+                        <label for="appointBasicSalaryInput" class="form-label fw-bold text-dark">
+                            Monthly Basic Salary (₹) <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">₹</span>
+                            <input type="number" 
+                                   name="basic_salary" 
+                                   id="appointBasicSalaryInput" 
+                                   class="form-control {% if form.basic_salary.errors %}is-invalid{% endif %}" 
+                                   value="{{ form.basic_salary.value|default:'27000' }}" 
+                                   step="500" 
+                                   min="0" 
+                                   required>
+                        </div>
+                        {% if form.basic_salary.errors %}
+                            <div class="text-danger small mt-1">{{ form.basic_salary.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Salary Breakdown Preview Box -->
+                    <div class="col-12 col-md-8">
+                        <div class="salary-calc-preview">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="small fw-bold text-dark"><i class="bi bi-calculator me-1 text-primary"></i> Estimated Monthly Payroll Breakdown:</span>
+                                <span class="badge bg-light text-muted border">Automatic Structure Sync</span>
+                            </div>
+                            <div class="row g-2 small text-secondary">
+                                <div class="col-4">
+                                    Gross / Month: <b class="text-dark" id="calcGrossMonth">₹54,167</b>
+                                </div>
+                                <div class="col-4">
+                                    HRA (40%): <b class="text-dark" id="calcHra">₹10,800</b>
+                                </div>
+                                <div class="col-4">
+                                    Special Allowance: <b class="text-dark" id="calcSpecial">₹16,367</b>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 3: OFFICIAL HRMS LOGIN CREDENTIALS -->
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">3</div>
+                <div>
+                    <h5 class="fw-bold text-dark mb-0">Create Official HRMS Portal Login Credentials</h5>
+                    <div class="small text-muted">Issue the official username and initial portal password for employee self-service login.</div>
+                </div>
+            </div>
+            <div class="step-body">
+                <div class="alert alert-info py-2 px-3 small mb-4 d-flex align-items-center gap-2">
+                    <i class="bi bi-shield-lock-fill fs-5 text-primary"></i>
+                    <div>
+                        <b>Corporate Access Control:</b> The appointed employee will use this exact <b>Login User ID / Username</b> and <b>Password</b> to sign into Company HRMS to access employee profiles, attendance logs, and salary payslips.
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <!-- Login User ID / Username -->
+                    <div class="col-12 col-md-4">
+                        <label for="appointUsernameInput" class="form-label fw-bold text-dark">
+                            Login User ID / Username <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light font-monospace text-muted">@</span>
+                            <input type="text" 
+                                   name="username" 
+                                   id="appointUsernameInput" 
+                                   class="form-control font-monospace fw-bold {% if form.username.errors %}is-invalid{% endif %}" 
+                                   value="{{ form.username.value|default:'' }}" 
+                                   placeholder="e.g. chinmayee_mohanty_ux" 
+                                   required>
+                        </div>
+                        {% if form.username.errors %}
+                            <div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>
+                        {% else %}
+                            <div class="form-text text-muted small">Auto-generated from candidate name & role. You can customize.</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Create Password -->
+                    <div class="col-12 col-md-4">
+                        <label for="appointPassInput" class="form-label fw-bold text-dark">
+                            Create Password <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <input type="password" 
+                                   name="password" 
+                                   id="appointPassInput" 
+                                   class="form-control {% if form.password.errors %}is-invalid{% endif %}" 
+                                   placeholder="Min 6 characters" 
+                                   minlength="6" 
+                                   required>
+                            <button class="btn btn-outline-secondary password-toggle-btn" type="button" onclick="togglePasswordVisibility('appointPassInput', this)">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        {% if form.password.errors %}
+                            <div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>
+                        {% else %}
+                            <div class="form-text text-muted small">Minimum 6 characters.</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="col-12 col-md-4">
+                        <label for="appointConfirmPassInput" class="form-label fw-bold text-dark">
+                            Confirm Password <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <input type="password" 
+                                   name="confirm_password" 
+                                   id="appointConfirmPassInput" 
+                                   class="form-control {% if form.confirm_password.errors %}is-invalid{% endif %}" 
+                                   placeholder="Re-enter same password" 
+                                   minlength="6" 
+                                   required>
+                            <button class="btn btn-outline-secondary password-toggle-btn" type="button" onclick="togglePasswordVisibility('appointConfirmPassInput', this)">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <div class="small mt-1" id="passMatchIndicator"></div>
+                        {% if form.confirm_password.errors %}
+                            <div class="text-danger small mt-1">{{ form.confirm_password.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 4: CONFIRMATION & APPOINTMENT ACTIVATION -->
+        <div class="step-card">
+            <div class="step-header bg-light">
+                <div class="step-number bg-success">4</div>
+                <div>
+                    <h5 class="fw-bold text-dark mb-0">Confirmation & Employee Activation</h5>
+                    <div class="small text-muted">Final authorization to activate employee profile, issue employee ID, and establish payroll record.</div>
+                </div>
+            </div>
+            <div class="step-body">
+                <div class="form-check p-3 bg-light rounded border mb-4">
+                    <input class="form-check-input ms-0 me-3 {% if form.confirm_appointment.errors %}is-invalid{% endif %}" 
+                           type="checkbox" 
+                           name="confirm_appointment" 
+                           id="appointCheckbox" 
+                           required 
+                           style="width: 1.35rem; height: 1.35rem; cursor: pointer;">
+                    <label class="form-check-label fw-semibold text-dark" for="appointCheckbox" style="cursor: pointer;">
+                        I confirm that candidate documentation is reviewed and verified, salary compensation structure is approved, and this candidate is hereby appointed as an active employee of the organization.
+                    </label>
+                    {% if form.confirm_appointment.errors %}
+                        <div class="text-danger small mt-2 fw-bold">{{ form.confirm_appointment.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                    <div class="text-muted small">
+                        <i class="bi bi-lock-fill me-1"></i> Submitting creates CustomUser, EmployeeProfile, and links SalaryStructure in Payroll.
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'recruitment:onboarding_candidates_list' %}" class="btn btn-outline-secondary px-4 py-2">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-success btn-lg px-4 py-2 fw-bold shadow-sm" id="submitAppointBtn">
+                            <i class="bi bi-person-check-fill me-2"></i> Appoint & Activate Official Employee
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+</div>
+
+<!-- JAVASCRIPT LOGIC: AUTO-FETCH & SALARY CALCULATION -->
+<script>
+    function togglePasswordVisibility(inputId, btn) {
+        const input = document.getElementById(inputId);
+        const icon = btn.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const lookupInput = document.getElementById('lookupQueryInput');
+        const fetchBtn = document.getElementById('fetchCandidateBtn');
+        const fetchSpinner = document.getElementById('fetchSpinner');
+        const fetchIcon = document.getElementById('fetchIcon');
+        const cardBox = document.getElementById('candidateProfileCard');
+        const cardBoxContainer = document.getElementById('candidateCardBox');
+        const lookupErrorAlert = document.getElementById('lookupErrorAlert');
+        const lookupErrorMsg = document.getElementById('lookupErrorMsg');
+
+        // Form Fields
+        const appIdHidden = document.querySelector('input[name="application_id"]');
+        const candIdHidden = document.querySelector('input[name="candidate_id"]');
+        const usernameInput = document.getElementById('appointUsernameInput');
+        const designationInput = document.getElementById('appointDesignationInput');
+        const deptSelect = document.getElementById('appointDeptSelect');
+        const siteSelect = document.getElementById('appointSiteSelect');
+        const ctcInput = document.getElementById('appointCtcInput');
+        const basicSalaryInput = document.getElementById('appointBasicSalaryInput');
+        const joiningDateInput = document.getElementById('appointJoiningDateInput');
+
+        // Password matching
+        const passInput = document.getElementById('appointPassInput');
+        const confirmPassInput = document.getElementById('appointConfirmPassInput');
+        const matchIndicator = document.getElementById('passMatchIndicator');
+
+        function checkPasswords() {
+            const p1 = passInput.value;
+            const p2 = confirmPassInput.value;
+            if (!p2) {
+                matchIndicator.innerHTML = '';
+                return;
+            }
+            if (p1 === p2) {
+                matchIndicator.innerHTML = '<span class="text-success small fw-semibold"><i class="bi bi-check-circle-fill me-1"></i> Passwords match</span>';
+            } else {
+                matchIndicator.innerHTML = '<span class="text-danger small fw-semibold"><i class="bi bi-x-circle-fill me-1"></i> Passwords do not match</span>';
+            }
+        }
+        passInput.addEventListener('input', checkPasswords);
+        confirmPassInput.addEventListener('input', checkPasswords);
+
+        // Salary Calculations
+        function updateSalaryBreakdown() {
+            const ctc = parseFloat(ctcInput.value) || 0;
+            const basic = parseFloat(basicSalaryInput.value) || 0;
+            const monthlyGross = Math.round(ctc / 12);
+            const hra = Math.round(basic * 0.40);
+            const special = Math.max(0, monthlyGross - basic - hra);
+
+            document.getElementById('calcGrossMonth').textContent = '₹' + monthlyGross.toLocaleString('en-IN');
+            document.getElementById('calcHra').textContent = '₹' + hra.toLocaleString('en-IN');
+            document.getElementById('calcSpecial').textContent = '₹' + special.toLocaleString('en-IN');
+        }
+
+        ctcInput.addEventListener('input', function() {
+            const ctc = parseFloat(ctcInput.value) || 0;
+            if (ctc > 0 && (!basicSalaryInput.value || basicSalaryInput.value === '0')) {
+                // Default basic ~ 45% of gross
+                const monthlyGross = ctc / 12;
+                basicSalaryInput.value = Math.round(monthlyGross * 0.45);
+            }
+            updateSalaryBreakdown();
+        });
+        basicSalaryInput.addEventListener('input', updateSalaryBreakdown);
+        updateSalaryBreakdown();
+
+        // AJAX Auto-Fetch
+        let debounceTimer = null;
+
+        function performFetch() {
+            const query = lookupInput.value.trim();
+            if (!query || query.length < 3) return;
+
+            fetchSpinner.classList.remove('d-none');
+            fetchIcon.classList.add('d-none');
+            lookupErrorAlert.classList.add('d-none');
+
+            const url = "{% url 'recruitment:fetch_onboarding_candidate_ajax' %}?q=" + encodeURIComponent(query);
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    fetchSpinner.classList.add('d-none');
+                    fetchIcon.classList.remove('d-none');
+
+                    if (data.success && data.candidate) {
+                        const cand = data.candidate;
+                        // Populate card
+                        document.getElementById('cardCandName').textContent = cand.full_name;
+                        document.getElementById('cardAppId').textContent = cand.application_id;
+                        document.getElementById('cardCandEmail').textContent = cand.email;
+                        document.getElementById('cardCandPhone').textContent = cand.phone;
+                        document.getElementById('cardCandCity').textContent = cand.city || 'Not Specified';
+                        document.getElementById('cardJobTitle').textContent = cand.job_title;
+                        document.getElementById('cardJobDept').textContent = cand.department_name || 'General';
+                        document.getElementById('cardPan').textContent = cand.pan_number || 'Not Provided';
+                        document.getElementById('cardAadhaar').textContent = cand.aadhaar_number || 'Not Provided';
+                        document.getElementById('cardBank').textContent = cand.bank_name || 'Not Provided';
+                        document.getElementById('cardAccount').textContent = cand.bank_account_number || 'Not Provided';
+                        document.getElementById('cardIfsc').textContent = cand.bank_ifsc_code || 'Not Provided';
+                        document.getElementById('cardDocsCount').textContent = cand.documents_count || 0;
+                        document.getElementById('avatarInitial').textContent = (cand.full_name || 'C').charAt(0).toUpperCase();
+
+                        // Verification status badge
+                        const docBadge = document.getElementById('cardDocStatusBadge');
+                        const warningBox = document.getElementById('verificationWarningAlert');
+                        const warningMsg = document.getElementById('verificationWarningMsg');
+
+                        if (cand.document_status === 'VERIFIED') {
+                            docBadge.innerHTML = '<span class="badge bg-success"><i class="bi bi-patch-check-fill me-1"></i>Documents Verified</span>';
+                            cardBoxContainer.className = 'candidate-preview-box';
+                            warningBox.classList.add('d-none');
+                        } else if (cand.document_status === 'REJECTED') {
+                            docBadge.innerHTML = '<span class="badge bg-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>Documentation Error</span>';
+                            cardBoxContainer.className = 'candidate-preview-box error-state';
+                            warningBox.classList.remove('d-none');
+                            warningMsg.textContent = 'Warning: Candidate documents were rejected due to documentation error. Please ensure candidate has re-uploaded correct documents.';
+                        } else {
+                            docBadge.innerHTML = '<span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Pending Review</span>';
+                            cardBoxContainer.className = 'candidate-preview-box warning-state';
+                            warningBox.classList.remove('d-none');
+                            warningMsg.textContent = 'Note: Candidate documents are currently pending HR review. You may review them in Onboarding Employees list.';
+                        }
+
+                        // Auto-fill hidden and inputs
+                        if (appIdHidden) appIdHidden.value = cand.application_id;
+                        if (candIdHidden) candIdHidden.value = cand.candidate_id;
+                        if (usernameInput) usernameInput.value = cand.suggested_username;
+                        if (designationInput && !designationInput.value) designationInput.value = cand.job_title;
+
+                        if (deptSelect && cand.department_id) {
+                            deptSelect.value = cand.department_id;
+                        }
+                        if (siteSelect && cand.site_id) {
+                            siteSelect.value = cand.site_id;
+                        }
+                        if (cand.offered_ctc) {
+                            ctcInput.value = cand.offered_ctc;
+                        }
+                        if (cand.basic_salary) {
+                            basicSalaryInput.value = cand.basic_salary;
+                        }
+                        if (cand.joining_date) {
+                            joiningDateInput.value = cand.joining_date;
+                        }
+
+                        updateSalaryBreakdown();
+                        cardBox.classList.remove('d-none');
+                    } else {
+                        lookupErrorAlert.classList.remove('d-none');
+                        lookupErrorMsg.textContent = data.message || "Candidate not found.";
+                        cardBox.classList.add('d-none');
+                    }
+                })
+                .catch(err => {
+                    fetchSpinner.classList.add('d-none');
+                    fetchIcon.classList.remove('d-none');
+                    lookupErrorAlert.classList.remove('d-none');
+                    lookupErrorMsg.textContent = "Error communicating with server. Please try again.";
+                });
+        }
+
+        lookupInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            const val = lookupInput.value.trim();
+            // If phone (10 digits) or email contains @
+            if (val.length === 10 || val.includes('@')) {
+                debounceTimer = setTimeout(performFetch, 350);
+            } else if (val.length > 5) {
+                debounceTimer = setTimeout(performFetch, 650);
+            }
+        });
+
+        fetchBtn.addEventListener('click', performFetch);
+    });
+</script>
+{% endblock %}
+

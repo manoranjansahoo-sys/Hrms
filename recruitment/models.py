@@ -333,6 +333,9 @@ class CandidateDocument(models.Model):
     doc_type = models.CharField(max_length=30, choices=DOC_TYPES, default='OTHER')
     title = models.CharField(max_length=200)
     file = models.FileField(upload_to='candidates/documents/')
+    is_verified = models.BooleanField(default=False)
+    is_rejected = models.BooleanField(default=False)
+    rejection_notes = models.CharField(max_length=255, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -349,7 +352,7 @@ class JobApplication(models.Model):
         UNDER_REVIEW = 'UNDER_REVIEW', 'Under Review'
         SHORTLISTED = 'SHORTLISTED', 'Shortlisted'
         INTERVIEW_SCHEDULED = 'INTERVIEW_SCHEDULED', 'Interview Scheduled'
-        SELECTED = 'SELECTED', 'Interview Qualified / Selected'
+        SELECTED = 'SELECTED', 'Interview Qualified'
         ONBOARDING_COMPLETED = 'ONBOARDING_COMPLETED', 'Onboarding Details Submitted'
         HIRED = 'HIRED', 'Hired / Joined'
         REJECTED = 'REJECTED', 'Rejected'
@@ -389,6 +392,40 @@ class JobApplication(models.Model):
     status = models.CharField(max_length=30, choices=Status.choices, default=Status.SUBMITTED)
     is_onboarding_completed = models.BooleanField(default=False)
     onboarding_completed_at = models.DateTimeField(null=True, blank=True)
+
+    # Document Verification & Onboarding Approval workflow
+    class DocumentVerificationStatus(models.TextChoices):
+        PENDING = 'PENDING', 'Pending Verification'
+        VERIFIED = 'VERIFIED', 'Documents Verified'
+        REJECTED = 'REJECTED', 'Documentation Error / Re-upload Required'
+
+    document_verification_status = models.CharField(
+        max_length=30,
+        choices=DocumentVerificationStatus.choices,
+        default=DocumentVerificationStatus.PENDING,
+        db_index=True
+    )
+    document_rejection_reason = models.TextField(blank=True, help_text="Reason for document rejection / re-upload instructions")
+    documents_verified_at = models.DateTimeField(null=True, blank=True)
+    documents_verified_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='verified_applications'
+    )
+
+    # Final Approved Salary & Appointment Particulars
+    offered_ctc = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, help_text="Annual CTC (INR)")
+    offered_basic_salary = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, help_text="Monthly Basic Salary (INR)")
+    offered_joining_date = models.DateField(null=True, blank=True)
+    hired_employee = models.ForeignKey(
+        'employees.EmployeeProfile',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='recruitment_applications'
+    )
 
     # Internal HR notes (Confidential - never exposed to candidate!)
     hr_notes = models.TextField(blank=True, help_text="Confidential internal HR evaluation notes")
@@ -438,6 +475,16 @@ class JobApplication(models.Model):
     @property
     def is_qualified(self):
         return self.status in [self.Status.SELECTED, self.Status.ONBOARDING_COMPLETED, self.Status.HIRED]
+
+    @property
+    def assigned_employee_profile(self):
+        if self.hired_employee:
+            return self.hired_employee
+        from employees.models import EmployeeProfile
+        return EmployeeProfile.objects.filter(
+            models.Q(user__email__iexact=self.candidate.email) |
+            models.Q(personal_email__iexact=self.candidate.email)
+        ).first()
 
 
 class ApplicationStatusHistory(models.Model):

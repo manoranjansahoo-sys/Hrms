@@ -44,13 +44,15 @@
         margin-bottom: 0;
     }
 
-    /* Column Widths (Exact 100% proportional distribution across 6 columns - Single Interface, No Side Scroll) */
-    .candidate-table th.col-appid        { width: 16%; min-width: 130px; }
-    .candidate-table th.col-name         { width: 22%; min-width: 150px; }
-    .candidate-table th.col-email        { width: 23%; min-width: 160px; }
-    .candidate-table th.col-phone        { width: 15%; min-width: 120px; }
-    .candidate-table th.col-role         { width: 16%; min-width: 130px; }
-    .candidate-table th.col-actions      { width: 8%; min-width: 70px; text-align: right; }
+    /* Column Widths (Exact 100% proportional distribution across 8 columns) */
+    .candidate-table th.col-checkbox     { width: 44px; min-width: 44px; text-align: center; }
+    .candidate-table th.col-appid        { width: 15%; min-width: 110px; }
+    .candidate-table th.col-name         { width: 20%; min-width: 145px; }
+    .candidate-table th.col-email        { width: 19%; min-width: 140px; }
+    .candidate-table th.col-phone        { width: 13%; min-width: 110px; }
+    .candidate-table th.col-role         { width: 14%; min-width: 115px; }
+    .candidate-table th.col-status       { width: 13%; min-width: 125px; }
+    .candidate-table th.col-actions      { width: 6%; min-width: 60px; text-align: right; }
 
     /* Header Styling */
     .candidate-table thead th {
@@ -78,6 +80,10 @@
         box-shadow: inset 3px 0 0 var(--hrms-accent);
     }
 
+    .candidate-table tbody tr.selected-candidate-row {
+        background-color: #EFF6FF !important;
+    }
+
     .candidate-table tbody td {
         padding: 0.65rem 0.55rem;
         vertical-align: middle;
@@ -87,6 +93,22 @@
 
     .candidate-table tbody tr:last-child td {
         border-bottom: none;
+    }
+
+    /* Checkbox Styles */
+    .candidate-select-checkbox,
+    #selectAllCandidates {
+        width: 17px;
+        height: 17px;
+        cursor: pointer;
+        border: 1.5px solid #94A3B8;
+        border-radius: 4px;
+        transition: all 0.15s ease;
+    }
+    .candidate-select-checkbox:checked,
+    #selectAllCandidates:checked {
+        background-color: #2563EB;
+        border-color: #2563EB;
     }
 
     /* STRICT 2-LINE PER CELL FORMATTING - NEVER A 3RD LINE */
@@ -112,9 +134,7 @@
         margin-top: 2px;
     }
 
-    /* ========================================================= */
-    /* APPLICATION ID - COMPACT 5-DIGIT TECH PILL               */
-    /* ========================================================= */
+    /* APPLICATION ID - COMPACT 5-DIGIT TECH PILL */
     .app-id-pill {
         display: inline-flex;
         align-items: center;
@@ -181,10 +201,10 @@
     .badge-status {
         display: inline-flex;
         align-items: center;
-        gap: 0.3rem;
-        padding: 0.22rem 0.52rem;
+        gap: 0.32rem;
+        padding: 0.24rem 0.58rem;
         border-radius: 50rem;
-        font-size: 0.71rem;
+        font-size: 0.72rem;
         font-weight: 600;
         white-space: nowrap;
         line-height: 1.2;
@@ -206,11 +226,13 @@
     }
     .badge-status-submitted .status-dot { background-color: #94A3B8; }
 
+    .badge-status-under_review,
     .badge-status-under-review {
         background-color: #EFF6FF;
         color: #1D4ED8;
         border: 1px solid #BFDBFE;
     }
+    .badge-status-under_review .status-dot,
     .badge-status-under-review .status-dot { background-color: #3B82F6; }
 
     .badge-status-shortlisted {
@@ -220,11 +242,15 @@
     }
     .badge-status-shortlisted .status-dot { background-color: #06B6D4; }
 
+    .badge-status-interview_scheduled,
+    .badge-status-interview-scheduled,
     .badge-status-interview {
         background-color: #FFFBEB;
         color: #B45309;
         border: 1px solid #FDE68A;
     }
+    .badge-status-interview_scheduled .status-dot,
+    .badge-status-interview-scheduled .status-dot,
     .badge-status-interview .status-dot { background-color: #F59E0B; }
 
     .badge-status-selected {
@@ -234,11 +260,15 @@
     }
     .badge-status-selected .status-dot { background-color: #10B981; }
 
+    .badge-status-onboarding_completed,
+    .badge-status-onboarding-completed,
     .badge-status-onboarded {
         background-color: #F5F3FF;
         color: #6D28D9;
         border: 1px solid #DDD6FE;
     }
+    .badge-status-onboarding_completed .status-dot,
+    .badge-status-onboarding-completed .status-dot,
     .badge-status-onboarded .status-dot { background-color: #8B5CF6; }
 
     .badge-status-hired {
@@ -256,19 +286,36 @@
     }
     .badge-status-rejected .status-dot { background-color: #EF4444; }
 
+    .badge-status-on_hold,
     .badge-status-on-hold {
         background-color: #FFF7ED;
         color: #C2410C;
         border: 1px solid #FFEDD5;
     }
+    .badge-status-on_hold .status-dot,
     .badge-status-on-hold .status-dot { background-color: #F97316; }
+
+    /* Interactive Status Button Dropdown in Table Rows */
+    .inline-status-btn {
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+        text-decoration: none;
+    }
+    .inline-status-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        filter: brightness(0.97);
+    }
+    .inline-status-btn::after {
+        display: none !important;
+    }
 
     /* Clean Standalone Action Icons (No Box / No Border Button) */
     .action-icons-wrap {
         display: inline-flex;
         align-items: center;
         justify-content: flex-end;
-        gap: 0.75rem;
+        gap: 0.65rem;
         white-space: nowrap;
     }
 
@@ -279,7 +326,7 @@
         background: transparent !important;
         border: none !important;
         padding: 3px;
-        font-size: 1.25rem;
+        font-size: 1.15rem;
         line-height: 1;
         transition: all 0.18s ease-in-out;
         text-decoration: none !important;
@@ -287,63 +334,389 @@
         box-shadow: none !important;
     }
 
-    /* Status Indicator Icon (Replaces Review Icon) */
-    .status-icon-indicator {
-        font-size: 1.25rem;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        transition: transform 0.18s ease-in-out;
-        line-height: 1;
-    }
-
-    .status-icon-indicator:hover {
-        transform: scale(1.25);
-    }
-
     /* CV / Resume Icon - Crimson red */
     .action-icon-cv {
         color: #DC2626;
     }
-
     .action-icon-cv:hover {
         color: #B91C1C;
-        transform: scale(1.22);
+        transform: scale(1.15);
     }
-
     .action-icon-cv.disabled {
         color: #CBD5E1;
         cursor: not-allowed;
-        opacity: 0.45;
-        transform: none;
     }
 
-    /* Copy toast */
+    /* Copy Feedback Toast */
     .copy-toast {
+        display: none;
         position: fixed;
-        bottom: 25px;
-        right: 25px;
-        background-color: #0F172A;
+        bottom: 2rem;
+        right: 2rem;
+        background: #1E293B;
         color: #FFFFFF;
         padding: 0.6rem 1.1rem;
         border-radius: 8px;
         font-size: 0.82rem;
         font-weight: 500;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-        z-index: 1090;
-        display: none;
-        animation: fadeInToast 0.25s ease;
-        border: 1px solid #334155;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 9999;
+        animation: toastFade 0.2s ease-in-out;
     }
 
-    @keyframes fadeInToast {
+    @keyframes toastFade {
         from { opacity: 0; transform: translateY(10px); }
         to { opacity: 1; transform: translateY(0); }
     }
 
+    /* ========================================================= */
+    /* CLEAN & SMOOTH FLOATING BULK ACTIONS TOOLBAR              */
+    /* Centered in main content area - No overlap with sidebar   */
+    /* Smooth, calm executive colors - No highlighter/neon glow */
+    /* ========================================================= */
+    .bulk-actions-toolbar {
+        position: fixed;
+        bottom: 1.75rem;
+        z-index: 1060;
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.08), 
+                    0 4px 10px -2px rgba(15, 23, 42, 0.04);
+        border-radius: 9999px;
+        padding: 0.45rem 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), 
+                    opacity 0.25s ease;
+        opacity: 0;
+        pointer-events: none;
+        white-space: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .bulk-actions-toolbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Desktop: Center strictly within main workspace canvas (right of sidebar) */
+    @media (min-width: 992px) {
+        .bulk-actions-toolbar {
+            left: calc(var(--hrms-sidebar-width, 260px) + (100vw - var(--hrms-sidebar-width, 260px)) / 2);
+            transform: translate(-50%, calc(100% + 3.5rem));
+            max-width: calc(100vw - var(--hrms-sidebar-width, 260px) - 3rem);
+        }
+        .bulk-actions-toolbar.show {
+            transform: translate(-50%, 0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+    }
+
+    /* Mobile / Tablet: Centered on full viewport when sidebar is hidden off-screen */
+    @media (max-width: 991.98px) {
+        .bulk-actions-toolbar {
+            left: 50%;
+            transform: translate(-50%, calc(100% + 3.5rem));
+            max-width: calc(100vw - 1.5rem);
+            bottom: 1.25rem;
+            padding: 0.40rem 0.60rem;
+            gap: 0.45rem;
+        }
+        .bulk-actions-toolbar.show {
+            transform: translate(-50%, 0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+    }
+
+    /* Counter Pill - Clean Neutral Executive Surface */
+    .bulk-counter-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        padding: 0.28rem 0.75rem 0.28rem 0.35rem;
+        border-radius: 9999px;
+        color: #334155;
+        font-size: 0.80rem;
+        font-weight: 600;
+        user-select: none;
+    }
+    .bulk-counter-badge {
+        min-width: 24px;
+        height: 24px;
+        padding: 0 0.40rem;
+        border-radius: 9999px;
+        background: #2563EB;
+        color: #FFFFFF;
+        font-weight: 700;
+        font-size: 0.76rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.20s ease;
+    }
+    .bulk-counter-badge.pop {
+        transform: scale(1.2);
+    }
+
+    /* Subtle Slim Divider */
+    .bulk-dock-divider {
+        width: 1px;
+        height: 22px;
+        background: #E2E8F0;
+        margin: 0 0.15rem;
+        flex-shrink: 0;
+    }
+
+    /* Action Buttons Wrap */
+    .bulk-btn-wrap {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+    }
+
+    /* Base Action Button: Simple, Smooth, Refined */
+    .bulk-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.42rem 0.82rem;
+        border-radius: 9999px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.15s ease;
+        white-space: nowrap;
+        user-select: none;
+        outline: none;
+        box-shadow: none;
+    }
+    .bulk-btn:focus-visible {
+        outline: 2px solid #2563EB;
+        outline-offset: 2px;
+    }
+    .bulk-btn:hover {
+        transform: translateY(-1px);
+    }
+    .bulk-btn:active {
+        transform: translateY(0) scale(0.97);
+    }
+    .bulk-btn .btn-icon {
+        font-size: 0.84rem;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.18s ease;
+    }
+    .bulk-btn:hover .btn-icon {
+        transform: scale(1.08);
+    }
+
+    /* 1. Under Review: Smooth soft pastel blue */
+    .bulk-btn-review {
+        background: #EFF6FF;
+        color: #1D4ED8;
+        border-color: #DBEAFE;
+    }
+    .bulk-btn-review .btn-icon {
+        color: #2563EB;
+    }
+    .bulk-btn-review:hover {
+        background: #DBEAFE;
+        color: #1E40AF;
+        border-color: #BFDBFE;
+    }
+
+    /* 2. Shortlist: Smooth soft pastel teal */
+    .bulk-btn-shortlist {
+        background: #F0FDFA;
+        color: #0F766E;
+        border-color: #CCFBF1;
+    }
+    .bulk-btn-shortlist .btn-icon {
+        color: #0D9488;
+    }
+    .bulk-btn-shortlist:hover {
+        background: #CCFBF1;
+        color: #115E59;
+        border-color: #99F6E4;
+    }
+
+    /* 3. Schedule Interview: Smooth soft pastel amber */
+    .bulk-btn-interview {
+        background: #FEFCE8;
+        color: #854D0E;
+        border-color: #FEF08A;
+    }
+    .bulk-btn-interview .btn-icon {
+        color: #CA8A04;
+    }
+    .bulk-btn-interview:hover {
+        background: #FEF08A;
+        color: #713F12;
+        border-color: #FDE047;
+    }
+
+    /* 4. Select / Qualified: Smooth soft pastel emerald */
+    .bulk-btn-select {
+        background: #F0FDF4;
+        color: #166534;
+        border-color: #DCFCE7;
+    }
+    .bulk-btn-select .btn-icon {
+        color: #16A34A;
+    }
+    .bulk-btn-select:hover {
+        background: #DCFCE7;
+        color: #14532D;
+        border-color: #BBF7D0;
+    }
+
+    /* 5. On Hold: Smooth soft pastel warm peach */
+    .bulk-btn-hold {
+        background: #FFF7ED;
+        color: #9A3412;
+        border-color: #FFEDD5;
+    }
+    .bulk-btn-hold .btn-icon {
+        color: #EA580C;
+    }
+    .bulk-btn-hold:hover {
+        background: #FFEDD5;
+        color: #7C2D12;
+        border-color: #FED7AA;
+    }
+
+    /* 6. Reject: Smooth soft pastel rose */
+    .bulk-btn-reject {
+        background: #FEF2F2;
+        color: #991B1B;
+        border-color: #FEE2E2;
+    }
+    .bulk-btn-reject .btn-icon {
+        color: #DC2626;
+    }
+    .bulk-btn-reject:hover {
+        background: #FEE2E2;
+        color: #7F1D1D;
+        border-color: #FECACA;
+    }
+
+    /* 7. Clear Selection Button: Clean subtle slate */
+    .bulk-btn-clear {
+        background: #F8FAFC;
+        color: #64748B;
+        border-color: #E2E8F0;
+        padding: 0.42rem 0.75rem;
+    }
+    .bulk-btn-clear i {
+        color: #94A3B8;
+        font-size: 0.78rem;
+        transition: color 0.18s ease;
+    }
+    .bulk-btn-clear:hover {
+        background: #F1F5F9;
+        color: #334155;
+        border-color: #CBD5E1;
+    }
+    .bulk-btn-clear:hover i {
+        color: #475569;
+    }
+    .bulk-kbd-badge {
+        font-family: var(--bs-font-monospace, monospace);
+        font-size: 0.65rem;
+        background: #FFFFFF;
+        color: #64748B;
+        padding: 0.12rem 0.35rem;
+        border-radius: 4px;
+        border: 1px solid #CBD5E1;
+        line-height: 1;
+        letter-spacing: 0.02em;
+    }
+
+    /* Live Bulk Feedback Toast (Modern Light Executive Capsule) */
+    .bulk-feedback-toast {
+        position: fixed;
+        top: 4.5rem;
+        right: 1.5rem;
+        z-index: 1090;
+        background: #FFFFFF;
+        color: #0F172A;
+        border-radius: 12px;
+        padding: 0.75rem 1.25rem;
+        box-shadow: 0 16px 36px rgba(15, 23, 42, 0.14), 0 0 0 1px #E2E8F0;
+        border-left: 4px solid #10B981;
+        display: none;
+        align-items: center;
+        gap: 0.75rem;
+        animation: toastSlideIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes toastSlideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* ========================================================= */
+    /* SCHEDULE INTERVIEW ROUND SECTION STYLES                  */
+    /* ========================================================= */
+    .schedule-interview-section {
+        scroll-margin-top: 5rem;
+    }
+    .schedule-interview-section .hrms-card {
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 14px;
+        box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+    }
+    .schedule-interview-section .hrms-card-header {
+        background: #F8FAFC !important;
+        border-bottom: 1px solid #E2E8F0 !important;
+    }
+    .candidate-sched-chip {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 10px;
+        padding: 0.60rem 0.85rem;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+        transition: border-color 0.18s ease;
+    }
+    .candidate-sched-chip:hover {
+        border-color: #CBD5E1;
+    }
+    .candidate-sched-remove {
+        background: transparent;
+        border: none;
+        color: #94A3B8;
+        padding: 2px 6px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.18s ease;
+    }
+    .candidate-sched-remove:hover {
+        color: #EF4444;
+        background: #FEF2F2;
+    }
+    .schedule-pulse-highlight {
+        animation: schedulePulse 1.2s ease-in-out;
+    }
+    @keyframes schedulePulse {
+        0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5); }
+        50% { box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.15); }
+        100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+    }
+
     /* Print styles */
     @media print {
-        .sidebar, .top-navbar, .page-header, .stat-card, form, .pagination, .col-actions, .btn {
+        .sidebar, .top-navbar, .page-header, .stat-card, form, .pagination, .col-actions, .col-checkbox, .bulk-actions-toolbar, .btn {
             display: none !important;
         }
         .recruitment-table-card {
@@ -354,47 +727,13 @@
             width: 100% !important;
         }
     }
-
-    /* Segmented Tab Buttons (Matches Screenshot Pixel-Perfect) */
-    .roster-tab-btn {
-        border-radius: 8px !important;
-        font-size: 0.86rem !important;
-        font-weight: 600 !important;
-        padding: 0.5rem 1rem !important;
-        color: #475569 !important;
-        background: transparent !important;
-        border: none !important;
-        transition: all 0.15s ease-in-out;
-        text-decoration: none !important;
-    }
-    .roster-tab-btn:hover {
-        color: #1E293B !important;
-        background: rgba(0, 0, 0, 0.03) !important;
-    }
-    .roster-tab-btn.active {
-        background-color: #0D6EFD !important;
-        color: #FFFFFF !important;
-        box-shadow: 0 1px 3px rgba(13, 110, 253, 0.25) !important;
-    }
-    .roster-tab-btn.active .tab-icon {
-        color: #FFFFFF !important;
-    }
-    .roster-tab-btn.active .tab-badge {
-        background-color: #FFFFFF !important;
-        color: #0D6EFD !important;
-    }
-    .roster-tab-btn .tab-badge {
-        background-color: #E2E8F0;
-        color: #475569;
-        font-size: 0.72rem;
-        padding: 0.2rem 0.55rem;
-        border-radius: 9999px;
-    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid p-0">
+<div class="container-fluid p-0 position-relative">
+    {% csrf_token %}
+
     <!-- PAGE HEADER WITH ALL CONTROLS -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <div>
@@ -419,61 +758,73 @@
         </div>
     </div>
 
-    <!-- METRICS STRIP -->
+    <!-- METRICS STRIP (FAST 1-CLICK PIPELINE FILTERS) -->
     <div class="row g-2 mb-3">
         <div class="col-6 col-md-4 col-xl">
-            <div class="stat-card py-2 px-3">
-                <div class="stat-icon stat-icon-blue"><i class="bi bi-people-fill"></i></div>
-                <div>
-                    <div class="stat-label">Applied</div>
-                    <div class="stat-value text-primary fs-5">{{ total_apps }}</div>
+            <a href="{% url 'recruitment:candidates_list' %}?tab={{ active_tab }}" class="text-decoration-none">
+                <div class="stat-card py-2 px-3 {% if not selected_status %}border-primary shadow-xs{% endif %}" title="View all applications in pipeline">
+                    <div class="stat-icon stat-icon-blue"><i class="bi bi-people-fill"></i></div>
+                    <div>
+                        <div class="stat-label">Applied</div>
+                        <div class="stat-value text-primary fs-5" id="metricTotalApps">{{ total_apps }}</div>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-6 col-md-4 col-xl">
-            <div class="stat-card py-2 px-3">
-                <div class="stat-icon stat-icon-amber"><i class="bi bi-hourglass-split"></i></div>
-                <div>
-                    <div class="stat-label">Review</div>
-                    <div class="stat-value text-warning fs-5">{{ under_review }}</div>
+            <a href="{% url 'recruitment:candidates_list' %}?tab={{ active_tab }}&status=UNDER_REVIEW" class="text-decoration-none">
+                <div class="stat-card py-2 px-3 {% if selected_status == 'UNDER_REVIEW' %}border-warning shadow-xs{% endif %}" title="Filter by Under Review">
+                    <div class="stat-icon stat-icon-amber"><i class="bi bi-hourglass-split"></i></div>
+                    <div>
+                        <div class="stat-label">Review</div>
+                        <div class="stat-value text-warning fs-5" id="metricUnderReview">{{ under_review }}</div>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-6 col-md-4 col-xl">
-            <div class="stat-card py-2 px-3">
-                <div class="stat-icon stat-icon-purple"><i class="bi bi-bookmark-star-fill"></i></div>
-                <div>
-                    <div class="stat-label">Shortlisted</div>
-                    <div class="stat-value text-purple fs-5">{{ shortlisted }}</div>
+            <a href="{% url 'recruitment:candidates_list' %}?tab={{ active_tab }}&status=SHORTLISTED" class="text-decoration-none">
+                <div class="stat-card py-2 px-3 {% if selected_status == 'SHORTLISTED' %}border-info shadow-xs{% endif %}" title="Filter by Shortlisted">
+                    <div class="stat-icon stat-icon-purple"><i class="bi bi-bookmark-star-fill"></i></div>
+                    <div>
+                        <div class="stat-label">Shortlisted</div>
+                        <div class="stat-value text-purple fs-5" id="metricShortlisted">{{ shortlisted }}</div>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-6 col-md-4 col-xl">
-            <div class="stat-card py-2 px-3">
-                <div class="stat-icon stat-icon-green"><i class="bi bi-calendar2-check-fill"></i></div>
-                <div>
-                    <div class="stat-label">Interviews</div>
-                    <div class="stat-value text-success fs-5">{{ interview_scheduled }}</div>
+            <a href="{% url 'recruitment:candidates_list' %}?tab={{ active_tab }}&status=INTERVIEW_SCHEDULED" class="text-decoration-none">
+                <div class="stat-card py-2 px-3 {% if selected_status == 'INTERVIEW_SCHEDULED' %}border-success shadow-xs bg-light{% endif %}" title="Click to view only candidates who have interview scheduled">
+                    <div class="stat-icon stat-icon-green"><i class="bi bi-calendar2-check-fill"></i></div>
+                    <div>
+                        <div class="stat-label">Interviews</div>
+                        <div class="stat-value text-success fs-5" id="metricInterviews">{{ interview_scheduled }}</div>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-6 col-md-4 col-xl">
-            <div class="stat-card py-2 px-3">
-                <div class="stat-icon stat-icon-green"><i class="bi bi-check-circle-fill"></i></div>
-                <div>
-                    <div class="stat-label">Selected</div>
-                    <div class="stat-value text-success fs-5">{{ selected }}</div>
+            <a href="{% url 'recruitment:candidates_list' %}?tab={{ active_tab }}&status=SELECTED" class="text-decoration-none">
+                <div class="stat-card py-2 px-3 {% if selected_status == 'SELECTED' %}border-success shadow-xs{% endif %}" title="Filter by Interview Qualified">
+                    <div class="stat-icon stat-icon-green"><i class="bi bi-check-circle-fill"></i></div>
+                    <div>
+                        <div class="stat-label">Qualified</div>
+                        <div class="stat-value text-success fs-5" id="metricSelected">{{ selected }}</div>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-6 col-md-4 col-xl">
-            <div class="stat-card py-2 px-3">
-                <div class="stat-icon" style="background-color: #E8F5E9; color: #1B5E20;"><i class="bi bi-person-check-fill"></i></div>
-                <div>
-                    <div class="stat-label">Hired</div>
-                    <div class="stat-value fs-5" style="color: #1B5E20;">{{ hired|default:0 }}</div>
+            <a href="{% url 'recruitment:candidates_list' %}?tab={{ active_tab }}&status=HIRED" class="text-decoration-none">
+                <div class="stat-card py-2 px-3 {% if selected_status == 'HIRED' %}border-success shadow-xs{% endif %}" title="Filter by Hired">
+                    <div class="stat-icon" style="background-color: #E8F5E9; color: #1B5E20;"><i class="bi bi-person-check-fill"></i></div>
+                    <div>
+                        <div class="stat-label">Hired</div>
+                        <div class="stat-value fs-5" style="color: #1B5E20;" id="metricHired">{{ hired|default:0 }}</div>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
 
@@ -535,20 +886,45 @@
             <table class="candidate-table table table-hover">
                 <thead>
                     <tr>
-                        <th class="col-appid ps-3">Application ID</th>
+                        <th class="col-checkbox ps-3">
+                            <input type="checkbox" id="selectAllCandidates" class="form-check-input" onclick="toggleSelectAllCandidates(this); event.stopPropagation();" title="Select / Deselect all candidates on this page">
+                        </th>
+                        <th class="col-appid">Application ID</th>
                         <th class="col-name">Name</th>
                         <th class="col-email">Email ID</th>
                         <th class="col-phone">Phone No</th>
                         <th class="col-role">Position Name</th>
+                        <th class="col-status">Status (HR Review)</th>
                         <th class="col-actions text-end pe-3">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for app in page_obj %}
-                        <tr class="clickable-candidate-row" data-url="{% url 'recruitment:candidate_detail' application_id=app.id %}">
+                        <tr class="clickable-candidate-row" data-url="{% url 'recruitment:candidate_detail' application_id=app.id %}" id="candidateRow_{{ app.id }}">
+
+                            <!-- 0. MULTI-SELECT CHECKBOX -->
+                            <td class="col-checkbox ps-3 py-2.5 stop-row-click" onclick="event.stopPropagation();">
+                                <input type="checkbox" 
+                                       class="form-check-input candidate-select-checkbox" 
+                                       value="{{ app.id }}" 
+                                       data-app-id="{{ app.application_id }}" 
+                                       data-name="{{ app.candidate.full_name }}" 
+                                       data-role="{{ app.job.title }}"
+                                       data-email="{{ app.candidate.email }}"
+                                       data-phone="{{ app.candidate.phone|default:'--' }}"
+                                       data-avatar="{{ app.candidate.get_photo_url }}"
+                                       data-status="{{ app.status }}"
+                                       data-status-label="{{ app.get_status_display }}"
+                                       data-interview-date="{{ app.interview_date|date:'Y-m-d'|default:'' }}"
+                                       data-interview-time="{{ app.interview_time|time:'H:i'|default:'' }}"
+                                       data-interview-mode="{{ app.interview_mode|default:'VIRTUAL' }}"
+                                       data-interview-location="{{ app.interview_location_link|default:'' }}"
+                                       data-interview-notes="{{ app.interview_notes|default:'' }}"
+                                       onchange="updateSelectedCount();">
+                            </td>
 
                             <!-- 1. APPLICATION ID & APPLIED ON BELOW IT -->
-                            <td class="col-appid ps-3 py-2.5">
+                            <td class="col-appid py-2.5">
                                 <div class="d-flex align-items-center gap-1.5">
                                     <span class="app-id-pill" title="Application ID: {{ app.application_id }}">
                                         <span class="app-id-code">{% if app.application_id|slice:":4" == "APP-" %}{{ app.application_id|slice:"4:" }}{% elif app.application_id|slice:":5" == "HRMS-" %}{{ app.application_id|slice:"5:" }}{% else %}{{ app.application_id }}{% endif %}</span>
@@ -592,17 +968,43 @@
                                 </div>
                             </td>
 
-                            <!-- 5. POSITION NAME: ONLY DEVELOPER ROLE (NO ENGINEERING & TECHNOLOGY SUBTEXT) -->
+                            <!-- 5. POSITION NAME -->
                             <td class="col-role py-2.5">
                                 <div class="table-cell-title text-truncate fw-semibold" title="{{ app.job.title }}">
                                     <i class="bi bi-briefcase text-primary opacity-75 me-1"></i>{{ app.job.title }}
                                 </div>
                             </td>
 
-                            <!-- 6. ACTIONS (STATUS ICON & CV ICON - NO BOX, JUST ICONS) -->
+                            <!-- 6. INTERACTIVE 1-CLICK STATUS DROPDOWN -->
+                            <td class="col-status py-2.5 stop-row-click" onclick="event.stopPropagation();">
+                                <div class="dropdown d-inline-block">
+                                    <button type="button" 
+                                            class="btn btn-sm inline-status-btn badge-status badge-status-{{ app.status|lower }} dropdown-toggle stop-row-click" 
+                                            data-bs-toggle="dropdown" 
+                                            aria-expanded="false" 
+                                            id="statusBtn_{{ app.id }}"
+                                            title="Click to quickly change status for {{ app.candidate.full_name }}">
+                                        <span class="status-dot"></span>
+                                        <span class="status-btn-text">{{ app.get_status_display }}</span>
+                                        <i class="bi bi-chevron-down ms-1 opacity-75" style="font-size: 0.60rem;"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-start shadow-sm border py-1" style="font-size: 0.80rem; min-width: 205px; z-index: 1060;">
+                                        <li class="dropdown-header text-uppercase py-1" style="font-size: 0.68rem; font-weight: 700; color: #64748B;">Change Status (1-Click)</li>
+                                        <li><button type="button" class="dropdown-item py-1.5 d-flex align-items-center gap-2" onclick="quickUpdateCandidateStatus({{ app.id }}, 'UNDER_REVIEW', '{{ app.candidate.full_name|escapejs }}')"><i class="bi bi-hourglass-split text-primary"></i> Under Review</button></li>
+                                        <li><button type="button" class="dropdown-item py-1.5 d-flex align-items-center gap-2" onclick="quickUpdateCandidateStatus({{ app.id }}, 'SHORTLISTED', '{{ app.candidate.full_name|escapejs }}')"><i class="bi bi-star-fill text-info"></i> Shortlisted</button></li>
+                                        <li><button type="button" class="dropdown-item py-1.5 d-flex align-items-center gap-2" onclick="quickUpdateCandidateStatus({{ app.id }}, 'INTERVIEW_SCHEDULED', '{{ app.candidate.full_name|escapejs }}')"><i class="bi bi-calendar2-check-fill text-warning"></i> Interview Scheduled</button></li>
+                                        <li><button type="button" class="dropdown-item py-1.5 d-flex align-items-center gap-2" onclick="quickUpdateCandidateStatus({{ app.id }}, 'SELECTED', '{{ app.candidate.full_name|escapejs }}')"><i class="bi bi-check-circle-fill text-success"></i> Interview Qualified</button></li>
+                                        <li><button type="button" class="dropdown-item py-1.5 d-flex align-items-center gap-2" onclick="quickUpdateCandidateStatus({{ app.id }}, 'ON_HOLD', '{{ app.candidate.full_name|escapejs }}')"><i class="bi bi-pause-circle-fill text-secondary"></i> On Hold</button></li>
+                                        <li><hr class="dropdown-divider my-1"></li>
+                                        <li><button type="button" class="dropdown-item py-1.5 text-danger d-flex align-items-center gap-2" onclick="quickUpdateCandidateStatus({{ app.id }}, 'REJECTED', '{{ app.candidate.full_name|escapejs }}')"><i class="bi bi-x-circle-fill text-danger"></i> Rejected</button></li>
+                                    </ul>
+                                </div>
+                            </td>
+
+                            <!-- 7. ACTIONS (STATUS ICON + CV DOWNLOAD + VIEW FULL PROFILE) -->
                             <td class="col-actions text-end pe-3 py-2.5">
                                 <div class="action-icons-wrap">
-                                    <!-- Status Icon (Submitted, Under Review, Shortlisted, Interview, Selected, Hired/Joined, Reject, Hold) -->
+                                    <!-- Status Icon Indicator -->
                                     <span class="status-icon-indicator" title="Status: {{ app.get_status_display }}">
                                         {% if app.status == 'SUBMITTED' %}
                                             <i class="bi bi-clock-history text-secondary" title="Submitted"></i>
@@ -613,7 +1015,7 @@
                                         {% elif app.status == 'INTERVIEW_SCHEDULED' %}
                                             <i class="bi bi-calendar2-check-fill text-warning" style="color: #D97706 !important;" title="Interview Scheduled"></i>
                                         {% elif app.status == 'SELECTED' %}
-                                            <i class="bi bi-check-circle-fill text-success" style="color: #10B981 !important;" title="Selected"></i>
+                                            <i class="bi bi-check-circle-fill text-success" style="color: #10B981 !important;" title="Interview Qualified"></i>
                                         {% elif app.status == 'ONBOARDING_COMPLETED' %}
                                             <i class="bi bi-person-badge-fill text-purple" style="color: #7C3AED !important;" title="Onboarded"></i>
                                         {% elif app.status == 'HIRED' %}
@@ -627,7 +1029,7 @@
                                         {% endif %}
                                     </span>
 
-                                    <!-- CV Icon (NO BOX, JUST ICON) -->
+                                    <!-- CV Icon -->
                                     {% if app.resume %}
                                         <a href="{{ app.resume.url }}" 
                                            target="_blank" 
@@ -642,12 +1044,30 @@
                                             <i class="bi bi-file-earmark-x"></i>
                                         </span>
                                     {% endif %}
+
+                                    <!-- Schedule Interview Action Icon (Hidden for Interview Qualified, Hired, Onboarded, and Rejected candidates) -->
+                                    {% if app.status != 'SELECTED' and app.status != 'HIRED' and app.status != 'ONBOARDING_COMPLETED' and app.status != 'REJECTED' %}
+                                        <button type="button" 
+                                                class="action-icon-plain action-icon-schedule stop-row-click" 
+                                                title="Schedule Interview Round for {{ app.candidate.full_name }}"
+                                                onclick="pickCandidateForSchedule('{{ app.id }}'); event.stopPropagation();">
+                                            <i class="bi bi-calendar-plus text-primary"></i>
+                                        </button>
+                                    {% endif %}
+
+                                    <!-- View Profile Arrow Icon -->
+                                    <a href="{% url 'recruitment:candidate_detail' application_id=app.id %}" 
+                                       class="action-icon-plain text-secondary stop-row-click" 
+                                       title="View Full Profile & Detailed Review"
+                                       onclick="event.stopPropagation();">
+                                        <i class="bi bi-chevron-right" style="font-size: 0.88rem;"></i>
+                                    </a>
                                 </div>
                             </td>
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="6" class="text-center py-5">
+                            <td colspan="8" class="text-center py-5">
                                 <div class="py-4">
                                     <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 54px; height: 54px; background-color: #F3F4F6;">
                                         <i class="bi bi-person-x fs-3 text-muted"></i>
@@ -722,17 +1142,363 @@
     </div>
 </div>
 
+<!-- ========================================================= -->
+<!-- SCHEDULE INTERVIEW ROUND SECTION                          -->
+<!-- Placed directly after Candidate Applications Table        -->
+<!-- ========================================================= -->
+<div class="schedule-interview-section mt-4 mb-5" id="scheduleInterviewSection">
+    <div class="row g-4">
+        <!-- LEFT COLUMN: SCHEDULE INTERVIEW ROUND FORM -->
+        <div class="col-lg-7">
+            <div class="hrms-card">
+                <!-- Header (Exact Match to Screenshot) -->
+                <div class="hrms-card-header d-flex align-items-center justify-content-between py-3 px-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-calendar-plus-fill text-primary fs-5"></i>
+                        <h6 class="fw-bold mb-0 text-dark">Schedule Interview Round</h6>
+                    </div>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1 rounded-pill small fw-semibold" id="scheduleCandidateCountPill">
+                        <span id="schedCandidateCountNumber">0</span> Candidate(s) Selected
+                    </span>
+                </div>
+
+                <div class="hrms-card-body p-3 p-md-4">
+                    <!-- WHO IS THE CANDIDATE(S) TO SCHEDULE (DOSSIER DISPLAY) -->
+                    <div class="schedule-candidate-selection-wrap mb-3 p-3 rounded-3" style="background: #F8FAFC; border: 1px dashed #CBD5E1;">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="small fw-bold text-dark d-flex align-items-center gap-1.5">
+                                <i class="bi bi-person-check-fill text-primary"></i>
+                                <span>Candidate(s) to Schedule *</span>
+                            </span>
+                            <small class="text-muted" style="font-size: 0.72rem;">(Syncs with table selection or choose below)</small>
+                        </div>
+
+                        <!-- Candidate Quick Switch / Dropdown Selector -->
+                        <div class="mb-2">
+                            <select id="scheduleCandidatePicker" class="form-select form-select-sm" onchange="onSchedulePickerChange(this);">
+                                <option value="">-- Choose Candidate with Interview Scheduled to Schedule --</option>
+                                {% for cand_app in candidates_to_schedule %}
+                                    {% if cand_app.status == 'INTERVIEW_SCHEDULED' %}
+                                        <option value="{{ cand_app.id }}" 
+                                                data-app-id="{{ cand_app.application_id }}"
+                                                data-name="{{ cand_app.candidate.full_name }}"
+                                                data-role="{{ cand_app.job.title }}"
+                                                data-email="{{ cand_app.candidate.email }}"
+                                                data-phone="{{ cand_app.candidate.phone|default:'--' }}"
+                                                data-avatar="{{ cand_app.candidate.get_photo_url }}"
+                                                data-status="{{ cand_app.status }}"
+                                                data-status-label="{{ cand_app.get_status_display }}"
+                                                data-interview-date="{{ cand_app.interview_date|date:'Y-m-d'|default:'' }}"
+                                                data-interview-time="{{ cand_app.interview_time|time:'H:i'|default:'' }}"
+                                                data-interview-mode="{{ cand_app.interview_mode|default:'VIRTUAL' }}"
+                                                data-interview-location="{{ cand_app.interview_location_link|default:'' }}"
+                                                data-interview-notes="{{ cand_app.interview_notes|default:'' }}">
+                                            📅 {{ cand_app.candidate.full_name }} — {{ cand_app.job.title }} ({{ cand_app.application_id }})
+                                        </option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Selected Candidate Cards List -->
+                        <div id="scheduleSelectedCandidatesList" class="d-flex flex-column gap-2 mt-2">
+                            <!-- Populated dynamically via JS from table selection or dropdown -->
+                            <div id="scheduleEmptyPrompt" class="text-center py-3 text-muted small">
+                                <i class="bi bi-cursor text-secondary fs-5 d-block mb-1"></i>
+                                Select candidate(s) from the table above or choose from the dropdown to schedule an interview.
+                            </div>
+                        </div>
+
+                        <!-- Current Interview Alert (Exact Match to Screenshot Green Pill) -->
+                        <div id="currentInterviewAlert" class="alert alert-success p-2.5 small mb-0 mt-2.5 border-0 align-items-center gap-2" style="display: none; background-color: #ECFDF5; color: #065F46; border-radius: 8px;">
+                            <i class="bi bi-check-circle-fill text-success fs-6 flex-shrink-0"></i>
+                            <div>
+                                <span>Current Interview: <b id="currentInterviewDateTime">11 Nov 2026 at 04:52 PM</b></span>
+                                <span id="currentInterviewModeText">(Virtual (Google Meet / Microsoft Teams))</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- INTERVIEW FORM (Exact Match to Screenshot) -->
+                    <form method="POST" action="{% url 'recruitment:schedule_candidate_interview' %}" id="scheduleInterviewForm" onsubmit="return validateScheduleInterviewForm(this);">
+                        {% csrf_token %}
+                        <input type="hidden" name="action_type" value="SCHEDULE_INTERVIEW">
+                        <input type="hidden" name="tab" value="{{ active_tab }}">
+                        <!-- Container for dynamic hidden inputs for selected candidate IDs -->
+                        <div id="scheduleHiddenInputsWrap"></div>
+
+                        <!-- Row 1: Interview Date * and Interview Time * -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-sm-6">
+                                <label class="form-label small fw-semibold text-dark mb-1">
+                                    Interview Date *
+                                </label>
+                                <input type="date" 
+                                       name="interview_date" 
+                                       id="schedInterviewDate" 
+                                       class="form-control" 
+                                       min="{{ today_date|default:'' }}"
+                                       onchange="validateInterviewDateInput(this);"
+                                       required>
+                                <div class="invalid-feedback small">
+                                    Invalid date. Interview date cannot be in the past (yesterday or earlier).
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label small fw-semibold text-dark mb-1">
+                                    Interview Time *
+                                </label>
+                                <input type="time" 
+                                       name="interview_time" 
+                                       id="schedInterviewTime" 
+                                       class="form-control" 
+                                       onchange="validateInterviewTimeInput(this);"
+                                       required>
+                                <div class="invalid-feedback small" id="schedTimeInvalidFeedback">
+                                    Invalid time. For today's date, interview time cannot be in the past.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Row 2: Interview Format / Mode * -->
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-dark mb-1">
+                                Interview Format / Mode *
+                            </label>
+                            <select name="interview_mode" id="schedInterviewMode" class="form-select" required>
+                                <option value="VIRTUAL" selected>Virtual (Google Meet / Microsoft Teams)</option>
+                                <option value="IN_PERSON">In-Person (Office Campus / Headquarters)</option>
+                                <option value="TELEPHONIC">Telephonic Screening Round</option>
+                            </select>
+                        </div>
+
+                        <!-- Row 3: Meeting Link / Room Venue * -->
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-dark mb-1">
+                                Meeting Link / Room Venue *
+                            </label>
+                            <input type="text" 
+                                   name="interview_location_link" 
+                                   id="schedInterviewLocation" 
+                                   class="form-control" 
+                                   placeholder="e.g. designlope.in or https://meet.google.com/abc-defg-hij" 
+                                   required>
+                        </div>
+
+                        <!-- Row 4: Candidate Guidelines / Agenda -->
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-dark mb-1">
+                                Candidate Guidelines / Agenda
+                            </label>
+                            <textarea name="interview_notes" 
+                                      id="schedInterviewNotes" 
+                                      rows="3" 
+                                      class="form-control" 
+                                      placeholder="Interview round agenda, guidelines for candidate, technical prep notes..."></textarea>
+                        </div>
+
+                        <!-- Submit Button (Exact Match to Screenshot) -->
+                        <button type="submit" 
+                                id="schedSubmitBtn" 
+                                class="btn btn-primary w-100 py-2.5 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm"
+                                style="background: linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%); border: none; border-radius: 10px; font-size: 0.92rem;">
+                            <i class="bi bi-send-fill"></i>
+                            <span>Schedule & Send Email Invite</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: SCHEDULED CANDIDATES & UPCOMING PIPELINE -->
+        <div class="col-lg-5">
+            <div class="hrms-card h-100">
+                <div class="hrms-card-header d-flex align-items-center justify-content-between py-3 px-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-clock-history text-primary fs-5"></i>
+                        <h6 class="fw-bold mb-0 text-dark">Upcoming Scheduled Interviews</h6>
+                    </div>
+                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2.5 py-1 rounded-pill small fw-semibold">
+                        <span id="pipelineCountNumber">{{ scheduled_interviews|length }}</span> In Pipeline
+                    </span>
+                </div>
+
+                <div class="hrms-card-body p-3" style="max-height: 560px; overflow-y: auto;">
+                    {% if scheduled_interviews %}
+                        <div class="d-flex flex-column gap-2.5" id="scheduledInterviewsListContainer">
+                            {% for sch in scheduled_interviews %}
+                                <div class="p-3 rounded-3 border bg-white shadow-xs" id="scheduledCard_{{ sch.id }}" style="border-color: #E2E8F0 !important;">
+                                    <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <img src="{{ sch.candidate.get_photo_url }}" alt="{{ sch.candidate.full_name }}" class="rounded-circle" style="width: 36px; height: 36px; object-fit: cover;">
+                                            <div>
+                                                <a href="{% url 'recruitment:candidate_detail' application_id=sch.id %}" class="fw-bold text-dark text-decoration-none small d-block">
+                                                    {{ sch.candidate.full_name }}
+                                                </a>
+                                                <span class="text-muted" style="font-size: 0.74rem;">
+                                                    <i class="bi bi-briefcase me-1"></i>{{ sch.job.title }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <span class="badge bg-warning-subtle text-dark border border-warning-subtle py-1 px-2" style="font-size: 0.68rem;">
+                                            {{ sch.get_status_display }}
+                                        </span>
+                                    </div>
+
+                                    <!-- Interview Date & Time Badge -->
+                                    <div class="p-2 rounded-2 mb-2 small d-flex align-items-center justify-content-between" style="background-color: #F0FDF4; border: 1px solid #DCFCE7; color: #166534;">
+                                        <span class="fw-semibold">
+                                            <i class="bi bi-calendar-event me-1"></i>{{ sch.interview_date|date:"d M Y" }} at {{ sch.interview_time|time:"h:i A" }}
+                                        </span>
+                                        <span class="badge bg-white text-success border border-success-subtle py-0.5 px-1.5" style="font-size: 0.65rem;">
+                                            {{ sch.get_interview_mode_display }}
+                                        </span>
+                                    </div>
+
+                                    <!-- Location / Meeting Link -->
+                                    {% if sch.interview_location_link %}
+                                        <div class="text-truncate mb-2 text-muted" style="font-size: 0.74rem;">
+                                            <i class="bi bi-link-45deg me-1 text-primary"></i>
+                                            {% if "http" in sch.interview_location_link %}
+                                                <a href="{{ sch.interview_location_link }}" target="_blank" class="text-decoration-none text-primary">{{ sch.interview_location_link }}</a>
+                                            {% else %}
+                                                <span>{{ sch.interview_location_link }}</span>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+
+                                    <!-- Action Buttons -->
+                                    <div class="d-flex align-items-center justify-content-between pt-1 border-top" style="border-color: #F1F5F9 !important;">
+                                        <small class="text-muted" style="font-size: 0.70rem;">{{ sch.application_id }}</small>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <button type="button" 
+                                                    class="btn btn-xs btn-outline-primary py-0.5 px-2" 
+                                                    style="font-size: 0.72rem; border-radius: 6px;"
+                                                    onclick="loadCandidateIntoScheduleForm('{{ sch.id }}', '{{ sch.application_id }}', '{{ sch.candidate.full_name|escapejs }}', '{{ sch.job.title|escapejs }}', '{{ sch.candidate.email|escapejs }}', '{{ sch.candidate.phone|default:''|escapejs }}', '{{ sch.candidate.get_photo_url }}', '{{ sch.status }}', '{{ sch.get_status_display|escapejs }}', '{{ sch.interview_date|date:'Y-m-d'|default:'' }}', '{{ sch.interview_time|time:'H:i'|default:'' }}', '{{ sch.interview_mode|default:'' }}', '{{ sch.interview_location_link|escapejs }}', '{{ sch.interview_notes|escapejs }}')">
+                                                <i class="bi bi-pencil-square me-1"></i>Edit Slot
+                                            </button>
+                                            <a href="{% url 'recruitment:candidate_detail' application_id=sch.id %}" class="btn btn-xs btn-outline-secondary py-0.5 px-2" style="font-size: 0.72rem; border-radius: 6px;">
+                                                Dossier <i class="bi bi-arrow-right"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 52px; height: 52px; background-color: #EFF6FF;">
+                                <i class="bi bi-calendar-check text-primary fs-3"></i>
+                            </div>
+                            <h6 class="fw-bold text-dark mb-1">No Interviews Scheduled Yet</h6>
+                            <p class="text-muted small mb-0 px-3">Select candidate(s) from the application roster above to schedule their first interview round.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FLOATING LUXURY BULK ACTIONS ISLAND (DYNAMIC ISLAND STYLE) -->
+<div class="bulk-actions-toolbar" id="bulkActionsToolbar" role="toolbar" aria-label="Bulk Candidate Status Management">
+    <!-- [X] Selected Counter Pill -->
+    <div class="bulk-counter-chip" id="bulkSelectedCounter" title="Number of candidates currently selected">
+        <span class="bulk-counter-badge" id="selectedCountNumber">0</span>
+        <span>Selected</span>
+    </div>
+
+    <div class="bulk-dock-divider"></div>
+
+    <!-- Status Action Buttons with Vibrant Micro-Styles & Icons -->
+    <div class="bulk-btn-wrap">
+        <!-- 🔍 Under Review -->
+        <button type="button" 
+                class="bulk-btn bulk-btn-review" 
+                onclick="applyBulkStatus('UNDER_REVIEW', this)" 
+                title="Mark selected candidates as Under Review">
+            <span class="btn-icon"><i class="bi bi-search"></i></span>
+            <span>Under Review</span>
+        </button>
+
+        <!-- ⭐ Shortlist -->
+        <button type="button" 
+                class="bulk-btn bulk-btn-shortlist" 
+                onclick="applyBulkStatus('SHORTLISTED', this)" 
+                title="Shortlist selected candidates">
+            <span class="btn-icon"><i class="bi bi-star-fill"></i></span>
+            <span>Shortlist</span>
+        </button>
+
+        <!-- 📅 Schedule Interview -->
+        <button type="button" 
+                class="bulk-btn bulk-btn-interview" 
+                onclick="handleScheduleInterviewAction(this)" 
+                title="Schedule interview round for selected candidates">
+            <span class="btn-icon"><i class="bi bi-calendar2-check-fill"></i></span>
+            <span>Schedule Interview</span>
+        </button>
+
+        <!-- ✅ Interview Qualified -->
+        <button type="button" 
+                class="bulk-btn bulk-btn-select" 
+                onclick="applyBulkStatus('SELECTED', this)" 
+                title="Mark selected candidates as Interview Qualified">
+            <span class="btn-icon"><i class="bi bi-check-circle-fill"></i></span>
+            <span>Interview Qualified</span>
+        </button>
+
+        <!-- ⏸️ On Hold -->
+        <button type="button" 
+                class="bulk-btn bulk-btn-hold" 
+                onclick="applyBulkStatus('ON_HOLD', this)" 
+                title="Put selected candidate applications on hold">
+            <span class="btn-icon"><i class="bi bi-pause-circle-fill"></i></span>
+            <span>On Hold</span>
+        </button>
+
+        <!-- ❌ Reject -->
+        <button type="button" 
+                class="bulk-btn bulk-btn-reject" 
+                onclick="applyBulkStatus('REJECTED', this)" 
+                title="Reject selected candidate applications">
+            <span class="btn-icon"><i class="bi bi-x-circle-fill"></i></span>
+            <span>Reject</span>
+        </button>
+    </div>
+
+    <div class="bulk-dock-divider"></div>
+
+    <!-- ✕ Clear Selection Button with Esc Hint -->
+    <button type="button" 
+            class="bulk-btn bulk-btn-clear" 
+            onclick="clearCandidateSelection()" 
+            title="Deselect all candidates (or press Esc key)">
+        <i class="bi bi-x-lg"></i>
+        <span>Clear</span>
+        <span class="bulk-kbd-badge">Esc</span>
+    </button>
+</div>
+
+<!-- LIVE BULK FEEDBACK TOAST -->
+<div id="bulkStatusToast" class="bulk-feedback-toast">
+    <i class="bi bi-check-circle-fill text-success fs-5"></i>
+    <span id="bulkStatusToastMsg" class="fw-semibold small">Status updated successfully</span>
+</div>
+
 <!-- COPY TOAST FEEDBACK -->
 <div class="copy-toast" id="copyToast">
     <i class="bi bi-check-circle-fill text-success me-2"></i> Application ID copied to clipboard!
 </div>
 
 <script>
-    // Row click handler: opens candidate application detail when clicking any part of the row
+    const BULK_UPDATE_URL = "{% url 'recruitment:bulk_update_status' %}";
+
+    // Row click handler: opens candidate application detail when clicking any non-interactive part of the row
     document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('tr.clickable-candidate-row').forEach(function(row) {
             row.addEventListener('click', function(e) {
-                if (e.target.closest('.stop-row-click') || e.target.closest('button') || e.target.closest('a')) {
+                if (e.target.closest('.stop-row-click') || e.target.closest('button') || e.target.closest('a') || e.target.closest('input')) {
                     return;
                 }
                 if (this.dataset.url) {
@@ -740,7 +1506,340 @@
                 }
             });
         });
+
+        // Keyboard navigation: press Escape to clear bulk selection
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const checked = document.querySelectorAll('.candidate-select-checkbox:checked');
+                if (checked.length > 0) {
+                    clearCandidateSelection();
+                }
+            }
+        });
     });
+
+    function getCsrfToken() {
+        const input = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (input) return input.value;
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, 10) === ('csrftoken=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(10));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function updateSelectedCount() {
+        const checked = document.querySelectorAll('.candidate-select-checkbox:checked');
+        const count = checked.length;
+        const toolbar = document.getElementById('bulkActionsToolbar');
+        const counterNum = document.getElementById('selectedCountNumber');
+        const masterCheckbox = document.getElementById('selectAllCandidates');
+        const allCheckboxes = document.querySelectorAll('.candidate-select-checkbox');
+
+        if (counterNum) {
+            counterNum.textContent = count;
+            counterNum.classList.remove('pop');
+            void counterNum.offsetWidth; // Reflow to trigger CSS pop bounce
+            counterNum.classList.add('pop');
+        }
+
+        if (count > 0) {
+            toolbar.classList.add('show');
+        } else {
+            toolbar.classList.remove('show');
+        }
+
+        if (masterCheckbox) {
+            masterCheckbox.checked = (allCheckboxes.length > 0 && count === allCheckboxes.length);
+            masterCheckbox.indeterminate = (count > 0 && count < allCheckboxes.length);
+        }
+
+        // Toggle active row highlight
+        document.querySelectorAll('.candidate-select-checkbox').forEach(cb => {
+            const row = cb.closest('tr');
+            if (row) {
+                if (cb.checked) {
+                    row.classList.add('selected-candidate-row');
+                } else {
+                    row.classList.remove('selected-candidate-row');
+                }
+            }
+        });
+    }
+
+    function toggleSelectAllCandidates(masterCb) {
+        const isChecked = masterCb.checked;
+        document.querySelectorAll('.candidate-select-checkbox').forEach(cb => {
+            cb.checked = isChecked;
+        });
+        updateSelectedCount();
+    }
+
+    function clearCandidateSelection() {
+        document.querySelectorAll('.candidate-select-checkbox').forEach(cb => {
+            cb.checked = false;
+        });
+        const master = document.getElementById('selectAllCandidates');
+        if (master) {
+            master.checked = false;
+            master.indeterminate = false;
+        }
+        updateSelectedCount();
+    }
+
+    function showBulkFeedback(msg, isError = false) {
+        const toast = document.getElementById('bulkStatusToast');
+        const msgEl = document.getElementById('bulkStatusToastMsg');
+        const iconEl = toast ? toast.querySelector('i') : null;
+        if (!toast || !msgEl) return;
+
+        msgEl.textContent = msg;
+        if (isError) {
+            toast.style.borderLeftColor = '#EF4444';
+            if (iconEl) iconEl.className = 'bi bi-exclamation-triangle-fill text-danger fs-5';
+        } else {
+            toast.style.borderLeftColor = '#10B981';
+            if (iconEl) iconEl.className = 'bi bi-check-circle-fill text-success fs-5';
+        }
+
+        toast.style.display = 'flex';
+        clearTimeout(toast._timeout);
+        toast._timeout = setTimeout(() => {
+            toast.style.display = 'none';
+        }, 3400);
+    }
+
+    // Purge candidate completely from the Schedule Interview section & dropdown when status changes away from INTERVIEW_SCHEDULED
+    function purgeCandidateFromScheduleSection(appId) {
+        // 1. Remove from #scheduleCandidatePicker dropdown
+        const picker = document.getElementById('scheduleCandidatePicker');
+        if (picker) {
+            const opt = picker.querySelector(`option[value="${appId}"]`);
+            if (opt) opt.remove();
+            if (picker.value == appId) picker.value = '';
+        }
+
+        // 2. Remove chip from #scheduleSelectedCandidatesList
+        const chip = document.getElementById(`schedChip_${appId}`);
+        if (chip) chip.remove();
+
+        // 3. Remove hidden input from #scheduleHiddenInputsWrap
+        const hidden = document.querySelector(`#scheduleHiddenInputsWrap input[value="${appId}"]`);
+        if (hidden) hidden.remove();
+
+        // 4. Remove card from right column "Upcoming Scheduled Interviews"
+        const scheduledCard = document.getElementById(`scheduledCard_${appId}`);
+        if (scheduledCard) {
+            scheduledCard.remove();
+            const remainingCards = document.querySelectorAll('#scheduledInterviewsListContainer > div');
+            const countEl = document.getElementById('pipelineCountNumber');
+            if (countEl) countEl.textContent = remainingCards.length;
+            if (remainingCards.length === 0) {
+                const listContainer = document.getElementById('scheduledInterviewsListContainer');
+                if (listContainer) {
+                    listContainer.parentElement.innerHTML = `
+                        <div class="text-center py-5" id="scheduledEmptyState">
+                            <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 52px; height: 52px; background-color: #EFF6FF;">
+                                <i class="bi bi-calendar-check text-primary fs-3"></i>
+                            </div>
+                            <h6 class="fw-bold text-dark mb-1">No Interviews Scheduled Yet</h6>
+                            <p class="text-muted small mb-0 px-3">Select candidate(s) from the application roster above to schedule their first interview round.</p>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        // 5. Update remaining count in schedule candidate count pill
+        const remainingHidden = document.querySelectorAll('#scheduleHiddenInputsWrap input');
+        const schedCountPill = document.getElementById('schedCandidateCountNumber');
+        if (schedCountPill) schedCountPill.textContent = remainingHidden.length;
+
+        // 6. If no candidates remain in the schedule batch, show empty prompt & hide alert
+        if (remainingHidden.length === 0) {
+            const container = document.getElementById('scheduleSelectedCandidatesList');
+            if (container) {
+                container.innerHTML = `
+                    <div id="scheduleEmptyPrompt" class="text-center py-3 text-muted small">
+                        <i class="bi bi-cursor text-secondary fs-5 d-block mb-1"></i>
+                        Select candidate(s) from the table above or choose from the dropdown to schedule an interview.
+                    </div>
+                `;
+            }
+            const alertBox = document.getElementById('currentInterviewAlert');
+            if (alertBox) alertBox.style.display = 'none';
+        }
+    }
+
+    function updateRowStatusBadge(appId, newStatus, statusDisplay) {
+        const btn = document.getElementById('statusBtn_' + appId);
+        if (!btn) return;
+
+        // Clean out previous badge-status-* classes
+        const remainingClasses = Array.from(btn.classList).filter(c => !c.startsWith('badge-status-') || c === 'badge-status');
+        btn.className = remainingClasses.join(' ');
+
+        const slug = newStatus.toLowerCase();
+        btn.classList.add('badge-status-' + slug);
+
+        const textSpan = btn.querySelector('.status-btn-text');
+        if (textSpan) textSpan.textContent = statusDisplay;
+
+        const cb = document.querySelector(`.candidate-select-checkbox[value="${appId}"]`);
+        if (cb) {
+            cb.dataset.status = newStatus;
+            cb.dataset.statusLabel = statusDisplay;
+        }
+
+        // Dynamically toggle the calendar schedule icon in actions column
+        const calBtn = document.querySelector(`#candidateRow_${appId} .action-icon-schedule`);
+        if (calBtn) {
+            if (['SELECTED', 'HIRED', 'ONBOARDING_COMPLETED', 'REJECTED'].includes(newStatus)) {
+                calBtn.style.display = 'none';
+            } else {
+                calBtn.style.display = 'inline-flex';
+            }
+        }
+
+        // Update the status indicator icon in actions column
+        const iconIndicator = document.querySelector(`#candidateRow_${appId} .status-icon-indicator`);
+        if (iconIndicator) {
+            let iconHtml = '<i class="bi bi-circle-fill text-muted"></i>';
+            if (newStatus === 'SUBMITTED') {
+                iconHtml = '<i class="bi bi-clock-history text-secondary" title="Submitted"></i>';
+            } else if (newStatus === 'UNDER_REVIEW') {
+                iconHtml = '<i class="bi bi-hourglass-split text-primary" title="Under Review"></i>';
+            } else if (newStatus === 'SHORTLISTED') {
+                iconHtml = '<i class="bi bi-star-fill text-info" style="color: #06B6D4 !important;" title="Shortlisted"></i>';
+            } else if (newStatus === 'INTERVIEW_SCHEDULED') {
+                iconHtml = '<i class="bi bi-calendar2-check-fill text-warning" style="color: #D97706 !important;" title="Interview Scheduled"></i>';
+            } else if (newStatus === 'SELECTED') {
+                iconHtml = '<i class="bi bi-check-circle-fill text-success" style="color: #10B981 !important;" title="Interview Qualified"></i>';
+            } else if (newStatus === 'ONBOARDING_COMPLETED') {
+                iconHtml = '<i class="bi bi-person-badge-fill text-purple" style="color: #7C3AED !important;" title="Onboarded"></i>';
+            } else if (newStatus === 'HIRED') {
+                iconHtml = '<i class="bi bi-patch-check-fill text-success" style="color: #15803D !important;" title="Hired / Joined"></i>';
+            } else if (newStatus === 'REJECTED') {
+                iconHtml = '<i class="bi bi-x-circle-fill text-danger" title="Rejected"></i>';
+            } else if (newStatus === 'ON_HOLD') {
+                iconHtml = '<i class="bi bi-pause-circle-fill text-warning" style="color: #EA580C !important;" title="On Hold"></i>';
+            }
+            iconIndicator.innerHTML = iconHtml;
+            iconIndicator.title = 'Status: ' + statusDisplay;
+        }
+
+        // If status changed away from INTERVIEW_SCHEDULED, PURGE them completely from schedule section!
+        if (newStatus !== 'INTERVIEW_SCHEDULED') {
+            purgeCandidateFromScheduleSection(appId);
+        } else {
+            // Status changed to INTERVIEW_SCHEDULED: ensure in dropdown
+            ensureCandidateInSchedulePicker(cb || appId);
+        }
+    }
+
+    function applyBulkStatus(targetStatus, clickedBtn) {
+        const checked = Array.from(document.querySelectorAll('.candidate-select-checkbox:checked'));
+        if (checked.length === 0) {
+            showBulkFeedback('Please select at least one candidate first.', true);
+            return;
+        }
+
+        const ids = checked.map(cb => cb.value);
+        const csrfToken = getCsrfToken();
+        const toolbar = document.getElementById('bulkActionsToolbar');
+        let originalBtnHtml = null;
+
+        // Visual loading state on the clicked button
+        if (clickedBtn) {
+            originalBtnHtml = clickedBtn.innerHTML;
+            clickedBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" style="width:0.75rem; height:0.75rem;"></span> <span style="font-size:0.72rem;">Updating...</span>';
+        }
+
+        toolbar.querySelectorAll('button').forEach(b => b.disabled = true);
+        toolbar.style.opacity = '0.85';
+
+        fetch(BULK_UPDATE_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                application_ids: ids,
+                status: targetStatus,
+                notes: 'Bulk status update applied via Candidates Pipeline'
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            toolbar.querySelectorAll('button').forEach(b => b.disabled = false);
+            toolbar.style.opacity = '1';
+
+            if (clickedBtn && originalBtnHtml) {
+                clickedBtn.innerHTML = '<i class="bi bi-check2"></i> <span>Updated!</span>';
+            }
+
+            if (data.success) {
+                if (data.updated_ids) {
+                    data.updated_ids.forEach(id => {
+                        updateRowStatusBadge(id, data.new_status, data.status_display);
+                    });
+                }
+                showBulkFeedback(data.message || `Updated ${data.updated_count} candidate(s) to '${data.status_display}'!`);
+                setTimeout(() => {
+                    if (clickedBtn && originalBtnHtml) clickedBtn.innerHTML = originalBtnHtml;
+                    clearCandidateSelection();
+                }, 600);
+            } else {
+                if (clickedBtn && originalBtnHtml) clickedBtn.innerHTML = originalBtnHtml;
+                showBulkFeedback(data.error || 'Failed to update candidate status.', true);
+            }
+        })
+        .catch(err => {
+            toolbar.querySelectorAll('button').forEach(b => b.disabled = false);
+            toolbar.style.opacity = '1';
+            if (clickedBtn && originalBtnHtml) clickedBtn.innerHTML = originalBtnHtml;
+            showBulkFeedback('Network error while updating candidate status.', true);
+        });
+    }
+
+    function quickUpdateCandidateStatus(appId, targetStatus, candidateName) {
+        const csrfToken = getCsrfToken();
+
+        fetch(BULK_UPDATE_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                application_ids: [appId],
+                status: targetStatus,
+                notes: `Individual status update for ${candidateName}`
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                updateRowStatusBadge(appId, data.new_status, data.status_display);
+                showBulkFeedback(`Updated ${candidateName} to "${data.status_display}"!`);
+            } else {
+                showBulkFeedback(data.error || 'Failed to update status.', true);
+            }
+        })
+        .catch(err => {
+            showBulkFeedback('Network error while updating status.', true);
+        });
+    }
 
     function changePageSize(size) {
         const form = document.getElementById('candidateFilterForm');
@@ -796,5 +1895,633 @@
             }, 2500);
         });
     }
+
+    /* ========================================================= */
+    /* SCHEDULE INTERVIEW ROUND SECTION JAVASCRIPT LOGIC         */
+    /* ========================================================= */
+
+    // Helper: render candidate dossier card (Strictly: Application ID, Name, Email ID, Phone No, Position, Status, Action)
+    function renderCandidateChipHtml(id, name, appId, role, email, phone, avatar, status, statusLabel) {
+        return `
+            <div class="candidate-sched-chip p-2.5 rounded-3 border bg-white shadow-xs" id="schedChip_${id}" style="border-color: #E2E8F0;">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 w-100">
+                    <div class="d-flex align-items-center gap-2 overflow-hidden">
+                        <img src="${avatar || '/static/images/default-avatar.png'}" alt="${name}" class="rounded-circle flex-shrink-0" style="width: 36px; height: 36px; object-fit: cover;">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <span class="fw-bold text-dark small" style="font-size: 0.90rem;">${name}</span>
+                                <span class="badge bg-light text-dark border px-2 py-0.5" style="font-size: 0.70rem;">ID: ${appId}</span>
+                                <span class="badge badge-status badge-status-${(status || 'interview_scheduled').toLowerCase()}" style="font-size: 0.68rem;">• ${statusLabel || 'Interview Scheduled'}</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2.5 flex-wrap mt-0.5 text-muted" style="font-size: 0.74rem;">
+                                <span><i class="bi bi-briefcase text-primary me-1"></i>${role}</span>
+                                <span>•</span>
+                                <span><i class="bi bi-envelope text-primary me-1"></i>${email}</span>
+                                <span>•</span>
+                                <span><i class="bi bi-telephone text-secondary me-1"></i>${phone || '--'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-sm btn-outline-danger py-0.5 px-2 d-inline-flex align-items-center gap-1" style="font-size: 0.72rem; border-radius: 6px;" onclick="removeCandidateFromSchedule('${id}')" title="Remove candidate from this scheduling batch">
+                            <i class="bi bi-x-lg"></i> <span>Remove</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Helper: Ensure candidate exists in the #scheduleCandidatePicker dropdown with dataset values
+    function ensureCandidateInSchedulePicker(cbOrAppId) {
+        const picker = document.getElementById('scheduleCandidatePicker');
+        if (!picker) return;
+
+        let id, name, appId, role, email, phone, avatar, status, statusLabel, intDate, intTime, intMode, intLocation, intNotes;
+
+        if (typeof cbOrAppId === 'object' && cbOrAppId !== null) {
+            id = cbOrAppId.value;
+            const ds = cbOrAppId.dataset;
+            name = ds.name || 'Candidate';
+            appId = ds.appId || id;
+            role = ds.role || '';
+            email = ds.email || '';
+            phone = ds.phone || '--';
+            avatar = ds.avatar || '/static/images/default-avatar.png';
+            status = ds.status || 'INTERVIEW_SCHEDULED';
+            statusLabel = ds.statusLabel || 'Interview Scheduled';
+            intDate = ds.interviewDate || '';
+            intTime = ds.interviewTime || '';
+            intMode = ds.interviewMode || 'VIRTUAL';
+            intLocation = ds.interviewLocation || '';
+            intNotes = ds.interviewNotes || '';
+        } else {
+            id = cbOrAppId;
+            const cb = document.querySelector(`.candidate-select-checkbox[value="${id}"]`);
+            if (cb) {
+                return ensureCandidateInSchedulePicker(cb);
+            }
+            return;
+        }
+
+        let opt = picker.querySelector(`option[value="${id}"]`);
+        if (!opt) {
+            opt = document.createElement('option');
+            opt.value = id;
+            opt.textContent = `📅 ${name} — ${role} (${appId})`;
+            picker.appendChild(opt);
+        }
+        opt.dataset.appId = appId;
+        opt.dataset.name = name;
+        opt.dataset.role = role;
+        opt.dataset.email = email;
+        opt.dataset.phone = phone;
+        opt.dataset.avatar = avatar;
+        opt.dataset.status = status;
+        opt.dataset.statusLabel = statusLabel;
+        opt.dataset.interviewDate = intDate;
+        opt.dataset.interviewTime = intTime;
+        opt.dataset.interviewMode = intMode;
+        opt.dataset.interviewLocation = intLocation;
+        opt.dataset.interviewNotes = intNotes;
+    }
+
+    // Update schedule batch banner for multiple candidates
+    function updateScheduleBatchBanner(count) {
+        const container = document.getElementById('scheduleSelectedCandidatesList');
+        if (!container) return;
+        let banner = document.getElementById('schedBatchAlertBanner');
+
+        if (count > 1) {
+            if (!banner) {
+                banner = document.createElement('div');
+                banner.id = 'schedBatchAlertBanner';
+                banner.className = 'alert alert-primary py-2 px-3 small mb-2 border-0 d-flex align-items-center justify-content-between gap-2';
+                banner.style.cssText = 'background-color: #EFF6FF; color: #1D4ED8; border-radius: 8px;';
+                container.prepend(banner);
+            }
+            banner.innerHTML = `
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-people-fill flex-shrink-0 fs-6"></i>
+                    <span><b>Batch Interview Scheduling:</b> All <b>${count}</b> selected candidates will be scheduled for this slot and will receive individual email invites.</span>
+                </div>
+                <button type="button" class="btn btn-xs btn-outline-danger py-0 px-2 fw-semibold" style="font-size: 0.70rem;" onclick="clearScheduleBatch()">Clear All</button>
+            `;
+        } else if (banner) {
+            banner.remove();
+        }
+    }
+
+    // Clear all candidates from the schedule batch
+    function clearScheduleBatch() {
+        const container = document.getElementById('scheduleSelectedCandidatesList');
+        const hiddenInputsWrap = document.getElementById('scheduleHiddenInputsWrap');
+        if (container) {
+            container.innerHTML = `
+                <div id="scheduleEmptyPrompt" class="text-center py-3 text-muted small">
+                    <i class="bi bi-cursor text-secondary fs-5 d-block mb-1"></i>
+                    Select candidate(s) from the table above or choose from the dropdown to schedule an interview.
+                </div>
+            `;
+        }
+        if (hiddenInputsWrap) hiddenInputsWrap.innerHTML = '';
+        const countNumber = document.getElementById('schedCandidateCountNumber');
+        if (countNumber) countNumber.textContent = '0';
+        const alertBox = document.getElementById('currentInterviewAlert');
+        if (alertBox) alertBox.style.display = 'none';
+        const picker = document.getElementById('scheduleCandidatePicker');
+        if (picker) picker.value = '';
+        showBulkFeedback('Cleared candidates from schedule batch.');
+    }
+
+    // 1st: Update candidate status on table, then show multiple or single candidates in Schedule Interview Round section
+    function handleScheduleInterviewAction(clickedBtn) {
+        const checked = Array.from(document.querySelectorAll('.candidate-select-checkbox:checked'));
+        if (checked.length === 0) {
+            showBulkFeedback('Please select candidate(s) to schedule an interview.', true);
+            return;
+        }
+
+        const ids = checked.map(cb => cb.value);
+        const csrfToken = getCsrfToken();
+        const originalBtnHtml = clickedBtn ? clickedBtn.innerHTML : null;
+
+        if (clickedBtn) {
+            clickedBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" style="width:0.75rem; height:0.75rem;"></span> <span style="font-size:0.72rem;">Scheduling...</span>';
+            clickedBtn.disabled = true;
+        }
+
+        // 1st: Immediately change status in candidate applications table & backend database to INTERVIEW_SCHEDULED
+        fetch(BULK_UPDATE_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                application_ids: ids,
+                status: 'INTERVIEW_SCHEDULED',
+                notes: 'Interview scheduled by HR'
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (clickedBtn && originalBtnHtml) {
+                clickedBtn.innerHTML = originalBtnHtml;
+                clickedBtn.disabled = false;
+            }
+
+            if (data.success) {
+                // 1st: Update table row status badge to "Interview Scheduled"
+                if (data.updated_ids) {
+                    data.updated_ids.forEach(id => {
+                        updateRowStatusBadge(id, 'INTERVIEW_SCHEDULED', 'Interview Scheduled');
+                        const cb = document.querySelector(`.candidate-select-checkbox[value="${id}"]`);
+                        if (cb) {
+                            cb.dataset.status = 'INTERVIEW_SCHEDULED';
+                            cb.dataset.statusLabel = 'Interview Scheduled';
+                            ensureCandidateInSchedulePicker(cb);
+                        }
+                    });
+                }
+
+                // Update Interviews metric counter if present
+                const metricInterviews = document.getElementById('metricInterviews');
+                if (metricInterviews && data.updated_count) {
+                    const cur = parseInt(metricInterviews.textContent) || 0;
+                    metricInterviews.textContent = cur + data.updated_count;
+                }
+
+                showBulkFeedback(`Status updated to 'Interview Scheduled' for ${checked.length} candidate(s)! Available to choose in Schedule Interview section below.`);
+
+                // Clear table selection after status update so toolbar closes smoothly
+                setTimeout(() => {
+                    clearCandidateSelection();
+                }, 600);
+
+                // DO NOT auto-scroll or jump away from the table! Stay on table so user sees status change.
+            } else {
+                showBulkFeedback(data.error || 'Failed to update candidate status.', true);
+            }
+        })
+        .catch(err => {
+            if (clickedBtn && originalBtnHtml) {
+                clickedBtn.innerHTML = originalBtnHtml;
+                clickedBtn.disabled = false;
+            }
+            showBulkFeedback('Network error while updating candidate status.', true);
+        });
+    }
+
+    // Helper: Add candidate to schedule batch via picker
+    function addCandidateToScheduleBatch(candidateId) {
+        const picker = document.getElementById('scheduleCandidatePicker');
+        if (!picker) return;
+        let opt = picker.querySelector(`option[value="${candidateId}"]`);
+        if (!opt) {
+            const cb = document.querySelector(`.candidate-select-checkbox[value="${candidateId}"]`);
+            if (cb) {
+                ensureCandidateInSchedulePicker(cb);
+                opt = picker.querySelector(`option[value="${candidateId}"]`);
+            }
+        }
+        if (opt) {
+            picker.value = candidateId;
+            onSchedulePickerChange(picker);
+        }
+    }
+
+    // Select candidate from row action icon (1st changes status in table, then shows in schedule section)
+    function pickCandidateForSchedule(candidateId) {
+        const cb = document.querySelector(`.candidate-select-checkbox[value="${candidateId}"]`);
+        const appId = cb ? (cb.dataset.appId || candidateId) : candidateId;
+        const name = cb ? (cb.dataset.name || 'Candidate') : 'Candidate';
+        const currentStatus = cb ? cb.dataset.status : null;
+
+        // 1st: If not already INTERVIEW_SCHEDULED, update status in table and backend database
+        if (currentStatus !== 'INTERVIEW_SCHEDULED') {
+            fetch(BULK_UPDATE_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    application_ids: [candidateId],
+                    status: 'INTERVIEW_SCHEDULED',
+                    notes: `Interview scheduled by HR for ${name}`
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    updateRowStatusBadge(candidateId, 'INTERVIEW_SCHEDULED', 'Interview Scheduled');
+                    if (cb) {
+                        cb.dataset.status = 'INTERVIEW_SCHEDULED';
+                        cb.dataset.statusLabel = 'Interview Scheduled';
+                        ensureCandidateInSchedulePicker(cb);
+                    }
+                    addCandidateToScheduleBatch(candidateId);
+
+                    const metricInterviews = document.getElementById('metricInterviews');
+                    if (metricInterviews) {
+                        const cur = parseInt(metricInterviews.textContent) || 0;
+                        metricInterviews.textContent = cur + 1;
+                    }
+                }
+            })
+            .catch(err => {
+                console.error('Error updating status on pick:', err);
+            });
+        } else {
+            if (cb) ensureCandidateInSchedulePicker(cb);
+            addCandidateToScheduleBatch(candidateId);
+        }
+
+        // Scroll to schedule section
+        const sec = document.getElementById('scheduleInterviewSection');
+        if (sec) {
+            sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            sec.classList.remove('schedule-pulse-highlight');
+            void sec.offsetWidth;
+            sec.classList.add('schedule-pulse-highlight');
+        }
+
+        const dateInput = document.getElementById('schedInterviewDate');
+        if (dateInput) {
+            setTimeout(() => dateInput.focus(), 400);
+        }
+    }
+
+    // Quick switch or candidate picker dropdown: ADDS candidate to the scheduling batch (allowing multiple candidates at a time!)
+    function onSchedulePickerChange(selectEl) {
+        const val = selectEl.value;
+        if (!val) return;
+
+        const opt = selectEl.options[selectEl.selectedIndex];
+        if (!opt) return;
+
+        const ds = opt.dataset;
+        const name = ds.name || opt.text.trim();
+        const appId = ds.appId || val;
+        const role = ds.role || 'Position';
+        const email = ds.email || '';
+        const phone = ds.phone || '--';
+        const avatar = ds.avatar || '/static/images/default-avatar.png';
+        const status = ds.status || 'INTERVIEW_SCHEDULED';
+        const statusLabel = ds.statusLabel || 'Interview Scheduled';
+        const intDate = ds.interviewDate || '';
+        const intTime = ds.interviewTime || '';
+        const intMode = ds.interviewMode || 'VIRTUAL';
+        const intLocation = ds.interviewLocation || '';
+        const intNotes = ds.interviewNotes || '';
+
+        const container = document.getElementById('scheduleSelectedCandidatesList');
+        const hiddenInputsWrap = document.getElementById('scheduleHiddenInputsWrap');
+        const countNumber = document.getElementById('schedCandidateCountNumber');
+        const emptyPrompt = document.getElementById('scheduleEmptyPrompt');
+
+        if (!container || !hiddenInputsWrap) return;
+
+        // Check if candidate is already in this batch
+        if (document.getElementById(`schedChip_${val}`)) {
+            showBulkFeedback(`${name} is already in the interview schedule batch.`);
+            selectEl.value = '';
+            return;
+        }
+
+        // Remove empty placeholder prompt
+        if (emptyPrompt) emptyPrompt.remove();
+
+        // Create candidate dossier chip
+        const chipWrap = document.createElement('div');
+        chipWrap.innerHTML = renderCandidateChipHtml(val, name, appId, role, email, phone, avatar, status, statusLabel);
+        container.appendChild(chipWrap.firstElementChild);
+
+        // Append hidden input for form submission
+        const hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'application_ids';
+        hidden.value = val;
+        hiddenInputsWrap.appendChild(hidden);
+
+        // Update count pill
+        const currentCount = hiddenInputsWrap.querySelectorAll('input').length;
+        if (countNumber) countNumber.textContent = currentCount;
+
+        // Reset dropdown so user can immediately choose another candidate (Batch Scheduling)
+        selectEl.value = '';
+
+        // If this is the only candidate in the batch and has previous interview details, pre-fill form
+        if (currentCount === 1) {
+            const dateInput = document.getElementById('schedInterviewDate');
+            const timeInput = document.getElementById('schedInterviewTime');
+            const modeInput = document.getElementById('schedInterviewMode');
+            const locationInput = document.getElementById('schedInterviewLocation');
+            const notesInput = document.getElementById('schedInterviewNotes');
+
+            const todayStr = getLocalDateString();
+            const currentTimeStr = getLocalTimeString();
+            if (dateInput && intDate) {
+                if (intDate > todayStr) {
+                    dateInput.value = intDate;
+                    if (timeInput && intTime) timeInput.value = intTime;
+                } else if (intDate === todayStr) {
+                    dateInput.value = intDate;
+                    if (timeInput && intTime) {
+                        if (intTime >= currentTimeStr) {
+                            timeInput.value = intTime;
+                        } else {
+                            timeInput.value = '';
+                        }
+                    }
+                } else {
+                    dateInput.value = '';
+                    if (timeInput) timeInput.value = '';
+                }
+            }
+            if (modeInput && intMode) modeInput.value = intMode;
+            if (locationInput && intLocation) locationInput.value = intLocation;
+            if (notesInput && intNotes) notesInput.value = intNotes;
+
+            const alertBox = document.getElementById('currentInterviewAlert');
+            const alertDateTime = document.getElementById('currentInterviewDateTime');
+            const alertModeText = document.getElementById('currentInterviewModeText');
+            if (intDate && intTime && alertBox) {
+                alertBox.style.display = 'flex';
+                if (alertDateTime) alertDateTime.textContent = `${intDate} at ${intTime}`;
+                if (alertModeText) {
+                    const modeLabel = intMode === 'VIRTUAL' ? 'Virtual (Google Meet / Microsoft Teams)' : intMode === 'IN_PERSON' ? 'In-Person (Office Campus)' : 'Telephonic Round';
+                    alertModeText.textContent = `(${modeLabel})`;
+                }
+            }
+        }
+
+        showBulkFeedback(`Added ${name} (${appId}) to interview round schedule.`);
+    }
+
+    // Remove candidate chip from scheduling batch
+    function removeCandidateFromSchedule(candidateId) {
+        const chip = document.getElementById(`schedChip_${candidateId}`);
+        if (chip) chip.remove();
+
+        const hidden = document.querySelector(`#scheduleHiddenInputsWrap input[value="${candidateId}"]`);
+        if (hidden) hidden.remove();
+
+        const hiddenInputs = document.querySelectorAll('#scheduleHiddenInputsWrap input');
+        const count = hiddenInputs.length;
+        const countEl = document.getElementById('schedCandidateCountNumber');
+        if (countEl) countEl.textContent = count;
+
+        if (count === 0) {
+            const container = document.getElementById('scheduleSelectedCandidatesList');
+            if (container) {
+                container.innerHTML = `
+                    <div id="scheduleEmptyPrompt" class="text-center py-3 text-muted small">
+                        <i class="bi bi-cursor text-secondary fs-5 d-block mb-1"></i>
+                        Select candidate(s) from the table above or choose from the dropdown to schedule an interview.
+                    </div>
+                `;
+            }
+            const alertBox = document.getElementById('currentInterviewAlert');
+            if (alertBox) alertBox.style.display = 'none';
+        }
+    }
+
+    // Load candidate from right column "Upcoming Scheduled Interviews" into form
+    function loadCandidateIntoScheduleForm(id, appId, name, role, email, phone, avatar, status, statusLabel, date, time, mode, location, notes) {
+        clearScheduleBatch();
+        addCandidateToScheduleBatch(id);
+
+        const dateInput = document.getElementById('schedInterviewDate');
+        const timeInput = document.getElementById('schedInterviewTime');
+        const modeInput = document.getElementById('schedInterviewMode');
+        const locationInput = document.getElementById('schedInterviewLocation');
+        const notesInput = document.getElementById('schedInterviewNotes');
+
+        const todayStr = getLocalDateString();
+        const currentTimeStr = getLocalTimeString();
+        if (dateInput && date) {
+            if (date > todayStr) {
+                dateInput.value = date;
+                if (timeInput && time) timeInput.value = time;
+            } else if (date === todayStr) {
+                dateInput.value = date;
+                if (timeInput && time) {
+                    if (time >= currentTimeStr) {
+                        timeInput.value = time;
+                    } else {
+                        timeInput.value = '';
+                    }
+                }
+            } else {
+                dateInput.value = '';
+                if (timeInput) timeInput.value = '';
+            }
+        } else if (timeInput && time) {
+            timeInput.value = time;
+        }
+        if (modeInput && mode) modeInput.value = mode;
+        if (locationInput && location) locationInput.value = location;
+        if (notesInput && notes) notesInput.value = notes;
+
+        const alertBox = document.getElementById('currentInterviewAlert');
+        const alertDateTime = document.getElementById('currentInterviewDateTime');
+        const alertModeText = document.getElementById('currentInterviewModeText');
+        if (alertBox) {
+            alertBox.style.display = 'flex';
+            if (alertDateTime) alertDateTime.textContent = `${date} at ${time}`;
+            if (alertModeText) {
+                const modeLabel = mode === 'VIRTUAL' ? 'Virtual (Google Meet / Microsoft Teams)' : mode === 'IN_PERSON' ? 'In-Person (Office Campus)' : 'Telephonic Round';
+                alertModeText.textContent = `(${modeLabel})`;
+            }
+        }
+
+        const sec = document.getElementById('scheduleInterviewSection');
+        if (sec) {
+            sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            sec.classList.remove('schedule-pulse-highlight');
+            void sec.offsetWidth;
+            sec.classList.add('schedule-pulse-highlight');
+        }
+
+        if (dateInput) {
+            setTimeout(() => dateInput.focus(), 400);
+        }
+    }
+
+    // Helper: Local date string in YYYY-MM-DD
+    function getLocalDateString() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    // Helper: Local time string in HH:MM
+    function getLocalTimeString() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        return `${hours}:${minutes}`;
+    }
+
+    // Live validation for interview date input
+    function validateInterviewDateInput(inputEl) {
+        if (!inputEl || !inputEl.value) return true;
+        const todayStr = getLocalDateString();
+        const timeInput = document.getElementById('schedInterviewTime');
+
+        if (inputEl.value < todayStr) {
+            inputEl.classList.add('is-invalid');
+            showBulkFeedback(`Invalid interview date (${inputEl.value})! Date cannot be in the past (yesterday or earlier).`, true);
+            inputEl.value = '';
+            inputEl.focus();
+            return false;
+        } else {
+            inputEl.classList.remove('is-invalid');
+            if (timeInput) {
+                if (inputEl.value === todayStr) {
+                    timeInput.min = getLocalTimeString();
+                    if (timeInput.value) validateInterviewTimeInput(timeInput);
+                } else {
+                    timeInput.removeAttribute('min');
+                    timeInput.classList.remove('is-invalid');
+                }
+            }
+            return true;
+        }
+    }
+
+    // Live validation for interview time input
+    function validateInterviewTimeInput(timeInput) {
+        if (!timeInput || !timeInput.value) return true;
+        const dateInput = document.getElementById('schedInterviewDate');
+        const todayStr = getLocalDateString();
+
+        if (dateInput && dateInput.value === todayStr) {
+            const currentTimeStr = getLocalTimeString();
+            if (timeInput.value < currentTimeStr) {
+                timeInput.classList.add('is-invalid');
+                showBulkFeedback(`Invalid interview time (${timeInput.value})! For today, time cannot be in the past. Current time is ${currentTimeStr}.`, true);
+                timeInput.value = '';
+                timeInput.focus();
+                return false;
+            } else {
+                timeInput.classList.remove('is-invalid');
+                return true;
+            }
+        } else {
+            timeInput.classList.remove('is-invalid');
+            return true;
+        }
+    }
+
+    // Form submit validation
+    function validateScheduleInterviewForm(form) {
+        const hiddenInputs = form.querySelectorAll('input[name="application_ids"]');
+        if (hiddenInputs.length === 0) {
+            showBulkFeedback('Please select at least one candidate before scheduling.', true);
+            const picker = document.getElementById('scheduleCandidatePicker');
+            if (picker) picker.focus();
+            return false;
+        }
+
+        const dateInput = document.getElementById('schedInterviewDate');
+        const timeInput = document.getElementById('schedInterviewTime');
+        if (!dateInput.value || !timeInput.value) {
+            showBulkFeedback('Please specify both interview date and time.', true);
+            if (!dateInput.value) dateInput.focus();
+            else timeInput.focus();
+            return false;
+        }
+
+        const todayStr = getLocalDateString();
+        if (dateInput.value < todayStr) {
+            dateInput.classList.add('is-invalid');
+            showBulkFeedback(`Invalid interview date (${dateInput.value})! Date cannot be in the past (yesterday or earlier). Please choose today or a future date.`, true);
+            dateInput.focus();
+            return false;
+        } else {
+            dateInput.classList.remove('is-invalid');
+        }
+
+        // Validate time if date is today
+        if (dateInput.value === todayStr) {
+            const currentTimeStr = getLocalTimeString();
+            if (timeInput.value < currentTimeStr) {
+                timeInput.classList.add('is-invalid');
+                showBulkFeedback(`Invalid interview time (${timeInput.value})! For today's date, time must be in the future (after ${currentTimeStr}).`, true);
+                timeInput.focus();
+                return false;
+            } else {
+                timeInput.classList.remove('is-invalid');
+            }
+        }
+
+        const count = hiddenInputs.length;
+        const btn = document.getElementById('schedSubmitBtn');
+        if (btn) {
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status"></span> Scheduling & Sending Invites to ${count} Candidate(s)...`;
+            btn.disabled = true;
+        }
+        return true;
+    }
+
+    // Set today as min date & adjust min time on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateInput = document.getElementById('schedInterviewDate');
+        const timeInput = document.getElementById('schedInterviewTime');
+        if (dateInput) {
+            const todayStr = getLocalDateString();
+            dateInput.min = todayStr;
+            if (dateInput.value === todayStr && timeInput) {
+                timeInput.min = getLocalTimeString();
+            }
+        }
+    });
 </script>
 {% endblock %}

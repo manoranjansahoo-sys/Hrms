@@ -17,9 +17,18 @@ def hrms_global_context(request):
         'pending_profile_requests_count': 0,
         'user_today_attendance': None,
         'today_attendance': None,
+        'can_manage_master_data': False,
+        'pending_onboarding_count': 0,
     }
 
     if request.user.is_authenticated:
+        # Check Master Data management permission
+        try:
+            from organization.models import MasterDataPermission
+            context['can_manage_master_data'] = MasterDataPermission.can_user_access(request.user)
+        except Exception:
+            context['can_manage_master_data'] = (request.user.is_superuser or getattr(request.user, 'role', None) == 'head')
+
         # Notifications
         notifs = Notification.objects.filter(recipient=request.user)
         context['unread_notifications_count'] = notifs.filter(is_read=False).count()
@@ -37,6 +46,14 @@ def hrms_global_context(request):
             context['pending_profile_requests_count'] = ProfileCorrectionRequest.objects.filter(
                 status='PENDING'
             ).count()
+            try:
+                from recruitment.models import JobApplication
+                context['pending_onboarding_count'] = JobApplication.objects.filter(
+                    status=JobApplication.Status.ONBOARDING_COMPLETED,
+                    document_verification_status__in=['PENDING', 'REJECTED']
+                ).count()
+            except Exception:
+                context['pending_onboarding_count'] = 0
         elif user.is_site_manager_role:
             # Site Manager gets counts for their site
             managed_sites = user.managed_sites.all()

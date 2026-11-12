@@ -88,6 +88,15 @@
                     </a>
                 </li>
                 <li class="menu-item">
+                    <a href="{% url 'recruitment:onboarding_candidates_list' %}" class="menu-link {% if 'onboarding' in request.resolver_match.url_name %}active{% endif %}">
+                        <i class="bi bi-person-check-fill text-success"></i>
+                        <span>Onboarding Employees</span>
+                        {% if pending_onboarding_count > 0 %}
+                            <span class="badge bg-warning text-dark menu-badge">{{ pending_onboarding_count }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                <li class="menu-item">
                     <a href="{% url 'leave_management:admin_queue' %}" class="menu-link {% if 'leave' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-check2-circle"></i>
                         <span>Leave Approvals</span>
@@ -137,6 +146,12 @@
                         <span>Payroll Sign-Off</span>
                     </a>
                 </li>
+                <li class="menu-item">
+                    <a href="{% url 'organization:master_data' %}" class="menu-link {% if 'master_data' in request.resolver_match.url_name %}active{% endif %}">
+                        <i class="bi bi-database-fill-gear text-warning"></i>
+                        <span>Master Data</span>
+                    </a>
+                </li>
                 <!-- <li class="menu-item">
                     <a href="{% url 'accounts:audit_logs' %}" class="menu-link {% if 'audit' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-shield-check"></i>
@@ -175,6 +190,15 @@
                     <a href="{% url 'employees:employee_create' %}" class="menu-link {% if 'employee_create' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-person-plus-fill"></i>
                         <span>Add Employee</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="{% url 'recruitment:onboarding_candidates_list' %}" class="menu-link {% if 'onboarding' in request.resolver_match.url_name %}active{% endif %}">
+                        <i class="bi bi-person-check-fill text-success"></i>
+                        <span>Onboarding Employees</span>
+                        {% if pending_onboarding_count > 0 %}
+                            <span class="badge bg-warning text-dark menu-badge">{{ pending_onboarding_count }}</span>
+                        {% endif %}
                     </a>
                 </li>
 
@@ -273,6 +297,14 @@
                         <span>Helpdesk</span>
                     </a>
                 </li>
+                {% if can_manage_master_data %}
+                <li class="menu-item">
+                    <a href="{% url 'organization:master_data' %}" class="menu-link {% if 'master_data' in request.resolver_match.url_name %}active{% endif %}">
+                        <i class="bi bi-database-fill-gear text-warning"></i>
+                        <span>Master Data</span>
+                    </a>
+                </li>
+                {% endif %}
 
             {% elif request.user.is_site_manager_role %}
                 <!-- SITE MANAGER NAVIGATION -->
@@ -342,57 +374,14 @@
 
             {% endif %}
 
-            <!-- EMPLOYEE SELF-SERVICE (Available to all logged in users for their own affairs) -->
-            <li class="menu-category">My Workspace</li>
-            {% if request.user.employee_profile %}
-            <li class="menu-item">
-                <a href="{% url 'employees:employee_detail' emp_id=request.user.employee_profile.emp_id %}" class="menu-link">
-                    <i class="bi bi-person-circle"></i>
-                    <span>My Profile</span>
-                </a>
-            </li>
-            <li class="menu-item">
-                <a href="{% url 'attendance:my_attendance' %}" class="menu-link">
-                    <i class="bi bi-stopwatch"></i>
-                    <span>My Attendance</span>
-                </a>
-            </li>
-            <li class="menu-item">
-                <a href="{% url 'leave_management:my_leaves' %}" class="menu-link">
-                    <i class="bi bi-calendar-plus"></i>
-                    <span>My Leaves</span>
-                </a>
-            </li>
-            <li class="menu-item">
-                <a href="{% url 'payroll:my_payslips' %}" class="menu-link">
-                    <i class="bi bi-wallet2"></i>
-                    <span>My Salary & Payslips</span>
-                </a>
-            </li>
-            <!-- <li class="menu-item">
-                <a href="{% url 'performance:goals_list' %}" class="menu-link">
-                    <i class="bi bi-award"></i>
-                    <span>Goals & Reviews</span>
-                </a>
-            </li> -->
-            <li class="menu-item">
-                <a href="{% url 'support:tickets_list' %}" class="menu-link">
-                    <i class="bi bi-chat-left-dots"></i>
-                    <span>Service Tickets</span>
-                </a>
-            </li>
-            <!-- <li class="menu-item">
-                <a href="{% url 'support:documents_list' %}" class="menu-link">
-                    <i class="bi bi-file-earmark-text"></i>
-                    <span>Document Requests</span>
-                </a>
-            </li>
-            <li class="menu-item">
-                <a href="{% url 'support:assets_list' %}" class="menu-link">
-                    <i class="bi bi-laptop"></i>
-                    <span>My Assets</span>
-                </a>
-            </li> -->
+            {% if not request.user.is_head_role and not request.user.is_hr_role and can_manage_master_data %}
+                <li class="menu-category">Master Data Control</li>
+                <li class="menu-item">
+                    <a href="{% url 'organization:master_data' %}" class="menu-link {% if 'master_data' in request.resolver_match.url_name %}active{% endif %}">
+                        <i class="bi bi-database-fill-gear text-warning"></i>
+                        <span>Master Data</span>
+                    </a>
+                </li>
             {% endif %}
 
             <!-- GENERAL COMPANY PORTAL ITEMS -->
@@ -556,7 +545,7 @@
                                 </a>
                             </li>
                         {% empty %}
-                            <li class="p-3 text-center text-muted small">No new notifications</li>
+                        <li class="p-3 text-center text-muted small">No new notifications</li>
                         {% endfor %}
                         <li><hr class="dropdown-divider my-1"></li>
                         <li>
@@ -592,7 +581,16 @@
                         </li>
                         <li><a class="dropdown-item py-2" href="{% url 'accounts:profile' %}"><i class="bi bi-person me-2"></i>Account Profile</a></li>
                         <li><a class="dropdown-item py-2" href="{% url 'accounts:change_password' %}"><i class="bi bi-key me-2"></i>Change Password</a></li>
-                        <li><hr class="dropdown-divider"></li>
+                        {% if request.user.employee_profile %}
+                        <li><hr class="dropdown-divider my-1"></li>
+                        <li class="dropdown-header text-uppercase" style="font-size: 0.70rem;">My Workspace</li>
+                        <li><a class="dropdown-item py-1.5" href="{% url 'employees:employee_detail' emp_id=request.user.employee_profile.emp_id %}"><i class="bi bi-person-circle text-primary me-2"></i>My Profile</a></li>
+                        <li><a class="dropdown-item py-1.5" href="{% url 'attendance:my_attendance' %}"><i class="bi bi-stopwatch text-success me-2"></i>My Attendance</a></li>
+                        <li><a class="dropdown-item py-1.5" href="{% url 'leave_management:my_leaves' %}"><i class="bi bi-calendar-plus text-warning me-2"></i>My Leaves</a></li>
+                        <li><a class="dropdown-item py-1.5" href="{% url 'payroll:my_payslips' %}"><i class="bi bi-wallet2 text-info me-2"></i>My Salary & Payslips</a></li>
+                        <li><a class="dropdown-item py-1.5" href="{% url 'support:tickets_list' %}"><i class="bi bi-chat-left-dots text-secondary me-2"></i>Service Tickets</a></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider my-1"></li>
                         <li><a class="dropdown-item py-2 text-danger" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Sign Out</a></li>
                     </ul>
                 </div>

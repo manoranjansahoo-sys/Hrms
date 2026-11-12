@@ -71,7 +71,10 @@
 
                 <div class="col-md-3">
                     <label class="form-label small fw-semibold">Mobile Phone Number <span class="text-danger">*</span></label>
-                    {{ form.phone }}
+                    <div class="input-group">
+                        <span class="input-group-text bg-light fw-bold text-secondary" style="font-size: 0.88rem;">🇮🇳 +91</span>
+                        {{ form.phone }}
+                    </div>
                     {% if form.phone.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.phone.errors.0 }}</div>{% endif %}
                 </div>
                 <!-- PASSWORD SHELLS WITH SHOW/HIDE EYE ICONS -->
@@ -205,7 +208,10 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label small fw-semibold">Emergency Phone <span class="text-danger">*</span></label>
-                    {{ form.emergency_contact_phone }}
+                    <div class="input-group">
+                        <span class="input-group-text bg-light fw-bold text-secondary" style="font-size: 0.88rem;">🇮🇳 +91</span>
+                        {{ form.emergency_contact_phone }}
+                    </div>
                     {% if form.emergency_contact_phone.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.emergency_contact_phone.errors.0 }}</div>{% endif %}
                 </div>
 

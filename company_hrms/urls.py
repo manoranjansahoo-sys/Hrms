@@ -15,6 +15,7 @@ urlpatterns = [
     path('performance/', include('performance.urls')),
     path('support/', include('support.urls')),
     path('notifications/', include('notifications.urls')),
+    path('master-data/', include('organization.urls')),
     path('', include('recruitment.urls')),
     path('', include('portal.urls')),
 ]
