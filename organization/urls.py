@@ -21,6 +21,11 @@ urlpatterns = [
     path('locations/<int:site_id>/edit/', views.location_edit, name='location_edit'),
     path('locations/<int:site_id>/delete/', views.location_delete, name='location_delete'),
 
+    # Company Departments Management (Add, Edit, Delete)
+    path('departments/create/', views.department_create, name='department_create'),
+    path('departments/<int:dept_id>/edit/', views.department_edit, name='department_edit'),
+    path('departments/<int:dept_id>/delete/', views.department_delete, name='department_delete'),
+
     # Leave Policies (Sick Leave & Paid Leave Quotas)
     path('leaves/<int:leave_type_id>/update/', views.leave_policy_update, name='leave_policy_update'),
     path('leaves/create/', views.leave_type_create, name='leave_type_create'),

@@ -933,16 +933,37 @@
                 <p class="description">Attach your latest résumé for technical evaluation and interview screening.</p>
                 
                 <div class="resume-upload-box">
+                    <!-- Previously Uploaded Resume Attached Banner -->
+                    <div id="savedResumeInfoBox" class="p-3 mb-3 rounded-3 bg-success-subtle border border-success d-flex align-items-center justify-content-between flex-wrap gap-2" {% if not has_saved_resume and not saved_resume_url %}style="display: none;"{% endif %}>
+                        <div class="d-flex align-items-center gap-2.5">
+                            <i class="bi bi-file-earmark-check-fill text-success fs-3"></i>
+                            <div>
+                                <div class="fw-bold text-success small">Previously Uploaded Résumé Attached!</div>
+                                <div class="small text-muted" id="savedResumeNameDisplay">{{ saved_resume_name|default:"Your résumé from Candidate Job Application is attached." }}</div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <a id="savedResumeLink" href="{{ saved_resume_url|default:'#' }}" target="_blank" class="btn btn-sm btn-outline-success {% if not saved_resume_url %}d-none{% endif %}">
+                                <i class="bi bi-eye me-1"></i> Preview / Download
+                            </a>
+                            <span class="badge bg-success">Auto-Fetched</span>
+                        </div>
+                    </div>
+
                     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
                         <label class="reg-label fw-bold mb-0 fs-6 text-dark" for="id_resume">
-                            <i class="bi bi-file-earmark-pdf-fill text-danger me-2 fs-5"></i>Upload Resume / Curriculum Vitae <b>*</b>
+                            <i class="bi bi-file-earmark-pdf-fill text-danger me-2 fs-5"></i>Upload Resume / Curriculum Vitae <b id="resumeAsterisk">{% if not has_saved_resume %}*{% endif %}</b>
                         </label>
                         <span class="resume-badge">
                             <i class="bi bi-check2-circle me-1"></i> PDF, DOCX, DOC (Up to 10MB)
                         </span>
                     </div>
-                    <p class="text-muted small mb-3" style="font-size: 13px; line-height: 1.55;">
-                        Please upload your updated résumé. Our recruitment team will review your qualifications and contact you for interview scheduling.
+                    <p class="text-muted small mb-3" id="resumeHelpText" style="font-size: 13px; line-height: 1.55;">
+                        {% if has_saved_resume %}
+                            Your résumé from Candidate Job Application is attached above. (Optional: upload a new file below only if you wish to replace it).
+                        {% else %}
+                            Please upload your updated résumé. Our recruitment team will review your qualifications and contact you for interview scheduling.
+                        {% endif %}
                     </p>
 
                     {{ form.resume }}
@@ -1065,7 +1086,7 @@
             if (data.success) {
                 applyGoogleIdentity(data.google_user, data.candidate_data, data.is_returning_candidate);
             } else {
-                alert('Google Authentication Error: ' + (data.error || 'Failed to authenticate.'));
+                showToast('Google Authentication Error: ' + (data.error || 'Failed to authenticate.'), 'danger');
             }
             return data;
         })
@@ -1169,7 +1190,7 @@
         // 1. Personal & Contact
         const nameInput = document.getElementById('id_full_name');
         const emailInput = document.getElementById('id_email');
-        if (nameInput) nameInput.value = googleUser.name;
+        if (nameInput) nameInput.value = (candidateData && candidateData.full_name) ? candidateData.full_name : googleUser.name;
         if (emailInput) {
             emailInput.value = googleUser.email;
             emailInput.readOnly = true;
@@ -1209,6 +1230,26 @@
             if (posSelect && targetJobId && (!posSelect.value || posSelect.value === '')) {
                 posSelect.value = String(targetJobId);
                 posSelect.dispatchEvent(new Event('change'));
+            }
+
+            // Auto-fetch and display previously uploaded resume
+            if (candidateData.has_saved_resume) {
+                const rBox = document.getElementById('savedResumeInfoBox');
+                const rName = document.getElementById('savedResumeNameDisplay');
+                const rLink = document.getElementById('savedResumeLink');
+                const rInput = document.getElementById('id_resume');
+                const rHelp = document.getElementById('resumeHelpText');
+                const rAsterisk = document.getElementById('resumeAsterisk');
+
+                if (rBox) rBox.style.display = 'flex';
+                if (rName && candidateData.saved_resume_name) rName.textContent = candidateData.saved_resume_name;
+                if (rLink && candidateData.saved_resume_url) {
+                    rLink.href = candidateData.saved_resume_url;
+                    rLink.classList.remove('d-none');
+                }
+                if (rInput) rInput.removeAttribute('required');
+                if (rAsterisk) rAsterisk.textContent = '';
+                if (rHelp) rHelp.textContent = 'Your résumé from Candidate Job Application is attached above. (Optional: upload a new file below only if you wish to replace it).';
             }
 
             // Education
@@ -1326,16 +1367,16 @@
             }
         }, 120);
 
-        // Check if server session has verified Google user
-        {% if google_user %}
+        // Check if server session or database has returning candidate
+        {% if google_user or returning_candidate %}
             const serverUser = {
-                name: "{{ google_user.name|escapejs }}",
-                email: "{{ google_user.email|escapejs }}",
-                picture: "{{ google_user.picture|default:''|escapejs }}",
-                sub: "{{ google_user.sub|default:''|escapejs }}"
+                name: "{{ google_user.name|default:returning_candidate.full_name|escapejs }}",
+                email: "{{ google_user.email|default:returning_candidate.email|escapejs }}",
+                picture: "{{ google_user.picture|default:returning_candidate.google_picture_url|default:''|escapejs }}",
+                sub: "{{ google_user.sub|default:returning_candidate.google_sub|default:''|escapejs }}"
             };
             const existingData = {{ existing_candidate_data|safe }};
-            applyGoogleIdentity(serverUser, existingData, {% if returning_candidate %}true{% else %}false{% endif %});
+            applyGoogleIdentity(serverUser, existingData, true);
         {% else %}
             const savedName = sessionStorage.getItem('google_auth_name');
             const savedEmail = sessionStorage.getItem('google_auth_email');
@@ -1348,6 +1389,51 @@
                 confirmGoogleAccount(nameInput.value || 'Candidate', emailInput.value);
             }
         {% endif %}
+
+        // Dynamic candidate lookup on Email or Phone entry
+        const emailField = document.getElementById('id_email');
+        const phoneField = document.getElementById('id_phone');
+        let lookupDone = {% if returning_candidate %}true{% else %}false{% endif %};
+
+        function lookupCandidateDetails(query) {
+            if (!query || query.length < 4 || lookupDone) return;
+            fetch(`{% url 'recruitment:candidate_lookup_ajax' %}?q=${encodeURIComponent(query)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.candidate_data) {
+                        lookupDone = true;
+                        applyGoogleIdentity({
+                            name: data.candidate_data.full_name,
+                            email: data.candidate_data.email,
+                            picture: data.candidate_data.google_picture_url || ''
+                        }, data.candidate_data, true);
+                        showToast(`Application record found for ${data.candidate_data.full_name}! Details and resume auto-filled.`, 'success');
+                    }
+                })
+                .catch(e => console.error(e));
+        }
+
+        if (emailField) {
+            emailField.addEventListener('blur', function() {
+                if (this.value && this.value.includes('@')) {
+                    lookupCandidateDetails(this.value.trim());
+                }
+            });
+        }
+        if (phoneField) {
+            phoneField.addEventListener('blur', function() {
+                const digits = this.value.replace(/\D/g, '');
+                if (digits.length >= 10) {
+                    lookupCandidateDetails(digits);
+                }
+            });
+            phoneField.addEventListener('input', function() {
+                const digits = this.value.replace(/\D/g, '');
+                if (digits.length === 10) {
+                    lookupCandidateDetails(digits);
+                }
+            });
+        }
 
         const positionSelect = document.getElementById('positionSelect');
         const previewBox = document.getElementById('positionPreview');

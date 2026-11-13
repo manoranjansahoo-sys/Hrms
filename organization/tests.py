@@ -3,7 +3,7 @@ import datetime
 from django.test import TestCase, Client
 from django.urls import reverse
 from accounts.models import CustomUser
-from organization.models import Holiday, Site, OperatingSchedule, MasterDataPermission
+from organization.models import Holiday, Site, OperatingSchedule, MasterDataPermission, Department
 from leave_management.models import LeaveType, LeaveBalance
 from employees.models import EmployeeProfile
 
@@ -230,6 +230,47 @@ class MasterDataTests(TestCase):
         res_del = self.client.post(reverse('organization:location_delete', args=[loc.id]))
         self.assertIn(res_del.status_code, [302, 200])
         self.assertFalse(Site.objects.filter(id=loc.id).exists())
+
+    def test_departments_crud(self):
+        """Test adding, editing, and deleting a department in Master Data (Admin Only)."""
+        # Non-admin (HR) gets 403 Forbidden
+        self.client.login(username='hr_admin', password='Password@123')
+        res_hr = self.client.post(reverse('organization:department_create'), {'name': 'Unauthorized HR Dept'})
+        self.assertEqual(res_hr.status_code, 403)
+        self.assertFalse(Department.objects.filter(name='Unauthorized HR Dept').exists())
+        self.client.logout()
+
+        # Admin / Head can add department
+        self.client.login(username='admin_head', password='Password@123')
+
+        # Add Department
+        dept_data = {
+            'name': 'Cloud Infrastructure & DevOps',
+            'code': 'DEVOPS',
+            'description': 'AWS, Azure, and Kubernetes infra',
+        }
+        res_add = self.client.post(reverse('organization:department_create'), dept_data)
+        self.assertIn(res_add.status_code, [302, 200])
+        dept = Department.objects.filter(code='DEVOPS').first()
+        self.assertIsNotNone(dept)
+        self.assertEqual(dept.name, 'Cloud Infrastructure & DevOps')
+
+        # Edit Department
+        edit_data = {
+            'name': 'Platform Engineering & SRE',
+            'code': 'SRE',
+            'description': 'Site reliability and developer platforms',
+        }
+        res_edit = self.client.post(reverse('organization:department_edit', args=[dept.id]), edit_data)
+        self.assertIn(res_edit.status_code, [302, 200])
+        dept.refresh_from_db()
+        self.assertEqual(dept.name, 'Platform Engineering & SRE')
+        self.assertEqual(dept.code, 'SRE')
+
+        # Delete Department
+        res_del = self.client.post(reverse('organization:department_delete', args=[dept.id]))
+        self.assertIn(res_del.status_code, [302, 200])
+        self.assertFalse(Department.objects.filter(id=dept.id).exists())
 
     def test_leave_policy_update_annual_and_monthly(self):
         """Test leave quota updates and balance sync."""

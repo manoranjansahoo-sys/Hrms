@@ -746,8 +746,8 @@
             <button type="button" class="btn btn-success btn-sm shadow-sm fw-semibold" onclick="copyUniversalRegistrationLink(this)" data-url="{{ fast_apply_url }}" title="Copy Public Candidate Job Application Link">
                 <i class="bi bi-clipboard-check me-1"></i> Copy Link
             </button>
-            <a href="{% url 'recruitment:jobs_list' %}" class="btn btn-outline-secondary btn-sm shadow-sm">
-                <i class="bi bi-briefcase me-1"></i> Jobs
+            <a href="{% url 'recruitment:links_list' %}" class="btn btn-outline-secondary btn-sm shadow-sm">
+                <i class="bi bi-briefcase me-1"></i> Positions & Links
             </a>
             <a href="{% url 'recruitment:export_candidates_csv' %}?search={{ search_query }}&job={{ selected_job }}&status={{ selected_status }}&experience={{ selected_exp }}&sort={{ selected_sort }}" class="btn btn-outline-primary btn-sm shadow-sm" title="Export Candidates Pipeline to CSV Spreadsheet">
                 <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV

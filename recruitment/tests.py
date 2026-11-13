@@ -1039,3 +1039,447 @@ class RecruitmentTests(TestCase):
         self.assertEqual(past_time_resp.status_code, 400)
         self.assertIn("interview time cannot be in the past", past_time_resp.json().get('message', ''))
 
+    def test_document_verification_persists(self):
+        """
+        Verify that clicking verify documents updates status to VERIFIED in the database,
+        marks all attached documents is_verified=True, and persists on subsequent queries.
+        """
+        self.client.force_login(self.hr_user)
+
+        # Create candidate with documents
+        candidate = Candidate.objects.create(
+            full_name='Ananya Sen',
+            email='ananya.sen@example.com',
+            phone='9876543210',
+            alt_phone='9876543211',
+            city='Bengaluru'
+        )
+        app = JobApplication.objects.create(
+            candidate=candidate,
+            job=self.job,
+            application_id='APP-ANANYA-DOCS',
+            status=JobApplication.Status.SELECTED,
+            document_verification_status=JobApplication.DocumentVerificationStatus.PENDING,
+            resume=SimpleUploadedFile("ananya_resume.pdf", b"%PDF-1.4 dummy", content_type="application/pdf")
+        )
+        doc1 = CandidateDocument.objects.create(
+            candidate=candidate,
+            doc_type='CERTIFICATE',
+            title='Degree Certificate',
+            file=SimpleUploadedFile("degree.pdf", b"%PDF-1.4 degree", content_type="application/pdf"),
+            is_verified=False
+        )
+        doc2 = CandidateDocument.objects.create(
+            candidate=candidate,
+            doc_type='AADHAAR_CARD',
+            title='Aadhaar Card Copy',
+            file=SimpleUploadedFile("aadhaar.pdf", b"%PDF-1.4 aadhaar", content_type="application/pdf"),
+            is_verified=False
+        )
+
+        # Verify initial state is unverified
+        self.assertFalse(doc1.is_verified)
+        self.assertFalse(doc2.is_verified)
+        self.assertEqual(app.document_verification_status, JobApplication.DocumentVerificationStatus.PENDING)
+
+        # 1. Test single doc AJAX verify endpoint
+        single_resp = self.client.post(
+            reverse('recruitment:verify_single_candidate_document', kwargs={'doc_id': doc1.id})
+        )
+        self.assertEqual(single_resp.status_code, 200)
+        self.assertTrue(single_resp.json().get('success'))
+        doc1.refresh_from_db()
+        self.assertTrue(doc1.is_verified)
+
+        # 2. Test full document verification form submit (action='VERIFY')
+        verify_resp = self.client.post(
+            reverse('recruitment:verify_candidate_documents', kwargs={'application_id': app.application_id}),
+            data={'action': 'VERIFY'}
+        )
+        self.assertEqual(verify_resp.status_code, 302)
+
+        # 3. Reload from database and verify persistence
+        app.refresh_from_db()
+        doc1.refresh_from_db()
+        doc2.refresh_from_db()
+        self.assertEqual(app.document_verification_status, JobApplication.DocumentVerificationStatus.VERIFIED)
+        self.assertTrue(doc1.is_verified)
+        self.assertTrue(doc2.is_verified)
+        self.assertIsNotNone(app.documents_verified_at)
+        self.assertEqual(app.documents_verified_by, self.hr_user)
+
+        # 4. Subsequent GET requests should show Verified status
+        page_resp = self.client.get(reverse('recruitment:onboarding_candidates_list'))
+        self.assertEqual(page_resp.status_code, 200)
+        self.assertContains(page_resp, 'Verified')
+        self.assertContains(page_resp, 'Degree Certificate')
+
+    def test_fast_apply_and_registration_autofill_with_resume(self):
+        """
+        Verify that Candidate Job Application (Fast-Apply) saves name, phone, alt_phone, email,
+        and resume in database, and subsequent Candidate Registration & Job Application
+        auto-fetches all details and allows submission without re-uploading resume.
+        """
+        resume_content = b"%PDF-1.4 test resume content"
+        resume_file = SimpleUploadedFile("rohan_resume.pdf", resume_content, content_type="application/pdf")
+
+        # 1. Submit Candidate Job Application (Fast-Apply)
+        fast_resp = self.client.post(
+            reverse('recruitment:candidate_fast_apply'),
+            data={
+                'job': self.job.id,
+                'full_name': 'Rohan Das',
+                'email': 'rohan.das@example.com',
+                'phone': '9876543210',
+                'alt_phone': '9876543212',
+                'resume': resume_file
+            }
+        )
+        self.assertEqual(fast_resp.status_code, 302)
+
+        # Verify candidate and application saved in DB
+        candidate = Candidate.objects.filter(email='rohan.das@example.com').first()
+        self.assertIsNotNone(candidate)
+        self.assertEqual(candidate.full_name, 'Rohan Das')
+        self.assertEqual(candidate.phone, '9876543210')
+        self.assertEqual(candidate.alt_phone, '9876543212')
+
+        app = JobApplication.objects.filter(candidate=candidate).first()
+        self.assertIsNotNone(app)
+        self.assertTrue(bool(app.resume))
+
+        # Verify CandidateDocument was also created
+        res_doc = CandidateDocument.objects.filter(candidate=candidate, doc_type='RESUME').first()
+        self.assertIsNotNone(res_doc)
+
+        # 2. Test AJAX lookup endpoint by email and phone
+        lookup_resp = self.client.get(reverse('recruitment:candidate_lookup_ajax') + '?q=rohan.das@example.com')
+        self.assertEqual(lookup_resp.status_code, 200)
+        data = lookup_resp.json()
+        self.assertTrue(data['success'])
+        self.assertEqual(data['candidate_data']['full_name'], 'Rohan Das')
+        self.assertEqual(data['candidate_data']['alt_phone'], '9876543212')
+        self.assertTrue(data['candidate_data']['has_saved_resume'])
+
+        # 3. GET Candidate Registration & Job Application form - should auto-populate
+        reg_page = self.client.get(reverse('recruitment:candidate_apply') + '?email=rohan.das@example.com')
+        self.assertEqual(reg_page.status_code, 200)
+        self.assertTrue(reg_page.context['has_saved_resume'])
+        self.assertEqual(reg_page.context['returning_candidate'].full_name, 'Rohan Das')
+
+        # 4. POST Candidate Registration & Job Application WITHOUT uploading a new resume
+        # Only fill the rest of the fields (address, education, experience, skills)
+        post_data = {
+            'job': self.job.id,
+            'full_name': 'Rohan Das',
+            'email': 'rohan.das@example.com',
+            'phone': '9876543210',
+            'alt_phone': '9876543212',
+            'current_address': 'Flat 302, Green Glen Layout, Bellandur',
+            'city': 'Bengaluru',
+            'state': 'Karnataka',
+            'postal_code': '560103',
+            'country': 'India',
+            'highest_qualification': "Bachelor's Degree (B.Tech / B.E. / BCA / B.Sc)",
+            'institution': 'IIT Bengaluru',
+            'experience_type': 'FRESHER',
+            'total_experience_years': '0',
+            'technical_skills': 'Python, Django, MySQL, HTML, CSS, JavaScript',
+            'is_google_verified': 'true'
+        }
+        submit_resp = self.client.post(reverse('recruitment:candidate_apply'), data=post_data)
+        self.assertEqual(submit_resp.status_code, 302)
+
+        # Verify application in database retained the previously uploaded resume
+        app.refresh_from_db()
+        self.assertTrue(app.is_office_registered)
+        self.assertTrue(bool(app.resume))
+
+    def test_job_opening_pages_decommissioned_and_consolidated_into_links_list(self):
+        """Standalone 'Company Job Openings' and 'Post New Job' pages redirect to Links Generation."""
+        self.client.force_login(self.hr_user)
+
+        # 1. GET /hr/jobs/ redirects cleanly to Links Generation
+        jobs_resp = self.client.get(reverse('recruitment:jobs_list'))
+        self.assertRedirects(jobs_resp, reverse('recruitment:links_list'))
+
+        # 2. GET /hr/jobs/create/ redirects cleanly to Links Generation
+        create_get_resp = self.client.get(reverse('recruitment:create_job'))
+        self.assertRedirects(create_get_resp, reverse('recruitment:links_list'))
+
+        # 3. POST /hr/jobs/create/ creates job and redirects to Links Generation
+        create_post_resp = self.client.post(reverse('recruitment:create_job'), data={
+            'title': 'AI Automation Specialist',
+            'department': self.dept.id,
+            'employment_type': 'FULL_TIME',
+            'status': 'OPEN',
+            'location': 'Bengaluru HQ',
+            'vacancies': 2,
+            'experience_required': '2-4 Years',
+            'description': 'Building AI automation workflows.',
+            'requirements': 'Python, Prompt Engineering, Django'
+        })
+        self.assertRedirects(create_post_resp, reverse('recruitment:links_list'))
+        created_job = RecruitmentJob.objects.filter(title='AI Automation Specialist').first()
+        self.assertIsNotNone(created_job)
+
+        # 4. GET /hr/jobs/<id>/edit/ redirects cleanly to Links Generation
+        edit_get_resp = self.client.get(reverse('recruitment:edit_job', kwargs={'job_id': created_job.id}))
+        self.assertRedirects(edit_get_resp, reverse('recruitment:links_list'))
+
+        # 5. POST /hr/jobs/<id>/edit/ updates job and redirects to Links Generation
+        edit_post_resp = self.client.post(reverse('recruitment:edit_job', kwargs={'job_id': created_job.id}), data={
+            'title': 'Senior AI Automation Specialist',
+            'department': self.dept.id,
+            'employment_type': 'FULL_TIME',
+            'status': 'OPEN',
+            'location': 'Bengaluru HQ',
+            'vacancies': 3,
+            'experience_required': '3-5 Years',
+            'description': 'Updated description.',
+            'requirements': 'Updated requirements.'
+        })
+        self.assertRedirects(edit_post_resp, reverse('recruitment:links_list'))
+        created_job.refresh_from_db()
+        self.assertEqual(created_job.title, 'Senior AI Automation Specialist')
+        self.assertEqual(created_job.vacancies, 3)
+
+    def test_inline_department_creation_and_modal_integration(self):
+        """Only Admin can add departments; HR is restricted from adding departments."""
+        # 1. HR User gets 403 when trying to add a department via AJAX
+        self.client.force_login(self.hr_user)
+        hr_ajax_resp = self.client.post(
+            reverse('recruitment:create_department_ajax'),
+            data={'name': 'HR Attempted Dept'}
+        )
+        self.assertEqual(hr_ajax_resp.status_code, 403)
+        self.assertFalse(Department.objects.filter(name='HR Attempted Dept').exists())
+
+        # 2. HR User submitting new_department_name in job creation gets blocked
+        hr_job_resp = self.client.post(reverse('recruitment:create_job'), data={
+            'title': 'Blocked Job Role',
+            'new_department_name': 'Unauthorized Dept By HR',
+            'employment_type': 'FULL_TIME',
+            'status': 'OPEN',
+            'location': 'Bengaluru HQ',
+            'vacancies': 1,
+            'description': 'Test description.',
+            'requirements': 'Test requirements.'
+        })
+        self.assertRedirects(hr_job_resp, reverse('recruitment:links_list'))
+        self.assertFalse(Department.objects.filter(name='Unauthorized Dept By HR').exists())
+
+        # 3. Head / Admin successfully adds a department via AJAX
+        self.client.force_login(self.head_user)
+        admin_ajax_resp = self.client.post(
+            reverse('recruitment:create_department_ajax'),
+            data={'name': 'Quantum Robotics & Automation'}
+        )
+        self.assertEqual(admin_ajax_resp.status_code, 200)
+        data = admin_ajax_resp.json()
+        self.assertTrue(data['success'])
+        self.assertEqual(data['name'], 'Quantum Robotics & Automation')
+        dept_id = data['id']
+
+        dept = Department.objects.filter(id=dept_id).first()
+        self.assertIsNotNone(dept)
+        self.assertEqual(dept.name, 'Quantum Robotics & Automation')
+
+        # 4. Head / Admin successfully creates job with inline new_department_name
+        job_resp = self.client.post(reverse('recruitment:create_job'), data={
+            'title': 'Autonomous Navigation Engineer',
+            'new_department_name': 'Cyberphysical Systems & IoT',
+            'employment_type': 'FULL_TIME',
+            'status': 'OPEN',
+            'location': 'Bengaluru HQ',
+            'vacancies': 2,
+            'experience_required': '3+ Years',
+            'description': 'Hardware/software integration.',
+            'requirements': 'ROS2, C++, Python'
+        })
+        self.assertRedirects(job_resp, reverse('recruitment:links_list'))
+        new_dept = Department.objects.filter(name='Cyberphysical Systems & IoT').first()
+        self.assertIsNotNone(new_dept)
+        auto_job = RecruitmentJob.objects.filter(title='Autonomous Navigation Engineer').first()
+        self.assertIsNotNone(auto_job)
+        self.assertEqual(auto_job.department, new_dept)
+
+    def test_single_document_verify_and_reject_ajax(self):
+        """Test individual document rejection and verification via HR AJAX endpoints."""
+        self.client.force_login(self.hr_user)
+
+        candidate = Candidate.objects.create(
+            full_name='Soumya Ranjan Test',
+            email='soumya.test@example.com',
+            phone='9876543210'
+        )
+        dummy_file = SimpleUploadedFile("sample.pdf", b"%PDF-dummy-content", content_type="application/pdf")
+        doc1 = CandidateDocument.objects.create(
+            candidate=candidate,
+            doc_type='AADHAAR_CARD',
+            title='Aadhaar / National ID Proof',
+            file=dummy_file
+        )
+        doc2 = CandidateDocument.objects.create(
+            candidate=candidate,
+            doc_type='CERTIFICATE',
+            title='Degree Certificate / Final Marksheet',
+            file=dummy_file
+        )
+
+        app = JobApplication.objects.create(
+            application_id='APP-TEST-9988',
+            candidate=candidate,
+            job=self.job,
+            resume=dummy_file,
+            status=JobApplication.Status.ONBOARDING_COMPLETED,
+            document_verification_status=JobApplication.DocumentVerificationStatus.PENDING
+        )
+
+        # 1. HR rejects doc1 with specific reason
+        reject_resp = self.client.post(
+            reverse('recruitment:reject_single_candidate_document', kwargs={'doc_id': doc1.id}),
+            data='{"reason": "Aadhaar copy is blurry and illegible."}',
+            content_type='application/json'
+        )
+        self.assertEqual(reject_resp.status_code, 200)
+        self.assertTrue(reject_resp.json()['success'])
+
+        doc1.refresh_from_db()
+        app.refresh_from_db()
+        self.assertTrue(doc1.is_rejected)
+        self.assertFalse(doc1.is_verified)
+        self.assertEqual(doc1.rejection_notes, "Aadhaar copy is blurry and illegible.")
+        self.assertEqual(app.document_verification_status, JobApplication.DocumentVerificationStatus.REJECTED)
+
+        # 2. HR verifies doc1 (reversing rejection)
+        verify_resp1 = self.client.post(
+            reverse('recruitment:verify_single_candidate_document', kwargs={'doc_id': doc1.id})
+        )
+        self.assertEqual(verify_resp1.status_code, 200)
+        self.assertTrue(verify_resp1.json()['success'])
+
+        doc1.refresh_from_db()
+        app.refresh_from_db()
+        self.assertTrue(doc1.is_verified)
+        self.assertFalse(doc1.is_rejected)
+        self.assertEqual(doc1.rejection_notes, '')
+        # Not all verified yet because doc2 is still pending
+        self.assertFalse(verify_resp1.json()['all_verified'])
+        self.assertEqual(app.document_verification_status, JobApplication.DocumentVerificationStatus.PENDING)
+
+        # 3. HR verifies doc2 (all documents are now verified)
+        verify_resp2 = self.client.post(
+            reverse('recruitment:verify_single_candidate_document', kwargs={'doc_id': doc2.id})
+        )
+        self.assertEqual(verify_resp2.status_code, 200)
+        self.assertTrue(verify_resp2.json()['all_verified'])
+
+        app.refresh_from_db()
+        self.assertEqual(app.document_verification_status, JobApplication.DocumentVerificationStatus.VERIFIED)
+
+    def test_candidate_onboarding_reupload_and_prefill(self):
+        """Candidate only needs to re-upload rejected document; all DB data prefilled."""
+        candidate = Candidate.objects.create(
+            full_name='Chinmayee Mohanty',
+            email='chinmayee.test@example.com',
+            phone='9876543211',
+            date_of_birth=date(1998, 5, 20),
+            gender='FEMALE',
+            father_name='Ramesh Mohanty',
+            pan_number='ABCDE1234F',
+            aadhaar_number='123456789012',
+            bank_name='HDFC Bank',
+            bank_branch='Koramangala',
+            bank_account_number='987654321098',
+            bank_ifsc_code='HDFC0001234',
+            current_address='Indiranagar, Bengaluru',
+            permanent_address='Indiranagar, Bengaluru',
+            state='Karnataka',
+            postal_code='560038'
+        )
+        dummy_file = SimpleUploadedFile("cert.pdf", b"%PDF-cert-content", content_type="application/pdf")
+        cert_doc = CandidateDocument.objects.create(
+            candidate=candidate,
+            doc_type='CERTIFICATE',
+            title='Degree Certificate / Final Marksheet',
+            file=dummy_file,
+            is_rejected=True,
+            rejection_notes='Blurry certificate copy.'
+        )
+        passbook_doc = CandidateDocument.objects.create(
+            candidate=candidate,
+            doc_type='BANK_PROOF',
+            title='Cancelled Cheque / Bank Passbook Copy',
+            file=dummy_file,
+            is_verified=True
+        )
+
+        app = JobApplication.objects.create(
+            application_id='APP-TEST-5566',
+            candidate=candidate,
+            job=self.job,
+            resume=dummy_file,
+            status=JobApplication.Status.SELECTED,
+            document_verification_status=JobApplication.DocumentVerificationStatus.REJECTED,
+            document_rejection_reason='Please re-upload Degree Certificate: Blurry certificate copy.'
+        )
+
+        # 1. Candidate visits onboarding portal: prefilled data
+        resp = self.client.get(reverse('recruitment:candidate_onboarding', kwargs={'application_id': app.application_id}))
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn('existing_docs', resp.context)
+        self.assertTrue(resp.context['has_rejected_docs'])
+        self.assertEqual(resp.context['form'].initial['pan_number'], 'ABCDE1234F')
+        self.assertEqual(resp.context['form'].initial['bank_name'], 'HDFC Bank')
+
+        # 2. Candidate submits replacement file for educational_certificate
+        replacement_pdf = SimpleUploadedFile("new_degree.pdf", b"%PDF-new-clear-degree", content_type="application/pdf")
+        post_resp = self.client.post(
+            reverse('recruitment:candidate_onboarding', kwargs={'application_id': app.application_id}),
+            data={
+                'date_of_birth': '1998-05-20',
+                'gender': 'FEMALE',
+                'father_name': 'Ramesh Mohanty',
+                'marital_status': 'SINGLE',
+                'emergency_contact_name': 'Ramesh Mohanty',
+                'emergency_contact_relation': 'Father',
+                'emergency_contact_phone': '9876543211',
+                'current_address': 'Indiranagar, Bengaluru',
+                'permanent_address': 'Indiranagar, Bengaluru',
+                'state': 'Karnataka',
+                'postal_code': '560038',
+                'degree_name': 'B.Tech Computer Science',
+                'institution': 'VTU Belagavi',
+                'passing_year': 2020,
+                'percentage_cgpa': '8.5 CGPA',
+                'details_10th': 'CBSE 2014 90%',
+                'details_12th': 'State 2016 88%',
+                'bank_name': 'HDFC Bank',
+                'bank_branch': 'Koramangala',
+                'bank_account_number': '987654321098',
+                'bank_ifsc_code': 'HDFC0001234',
+                'pan_number': 'ABCDE1234F',
+                'aadhaar_number': '123456789012',
+                'accuracy_declaration': 'on',
+                'educational_certificate': replacement_pdf,
+            }
+        )
+        self.assertEqual(post_resp.status_code, 200)
+
+        # Check DB updates: cert_doc updated, rejection cleared
+        cert_doc.refresh_from_db()
+        passbook_doc.refresh_from_db()
+        app.refresh_from_db()
+
+        self.assertFalse(cert_doc.is_rejected)
+        self.assertEqual(cert_doc.rejection_notes, '')
+        # passbook_doc remains verified!
+        self.assertTrue(passbook_doc.is_verified)
+        self.assertEqual(app.document_verification_status, JobApplication.DocumentVerificationStatus.PENDING)
+        self.assertEqual(app.document_rejection_reason, '')
+
+
+
+
+

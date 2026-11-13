@@ -102,6 +102,7 @@ def candidate_links_list(request):
         'fast_apply_url': fast_apply_url,
         'quick_job_form': quick_job_form,
         'sites': Site.objects.filter(is_active=True).order_by('name'),
+        'departments': Department.objects.all().order_by('name'),
         'now': timezone.now(),
     })
 
@@ -155,27 +156,39 @@ def toggle_candidate_link(request, link_id):
 @login_required
 @hr_required
 def jobs_list(request):
-    """Manage company job openings."""
-    jobs = RecruitmentJob.objects.select_related('department', 'site').annotate(
-        app_count=Count('applications')
-    ).all()
-    host = request.get_host()
-    scheme = request.scheme
-    return render(request, 'recruitment/jobs_list.html', {
-        'jobs': jobs,
-        'host_url': f"{scheme}://{host}"
-    })
+    """Unified Job Positions are now managed directly from Links Generation."""
+    return redirect('recruitment:links_list')
 
 
 @login_required
 @hr_required
 def create_job_opening(request):
-    """Create a new job opening."""
+    """Create a new job opening via modal or API form submission."""
     if request.method == 'POST':
         form = JobOpeningForm(request.POST)
         if form.is_valid():
             job = form.save(commit=False)
             job.created_by = request.user
+
+            # Check if an inline new department was entered (Admin only)
+            new_dept_name = request.POST.get('new_department_name', '').strip()
+            if new_dept_name:
+                if not (request.user.role == CustomUser.Role.HEAD or request.user.is_superuser):
+                    messages.error(request, "Permission Denied: Only Admin can add new departments.")
+                    return redirect('recruitment:links_list')
+                words = [w for w in new_dept_name.split() if w]
+                base_code = ("".join(w[0] for w in words[:4]) if len(words) > 1 else new_dept_name[:4]).upper()
+                code = base_code
+                idx = 1
+                while Department.objects.filter(code=code).exists():
+                    code = f"{base_code[:3]}{idx}"
+                    idx += 1
+                dept, _ = Department.objects.get_or_create(
+                    name__iexact=new_dept_name,
+                    defaults={'name': new_dept_name, 'code': code}
+                )
+                job.department = dept
+
             location_val = request.POST.get('location')
             if location_val:
                 job.location = location_val
@@ -189,24 +202,46 @@ def create_job_opening(request):
             job.save()
             messages.success(request, f"Job opening '{job.title}' created successfully and is now active in the candidate registration form!")
             next_url = request.POST.get('next')
-            if next_url:
+            if next_url and next_url.startswith('/'):
                 return redirect(next_url)
-            return redirect('recruitment:jobs_list')
-    else:
-        form = JobOpeningForm()
-    return render(request, 'recruitment/job_form.html', {'form': form, 'is_new': True})
+            return redirect('recruitment:links_list')
+        else:
+            errors_str = "; ".join([f"{f}: {', '.join(errs)}" for f, errs in form.errors.items()])
+            messages.error(request, f"Could not create job opening: {errors_str}")
+            return redirect('recruitment:links_list')
+    return redirect('recruitment:links_list')
 
 
 @login_required
 @hr_required
 def edit_job_opening(request, job_id):
-    """Edit existing job opening."""
+    """Edit existing job opening via modal or API form submission."""
     job = get_object_or_404(RecruitmentJob, id=job_id)
     next_url = request.POST.get('next') or request.GET.get('next') or ''
     if request.method == 'POST':
         form = JobOpeningForm(request.POST, instance=job)
         if form.is_valid():
             saved_job = form.save(commit=False)
+
+            # Check if an inline new department was entered (Admin only)
+            new_dept_name = request.POST.get('new_department_name', '').strip()
+            if new_dept_name:
+                if not (request.user.role == CustomUser.Role.HEAD or request.user.is_superuser):
+                    messages.error(request, "Permission Denied: Only Admin can add new departments.")
+                    return redirect('recruitment:links_list')
+                words = [w for w in new_dept_name.split() if w]
+                base_code = ("".join(w[0] for w in words[:4]) if len(words) > 1 else new_dept_name[:4]).upper()
+                code = base_code
+                idx = 1
+                while Department.objects.filter(code=code).exists():
+                    code = f"{base_code[:3]}{idx}"
+                    idx += 1
+                dept, _ = Department.objects.get_or_create(
+                    name__iexact=new_dept_name,
+                    defaults={'name': new_dept_name, 'code': code}
+                )
+                saved_job.department = dept
+
             location_val = request.POST.get('location')
             if location_val:
                 saved_job.location = location_val
@@ -220,15 +255,51 @@ def edit_job_opening(request, job_id):
             messages.success(request, f"Job opening '{job.title}' updated successfully.")
             if next_url and next_url.startswith('/'):
                 return redirect(next_url)
-            return redirect('recruitment:jobs_list')
-    else:
-        form = JobOpeningForm(instance=job)
-    return render(request, 'recruitment/job_form.html', {
-        'form': form,
-        'job': job,
-        'is_new': False,
-        'next_url': next_url,
-    })
+            return redirect('recruitment:links_list')
+        else:
+            errors_str = "; ".join([f"{f}: {', '.join(errs)}" for f, errs in form.errors.items()])
+            messages.error(request, f"Could not update job opening: {errors_str}")
+            return redirect('recruitment:links_list')
+    return redirect('recruitment:links_list')
+
+
+@login_required
+@head_required
+def create_department_ajax(request):
+    """AJAX endpoint to quickly add a department from inside a modal without a separate button or page."""
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        if not name:
+            return JsonResponse({'success': False, 'error': 'Department name is required.'})
+
+        existing = Department.objects.filter(name__iexact=name).first()
+        if existing:
+            return JsonResponse({
+                'success': True,
+                'id': existing.id,
+                'name': existing.name,
+                'code': existing.code,
+                'already_existed': True,
+                'message': f"Department '{existing.name}' is already available."
+            })
+
+        words = [w for w in name.split() if w]
+        base_code = ("".join(w[0] for w in words[:4]) if len(words) > 1 else name[:4]).upper()
+        code = base_code
+        idx = 1
+        while Department.objects.filter(code=code).exists():
+            code = f"{base_code[:3]}{idx}"
+            idx += 1
+
+        dept = Department.objects.create(name=name, code=code)
+        return JsonResponse({
+            'success': True,
+            'id': dept.id,
+            'name': dept.name,
+            'code': dept.code,
+            'message': f"Department '{dept.name}' added successfully!"
+        })
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'})
 
 
 @login_required
@@ -1010,11 +1081,32 @@ def serialize_candidate_data(candidate):
     applied_job_id = latest_app.job_id if latest_app else None
     applied_job_title = latest_app.job.title if (latest_app and latest_app.job) else ''
 
+    # Resume inspection from JobApplication or CandidateDocument
+    saved_resume_url = ''
+    saved_resume_name = ''
+    if latest_app and latest_app.resume:
+        try:
+            saved_resume_url = latest_app.resume.url
+            saved_resume_name = os.path.basename(latest_app.resume.name)
+        except Exception:
+            pass
+    if not saved_resume_url:
+        resume_doc = candidate.documents.filter(doc_type='RESUME').first()
+        if resume_doc and resume_doc.file:
+            try:
+                saved_resume_url = resume_doc.file.url
+                saved_resume_name = os.path.basename(resume_doc.file.name)
+            except Exception:
+                pass
+
     return {
         'full_name': candidate.full_name or '',
         'email': candidate.email or '',
         'phone': candidate.phone or '',
         'alt_phone': candidate.alt_phone or '',
+        'has_saved_resume': bool(saved_resume_url),
+        'saved_resume_url': saved_resume_url,
+        'saved_resume_name': saved_resume_name,
         'current_address': candidate.current_address or '',
         'city': candidate.city or '',
         'state': candidate.state or '',
@@ -1141,6 +1233,50 @@ def candidate_google_logout(request):
     return JsonResponse({'success': True, 'message': 'Google authentication cleared.'})
 
 
+def candidate_lookup_ajax(request):
+    """
+    Auto-fetches candidate details by Email or Phone Number.
+    Used dynamically on the Candidate Registration form to pre-populate details
+    when the candidate types their email or phone.
+    """
+    q = request.GET.get('q', '').strip() or request.POST.get('q', '').strip()
+    if not q:
+        return JsonResponse({'success': False, 'message': 'Query required'}, status=400)
+
+    candidate = None
+    if '@' in q:
+        candidate = Candidate.objects.select_related('education', 'experience', 'skills').filter(email__iexact=q.lower()).first()
+    else:
+        digits = re.sub(r'\D', '', q)
+        if digits.startswith('91') and len(digits) == 12:
+            digits = digits[2:]
+        elif digits.startswith('0') and len(digits) == 11:
+            digits = digits[1:]
+        if len(digits) >= 10:
+            candidate = Candidate.objects.select_related('education', 'experience', 'skills').filter(
+                Q(phone__icontains=digits[-10:]) | Q(alt_phone__icontains=digits[-10:])
+            ).first()
+
+    if candidate:
+        data = serialize_candidate_data(candidate)
+        if 'candidate_google_auth' not in request.session:
+            request.session['candidate_google_auth'] = {
+                'email': candidate.email,
+                'name': candidate.full_name,
+                'sub': candidate.google_sub or f"cand-{candidate.id}",
+                'picture': candidate.google_picture_url or '',
+            }
+            request.session.modified = True
+        return JsonResponse({
+            'success': True,
+            'is_returning_candidate': True,
+            'candidate_data': data,
+            'message': f"Found existing application for {candidate.full_name}!"
+        })
+
+    return JsonResponse({'success': False, 'message': 'No existing candidate record found'})
+
+
 def candidate_register(request, token=None):
     """
     STAGE 1: Public Pre-Interview Candidate Registration (Google Form Style).
@@ -1203,10 +1339,28 @@ def candidate_register(request, token=None):
     google_client_id = getattr(settings, 'GOOGLE_CLIENT_ID', '315051569117-7knfkmsdkcsmcbmnp2or1pos542kd8b7.apps.googleusercontent.com')
     returning_candidate = None
 
-    if google_auth and google_auth.get('email'):
+    lookup_email = (google_auth.get('email') if google_auth else None) or request.session.get('last_applied_email') or request.GET.get('email')
+    lookup_phone = request.GET.get('phone')
+
+    if lookup_email:
         returning_candidate = Candidate.objects.select_related('education', 'experience', 'skills').filter(
-            email__iexact=google_auth['email']
+            email__iexact=str(lookup_email).strip()
         ).first()
+    elif lookup_phone:
+        digits = re.sub(r'\D', '', str(lookup_phone))
+        if len(digits) >= 10:
+            returning_candidate = Candidate.objects.select_related('education', 'experience', 'skills').filter(
+                Q(phone__icontains=digits[-10:]) | Q(alt_phone__icontains=digits[-10:])
+            ).first()
+
+    has_saved_resume = False
+    saved_resume_url = ''
+    saved_resume_name = ''
+    if returning_candidate:
+        cand_meta = serialize_candidate_data(returning_candidate)
+        has_saved_resume = cand_meta.get('has_saved_resume', False)
+        saved_resume_url = cand_meta.get('saved_resume_url', '')
+        saved_resume_name = cand_meta.get('saved_resume_name', '')
 
     # Automatically fetch position from returning candidate's previous application (e.g. from 1st form Fast-Apply) if not already set
     if not job and returning_candidate:
@@ -1217,7 +1371,16 @@ def candidate_register(request, token=None):
             job = latest_app.job
 
     if request.method == 'POST':
-        form = PreInterviewApplicationForm(request.POST, request.FILES, default_job=job)
+        post_email = request.POST.get('email', '').strip().lower()
+        if not has_saved_resume and post_email:
+            post_cand = Candidate.objects.filter(email__iexact=post_email).first()
+            if post_cand:
+                p_meta = serialize_candidate_data(post_cand)
+                has_saved_resume = p_meta.get('has_saved_resume', False)
+                saved_resume_url = p_meta.get('saved_resume_url', '')
+                saved_resume_name = p_meta.get('saved_resume_name', '')
+
+        form = PreInterviewApplicationForm(request.POST, request.FILES, default_job=job, has_saved_resume=has_saved_resume)
         if form.is_valid():
             cd = form.cleaned_data
             selected_job = cd['job']
@@ -1322,12 +1485,24 @@ def candidate_register(request, token=None):
                     )
 
                     # 5. Create or Upgrade Job Application to Office Registration
+                    resume_to_save = cd.get('resume')
+                    if not resume_to_save and existing_app and existing_app.resume:
+                        resume_to_save = existing_app.resume
+                    elif not resume_to_save and returning_candidate:
+                        lat_app = returning_candidate.applications.order_by('-applied_at').first()
+                        if lat_app and lat_app.resume:
+                            resume_to_save = lat_app.resume
+                        else:
+                            r_doc = returning_candidate.documents.filter(doc_type='RESUME').first()
+                            if r_doc and r_doc.file:
+                                resume_to_save = r_doc.file
+
                     if existing_app:
                         application = existing_app
                         application.is_office_registered = True
                         application.application_type = JobApplication.ApplicationType.OFFICE_REGISTRATION
-                        if cd.get('resume'):
-                            application.resume = cd['resume']
+                        if resume_to_save:
+                            application.resume = resume_to_save
                         if link:
                             application.registration_link = link
                         application.save()
@@ -1344,7 +1519,7 @@ def candidate_register(request, token=None):
                             candidate=candidate,
                             job=selected_job,
                             registration_link=link,
-                            resume=cd['resume'],
+                            resume=resume_to_save,
                             status=JobApplication.Status.SUBMITTED,
                             application_type=JobApplication.ApplicationType.OFFICE_REGISTRATION,
                             is_office_registered=True,
@@ -1356,6 +1531,18 @@ def candidate_register(request, token=None):
                             old_status='NONE',
                             new_status=JobApplication.Status.SUBMITTED,
                             notes='Application submitted via online portal with Google Verification for Round 1 Interview Screening.'
+                        )
+
+                    # Ensure CandidateDocument is updated with resume
+                    if application.resume:
+                        CandidateDocument.objects.update_or_create(
+                            candidate=candidate,
+                            doc_type='RESUME',
+                            defaults={
+                                'title': f"Resume - {candidate.full_name}",
+                                'file': application.resume,
+                                'is_verified': False,
+                            }
                         )
 
                 # 7. Dispatch notification to HR Administrators
@@ -1418,7 +1605,7 @@ def candidate_register(request, token=None):
             }
             if job:
                 initial_data['job'] = job.id
-        form = PreInterviewApplicationForm(initial=initial_data, default_job=job, selected_job=job)
+        form = PreInterviewApplicationForm(initial=initial_data, default_job=job, selected_job=job, has_saved_resume=has_saved_resume)
 
     # Serialize job metadata to JSON for live client-side preview in the Google Form
     jobs_json = {}
@@ -1448,6 +1635,9 @@ def candidate_register(request, token=None):
         'google_user': google_auth,
         'google_client_id': google_client_id,
         'returning_candidate': returning_candidate,
+        'has_saved_resume': has_saved_resume,
+        'saved_resume_url': saved_resume_url,
+        'saved_resume_name': saved_resume_name,
         'existing_candidate_data': json.dumps(serialize_candidate_data(returning_candidate)) if returning_candidate else '{}',
     })
 
@@ -1563,6 +1753,27 @@ def candidate_fast_apply(request, job_id=None):
                         application_type=JobApplication.ApplicationType.ONLINE_FAST_APPLY,
                         is_office_registered=False,
                     )
+
+                    # Save resume in candidate's document portfolio
+                    CandidateDocument.objects.update_or_create(
+                        candidate=candidate,
+                        doc_type='RESUME',
+                        defaults={
+                            'title': f"Resume - {candidate.full_name}",
+                            'file': application.resume,
+                            'is_verified': False,
+                        }
+                    )
+
+                    # Persist session so next form auto-fetches all details seamlessly
+                    request.session['candidate_google_auth'] = {
+                        'email': candidate.email,
+                        'name': candidate.full_name,
+                        'sub': candidate.google_sub or f"cand-{candidate.id}",
+                        'picture': candidate.google_picture_url or '',
+                    }
+                    request.session['last_applied_email'] = candidate.email
+                    request.session.modified = True
 
                     ApplicationStatusHistory.objects.create(
                         application=application,
@@ -1746,42 +1957,35 @@ def candidate_onboarding(request, application_id):
                             }
                         )
 
-                    # 4. Save Uploaded Verification Documents
-                    if cd.get('educational_certificate'):
-                        CandidateDocument.objects.create(
-                            candidate=candidate,
-                            doc_type='CERTIFICATE',
-                            title='Degree Certificate / Final Marksheet',
-                            file=cd['educational_certificate']
-                        )
-                    if cd.get('experience_letter'):
-                        CandidateDocument.objects.create(
-                            candidate=candidate,
-                            doc_type='EXPERIENCE_LETTER',
-                            title='Experience / Relieving Letter',
-                            file=cd['experience_letter']
-                        )
-                    if cd.get('payslip'):
-                        CandidateDocument.objects.create(
-                            candidate=candidate,
-                            doc_type='PAYSLIP',
-                            title='Recent Payslip',
-                            file=cd['payslip']
-                        )
-                    if cd.get('bank_proof'):
-                        CandidateDocument.objects.create(
-                            candidate=candidate,
-                            doc_type='BANK_PROOF',
-                            title='Cancelled Cheque / Bank Passbook Copy',
-                            file=cd['bank_proof']
-                        )
-                    if cd.get('id_proof'):
-                        CandidateDocument.objects.create(
-                            candidate=candidate,
-                            doc_type='AADHAAR_CARD',
-                            title='Aadhaar / National ID Proof',
-                            file=cd['id_proof']
-                        )
+                    # 4. Save / Update Uploaded Verification Documents
+                    doc_specs = [
+                        ('educational_certificate', 'CERTIFICATE', 'Degree Certificate / Final Marksheet'),
+                        ('experience_letter', 'EXPERIENCE_LETTER', 'Experience / Relieving Letter'),
+                        ('payslip', 'PAYSLIP', 'Recent Payslip / Form 16'),
+                        ('bank_proof', 'BANK_PROOF', 'Cancelled Cheque / Bank Passbook Copy'),
+                        ('id_proof', 'AADHAAR_CARD', 'Aadhaar / National ID Proof'),
+                    ]
+                    for field_name, doc_type, default_title in doc_specs:
+                        uploaded_file = cd.get(field_name)
+                        if uploaded_file:
+                            doc = CandidateDocument.objects.filter(candidate=candidate, doc_type=doc_type).first()
+                            if doc:
+                                doc.file = uploaded_file
+                                doc.title = default_title
+                                doc.is_verified = False
+                                doc.is_rejected = False
+                                doc.rejection_notes = ''
+                                doc.save()
+                            else:
+                                CandidateDocument.objects.create(
+                                    candidate=candidate,
+                                    doc_type=doc_type,
+                                    title=default_title,
+                                    file=uploaded_file,
+                                    is_verified=False,
+                                    is_rejected=False,
+                                    rejection_notes=''
+                                )
 
                     # 5. Mark Application as ONBOARDING_COMPLETED and PENDING HR Document Review
                     old_status = app.status
@@ -1789,6 +1993,7 @@ def candidate_onboarding(request, application_id):
                     app.onboarding_completed_at = timezone.now()
                     app.status = JobApplication.Status.ONBOARDING_COMPLETED
                     app.document_verification_status = JobApplication.DocumentVerificationStatus.PENDING
+                    app.document_rejection_reason = ''
                     app.save()
 
                     # 6. Audit History
@@ -1849,11 +2054,27 @@ def candidate_onboarding(request, application_id):
             })
         form = CandidateOnboardingForm(initial=initial_data)
 
+    existing_docs = {d.doc_type: d for d in candidate.documents.all()}
+    rejected_docs = candidate.documents.filter(is_rejected=True)
+    cert_doc = existing_docs.get('CERTIFICATE')
+    exp_doc = existing_docs.get('EXPERIENCE_LETTER')
+    pay_doc = existing_docs.get('PAYSLIP')
+    bank_doc = existing_docs.get('BANK_PROOF')
+    id_doc = existing_docs.get('AADHAAR_CARD') or existing_docs.get('PAN_CARD')
+
     return render(request, 'recruitment/public/onboarding.html', {
         'form': form,
         'application': app,
         'candidate': candidate,
         'job': app.job,
+        'existing_docs': existing_docs,
+        'rejected_docs': rejected_docs,
+        'cert_doc': cert_doc,
+        'exp_doc': exp_doc,
+        'pay_doc': pay_doc,
+        'bank_doc': bank_doc,
+        'id_doc': id_doc,
+        'has_rejected_docs': rejected_docs.exists(),
     })
 
 
@@ -2034,7 +2255,16 @@ def onboarding_candidates_list(request):
             JobApplication.Status.HIRED
         ]
     ).select_related(
-        'candidate', 'job', 'job__department', 'job__site', 'hired_employee', 'hired_employee__user'
+        'candidate',
+        'candidate__education',
+        'candidate__experience',
+        'candidate__skills',
+        'job',
+        'job__department',
+        'job__site',
+        'hired_employee',
+        'hired_employee__user',
+        'documents_verified_by'
     ).prefetch_related('candidate__documents').order_by('-onboarding_completed_at', '-updated_at')
 
     if search_query:
@@ -2072,8 +2302,25 @@ def onboarding_candidates_list(request):
     departments = Department.objects.all().order_by('name')
     sites = Site.objects.filter(is_active=True).order_by('name')
 
+    # Pagination with configurable rows per page (default: 5, options: 5, 10, 20, 50, 100)
+    per_page_options = [5, 10, 20, 50, 100]
+    try:
+        per_page = int(request.GET.get('per_page', 5))
+        if per_page not in per_page_options:
+            per_page = 5
+    except (ValueError, TypeError):
+        per_page = 5
+
+    page_number = request.GET.get('page', 1)
+    paginator = Paginator(applications, per_page)
+    page_obj = paginator.get_page(page_number)
+
     return render(request, 'recruitment/admin_onboarding_list.html', {
-        'applications': applications,
+        'page_obj': page_obj,
+        'applications': page_obj,
+        'paginator': paginator,
+        'per_page': per_page,
+        'per_page_options': per_page_options,
         'search_query': search_query,
         'status_filter': status_filter,
         'total_onboarding': total_onboarding,
@@ -2110,10 +2357,17 @@ def verify_candidate_documents(request, application_id):
             app.documents_verified_by = request.user
             app.save()
 
+            # Persist verification across all attached documents in the database
+            app.candidate.documents.all().update(
+                is_verified=True,
+                is_rejected=False,
+                rejection_notes=''
+            )
+
             messages.success(
                 request,
                 f"Documents for {app.candidate.full_name} ({app.application_id}) have been verified successfully! "
-                "You can now set salary and appoint them as an employee."
+                "All verification documents are marked Verified in the database."
             )
         elif action == 'REJECT':
             reason = request.POST.get('rejection_reason', '').strip()
@@ -2123,6 +2377,13 @@ def verify_candidate_documents(request, application_id):
             app.document_rejection_reason = reason
             app.save()
 
+            # Mark documents as rejected with reason for candidate correction
+            app.candidate.documents.all().update(
+                is_verified=False,
+                is_rejected=True,
+                rejection_notes=reason
+            )
+
             messages.warning(
                 request,
                 f"Documents for {app.candidate.full_name} marked with error: '{reason}'. "
@@ -2130,6 +2391,109 @@ def verify_candidate_documents(request, application_id):
             )
 
     return redirect('recruitment:onboarding_candidates_list')
+
+
+@login_required
+@hr_required
+def verify_single_candidate_document_ajax(request, doc_id):
+    """
+    AJAX action for HR to verify an individual candidate document.
+    Saves is_verified = True in CandidateDocument table.
+    If all candidate documents are verified, also updates application status to VERIFIED.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'POST method required'}, status=405)
+
+    doc = get_object_or_404(CandidateDocument, id=doc_id)
+    doc.is_verified = True
+    doc.is_rejected = False
+    doc.rejection_notes = ''
+    doc.save()
+
+    candidate = doc.candidate
+    unverified_count = candidate.documents.filter(is_verified=False).count()
+    rejected_count = candidate.documents.filter(is_rejected=True).count()
+    app = candidate.applications.order_by('-applied_at').first()
+
+    all_verified = (unverified_count == 0 and candidate.documents.exists())
+    if app:
+        if all_verified:
+            app.document_verification_status = JobApplication.DocumentVerificationStatus.VERIFIED
+            app.document_rejection_reason = ''
+            app.documents_verified_at = timezone.now()
+            app.documents_verified_by = request.user
+            app.save()
+        elif rejected_count == 0 and app.document_verification_status == JobApplication.DocumentVerificationStatus.REJECTED:
+            app.document_verification_status = JobApplication.DocumentVerificationStatus.PENDING
+            app.document_rejection_reason = ''
+            app.save()
+
+    return JsonResponse({
+        'success': True,
+        'doc_id': doc.id,
+        'doc_title': doc.title,
+        'is_verified': True,
+        'all_verified': all_verified,
+        'app_status': app.document_verification_status if app else 'VERIFIED',
+        'message': f"Document '{doc.title}' successfully verified and saved!"
+    })
+
+
+@login_required
+@hr_required
+def reject_single_candidate_document_ajax(request, doc_id):
+    """
+    AJAX endpoint for HR to reject an individual candidate document with feedback.
+    Sets is_rejected = True, is_verified = False, and saves rejection_notes.
+    Also updates the parent application document_verification_status to REJECTED.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'POST method required'}, status=405)
+
+    doc = get_object_or_404(CandidateDocument, id=doc_id)
+
+    reason = ''
+    if request.content_type == 'application/json':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            reason = data.get('reason', '').strip()
+        except Exception:
+            pass
+    if not reason:
+        reason = request.POST.get('reason', '').strip()
+    if not reason:
+        reason = "Document unclear or invalid. Please re-upload a clear copy."
+
+    doc.is_verified = False
+    doc.is_rejected = True
+    doc.rejection_notes = reason
+    doc.save()
+
+    candidate = doc.candidate
+    app = candidate.applications.order_by('-applied_at').first()
+    if app:
+        app.document_verification_status = JobApplication.DocumentVerificationStatus.REJECTED
+        app.document_rejection_reason = f"{doc.title}: {reason}"
+        app.save()
+
+        # Audit History
+        ApplicationStatusHistory.objects.create(
+            application=app,
+            old_status=app.status,
+            new_status=app.status,
+            notes=f"Document '{doc.title}' marked as rejected by {request.user.get_full_name() or request.user.username}: {reason}"
+        )
+
+    return JsonResponse({
+        'success': True,
+        'doc_id': doc.id,
+        'doc_title': doc.title,
+        'is_rejected': True,
+        'is_verified': False,
+        'rejection_notes': doc.rejection_notes,
+        'app_status': app.document_verification_status if app else 'REJECTED',
+        'message': f"Document '{doc.title}' marked as rejected with feedback."
+    })
 
 
 @login_required

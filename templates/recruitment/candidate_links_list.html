@@ -912,8 +912,42 @@
                             <input type="text" name="title" class="form-control" placeholder="e.g. Senior Full-Stack Django Developer" required>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label small fw-bold">Department <span class="text-danger">*</span></label>
-                            {{ quick_job_form.department }}
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label small fw-bold mb-0">Department <span class="text-danger">*</span></label>
+                                {% if request.user.is_head_role %}
+                                <button type="button" class="btn btn-link p-0 text-primary text-decoration-none small" style="font-size: 0.78rem;" onclick="toggleInlineDept('quick')">
+                                    <i class="bi bi-plus-circle me-0.5"></i> Add Dept
+                                </button>
+                                {% endif %}
+                            </div>
+                            <select name="department" id="quick_job_department" class="form-select" onchange="handleDeptSelectChange('quick')" required>
+                                <option value="">Select Department...</option>
+                                {% for d in departments %}
+                                    <option value="{{ d.id }}">{{ d.name }}</option>
+                                {% endfor %}
+                                {% if request.user.is_head_role %}
+                                <option value="__NEW__" class="text-primary fw-semibold">+ Add New Department...</option>
+                                {% endif %}
+                            </select>
+
+                            {% if request.user.is_head_role %}
+                            <!-- INLINE ADD DEPARTMENT (ADMIN ONLY) -->
+                            <div id="quickNewDeptBox" class="mt-2 p-2 rounded bg-light border shadow-sm" style="display: none;">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-dark fw-bold" style="font-size: 0.76rem;">New Department (Admin):</span>
+                                    <button type="button" class="btn-close" style="font-size: 0.65rem;" onclick="cancelInlineDept('quick')"></button>
+                                </div>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" id="quickNewDeptInput" name="new_department_name" class="form-control form-control-sm" placeholder="e.g. Artificial Intelligence" onkeydown="if(event.key==='Enter'){event.preventDefault();saveNewDeptInline('quick');}">
+                                    <button class="btn btn-primary btn-sm px-2.5 fw-semibold" type="button" onclick="saveNewDeptInline('quick')" title="Save Department">
+                                        <i class="bi bi-check-lg me-0.5"></i> Save
+                                    </button>
+                                </div>
+                                <div class="text-muted mt-1" style="font-size: 0.70rem;">
+                                    <i class="bi bi-info-circle me-1"></i>Saves instantly and selects it.
+                                </div>
+                            </div>
+                            {% endif %}
                         </div>
 
                         <!-- LOCATION SELECT FROM ADMIN SITES -->
@@ -1002,8 +1036,42 @@
                             <input type="text" name="title" id="edit_title" class="form-control" required>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label small fw-bold">Department <span class="text-danger">*</span></label>
-                            {{ quick_job_form.department }}
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label small fw-bold mb-0">Department <span class="text-danger">*</span></label>
+                                {% if request.user.is_head_role %}
+                                <button type="button" class="btn btn-link p-0 text-primary text-decoration-none small" style="font-size: 0.78rem;" onclick="toggleInlineDept('edit')">
+                                    <i class="bi bi-plus-circle me-0.5"></i> Add Dept
+                                </button>
+                                {% endif %}
+                            </div>
+                            <select name="department" id="edit_job_department" class="form-select" onchange="handleDeptSelectChange('edit')" required>
+                                <option value="">Select Department...</option>
+                                {% for d in departments %}
+                                    <option value="{{ d.id }}">{{ d.name }}</option>
+                                {% endfor %}
+                                {% if request.user.is_head_role %}
+                                <option value="__NEW__" class="text-primary fw-semibold">+ Add New Department...</option>
+                                {% endif %}
+                            </select>
+
+                            {% if request.user.is_head_role %}
+                            <!-- INLINE ADD DEPARTMENT (ADMIN ONLY) -->
+                            <div id="editNewDeptBox" class="mt-2 p-2 rounded bg-light border shadow-sm" style="display: none;">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-dark fw-bold" style="font-size: 0.76rem;">New Department (Admin):</span>
+                                    <button type="button" class="btn-close" style="font-size: 0.65rem;" onclick="cancelInlineDept('edit')"></button>
+                                </div>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" id="editNewDeptInput" name="new_department_name" class="form-control form-control-sm" placeholder="e.g. Artificial Intelligence" onkeydown="if(event.key==='Enter'){event.preventDefault();saveNewDeptInline('edit');}">
+                                    <button class="btn btn-primary btn-sm px-2.5 fw-semibold" type="button" onclick="saveNewDeptInline('edit')" title="Save Department">
+                                        <i class="bi bi-check-lg me-0.5"></i> Save
+                                    </button>
+                                </div>
+                                <div class="text-muted mt-1" style="font-size: 0.70rem;">
+                                    <i class="bi bi-info-circle me-1"></i>Saves instantly and selects it.
+                                </div>
+                            </div>
+                            {% endif %}
                         </div>
 
                         <!-- LOCATION SELECT FROM ADMIN SITES -->
@@ -1440,6 +1508,11 @@
             editDescription.value = data.desc || '';
             editRequirements.value = data.req || '';
 
+            const editDept = document.getElementById('edit_job_department');
+            if (editDept && data.dept) {
+                editDept.value = data.dept;
+            }
+
             const locVal = data.location || '';
             if (locVal && editLocation) {
                 let matched = false;
@@ -1463,6 +1536,7 @@
                 populateEditModal({
                     id: this.getAttribute('data-id'),
                     title: this.getAttribute('data-title'),
+                    dept: this.getAttribute('data-dept'),
                     vacancies: this.getAttribute('data-vacancies'),
                     exp: this.getAttribute('data-exp'),
                     salary: this.getAttribute('data-salary'),
@@ -1507,6 +1581,7 @@
                     title: this.getAttribute('data-title') || 'Position Details',
                     created: this.getAttribute('data-created') || '',
                     dept: this.getAttribute('data-dept') || 'General',
+                    deptId: this.getAttribute('data-dept-id') || '',
                     type: this.getAttribute('data-type') || 'Full-time',
                     exp: this.getAttribute('data-exp') || 'Not specified',
                     vacancies: this.getAttribute('data-vacancies') || '1',
@@ -1567,6 +1642,7 @@
             populateEditModal({
                 id: currentDrawerJobData.id,
                 title: currentDrawerJobData.title,
+                dept: currentDrawerJobData.deptId,
                 vacancies: currentDrawerJobData.vacancies,
                 exp: currentDrawerJobData.exp,
                 salary: currentDrawerJobData.salary,
@@ -1772,6 +1848,114 @@
                 setTimeout(() => { btn.innerHTML = originalHTML; }, 1800);
             });
         }
+    }
+
+    // -------------------------------------------------------------
+    // INLINE DEPARTMENT MANAGEMENT (NO SEPARATE PAGE OR BUTTON)
+    // -------------------------------------------------------------
+    function toggleInlineDept(mode) {
+        const box = document.getElementById(mode + 'NewDeptBox');
+        const input = document.getElementById(mode + 'NewDeptInput');
+        if (box) {
+            const isHidden = box.style.display === 'none' || box.style.display === '';
+            box.style.display = isHidden ? 'block' : 'none';
+            if (isHidden && input) {
+                setTimeout(() => input.focus(), 100);
+            }
+        }
+    }
+
+    function cancelInlineDept(mode) {
+        const box = document.getElementById(mode + 'NewDeptBox');
+        const select = document.getElementById(mode === 'quick' ? 'quick_job_department' : 'edit_job_department');
+        if (box) box.style.display = 'none';
+        if (select && select.value === '__NEW__') {
+            select.value = '';
+        }
+    }
+
+    function handleDeptSelectChange(mode) {
+        const select = document.getElementById(mode === 'quick' ? 'quick_job_department' : 'edit_job_department');
+        if (select && select.value === '__NEW__') {
+            toggleInlineDept(mode);
+        }
+    }
+
+    function saveNewDeptInline(mode) {
+        const input = document.getElementById(mode + 'NewDeptInput');
+        const val = input ? input.value.trim() : '';
+        if (!val) {
+            if (typeof showToast === 'function') {
+                showToast('Please enter a department name.', 'warning');
+            } else {
+                alert('Please enter a department name.');
+            }
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('name', val);
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        fetch("{% url 'recruitment:create_department_ajax' %}", {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                ['quick_job_department', 'edit_job_department'].forEach(id => {
+                    const sel = document.getElementById(id);
+                    if (sel) {
+                        let exists = false;
+                        for (let i = 0; i < sel.options.length; i++) {
+                            if (sel.options[i].value == data.id) {
+                                exists = true;
+                                break;
+                            }
+                        }
+                        if (!exists) {
+                            const newOpt = document.createElement('option');
+                            newOpt.value = data.id;
+                            newOpt.text = data.name;
+                            const lastOpt = sel.querySelector('option[value="__NEW__"]');
+                            if (lastOpt) {
+                                sel.insertBefore(newOpt, lastOpt);
+                            } else {
+                                sel.appendChild(newOpt);
+                            }
+                        }
+                    }
+                });
+
+                const curSel = document.getElementById(mode === 'quick' ? 'quick_job_department' : 'edit_job_department');
+                if (curSel) {
+                    curSel.value = data.id;
+                }
+
+                cancelInlineDept(mode);
+                if (input) input.value = '';
+
+                if (typeof showToast === 'function') {
+                    showToast(data.message || `Department "${data.name}" added successfully!`, 'success');
+                }
+            } else {
+                if (typeof showToast === 'function') {
+                    showToast(data.error || 'Failed to add department.', 'danger');
+                } else {
+                    alert(data.error || 'Failed to add department.');
+                }
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            if (typeof showToast === 'function') {
+                showToast('Network error while saving department.', 'danger');
+            }
+        });
     }
 </script>
 {% endblock %}

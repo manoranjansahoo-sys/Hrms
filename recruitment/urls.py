@@ -13,6 +13,7 @@ urlpatterns = [
     path('hr/jobs/', views.jobs_list, name='jobs_list'),
     path('hr/jobs/create/', views.create_job_opening, name='create_job'),
     path('hr/jobs/<int:job_id>/edit/', views.edit_job_opening, name='edit_job'),
+    path('hr/api/departments/create/', views.create_department_ajax, name='create_department_ajax'),
     path('hr/locations/manage/', views.locations_manager, name='locations_manager'),
     path('hr/locations/add/', views.add_location, name='add_location'),
     path('hr/locations/<int:site_id>/delete/', views.delete_location, name='delete_location'),
@@ -30,10 +31,13 @@ urlpatterns = [
     path('hr/onboarding/appoint-employee/', views.appoint_employee, name='appoint_employee'),
     path('hr/onboarding/fetch-candidate/', views.fetch_onboarding_candidate_ajax, name='fetch_onboarding_candidate_ajax'),
     path('hr/onboarding/<str:application_id>/verify-documents/', views.verify_candidate_documents, name='verify_candidate_documents'),
+    path('hr/onboarding/documents/<int:doc_id>/verify/', views.verify_single_candidate_document_ajax, name='verify_single_candidate_document'),
+    path('hr/onboarding/documents/<int:doc_id>/reject/', views.reject_single_candidate_document_ajax, name='reject_single_candidate_document'),
 
     # 2. Public Candidate Registration Portal (No Login Required - Google Form Style)
     path('candidate/api/google-auth/', views.candidate_google_auth, name='candidate_google_auth'),
     path('candidate/api/google-logout/', views.candidate_google_logout, name='candidate_google_logout'),
+    path('candidate/api/lookup/', views.candidate_lookup_ajax, name='candidate_lookup_ajax'),
     path('candidate/apply/', views.candidate_register, name='candidate_apply'),
     path('candidate/fast-apply/', views.candidate_fast_apply, name='candidate_fast_apply'),
     path('candidate/fast-apply/<int:job_id>/', views.candidate_fast_apply, name='candidate_fast_apply_job'),

@@ -633,6 +633,45 @@
 <!-- Custom HRMS Script -->
 <script src="{% static 'js/hrms.js' %}"></script>
 
+<!-- Global Toast Notification Container & Engine -->
+<div id="hrmsToastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 99999;"></div>
+
+<script>
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('hrmsToastContainer');
+        if (!container) return;
+        const bgClass = type === 'success' ? 'bg-success text-white' : 
+                       (type === 'danger' || type === 'error' ? 'bg-danger text-white' : 
+                       (type === 'warning' ? 'bg-warning text-dark' : 'bg-primary text-white'));
+        const icon = type === 'success' ? 'bi-check-circle-fill' : 
+                    (type === 'danger' || type === 'error' ? 'bi-exclamation-triangle-fill' : 
+                    (type === 'warning' ? 'bi-exclamation-circle-fill' : 'bi-info-circle-fill'));
+        
+        const toastEl = document.createElement('div');
+        toastEl.className = `toast align-items-center ${bgClass} border-0 shadow-lg rounded-3 mb-2 show`;
+        toastEl.setAttribute('role', 'alert');
+        toastEl.setAttribute('aria-live', 'assertive');
+        toastEl.setAttribute('aria-atomic', 'true');
+        toastEl.innerHTML = `
+            <div class="d-flex p-3 align-items-center gap-2">
+                <i class="bi ${icon} fs-5 flex-shrink-0"></i>
+                <div class="toast-body p-0 fw-semibold flex-grow-1" style="font-size: 0.9rem;">${message}</div>
+                <button type="button" class="btn-close ${type === 'warning' ? '' : 'btn-close-white'} ms-2" aria-label="Close" onclick="this.closest('.toast').remove()"></button>
+            </div>
+        `;
+        container.appendChild(toastEl);
+        setTimeout(() => {
+            toastEl.classList.remove('show');
+            setTimeout(() => toastEl.remove(), 400);
+        }, 4500);
+    }
+
+    // Global replacement: convert any window.alert call to modern toast popup
+    window.alert = function(msg) {
+        showToast(msg, 'info');
+    };
+</script>
+
 {% block extra_js %}{% endblock %}
 </body>
 </html>

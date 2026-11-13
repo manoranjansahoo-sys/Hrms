@@ -221,6 +221,27 @@ class Candidate(models.Model):
         last = name_parts[-1] if len(name_parts) > 1 else ''
         return f"https://ui-avatars.com/api/?name={first}+{last}&background=2E7D32&color=fff&size=128"
 
+    @property
+    def verified_documents_count(self):
+        return self.documents.filter(is_verified=True).count()
+
+    @property
+    def rejected_documents_count(self):
+        return self.documents.filter(is_rejected=True).count()
+
+    @property
+    def total_documents_count(self):
+        return self.documents.count()
+
+    @property
+    def verification_percentage(self):
+        total = self.total_documents_count
+        if total == 0:
+            return 100
+        verified = self.verified_documents_count
+        return int((verified / total) * 100)
+
+
 
 class CandidateEducation(models.Model):
     candidate = models.OneToOneField(

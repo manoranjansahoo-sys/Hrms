@@ -284,7 +284,7 @@
         </div>
 
         <!-- 3. Locations KPI -->
-        <div class="col-xl-3 col-sm-6">
+        <div class="col-xl col-md-4 col-sm-6">
             <div class="kpi-tile {% if active_tab == 'locations' %}active-kpi{% endif %}" onclick="switchMasterTab('locations')">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
@@ -305,8 +305,30 @@
             </div>
         </div>
 
+        <!-- 3B. Departments KPI -->
+        <div class="col-xl col-md-4 col-sm-6">
+            <div class="kpi-tile {% if active_tab == 'departments' %}active-kpi{% endif %}" onclick="switchMasterTab('departments')">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="text-muted small fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">Departments</div>
+                        <h3 class="fw-bold text-dark my-1">{{ departments_count }} <span class="fs-6 fw-normal text-muted">Units</span></h3>
+                        <div class="small text-primary fw-semibold">
+                            <i class="bi bi-diagram-3-fill me-1"></i> Active Teams
+                        </div>
+                    </div>
+                    <div class="kpi-icon-wrap bg-primary-subtle text-primary">
+                        <i class="bi bi-diagram-3-fill"></i>
+                    </div>
+                </div>
+                <div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-center small text-muted">
+                    <span>Organizational Units</span>
+                    <span class="text-primary fw-semibold">Manage <i class="bi bi-chevron-right small"></i></span>
+                </div>
+            </div>
+        </div>
+
         <!-- 4. Leave Policies KPI -->
-        <div class="col-xl-3 col-sm-6">
+        <div class="col-xl col-md-4 col-sm-6">
             <div class="kpi-tile {% if active_tab == 'leaves' %}active-kpi{% endif %}" onclick="switchMasterTab('leaves')">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
@@ -350,6 +372,13 @@
                         <i class="bi bi-geo-alt-fill text-info"></i>
                         <span>Company Locations</span>
                         <span class="badge rounded-pill bg-light text-dark border ms-1">{{ locations_data|length }}</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {% if active_tab == 'departments' %}active{% endif %}" id="pills-departments-tab" data-bs-toggle="pill" data-bs-target="#pills-departments" type="button" role="tab">
+                        <i class="bi bi-diagram-3-fill text-primary"></i>
+                        <span>Departments</span>
+                        <span class="badge rounded-pill bg-light text-dark border ms-1">{{ departments_count }}</span>
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -1091,6 +1120,191 @@
         </div>
 
         <!-- ================================================================= -->
+        <!-- TAB: COMPANY DEPARTMENTS (ADD, EDIT, DELETE)                      -->
+        <!-- ================================================================= -->
+        <div class="tab-pane fade {% if active_tab == 'departments' %}show active{% endif %}" id="pills-departments" role="tabpanel">
+            <div class="row g-4 mb-4">
+                {% if is_admin %}
+                <!-- 1. ADD NEW DEPARTMENT FORM (ADMIN ONLY) -->
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm h-100" style="border-radius: 16px;">
+                        <div class="card-header bg-white border-0 pt-4 px-4 pb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="kpi-icon-wrap bg-primary-subtle text-primary" style="width: 36px; height: 36px;">
+                                    <i class="bi bi-plus-circle-fill"></i>
+                                </div>
+                                <div>
+                                    <h5 class="fw-bold text-dark mb-0">Add Department</h5>
+                                    <small class="text-muted">Register a new company organizational unit (Admin)</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body p-4 pt-3">
+                            <form method="POST" action="{% url 'organization:department_create' %}">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold text-dark">Department Name <span class="text-danger">*</span></label>
+                                    <input type="text" name="name" class="form-control" placeholder="e.g. Data Science & Analytics" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold text-dark">Department Code (Optional)</label>
+                                    <input type="text" name="code" class="form-control" placeholder="e.g. DSA (Auto-generated if empty)">
+                                    <div class="form-text small" style="font-size: 0.74rem;">Leave blank to auto-generate from department initials.</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold text-dark">Head of Department (Optional)</label>
+                                    <select name="head_of_department" class="form-select">
+                                        <option value="">-- Select Department Lead --</option>
+                                        {% for mgr in eligible_managers %}
+                                            <option value="{{ mgr.id }}">{{ mgr.get_full_name|default:mgr.username }} ({{ mgr.get_role_display }})</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label small fw-bold text-dark">Description</label>
+                                    <textarea name="description" class="form-control" rows="3" placeholder="Brief outline of this department's functions and team scope..."></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100 py-2.5 fw-semibold shadow-sm" style="border-radius: 10px;">
+                                    <i class="bi bi-plus-circle-fill me-1"></i> Create Department
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- 2. CURRENT DEPARTMENTS LIST -->
+                <div class="{% if is_admin %}col-lg-8{% else %}col-12{% endif %}">
+                    <div class="card border-0 shadow-sm h-100" style="border-radius: 16px;">
+                        <div class="card-header bg-white border-0 pt-4 px-4 pb-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <h5 class="fw-bold text-dark mb-0">Configured Departments</h5>
+                                    {% if not is_admin %}
+                                    <span class="badge bg-secondary-subtle text-secondary border">Admin Controlled</span>
+                                    {% endif %}
+                                </div>
+                                <small class="text-muted">Total: {{ departments_count }} active operational divisions</small>
+                            </div>
+                        </div>
+                        <div class="card-body p-4 pt-2">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light small text-uppercase" style="font-size: 0.76rem; letter-spacing: 0.5px;">
+                                        <tr>
+                                            <th class="ps-3 py-3">Department Name</th>
+                                            <th class="py-3">Code</th>
+                                            <th class="py-3 text-center">Active Staff</th>
+                                            <th class="py-3 text-center">Open Jobs</th>
+                                            <th class="pe-3 py-3 text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for d in departments_data %}
+                                            <tr>
+                                                <td class="ps-3 py-3">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div class="avatar-circle-sm bg-primary-subtle text-primary fw-bold" style="width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.78rem;">
+                                                            {{ d.code|slice:":2" }}
+                                                        </div>
+                                                        <div>
+                                                            <div class="fw-bold text-dark">{{ d.name }}</div>
+                                                            {% if d.description %}
+                                                                <small class="text-muted d-block text-truncate" style="max-width: 260px;">{{ d.description }}</small>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td class="py-3">
+                                                    <span class="badge bg-light text-dark border font-monospace">{{ d.code }}</span>
+                                                </td>
+                                                <td class="py-3 text-center">
+                                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1">
+                                                        {{ d.emp_count }} Active
+                                                    </span>
+                                                </td>
+                                                <td class="py-3 text-center">
+                                                    <span class="badge bg-info-subtle text-info border border-info-subtle px-2.5 py-1">
+                                                        {{ d.job_count }} Positions
+                                                    </span>
+                                                </td>
+                                                <td class="pe-3 py-3 text-end">
+                                                    {% if is_admin %}
+                                                    <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2.5 me-1" data-bs-toggle="modal" data-bs-target="#editDeptModal{{ d.id }}" title="Edit Department">
+                                                        <i class="bi bi-pencil-square"></i>
+                                                    </button>
+                                                    <form method="POST" action="{% url 'organization:department_delete' dept_id=d.id %}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete department \'{{ d.name }}\'?');">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2.5" title="Delete Department" {% if d.emp_count > 0 or d.job_count > 0 %}disabled{% endif %}>
+                                                            <i class="bi bi-trash3"></i>
+                                                        </button>
+                                                    </form>
+                                                    {% else %}
+                                                    <span class="badge bg-light text-muted border small">View Only</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+
+                                            <!-- EDIT DEPARTMENT MODAL -->
+                                            <div class="modal fade" id="editDeptModal{{ d.id }}" tabindex="-1" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content border-0 shadow" style="border-radius: 14px; overflow: hidden;">
+                                                        <form method="POST" action="{% url 'organization:department_edit' dept_id=d.id %}">
+                                                            {% csrf_token %}
+                                                            <div class="modal-header text-white" style="background: #0F172A;">
+                                                                <h5 class="modal-title fw-bold text-white mb-0">Edit Department: {{ d.name }}</h5>
+                                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                            </div>
+                                                            <div class="modal-body p-4">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label small fw-bold">Department Name <span class="text-danger">*</span></label>
+                                                                    <input type="text" name="name" class="form-control" value="{{ d.name }}" required>
+                                                                </div>
+                                                                <div class="mb-3">
+                                                                    <label class="form-label small fw-bold">Department Code</label>
+                                                                    <input type="text" name="code" class="form-control" value="{{ d.code }}" required>
+                                                                </div>
+                                                                <div class="mb-3">
+                                                                    <label class="form-label small fw-bold">Head of Department</label>
+                                                                    <select name="head_of_department" class="form-select">
+                                                                        <option value="">-- No Lead Assigned --</option>
+                                                                        {% for mgr in eligible_managers %}
+                                                                            <option value="{{ mgr.id }}" {% if d.head_of_department_id == mgr.id %}selected{% endif %}>
+                                                                                {{ mgr.get_full_name|default:mgr.username }} ({{ mgr.get_role_display }})
+                                                                            </option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                </div>
+                                                                <div class="mb-3">
+                                                                    <label class="form-label small fw-bold">Description</label>
+                                                                    <textarea name="description" class="form-control" rows="3">{{ d.description }}</textarea>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer bg-light py-2 px-4 border-top">
+                                                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                <button type="submit" class="btn btn-sm btn-primary">Save Changes</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="5" class="text-center py-4 text-muted">
+                                                    No departments configured yet. Add your first department on the left.
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
         <!-- TAB 4: LEAVE POLICIES (SICK LEAVE & PAID LEAVE)                   -->
         <!-- ================================================================= -->
         <div class="tab-pane fade {% if active_tab == 'leaves' %}show active{% endif %}" id="pills-leaves" role="tabpanel">
@@ -1787,6 +2001,7 @@
                 let tabName = 'holidays';
                 if (targetId === '#pills-timings') tabName = 'timings';
                 else if (targetId === '#pills-locations') tabName = 'locations';
+                else if (targetId === '#pills-departments') tabName = 'departments';
                 else if (targetId === '#pills-leaves') tabName = 'leaves';
                 else if (targetId === '#pills-access') tabName = 'access';
 
@@ -1800,7 +2015,8 @@
                     'holidays': 0,
                     'timings': 1,
                     'locations': 2,
-                    'leaves': 3
+                    'departments': 3,
+                    'leaves': 4
                 };
                 const idx = kpis[tabName];
                 const tiles = document.querySelectorAll('.kpi-tile');

@@ -824,7 +824,7 @@
             if (data.success) {
                 applyGoogleIdentity(data.google_user, data.candidate_data, data.is_returning_candidate);
             } else {
-                alert('Google Authentication Error: ' + (data.error || 'Failed to authenticate.'));
+                showToast('Google Authentication Error: ' + (data.error || 'Failed to authenticate.'), 'danger');
             }
             return data;
         })

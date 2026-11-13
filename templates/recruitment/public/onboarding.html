@@ -130,6 +130,62 @@ textarea.form-control {
     box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
 }
 
+/* Professional Smooth Action Buttons (Same Size, Refined Touch) */
+.btn-action-smooth {
+    min-width: 140px;
+    height: 44px;
+    padding: 0 1.5rem;
+    font-size: 0.92rem;
+    font-weight: 600;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+.btn-cancel-smooth {
+    background-color: #FFFFFF;
+    color: #475569;
+    border: 1.5px solid #CBD5E1;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.btn-cancel-smooth:hover {
+    background-color: #F8FAFC;
+    color: #1E293B;
+    border-color: #94A3B8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.07);
+}
+
+.btn-cancel-smooth:active {
+    transform: translateY(0);
+    background-color: #F1F5F9;
+}
+
+.btn-submit-smooth {
+    background: linear-gradient(135deg, #16A34A 0%, #15803D 100%);
+    color: #FFFFFF;
+    border: 1px solid #15803D;
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.28);
+}
+
+.btn-submit-smooth:hover {
+    background: linear-gradient(135deg, #15803D 0%, #166534 100%);
+    color: #FFFFFF;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(22, 163, 74, 0.38);
+}
+
+.btn-submit-smooth:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(22, 163, 74, 0.2);
+}
+
 .badge-qualified {
     background: #DCFCE7;
     color: #166534;
@@ -436,14 +492,50 @@ textarea.form-control {
                 </div>
 
                 <div class="col-12">
-                    <div class="doc-upload-card">
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <i class="bi bi-file-earmark-pdf-fill text-danger fs-5"></i>
-                            <div>
-                                <label class="form-label small fw-bold mb-0" for="id_educational_certificate">Upload Degree Certificate / Consolidated Marksheet</label>
-                                <span class="text-muted d-block" style="font-size: 0.76rem;">Accepted formats: PDF or JPG/PNG (Max 5MB)</span>
+                    <div class="doc-upload-card {% if cert_doc.is_rejected %}border-danger bg-danger-subtle bg-opacity-10{% endif %}">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-file-earmark-pdf-fill text-danger fs-5"></i>
+                                <div>
+                                    <label class="form-label small fw-bold mb-0" for="id_educational_certificate">
+                                        Upload Degree Certificate / Consolidated Marksheet
+                                        {% if cert_doc.is_rejected %}
+                                            <span class="badge bg-danger text-white ms-2">Re-upload Required</span>
+                                        {% endif %}
+                                    </label>
+                                    <span class="text-muted d-block" style="font-size: 0.76rem;">Accepted formats: PDF or JPG/PNG (Max 5MB)</span>
+                                </div>
                             </div>
+                            {% if cert_doc %}
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if cert_doc.is_verified %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-patch-check-fill me-1"></i> Verified</span>
+                                    {% elif cert_doc.is_rejected %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-x-circle-fill me-1"></i> Rejected</span>
+                                    {% else %}
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-file-earmark-check me-1"></i> Uploaded</span>
+                                    {% endif %}
+                                    <a href="{{ cert_doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.78rem;">
+                                        <i class="bi bi-eye"></i> View File
+                                    </a>
+                                </div>
+                            {% endif %}
                         </div>
+
+                        {% if cert_doc.is_rejected %}
+                            <div class="alert alert-danger p-2.5 mb-2.5 small rounded-2 border-danger-subtle d-flex align-items-center gap-2">
+                                <i class="bi bi-exclamation-triangle-fill text-danger fs-5 flex-shrink-0"></i>
+                                <div>
+                                    <strong class="text-danger">HR Rejection Reason:</strong>
+                                    <span>{{ cert_doc.rejection_notes|default:"Document incomplete or blurry. Please re-upload a clear copy." }}</span>
+                                </div>
+                            </div>
+                        {% elif cert_doc %}
+                            <div class="small text-muted mb-2">
+                                <i class="bi bi-check2-circle text-success me-1"></i> Already saved in database. You only need to choose a new file if you wish to replace it.
+                            </div>
+                        {% endif %}
+
                         {{ form.educational_certificate }}
                         {% if form.educational_certificate.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.educational_certificate.errors.0 }}</div>{% endif %}
                     </div>
@@ -470,27 +562,99 @@ textarea.form-control {
                 </div>
 
                 <div class="col-md-6">
-                    <div class="doc-upload-card h-100">
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <i class="bi bi-file-earmark-check-fill text-success fs-5"></i>
-                            <div>
-                                <label class="form-label small fw-bold mb-0" for="id_experience_letter">Upload Relieving / Experience Letter</label>
-                                <span class="text-muted d-block" style="font-size: 0.76rem;">Service letter or formal relieving certificate.</span>
+                    <div class="doc-upload-card h-100 {% if exp_doc.is_rejected %}border-danger bg-danger-subtle bg-opacity-10{% endif %}">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-file-earmark-check-fill text-success fs-5"></i>
+                                <div>
+                                    <label class="form-label small fw-bold mb-0" for="id_experience_letter">
+                                        Upload Relieving / Experience Letter
+                                        {% if exp_doc.is_rejected %}
+                                            <span class="badge bg-danger text-white ms-1">Re-upload</span>
+                                        {% endif %}
+                                    </label>
+                                    <span class="text-muted d-block" style="font-size: 0.76rem;">Service letter or formal relieving certificate.</span>
+                                </div>
                             </div>
+                            {% if exp_doc %}
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if exp_doc.is_verified %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-patch-check-fill me-1"></i> Verified</span>
+                                    {% elif exp_doc.is_rejected %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-x-circle-fill me-1"></i> Rejected</span>
+                                    {% else %}
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-file-earmark-check me-1"></i> Uploaded</span>
+                                    {% endif %}
+                                    <a href="{{ exp_doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.78rem;">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                </div>
+                            {% endif %}
                         </div>
+
+                        {% if exp_doc.is_rejected %}
+                            <div class="alert alert-danger p-2 mb-2 small rounded-2 border-danger-subtle d-flex align-items-center gap-2">
+                                <i class="bi bi-exclamation-triangle-fill text-danger fs-5 flex-shrink-0"></i>
+                                <div>
+                                    <strong class="text-danger">HR Reason:</strong>
+                                    <span>{{ exp_doc.rejection_notes|default:"Please re-upload a clear copy." }}</span>
+                                </div>
+                            </div>
+                        {% elif exp_doc %}
+                            <div class="small text-muted mb-2">
+                                <i class="bi bi-check2-circle text-success me-1"></i> Document on file. Upload only to replace.
+                            </div>
+                        {% endif %}
+
                         {{ form.experience_letter }}
                         {% if form.experience_letter.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.experience_letter.errors.0 }}</div>{% endif %}
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="doc-upload-card h-100">
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <i class="bi bi-file-earmark-ruled-fill text-primary fs-5"></i>
-                            <div>
-                                <label class="form-label small fw-bold mb-0" for="id_payslip">Upload Recent Payslip / Form 16</label>
-                                <span class="text-muted d-block" style="font-size: 0.76rem;">Most recent salary slip or annual statement.</span>
+                    <div class="doc-upload-card h-100 {% if pay_doc.is_rejected %}border-danger bg-danger-subtle bg-opacity-10{% endif %}">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-file-earmark-ruled-fill text-primary fs-5"></i>
+                                <div>
+                                    <label class="form-label small fw-bold mb-0" for="id_payslip">
+                                        Upload Recent Payslip / Form 16
+                                        {% if pay_doc.is_rejected %}
+                                            <span class="badge bg-danger text-white ms-1">Re-upload</span>
+                                        {% endif %}
+                                    </label>
+                                    <span class="text-muted d-block" style="font-size: 0.76rem;">Most recent salary slip or annual statement.</span>
+                                </div>
                             </div>
+                            {% if pay_doc %}
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if pay_doc.is_verified %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-patch-check-fill me-1"></i> Verified</span>
+                                    {% elif pay_doc.is_rejected %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-x-circle-fill me-1"></i> Rejected</span>
+                                    {% else %}
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-file-earmark-check me-1"></i> Uploaded</span>
+                                    {% endif %}
+                                    <a href="{{ pay_doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.78rem;">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                </div>
+                            {% endif %}
                         </div>
+
+                        {% if pay_doc.is_rejected %}
+                            <div class="alert alert-danger p-2 mb-2 small rounded-2 border-danger-subtle d-flex align-items-center gap-2">
+                                <i class="bi bi-exclamation-triangle-fill text-danger fs-5 flex-shrink-0"></i>
+                                <div>
+                                    <strong class="text-danger">HR Reason:</strong>
+                                    <span>{{ pay_doc.rejection_notes|default:"Please re-upload a clear copy." }}</span>
+                                </div>
+                            </div>
+                        {% elif pay_doc %}
+                            <div class="small text-muted mb-2">
+                                <i class="bi bi-check2-circle text-success me-1"></i> Document on file. Upload only to replace.
+                            </div>
+                        {% endif %}
+
                         {{ form.payslip }}
                         {% if form.payslip.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.payslip.errors.0 }}</div>{% endif %}
                     </div>
@@ -546,27 +710,99 @@ textarea.form-control {
                 </div>
 
                 <div class="col-md-6">
-                    <div class="doc-upload-card h-100">
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <i class="bi bi-wallet2 text-success fs-5"></i>
-                            <div>
-                                <label class="form-label small fw-bold mb-0" for="id_bank_proof">Upload Cancelled Cheque / Bank Passbook</label>
-                                <span class="text-muted d-block" style="font-size: 0.76rem;">Used for electronic payroll verification.</span>
+                    <div class="doc-upload-card h-100 {% if bank_doc.is_rejected %}border-danger bg-danger-subtle bg-opacity-10{% endif %}">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-wallet2 text-success fs-5"></i>
+                                <div>
+                                    <label class="form-label small fw-bold mb-0" for="id_bank_proof">
+                                        Upload Cancelled Cheque / Bank Passbook
+                                        {% if bank_doc.is_rejected %}
+                                            <span class="badge bg-danger text-white ms-1">Re-upload</span>
+                                        {% endif %}
+                                    </label>
+                                    <span class="text-muted d-block" style="font-size: 0.76rem;">Used for electronic payroll verification.</span>
+                                </div>
                             </div>
+                            {% if bank_doc %}
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if bank_doc.is_verified %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-patch-check-fill me-1"></i> Verified</span>
+                                    {% elif bank_doc.is_rejected %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-x-circle-fill me-1"></i> Rejected</span>
+                                    {% else %}
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-file-earmark-check me-1"></i> Uploaded</span>
+                                    {% endif %}
+                                    <a href="{{ bank_doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.78rem;">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                </div>
+                            {% endif %}
                         </div>
+
+                        {% if bank_doc.is_rejected %}
+                            <div class="alert alert-danger p-2 mb-2 small rounded-2 border-danger-subtle d-flex align-items-center gap-2">
+                                <i class="bi bi-exclamation-triangle-fill text-danger fs-5 flex-shrink-0"></i>
+                                <div>
+                                    <strong class="text-danger">HR Reason:</strong>
+                                    <span>{{ bank_doc.rejection_notes|default:"Please re-upload a clear copy." }}</span>
+                                </div>
+                            </div>
+                        {% elif bank_doc %}
+                            <div class="small text-muted mb-2">
+                                <i class="bi bi-check2-circle text-success me-1"></i> Document on file. Upload only to replace.
+                            </div>
+                        {% endif %}
+
                         {{ form.bank_proof }}
                         {% if form.bank_proof.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.bank_proof.errors.0 }}</div>{% endif %}
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="doc-upload-card h-100">
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <i class="bi bi-person-vcard-fill text-primary fs-5"></i>
-                            <div>
-                                <label class="form-label small fw-bold mb-0" for="id_id_proof">Upload Aadhaar / PAN Card Document</label>
-                                <span class="text-muted d-block" style="font-size: 0.76rem;">Government identity document copy.</span>
+                    <div class="doc-upload-card h-100 {% if id_doc.is_rejected %}border-danger bg-danger-subtle bg-opacity-10{% endif %}">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-person-vcard-fill text-primary fs-5"></i>
+                                <div>
+                                    <label class="form-label small fw-bold mb-0" for="id_id_proof">
+                                        Upload Aadhaar / PAN Card Document
+                                        {% if id_doc.is_rejected %}
+                                            <span class="badge bg-danger text-white ms-1">Re-upload</span>
+                                        {% endif %}
+                                    </label>
+                                    <span class="text-muted d-block" style="font-size: 0.76rem;">Government identity document copy.</span>
+                                </div>
                             </div>
+                            {% if id_doc %}
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if id_doc.is_verified %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-patch-check-fill me-1"></i> Verified</span>
+                                    {% elif id_doc.is_rejected %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-x-circle-fill me-1"></i> Rejected</span>
+                                    {% else %}
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-file-earmark-check me-1"></i> Uploaded</span>
+                                    {% endif %}
+                                    <a href="{{ id_doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.78rem;">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                </div>
+                            {% endif %}
                         </div>
+
+                        {% if id_doc.is_rejected %}
+                            <div class="alert alert-danger p-2 mb-2 small rounded-2 border-danger-subtle d-flex align-items-center gap-2">
+                                <i class="bi bi-exclamation-triangle-fill text-danger fs-5 flex-shrink-0"></i>
+                                <div>
+                                    <strong class="text-danger">HR Reason:</strong>
+                                    <span>{{ id_doc.rejection_notes|default:"Please re-upload a clear copy." }}</span>
+                                </div>
+                            </div>
+                        {% elif id_doc %}
+                            <div class="small text-muted mb-2">
+                                <i class="bi bi-check2-circle text-success me-1"></i> Document on file. Upload only to replace.
+                            </div>
+                        {% endif %}
+
                         {{ form.id_proof }}
                         {% if form.id_proof.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.id_proof.errors.0 }}</div>{% endif %}
                     </div>
@@ -592,20 +828,14 @@ textarea.form-control {
                 {% endif %}
             </div>
 
-            <!-- ACTION BUTTONS (MATCHING ADD-EMPLOYEE FOOTER) -->
-            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                <div class="text-muted small">
-                    <i class="bi bi-shield-check text-success me-1"></i>
-                    All required verification fields must be completed. Documents will be reviewed by HR.
-                </div>
-                <div class="d-flex gap-2">
-                    <a href="{% url 'recruitment:candidate_track' %}?application_id={{ application.application_id }}" class="btn btn-outline-secondary px-3" style="border-radius: 8px;">
-                        Cancel
-                    </a>
-                    <button type="submit" id="completeOnboardingBtn" class="btn btn-hrms px-4 py-2 fw-semibold">
-                        <i class="bi bi-send-check-fill me-1"></i> {% if application.document_verification_status == 'REJECTED' %}Resubmit Documents for HR Verification{% else %}Submit Onboarding Documents for HR Review{% endif %}
-                    </button>
-                </div>
+            <!-- ACTION BUTTONS: PROFESSIONAL, SMOOTH & EQUAL SIZE -->
+            <div class="d-flex justify-content-end align-items-center gap-3 pt-3 border-top">
+                <a href="{% url 'recruitment:candidate_track' %}?application_id={{ application.application_id }}" class="btn-action-smooth btn-cancel-smooth">
+                    <i class="bi bi-x-circle me-1"></i> Cancel
+                </a>
+                <button type="submit" id="completeOnboardingBtn" class="btn-action-smooth btn-submit-smooth">
+                    <i class="bi bi-check2-circle me-1"></i> {% if application.document_verification_status == 'REJECTED' %}Resubmit{% else %}Submit{% endif %}
+                </button>
             </div>
         </form>
     </div>
@@ -727,8 +957,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 '#id_degree_name', '#id_institution', '#id_passing_year', '#id_percentage_cgpa',
                 '#id_details_10th', '#id_details_12th',
                 '#id_bank_name', '#id_bank_branch', '#id_bank_account_number', '#id_bank_ifsc_code',
-                '#id_pan_number', '#id_aadhaar_number',
-                '#id_username', '#id_portal_password', '#id_confirm_password'
+                '#id_pan_number', '#id_aadhaar_number'
             ];
 
             requiredSelectors.forEach(function(sel) {
@@ -747,6 +976,50 @@ document.addEventListener('DOMContentLoaded', function() {
                 setFieldError(decl, 'You must acknowledge the accuracy declaration to submit.');
                 if (!firstInvalid) firstInvalid = decl;
             }
+
+            // Document re-upload enforcement for rejected documents
+            {% if has_rejected_docs %}
+                {% if cert_doc.is_rejected %}
+                    const certInput = document.getElementById('id_educational_certificate');
+                    if (certInput && !certInput.files.length) {
+                        isValid = false;
+                        setFieldError(certInput, 'Please upload a replacement file for your rejected degree certificate.');
+                        if (!firstInvalid) firstInvalid = certInput;
+                    }
+                {% endif %}
+                {% if exp_doc.is_rejected %}
+                    const expInput = document.getElementById('id_experience_letter');
+                    if (expInput && !expInput.files.length) {
+                        isValid = false;
+                        setFieldError(expInput, 'Please upload a replacement file for your rejected experience letter.');
+                        if (!firstInvalid) firstInvalid = expInput;
+                    }
+                {% endif %}
+                {% if pay_doc.is_rejected %}
+                    const payInput = document.getElementById('id_payslip');
+                    if (payInput && !payInput.files.length) {
+                        isValid = false;
+                        setFieldError(payInput, 'Please upload a replacement file for your rejected payslip.');
+                        if (!firstInvalid) firstInvalid = payInput;
+                    }
+                {% endif %}
+                {% if bank_doc.is_rejected %}
+                    const bankInput = document.getElementById('id_bank_proof');
+                    if (bankInput && !bankInput.files.length) {
+                        isValid = false;
+                        setFieldError(bankInput, 'Please upload a replacement file for your rejected bank proof.');
+                        if (!firstInvalid) firstInvalid = bankInput;
+                    }
+                {% endif %}
+                {% if id_doc.is_rejected %}
+                    const idInput = document.getElementById('id_id_proof');
+                    if (idInput && !idInput.files.length) {
+                        isValid = false;
+                        setFieldError(idInput, 'Please upload a replacement file for your rejected ID proof.');
+                        if (!firstInvalid) firstInvalid = idInput;
+                    }
+                {% endif %}
+            {% endif %}
 
             // Emergency phone validation (strictly 10 digits starting with 6-9)
             if (phoneInput && phoneInput.value.trim()) {
@@ -808,8 +1081,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            // Password matching & length
-            if (passInput && confirmInput) {
+            // Optional Password matching & length if fields exist
+            const passInput = document.getElementById('id_portal_password');
+            const confirmInput = document.getElementById('id_confirm_password');
+            if (passInput && confirmInput && passInput.value) {
                 if (passInput.value.length < 6) {
                     isValid = false;
                     setFieldError(passInput, 'Password must be at least 6 characters long.');

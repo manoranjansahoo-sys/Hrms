@@ -5,25 +5,125 @@
 
 {% block extra_css %}
 <style>
+    /* Executive Clean Hero Header (Modern Corporate Royal Blue Gradient) */
     .onboarding-hero {
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-        color: #fff;
-        border-radius: 12px;
-        padding: 1.75rem 2rem;
-        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.15);
-        margin-bottom: 1.75rem;
+        background: linear-gradient(135deg, #1E3A8A 0%, #1D4ED8 50%, #2563EB 100%);
+        color: #FFFFFF;
+        border-radius: 14px;
+        padding: 1.45rem 1.85rem;
+        box-shadow: 0 8px 24px rgba(30, 58, 138, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
     }
+    .onboarding-hero::after {
+        content: '';
+        position: absolute;
+        top: -50px;
+        right: -30px;
+        width: 220px;
+        height: 220px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+    .hero-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        padding: 0.32rem 0.8rem;
+        border-radius: 999px;
+    }
+    .hero-tag-green {
+        background: rgba(16, 185, 129, 0.22);
+        color: #A7F3D0;
+        border: 1px solid rgba(167, 243, 208, 0.45);
+    }
+    .hero-tag-amber {
+        background: rgba(245, 158, 11, 0.22);
+        color: #FDE68A;
+        border: 1px solid rgba(253, 230, 138, 0.45);
+    }
+    .btn-hero-primary {
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        height: 38px !important;
+        padding: 0 1.2rem !important;
+        font-weight: 700 !important;
+        font-size: 0.84rem !important;
+        border-radius: 8px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 7px !important;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35) !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        text-decoration: none !important;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+    }
+    .btn-hero-primary:hover {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.45) !important;
+        color: #FFFFFF !important;
+    }
+    .btn-hero-secondary {
+        background: rgba(255, 255, 255, 0.15) !important;
+        color: #FFFFFF !important;
+        border: 1px solid rgba(255, 255, 255, 0.35) !important;
+        height: 38px !important;
+        padding: 0 1.2rem !important;
+        font-weight: 600 !important;
+        font-size: 0.84rem !important;
+        border-radius: 8px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 7px !important;
+        backdrop-filter: blur(8px) !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        text-decoration: none !important;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+    }
+    .btn-hero-secondary:hover {
+        background: rgba(255, 255, 255, 0.25) !important;
+        border-color: rgba(255, 255, 255, 0.6) !important;
+        color: #FFFFFF !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+    }
+
+    /* KPI Metric Cards */
     .metric-card {
-        background: #fff;
-        border-radius: 10px;
-        padding: 1.25rem 1.5rem;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        background: #FFFFFF !important;
+        border-radius: 12px !important;
+        padding: 1.15rem 1.25rem !important;
+        border: 1px solid #E2E8F0 !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+        transition: all 0.2s ease !important;
     }
     .metric-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08) !important;
+    }
+    .metric-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #64748B;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+    .metric-value {
+        font-size: 1.65rem;
+        font-weight: 800;
+        line-height: 1.2;
+        margin-top: 0.35rem;
     }
     .metric-icon-box {
         width: 44px;
@@ -33,19 +133,182 @@
         align-items: center;
         justify-content: center;
         font-size: 1.35rem;
+        flex-shrink: 0;
     }
+
+    /* Filter Toolbar Card */
+    .filter-toolbar-card {
+        background: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+    }
+
+    /* Table Container & Pure White Table (No Side Scrolling) */
+    .onboarding-table-card {
+        background: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 14px !important;
+        box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04) !important;
+        overflow: hidden !important;
+    }
+    .table-responsive-clean {
+        width: 100%;
+        overflow-x: hidden;
+    }
+    @media (max-width: 991.98px) {
+        .table-responsive-clean {
+            overflow-x: auto;
+        }
+    }
+    .table.onboarding-table {
+        background-color: #FFFFFF !important;
+        --bs-table-bg: #FFFFFF !important;
+        margin-bottom: 0 !important;
+        width: 100% !important;
+        table-layout: auto !important;
+        border-collapse: collapse;
+    }
+    .table.onboarding-table thead th {
+        background-color: #F8FAFC !important;
+        color: #475569 !important;
+        font-size: 0.74rem !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.05em !important;
+        padding: 0.95rem 1rem !important;
+        border-bottom: 1.5px solid #E2E8F0 !important;
+        white-space: nowrap;
+    }
+    .table.onboarding-table tbody td {
+        background-color: #FFFFFF !important;
+        padding: 1rem 1rem !important;
+        border-bottom: 1px solid #F1F5F9 !important;
+        vertical-align: middle !important;
+    }
+    .onboarding-row {
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+    }
+    .onboarding-row:hover td {
+        background-color: #F8FAFC !important;
+    }
+    .table.onboarding-table tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+
+    /* Standardized Small & Equal-Sized Action Buttons in Table */
+    .btn-table-action {
+        height: 31px !important;
+        width: 104px !important;
+        min-width: 104px !important;
+        max-width: 104px !important;
+        padding: 0 0.35rem !important;
+        font-size: 0.77rem !important;
+        font-weight: 600 !important;
+        border-radius: 7px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 5px !important;
+        white-space: nowrap !important;
+        text-decoration: none !important;
+        box-sizing: border-box !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    .btn-table-action:hover {
+        transform: translateY(-1px);
+    }
+    .btn-table-action.btn-outline-primary {
+        background: rgba(37, 99, 235, 0.05) !important;
+        border: 1.5px solid #BFDBFE !important;
+        color: #1D4ED8 !important;
+    }
+    .btn-table-action.btn-outline-primary:hover {
+        background: #2563EB !important;
+        border-color: #2563EB !important;
+        color: #FFFFFF !important;
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25) !important;
+    }
+    .btn-table-action.btn-outline-success {
+        background: rgba(16, 185, 129, 0.06) !important;
+        border: 1.5px solid #A7F3D0 !important;
+        color: #065F46 !important;
+    }
+    .btn-table-action.btn-outline-success:hover {
+        background: #10B981 !important;
+        border-color: #10B981 !important;
+        color: #FFFFFF !important;
+        box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25) !important;
+    }
+    .btn-table-action.btn-success {
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+        border: none !important;
+        color: #FFFFFF !important;
+        box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25) !important;
+    }
+    .btn-table-action.btn-success:hover {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35) !important;
+        color: #FFFFFF !important;
+    }
+
+    /* Clean Pagination */
+    .pagination .page-link {
+        color: #334155;
+        background-color: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        font-size: 0.84rem;
+        font-weight: 600;
+        padding: 0.42rem 0.8rem;
+        border-radius: 8px;
+        transition: all 0.15s ease;
+    }
+    .pagination .page-link:hover {
+        background-color: #F1F5F9;
+        border-color: #CBD5E1;
+        color: #0F172A;
+    }
+    .pagination .page-item.active .page-link {
+        background-color: #2563EB;
+        border-color: #2563EB;
+        color: #FFFFFF;
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+    }
+    .pagination .page-item.disabled .page-link {
+        color: #94A3B8;
+        background-color: #F8FAFC;
+        border-color: #E2E8F0;
+    }
+
+    /* Candidate Avatar */
+    .candidate-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
+        color: #4F46E5;
+        font-weight: 700;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border: 1px solid #C7D2FE;
+    }
+
+    /* Application ID Pill */
     .app-id-pill {
         display: inline-flex;
         align-items: center;
-        border-radius: 6px;
+        border-radius: 8px;
         overflow: hidden;
-        background: #F0F7FF;
+        background: #EFF6FF;
         border: 1px solid #BFDBFE;
-        line-height: 1;
         font-family: var(--bs-font-monospace, monospace);
-        font-size: 0.8rem;
+        font-size: 0.82rem;
         font-weight: 700;
-        color: #0D6EFD;
+        color: #1D4ED8;
     }
     .copy-id-btn {
         background: transparent;
@@ -53,53 +316,235 @@
         border-left: 1px solid #BFDBFE;
         color: #64748B;
         cursor: pointer;
-        padding: 0.25rem 0.45rem;
-        font-size: 0.75rem;
+        padding: 0.35rem 0.55rem;
+        font-size: 0.78rem;
+        transition: all 0.15s ease;
     }
     .copy-id-btn:hover {
-        color: #0D6EFD;
-        background: #EFF6FF;
+        color: #1D4ED8;
+        background: #DBEAFE;
+    }
+
+    /* Status Badges */
+    .status-badge {
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        letter-spacing: 0.02em;
+        white-space: nowrap;
     }
     .status-badge-pending {
-        background: #FEF3C7;
-        color: #92400E;
-        border: 1px solid #FCD34D;
-        font-weight: 600;
+        background: #FEF3C7 !important;
+        color: #92400E !important;
+        border: 1px solid #FCD34D !important;
     }
     .status-badge-verified {
-        background: #D1FAE5;
-        color: #065F46;
-        border: 1px solid #6EE7B7;
-        font-weight: 600;
+        background: #DCFCE7 !important;
+        color: #166534 !important;
+        border: 1px solid #BBF7D0 !important;
     }
     .status-badge-rejected {
-        background: #FEE2E2;
-        color: #991B1B;
-        border: 1px solid #FCA5A5;
-        font-weight: 600;
+        background: #FEE2E2 !important;
+        color: #991B1B !important;
+        border: 1px solid #FECACA !important;
     }
     .status-badge-hired {
-        background: #E0E7FF;
-        color: #3730A3;
-        border: 1px solid #A5B4FC;
-        font-weight: 600;
+        background: #E0E7FF !important;
+        color: #3730A3 !important;
+        border: 1px solid #C7D2FE !important;
     }
+
+    /* Document Chips */
     .doc-chip {
         font-size: 0.76rem;
-        padding: 0.25rem 0.6rem;
-        border-radius: 6px;
-        background: #F1F5F9;
+        padding: 0.3rem 0.65rem;
+        border-radius: 8px;
+        background: #F8FAFC;
         border: 1px solid #E2E8F0;
         color: #334155;
         display: inline-flex;
         align-items: center;
-        gap: 0.35rem;
+        gap: 5px;
         text-decoration: none;
         transition: all 0.15s ease;
     }
     .doc-chip:hover {
-        background: #E2E8F0;
+        background: #F1F5F9;
+        border-color: #CBD5E1;
         color: #0F172A;
+    }
+    .doc-chip-more {
+        background: #EFF6FF !important;
+        border-color: #BFDBFE !important;
+        color: #2563EB !important;
+        font-weight: 700 !important;
+        cursor: pointer;
+    }
+    .doc-chip-more:hover {
+        background: #DBEAFE !important;
+        border-color: #93C5FD !important;
+        color: #1D4ED8 !important;
+    }
+
+    /* Enhanced Interactive Profile & Document Review Modals */
+    .profile-nav-tabs {
+        border-bottom: 1.5px solid #E2E8F0;
+        background: #FFFFFF;
+        padding: 0 1.25rem;
+    }
+    .profile-nav-tabs .nav-link {
+        color: #64748B;
+        font-weight: 600;
+        font-size: 0.86rem;
+        padding: 0.85rem 1.15rem;
+        border: none;
+        border-bottom: 2.5px solid transparent;
+        border-radius: 0;
+        background: transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s ease;
+    }
+    .profile-nav-tabs .nav-link:hover {
+        color: #1E293B;
+        border-bottom-color: #CBD5E1;
+    }
+    .profile-nav-tabs .nav-link.active {
+        color: #2563EB;
+        font-weight: 700;
+        border-bottom-color: #2563EB;
+        background: transparent;
+    }
+    .info-card-tile {
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        padding: 0.95rem 1.15rem;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        height: 100%;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.85rem;
+    }
+    .info-card-tile:hover {
+        border-color: #CBD5E1;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+        transform: translateY(-1px);
+    }
+    .info-tile-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+        flex-shrink: 0;
+    }
+    .info-tile-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #64748B;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 0.2rem;
+    }
+    .info-tile-value {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #0F172A;
+        word-break: break-word;
+        line-height: 1.35;
+    }
+    /* Ultra-Professional Document Review Interface ("Look Like a Wow") */
+    .doc-review-card-wow {
+        background: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 14px !important;
+        padding: 1.2rem 1.35rem !important;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        position: relative;
+    }
+    .doc-review-card-wow:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08) !important;
+        border-color: #CBD5E1 !important;
+    }
+    .doc-review-card-wow.status-verified {
+        border-left: 5px solid #10B981 !important;
+    }
+    .doc-review-card-wow.status-rejected {
+        border-left: 5px solid #EF4444 !important;
+    }
+    .doc-review-card-wow.status-pending {
+        border-left: 5px solid #F59E0B !important;
+    }
+    .doc-avatar-box {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+        box-shadow: inset 0 1px 2px rgba(255,255,255,0.6);
+    }
+    .btn-doc-action {
+        height: 38px !important;
+        padding: 0 1rem !important;
+        font-size: 0.84rem !important;
+        font-weight: 600 !important;
+        border-radius: 9px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 6px !important;
+        white-space: nowrap !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        text-decoration: none !important;
+    }
+    .btn-doc-action:hover {
+        transform: translateY(-1px);
+    }
+    .doc-live-badge {
+        font-size: 0.76rem !important;
+        font-weight: 700 !important;
+        padding: 0.35rem 0.75rem !important;
+        border-radius: 20px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        letter-spacing: 0.02em !important;
+    }
+    .badge-verified-glow {
+        background: #DCFCE7 !important;
+        color: #166534 !important;
+        border: 1px solid #86EFAC !important;
+        box-shadow: 0 1px 3px rgba(16, 185, 129, 0.15) !important;
+    }
+    .badge-rejected-glow {
+        background: #FEE2E2 !important;
+        color: #991B1B !important;
+        border: 1px solid #FCA5A5 !important;
+    }
+    .badge-pending-glow {
+        background: #FEF3C7 !important;
+        color: #92400E !important;
+        border: 1px solid #FDE68A !important;
+    }
+    .stats-progress-header {
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 14px;
+        padding: 1.15rem 1.4rem;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
     }
 </style>
 {% endblock %}
@@ -116,42 +561,42 @@
         </ol>
     </nav>
 
-    <!-- HERO HEADER -->
+    <!-- HERO HEADER (EXECUTIVE CORPORATE ROYAL BLUE FINISH) -->
     <div class="onboarding-hero">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
             <div>
-                <div class="d-flex align-items-center gap-2 mb-1">
-                    <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 px-2 py-1 small">
-                        <i class="bi bi-shield-check me-1"></i> Verification & Appointment Pipeline
+                <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                    <span class="hero-tag hero-tag-green">
+                        <i class="bi bi-shield-check"></i> Verification Pipeline
                     </span>
-                    <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-50 px-2 py-1 small">
-                        Phase 2: Post-Interview
+                    <span class="hero-tag hero-tag-amber">
+                        <i class="bi bi-award"></i> Phase 2: Post-Interview
                     </span>
                 </div>
-                <h2 class="h3 fw-bold mb-1 text-white">Onboarding Employee Review & Verification</h2>
-                <p class="text-white-50 mb-0 small">
-                    Inspect candidate documents, verify credential accuracy, handle error re-submissions, and formally appoint new hires into HRMS.
-                </p>
+                <h2 class="h4 fw-bold mb-0 text-white">Onboarding Employee Review & Verification</h2>
             </div>
-            <div class="d-flex gap-2">
-                <a href="{% url 'recruitment:appoint_employee' %}" class="btn btn-success fw-bold px-3 py-2 shadow-sm">
-                    <i class="bi bi-person-plus-fill me-1"></i> Appoint Employee
+            <div class="d-flex align-items-center flex-wrap" style="gap: 10px;">
+                <a href="{% url 'recruitment:appoint_employee' %}" class="btn btn-hero-primary shadow-sm" title="Appoint verified candidates into HRMS">
+                    <i class="bi bi-person-plus-fill"></i>
+                    <span>Appoint Employee</span>
                 </a>
-                <a href="{% url 'recruitment:candidates_list' %}" class="btn btn-outline-light px-3 py-2">
-                    <i class="bi bi-people me-1"></i> Candidate Applications
+                <a href="{% url 'recruitment:candidates_list' %}" class="btn btn-hero-secondary" title="View all job candidate applications">
+                    <i class="bi bi-people"></i>
+                    <span>Candidate Applications</span>
                 </a>
             </div>
         </div>
     </div>
 
-    <!-- METRICS CARDS -->
-    <div class="row g-3 mb-4">
-        <div class="col-6 col-lg-2-4 col-xl-2-4 col-xxl-2-4">
+    <!-- METRICS CARDS (5 EQUAL COLUMNS, PROPER GAP, NO OVERLAP) -->
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-5 g-3 mb-4">
+        <!-- 1. Total Pipeline -->
+        <div class="col">
             <div class="metric-card h-100">
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
-                        <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.04em;">Total Pipeline</div>
-                        <div class="fs-4 fw-bold text-dark mt-1">{{ total_onboarding }}</div>
+                        <div class="metric-label">Total Pipeline</div>
+                        <div class="metric-value text-dark">{{ total_onboarding }}</div>
                     </div>
                     <div class="metric-icon-box bg-secondary bg-opacity-10 text-secondary">
                         <i class="bi bi-inbox-fill"></i>
@@ -159,12 +604,13 @@
                 </div>
             </div>
         </div>
-        <div class="col-6 col-lg-2-4 col-xl-2-4 col-xxl-2-4">
+        <!-- 2. Pending Review -->
+        <div class="col">
             <div class="metric-card h-100 border-warning border-opacity-50">
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
-                        <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.04em;">Pending Review</div>
-                        <div class="fs-4 fw-bold text-warning mt-1">{{ pending_docs }}</div>
+                        <div class="metric-label">Pending Review</div>
+                        <div class="metric-value text-warning">{{ pending_docs }}</div>
                     </div>
                     <div class="metric-icon-box bg-warning bg-opacity-10 text-warning">
                         <i class="bi bi-hourglass-split"></i>
@@ -172,38 +618,41 @@
                 </div>
             </div>
         </div>
-        <div class="col-6 col-lg-2-4 col-xl-2-4 col-xxl-2-4">
+        <!-- 3. Verified Documents -->
+        <div class="col">
             <div class="metric-card h-100 border-success border-opacity-50">
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
-                        <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.04em;">Verified Documents</div>
-                        <div class="fs-4 fw-bold text-success mt-1">{{ verified_docs }}</div>
+                        <div class="metric-label">Verified Documents</div>
+                        <div class="metric-value text-success">{{ verified_docs }}</div>
                     </div>
                     <div class="metric-icon-box bg-success bg-opacity-10 text-success">
-                        <i class="bi bi-check2-circle"></i>
+                        <i class="bi bi-patch-check-fill"></i>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-6 col-lg-2-4 col-xl-2-4 col-xxl-2-4">
+        <!-- 4. Doc Errors / Rejected -->
+        <div class="col">
             <div class="metric-card h-100 border-danger border-opacity-50">
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
-                        <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.04em;">Doc Errors / Rejected</div>
-                        <div class="fs-4 fw-bold text-danger mt-1">{{ rejected_docs }}</div>
+                        <div class="metric-label">Doc Errors / Rejected</div>
+                        <div class="metric-value text-danger">{{ rejected_docs }}</div>
                     </div>
                     <div class="metric-icon-box bg-danger bg-opacity-10 text-danger">
-                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <i class="bi bi-exclamation-octagon-fill"></i>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-12 col-lg-2-4 col-xl-2-4 col-xxl-2-4">
+        <!-- 5. Appointed Employees -->
+        <div class="col">
             <div class="metric-card h-100 border-primary border-opacity-50">
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
-                        <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.04em;">Appointed Employees</div>
-                        <div class="fs-4 fw-bold text-primary mt-1">{{ hired_count }}</div>
+                        <div class="metric-label">Appointed Employees</div>
+                        <div class="metric-value text-primary">{{ hired_count }}</div>
                     </div>
                     <div class="metric-icon-box bg-primary bg-opacity-10 text-primary">
                         <i class="bi bi-person-badge-fill"></i>
@@ -213,85 +662,117 @@
         </div>
     </div>
 
-    <!-- SEARCH & STATUS FILTER TOOLBAR -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-3">
-            <form method="GET" class="row g-2 align-items-center" id="onboardingFilterForm">
-                <div class="col-12 col-md-7">
+    <!-- CANDIDATES ONBOARDING TABLE (PURE WHITE, CLEAN TOOLBAR, 5/10/20/50/100 ROWS, PROPER GAPS, ZERO OVERLAP) -->
+    <div class="card onboarding-table-card mb-4">
+        <!-- Table Header Toolbar -->
+        <div class="card-header bg-white p-3 p-md-3.5 border-bottom">
+            <!-- Top Row: Table Title -->
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex align-items-center gap-2.5">
+                    <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(37, 99, 235, 0.1); color: #2563EB; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; flex-shrink: 0;">
+                        <i class="bi bi-list-check"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0 fw-bold text-dark fs-6 d-flex align-items-center gap-2">
+                            <span>Onboarding Candidate</span>
+                            <span class="badge bg-light text-secondary border px-2 py-0.5 fw-semibold" style="font-size: 0.75rem;">{{ paginator.count }} Total</span>
+                        </h5>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Integrated Search & Status Filter Toolbar (Auto-submitting, No manual Filter button) -->
+            <form method="GET" class="row g-2.5 align-items-center" id="onboardingFilterForm">
+                <!-- Hidden page input: resets page to 1 upon filtering/searching -->
+                <input type="hidden" name="page" id="pageNumberInput" value="1">
+                <!-- Preserves per_page setting on search/filter -->
+                <input type="hidden" name="per_page" id="perPageHiddenInput" value="{{ per_page }}">
+
+                <!-- 1. Search Query Input -->
+                <div class="col-12 col-md-7 col-lg-8">
                     <div class="input-group">
-                        <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
-                        <input type="text" name="q" id="onboardingSearchInput" value="{{ search_query }}" class="form-control border-start-0 ps-0" placeholder="Search candidate by name, phone, email, app ID...">
+                        <span class="input-group-text bg-light border-end-0 text-muted ps-3">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" 
+                               name="q" 
+                               id="onboardingSearchInput" 
+                               value="{{ search_query }}" 
+                               class="form-control border-start-0 ps-1 bg-light" 
+                               style="height: 38px; border-radius: 0 8px 8px 0; font-size: 0.85rem;" 
+                               placeholder="Search candidate by name, phone, email, app ID...">
                         {% if search_query %}
-                            <button type="button" class="btn btn-outline-secondary border-start-0" onclick="document.getElementById('onboardingSearchInput').value=''; document.getElementById('onboardingFilterForm').submit();" title="Clear search">
+                            <button type="button" 
+                                    class="btn btn-outline-secondary border-start-0 bg-light" 
+                                    onclick="document.getElementById('onboardingSearchInput').value=''; document.getElementById('onboardingFilterForm').submit();" 
+                                    title="Clear search">
                                 <i class="bi bi-x-lg"></i>
                             </button>
                         {% endif %}
                     </div>
                 </div>
-                <div class="col-12 col-md-5 d-flex gap-2">
-                    <select name="status" id="onboardingStatusSelect" class="form-select" onchange="document.getElementById('onboardingFilterForm').submit();">
-                        <option value="" {% if not status_filter %}selected{% endif %}>All Document Statuses ({{ total_onboarding }})</option>
+
+                <!-- 2. Status Filter Dropdown with Inline Reset if active -->
+                <div class="col-12 col-md-5 col-lg-4 d-flex align-items-center gap-2">
+                    <select name="status" 
+                            id="onboardingStatusSelect" 
+                            class="form-select bg-light flex-grow-1" 
+                            style="height: 38px; border-radius: 8px; font-size: 0.85rem;" 
+                            onchange="document.getElementById('pageNumberInput').value='1'; document.getElementById('onboardingFilterForm').submit();">
+                        <option value="" {% if not status_filter %}selected{% endif %}>All Document Statuses</option>
                         <option value="PENDING" {% if status_filter == 'PENDING' %}selected{% endif %}>Pending Verification ({{ pending_docs }})</option>
                         <option value="VERIFIED" {% if status_filter == 'VERIFIED' %}selected{% endif %}>Documents Verified ({{ verified_docs }})</option>
                         <option value="REJECTED" {% if status_filter == 'REJECTED' %}selected{% endif %}>Documentation Errors ({{ rejected_docs }})</option>
                         <option value="HIRED" {% if status_filter == 'HIRED' %}selected{% endif %}>Officially Hired / Appointed ({{ hired_count }})</option>
                     </select>
+
                     {% if search_query or status_filter %}
-                        <a href="{% url 'recruitment:onboarding_candidates_list' %}" class="btn btn-outline-secondary d-inline-flex align-items-center" title="Reset all filters">
+                        <a href="{% url 'recruitment:onboarding_candidates_list' %}?per_page={{ per_page }}" 
+                           class="btn btn-outline-secondary d-inline-flex align-items-center text-nowrap px-2.5" 
+                           style="height: 38px; border-radius: 8px; font-size: 0.82rem;" 
+                           title="Reset search and status filter">
                             <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
                         </a>
                     {% endif %}
                 </div>
             </form>
         </div>
-    </div>
-
-    <!-- CANDIDATES ONBOARDING TABLE -->
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-            <h5 class="card-title mb-0 fw-bold text-dark">
-                <i class="bi bi-list-check me-2 text-primary"></i>Onboarding Candidate Queue
-            </h5>
-            <span class="badge bg-light text-muted border">Showing {{ applications|length }} record(s)</span>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light text-muted small text-uppercase" style="letter-spacing: 0.03em;">
+        <div class="table-responsive-clean">
+            <table class="table onboarding-table align-middle">
+                <thead>
                     <tr>
-                        <th style="min-width: 130px;">Application ID</th>
-                        <th style="min-width: 250px;">Candidate Details</th>
-                        <th style="min-width: 150px;">Document Status</th>
-                        <th style="min-width: 180px;">Uploaded Documents</th>
-                        <th style="min-width: 130px;">Submission Date</th>
-                        <th class="text-end" style="min-width: 170px;">Actions</th>
+                        <th style="width: 13%;">Application ID</th>
+                        <th style="width: 25%;">Candidate Name</th>
+                        <th style="width: 14%;">Document Status</th>
+                        <th style="width: 12%;">Documents</th>
+                        <th style="width: 14%;">Submission Date</th>
+                        <th class="text-end pe-3 pe-md-4" style="width: 22%;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for app in applications %}
-                        <tr>
+                        <tr class="onboarding-row" data-bs-toggle="modal" data-bs-target="#profileModal-{{ app.id }}" title="Click row line to view all candidate onboarding details">
                             <!-- Application ID -->
                             <td>
                                 <span class="app-id-pill" title="Application ID">
-                                    <span class="px-2 py-1">{{ app.application_id }}</span>
-                                    <button type="button" class="copy-id-btn" onclick="navigator.clipboard.writeText('{{ app.application_id }}'); this.innerHTML = '<i class=\'bi bi-check2 text-success\'></i>'; setTimeout(() => this.innerHTML = '<i class=\'bi bi-copy\'></i>', 1500);" title="Copy ID">
+                                    <span class="px-2.5 py-1.5">{{ app.application_id }}</span>
+                                    <button type="button" class="copy-id-btn" onclick="event.stopPropagation(); navigator.clipboard.writeText('{{ app.application_id }}'); this.innerHTML = '<i class=\'bi bi-check2 text-success\'></i>'; setTimeout(() => this.innerHTML = '<i class=\'bi bi-copy\'></i>', 1500);" title="Copy ID">
                                         <i class="bi bi-copy"></i>
                                     </button>
                                 </span>
                             </td>
 
-                            <!-- Candidate Details -->
+                            <!-- Candidate Name (Clean, generous gap between avatar and text) -->
                             <td>
-                                <div class="d-flex align-items-center gap-2.5">
-                                    <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold flex-shrink-0" style="width: 38px; height: 38px; font-size: 0.9rem;">
+                                <div class="d-flex align-items-center" style="gap: 14px;">
+                                    <div class="candidate-avatar">
                                         {{ app.candidate.full_name|slice:":1"|upper }}
                                     </div>
-                                    <div>
-                                        <div class="fw-bold text-dark">{{ app.candidate.full_name }}</div>
-                                        <div class="small text-muted"><i class="bi bi-envelope me-1"></i>{{ app.candidate.email }}</div>
-                                        <div class="small text-muted"><i class="bi bi-telephone me-1"></i>{{ app.candidate.phone }}</div>
-                                        <div class="small text-secondary fw-semibold mt-0.5" style="font-size: 0.76rem;">
-                                            <i class="bi bi-briefcase me-1 text-muted"></i>{{ app.job.title|default:"General Opening" }}
-                                            {% if app.job.site %} &bull; {{ app.job.site.name }}{% endif %}
+                                    <div class="d-flex flex-column justify-content-center">
+                                        <div class="fw-bold text-dark text-nowrap fs-6 lh-sm mb-1">{{ app.candidate.full_name }}</div>
+                                        <div class="small text-muted text-nowrap d-flex align-items-center" style="gap: 6px; font-size: 0.78rem;">
+                                            <i class="bi bi-briefcase text-primary opacity-75"></i>
+                                            <span>{{ app.job.title|default:"General Opening" }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -300,27 +781,19 @@
                             <!-- Document Verification Status -->
                             <td>
                                 {% if app.status == 'HIRED' %}
-                                    <span class="badge status-badge-hired px-2.5 py-1.5 rounded-pill d-inline-flex align-items-center gap-1">
-                                        <i class="bi bi-person-badge-fill"></i> Appointed Employee
+                                    <span class="status-badge status-badge-hired">
+                                        <i class="bi bi-person-badge-fill"></i> Appointed
                                     </span>
                                 {% elif app.document_verification_status == 'VERIFIED' %}
-                                    <span class="badge status-badge-verified px-2.5 py-1.5 rounded-pill d-inline-flex align-items-center gap-1">
-                                        <i class="bi bi-check2-circle"></i> Documents Verified
+                                    <span class="status-badge status-badge-verified">
+                                        <i class="bi bi-patch-check-fill"></i> Verified
                                     </span>
-                                    <div class="small text-success mt-1" style="font-size: 0.75rem;">
-                                        Ready for Appointment
-                                    </div>
                                 {% elif app.document_verification_status == 'REJECTED' %}
-                                    <span class="badge status-badge-rejected px-2.5 py-1.5 rounded-pill d-inline-flex align-items-center gap-1">
-                                        <i class="bi bi-exclamation-triangle-fill"></i> Documentation Error
+                                    <span class="status-badge status-badge-rejected">
+                                        <i class="bi bi-exclamation-octagon-fill"></i> Doc Error
                                     </span>
-                                    {% if app.document_rejection_reason %}
-                                        <div class="small text-danger mt-1 text-truncate" style="max-width: 170px; font-size: 0.74rem;" title="{{ app.document_rejection_reason }}">
-                                            <i class="bi bi-info-circle me-1"></i>{{ app.document_rejection_reason }}
-                                        </div>
-                                    {% endif %}
                                 {% else %}
-                                    <span class="badge status-badge-pending px-2.5 py-1.5 rounded-pill d-inline-flex align-items-center gap-1">
+                                    <span class="status-badge status-badge-pending">
                                         <i class="bi bi-hourglass-split"></i> Pending Review
                                     </span>
                                 {% endif %}
@@ -330,216 +803,824 @@
                             <td>
                                 {% with docs=app.candidate.documents.all %}
                                     {% if docs %}
-                                        <div class="d-flex flex-wrap gap-1">
-                                            {% for doc in docs|slice:":2" %}
-                                                <a href="{{ doc.file.url }}" target="_blank" class="doc-chip" title="{{ doc.title }}">
-                                                    <i class="bi bi-file-earmark-text text-primary"></i>
-                                                    <span class="text-truncate" style="max-width: 90px;">{{ doc.title }}</span>
-                                                </a>
-                                            {% endfor %}
-                                            {% if docs|length > 2 %}
-                                                <span class="doc-chip bg-white border text-primary fw-bold" role="button" data-bs-toggle="modal" data-bs-target="#reviewModal-{{ app.id }}">
-                                                    +{{ docs|length|add:"-2" }} more
-                                                </span>
-                                            {% endif %}
-                                        </div>
+                                        <span class="badge bg-light text-primary border px-2.5 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5" style="border-radius: 6px; font-size: 0.8rem;">
+                                            <i class="bi bi-paperclip"></i>
+                                            <span>{{ docs|length }} Attached</span>
+                                        </span>
                                     {% else %}
-                                        <span class="text-muted small fst-italic">No files uploaded yet</span>
+                                        <span class="text-muted small fst-italic">No files</span>
                                     {% endif %}
                                 {% endwith %}
                             </td>
 
                             <!-- Submission Date -->
-                            <td class="small text-muted">
-                                {{ app.applied_at|date:"d M Y" }}
-                                <div class="text-muted" style="font-size: 0.72rem;">{{ app.applied_at|time:"h:i A" }}</div>
+                            <td>
+                                <div class="text-dark fw-medium small text-nowrap">{{ app.applied_at|date:"d M Y" }}</div>
+                                <div class="text-muted small text-nowrap" style="font-size: 0.74rem;">{{ app.applied_at|time:"h:i A" }}</div>
                             </td>
 
-                            <!-- Actions -->
-                            <td class="text-end">
-                                <div class="d-inline-flex gap-1">
-                                    <!-- Review Documents Button (Opens Modal) -->
-                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reviewModal-{{ app.id }}" title="Review candidate documents and verify or reject">
-                                        <i class="bi bi-file-earmark-check me-1"></i> Review Docs
+                            <!-- Actions (Uniform Small & Equal Size, Single Line, No Clipping) -->
+                            <td class="text-end pe-3 pe-md-4" onclick="event.stopPropagation();">
+                                <div class="d-inline-flex align-items-center justify-content-end" style="gap: 8px;">
+                                    <!-- Review Documents Button (Small & Equal Size) -->
+                                    <button type="button" class="btn btn-table-action btn-outline-primary text-nowrap" data-bs-toggle="modal" data-bs-target="#reviewDocsModal-{{ app.id }}" title="Review candidate verification documents only">
+                                        <i class="bi bi-file-earmark-check"></i>
+                                        <span>Review Docs</span>
                                     </button>
 
-                                    <!-- Appoint Employee Button -->
+                                    <!-- Contextual Action Button (Small & Equal Size) -->
                                     {% if app.status == 'HIRED' %}
                                         {% if app.assigned_employee_profile %}
-                                            <a href="{% url 'employees:employee_detail' emp_id=app.assigned_employee_profile.emp_id %}" class="btn btn-sm btn-outline-success fw-semibold" title="View official employee profile">
-                                                <i class="bi bi-person-check me-1"></i> View Profile
+                                            <a href="{% url 'employees:employee_detail' emp_id=app.assigned_employee_profile.emp_id %}" class="btn btn-table-action btn-outline-success text-nowrap" title="View official employee profile">
+                                                <i class="bi bi-person-check"></i>
+                                                <span>View Profile</span>
                                             </a>
                                         {% elif app.hired_employee %}
-                                            <a href="{% url 'employees:employee_detail' emp_id=app.hired_employee.emp_id %}" class="btn btn-sm btn-outline-success fw-semibold" title="View official employee profile">
-                                                <i class="bi bi-person-check me-1"></i> View Profile
+                                            <a href="{% url 'employees:employee_detail' emp_id=app.hired_employee.emp_id %}" class="btn btn-table-action btn-outline-success text-nowrap" title="View official employee profile">
+                                                <i class="bi bi-person-check"></i>
+                                                <span>View Profile</span>
                                             </a>
                                         {% else %}
-                                            <span class="btn btn-sm btn-light border text-muted disabled">Hired</span>
+                                            <span class="btn btn-table-action btn-light border text-muted disabled text-nowrap">
+                                                <i class="bi bi-person-check"></i>
+                                                <span>Hired</span>
+                                            </span>
                                         {% endif %}
                                     {% elif app.document_verification_status == 'VERIFIED' %}
-                                        <a href="{% url 'recruitment:appoint_employee' %}?app_id={{ app.application_id }}" class="btn btn-sm btn-success fw-bold shadow-sm" title="Setup Salary and Appoint as Official Employee">
-                                            <i class="bi bi-person-plus-fill me-1"></i> Appoint Employee
+                                        <a href="{% url 'recruitment:appoint_employee' %}?app_id={{ app.application_id }}" class="btn btn-table-action btn-success fw-bold text-nowrap" title="Setup Salary and Appoint as Official Employee">
+                                            <i class="bi bi-person-plus-fill"></i>
+                                            <span>Appoint</span>
                                         </a>
                                     {% else %}
-                                        <a href="{% url 'recruitment:appoint_employee' %}?app_id={{ app.application_id }}" class="btn btn-sm btn-outline-secondary" title="Documents must be verified first, but you can view details">
+                                        <button type="button" class="btn btn-table-action btn-outline-secondary text-nowrap" data-bs-toggle="modal" data-bs-target="#profileModal-{{ app.id }}" title="View candidate onboarding particulars and details">
                                             <i class="bi bi-person-gear"></i>
-                                        </a>
+                                            <span>View Details</span>
+                                        </button>
                                     {% endif %}
                                 </div>
                             </td>
                         </tr>
 
-                        <!-- DOCUMENT REVIEW & ACTION MODAL -->
-                        <div class="modal fade" id="reviewModal-{{ app.id }}" tabindex="-1" aria-labelledby="reviewModalLabel-{{ app.id }}" aria-hidden="true">
-                            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-                                <div class="modal-content">
-                                    <div class="modal-header bg-light">
-                                        <div>
-                                            <h5 class="modal-title fw-bold text-dark mb-0" id="reviewModalLabel-{{ app.id }}">
-                                                <i class="bi bi-file-earmark-lock2-fill text-primary me-2"></i>Document Verification: {{ app.candidate.full_name }}
-                                            </h5>
-                                            <span class="small text-muted">Application ID: <b class="font-monospace text-primary">{{ app.application_id }}</b> &bull; {{ app.job.title|default:"Role" }}</span>
+                        <!-- MODAL 1: DEDICATED REVIEW DOCUMENTS MODAL (OPENS ONLY WHEN "REVIEW DOCS" IS CLICKED) -->
+                        <div class="modal fade" id="reviewDocsModal-{{ app.id }}" tabindex="-1" aria-labelledby="reviewDocsModalLabel-{{ app.id }}" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 920px; width: 95%;">
+                                <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                                    <div class="modal-header bg-white px-4 py-3 border-bottom d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="candidate-avatar fs-5" style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%); color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 700; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);">
+                                                {{ app.candidate.full_name|slice:":1"|upper }}
+                                            </div>
+                                            <div>
+                                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                    <h5 class="modal-title fw-bold text-dark mb-0 fs-5" id="reviewDocsModalLabel-{{ app.id }}">
+                                                        Review Documents: {{ app.candidate.full_name }}
+                                                    </h5>
+                                                    <span id="modalHeaderBadge{{ app.id }}">
+                                                        {% if app.status == 'HIRED' %}
+                                                            <span class="status-badge status-badge-hired">
+                                                                <i class="bi bi-person-badge-fill"></i> Appointed
+                                                            </span>
+                                                        {% elif app.document_verification_status == 'VERIFIED' %}
+                                                            <span class="status-badge status-badge-verified">
+                                                                <i class="bi bi-patch-check-fill"></i> Verified
+                                                            </span>
+                                                        {% elif app.document_verification_status == 'REJECTED' %}
+                                                            <span class="status-badge status-badge-rejected">
+                                                                <i class="bi bi-exclamation-octagon-fill"></i> Doc Error
+                                                            </span>
+                                                        {% else %}
+                                                            <span class="status-badge status-badge-pending">
+                                                                <i class="bi bi-hourglass-split"></i> Pending Review
+                                                            </span>
+                                                        {% endif %}
+                                                    </span>
+                                                </div>
+                                                <div class="small text-muted mt-1 d-flex align-items-center gap-2 flex-wrap">
+                                                    <span>App ID: <b class="font-monospace text-primary">{{ app.application_id }}</b></span>
+                                                    <span>&bull;</span>
+                                                    <span><i class="bi bi-briefcase me-1"></i>{{ app.job.title|default:"Role" }}</span>
+                                                    {% if app.job.site %}<span>&bull;</span><span><i class="bi bi-geo-alt me-1 text-danger"></i>{{ app.job.site.name }}</span>{% endif %}
+                                                    <span>&bull;</span>
+                                                    <span class="fw-semibold text-primary"><i class="bi bi-paperclip me-1"></i>{{ app.candidate.total_documents_count }} Attached</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <button type="button" class="btn-close" data-bs-toggle="modal" aria-label="Close"></button>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
-                                    <div class="modal-body p-4">
 
-                                        <!-- Status Alert -->
-                                        {% if app.document_verification_status == 'VERIFIED' %}
-                                            <div class="alert alert-success d-flex align-items-center gap-2 mb-3">
-                                                <i class="bi bi-patch-check-fill fs-5"></i>
-                                                <div>
-                                                    <strong>Documents are currently VERIFIED.</strong>
-                                                    {% if app.documents_verified_at %}
-                                                        <div class="small">Verified on {{ app.documents_verified_at|date:"d M Y, h:i A" }}{% if app.documents_verified_by %} by {{ app.documents_verified_by.get_full_name|default:app.documents_verified_by.username }}{% endif %}.</div>
-                                                    {% endif %}
+                                    <!-- Body: Live Verification Progress & Document Review Cards -->
+                                    <div class="modal-body p-4" style="background-color: #F8FAFC;">
+                                        <!-- Executive Verification Progress & Compliance Header -->
+                                        <div class="stats-progress-header mb-4" id="statsHeader{{ app.id }}">
+                                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-2.5">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary fw-bold px-2.5 py-1.5" style="font-size: 0.78rem;">
+                                                        <i class="bi bi-shield-check me-1"></i> Verification Compliance
+                                                    </span>
+                                                    <span class="text-muted small fw-medium" id="statsCountText{{ app.id }}">
+                                                        <b class="text-dark fs-6" id="verifiedCount{{ app.id }}">{{ app.candidate.verified_documents_count }}</b> of {{ app.candidate.total_documents_count }} Documents Verified
+                                                    </span>
+                                                </div>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span id="statusGlowBadgeContainer{{ app.id }}">
+                                                        {% if app.document_verification_status == 'VERIFIED' %}
+                                                            <span class="doc-live-badge badge-verified-glow" id="statusGlowBadge{{ app.id }}">
+                                                                <i class="bi bi-patch-check-fill"></i> Ready for Appointment
+                                                            </span>
+                                                        {% elif app.document_verification_status == 'REJECTED' %}
+                                                            <span class="doc-live-badge badge-rejected-glow" id="statusGlowBadge{{ app.id }}">
+                                                                <i class="bi bi-exclamation-octagon-fill"></i> Corrections Needed
+                                                            </span>
+                                                        {% else %}
+                                                            <span class="doc-live-badge badge-pending-glow" id="statusGlowBadge{{ app.id }}">
+                                                                <i class="bi bi-hourglass-split"></i> Under Verification
+                                                            </span>
+                                                        {% endif %}
+                                                    </span>
+                                                    <span class="badge bg-white text-dark border px-2.5 py-1.5 fw-bold shadow-xs" id="statsPercentText{{ app.id }}">
+                                                        {{ app.candidate.verification_percentage }}%
+                                                    </span>
                                                 </div>
                                             </div>
-                                        {% elif app.document_verification_status == 'REJECTED' %}
-                                            <div class="alert alert-danger d-flex align-items-center gap-2 mb-3">
-                                                <i class="bi bi-exclamation-triangle-fill fs-5"></i>
-                                                <div>
-                                                    <strong>Documents currently have a documentation error status.</strong>
-                                                    <div class="small">HR Rejection Reason: "{{ app.document_rejection_reason }}"</div>
+                                            <!-- Progress Bar with Animation -->
+                                            <div class="progress" style="height: 9px; border-radius: 999px; background-color: #E2E8F0;">
+                                                <div class="progress-bar progress-bar-striped progress-bar-animated {% if app.candidate.verification_percentage == 100 %}bg-success{% else %}bg-primary{% endif %}" 
+                                                     role="progressbar" 
+                                                     id="progressBar{{ app.id }}" 
+                                                     style="width: {{ app.candidate.verification_percentage }}%; transition: width 0.4s ease;" 
+                                                     aria-valuenow="{{ app.candidate.verification_percentage }}" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="100">
                                                 </div>
                                             </div>
-                                        {% else %}
-                                            <div class="alert alert-warning d-flex align-items-center gap-2 mb-3">
-                                                <i class="bi bi-clock-history fs-5"></i>
-                                                <div>
-                                                    <strong>Pending HR Review.</strong> Please inspect all attached verification documents and candidate financial identification details below.
+                                            {% if app.document_verification_status == 'VERIFIED' and app.documents_verified_at %}
+                                                <div class="small text-success mt-2 d-flex align-items-center gap-1.5">
+                                                    <i class="bi bi-check-circle-fill"></i> Verified on {{ app.documents_verified_at|date:"d M Y, h:i A" }}{% if app.documents_verified_by %} by <strong>{{ app.documents_verified_by.get_full_name|default:app.documents_verified_by.username }}</strong>{% endif %}. Clear for appointment.
                                                 </div>
-                                            </div>
-                                        {% endif %}
-
-                                        <!-- Candidate Statutory & Banking Details Card -->
-                                        <div class="card bg-light border mb-4">
-                                            <div class="card-body py-3 px-4">
-                                                <h6 class="fw-bold text-dark mb-3"><i class="bi bi-bank2 me-2 text-primary"></i>Statutory & Banking Details Submitted</h6>
-                                                <div class="row g-3 small">
-                                                    <div class="col-6 col-md-3">
-                                                        <div class="text-muted">PAN Card Number:</div>
-                                                        <div class="fw-bold font-monospace text-dark">{{ app.candidate.pan_number|default:"Not Provided" }}</div>
-                                                    </div>
-                                                    <div class="col-6 col-md-3">
-                                                        <div class="text-muted">Aadhaar Number:</div>
-                                                        <div class="fw-bold font-monospace text-dark">{{ app.candidate.aadhaar_number|default:"Not Provided" }}</div>
-                                                    </div>
-                                                    <div class="col-6 col-md-3">
-                                                        <div class="text-muted">Bank Name:</div>
-                                                        <div class="fw-bold text-dark">{{ app.candidate.bank_name|default:"Not Provided" }}</div>
-                                                    </div>
-                                                    <div class="col-6 col-md-3">
-                                                        <div class="text-muted">Bank Account Number:</div>
-                                                        <div class="fw-bold font-monospace text-dark">{{ app.candidate.bank_account_number|default:"Not Provided" }}</div>
-                                                    </div>
-                                                    <div class="col-6 col-md-3">
-                                                        <div class="text-muted">IFSC Code:</div>
-                                                        <div class="fw-bold font-monospace text-dark">{{ app.candidate.bank_ifsc_code|default:"Not Provided" }}</div>
-                                                    </div>
-                                                    <div class="col-6 col-md-3">
-                                                        <div class="text-muted">PF UAN Number:</div>
-                                                        <div class="fw-bold font-monospace text-dark">{{ app.candidate.pf_uan_number|default:"Not Applicable / New" }}</div>
-                                                    </div>
-                                                    <div class="col-12 col-md-6">
-                                                        <div class="text-muted">Registered Address:</div>
-                                                        <div class="fw-bold text-dark">{{ app.candidate.permanent_address|default:app.candidate.current_address|default:"Not Provided" }}</div>
-                                                    </div>
+                                            {% elif app.document_verification_status == 'REJECTED' and app.document_rejection_reason %}
+                                                <div class="small text-danger mt-2 d-flex align-items-center gap-1.5 bg-danger bg-opacity-10 px-2.5 py-1.5 rounded-2 border border-danger border-opacity-25">
+                                                    <i class="bi bi-exclamation-triangle-fill"></i> <span><strong>HR Feedback:</strong> {{ app.document_rejection_reason }}</span>
                                                 </div>
-                                            </div>
+                                            {% endif %}
                                         </div>
 
-                                        <!-- Attached Verification Documents -->
-                                        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-paperclip me-2 text-primary"></i>Uploaded Verification Documents</h6>
+                                        <!-- Document Review Cards List -->
                                         {% with docs=app.candidate.documents.all %}
                                             {% if docs %}
-                                                <div class="list-group mb-4 shadow-sm">
+                                                <div class="d-flex flex-column gap-3 mb-4">
                                                     {% for doc in docs %}
-                                                        <div class="list-group-item d-flex justify-content-between align-items-center py-3">
-                                                            <div class="d-flex align-items-center gap-3">
-                                                                <div class="rounded p-2 bg-light text-primary fs-4">
-                                                                    <i class="bi bi-file-earmark-check"></i>
-                                                                </div>
-                                                                <div>
-                                                                    <div class="fw-bold text-dark">{{ doc.title }}</div>
-                                                                    <div class="small text-muted">
-                                                                        Category: <span class="badge bg-light text-dark border">{{ doc.get_doc_type_display }}</span> &bull; 
-                                                                        Uploaded: {{ doc.uploaded_at|date:"d M Y" }}
+                                                        <div class="doc-review-card-wow {% if doc.is_verified %}status-verified{% elif doc.is_rejected %}status-rejected{% else %}status-pending{% endif %}" 
+                                                             id="docRow{{ doc.id }}" 
+                                                             data-app-id="{{ app.id }}" 
+                                                             data-doc-id="{{ doc.id }}" 
+                                                             data-verified="{% if doc.is_verified %}1{% else %}0{% endif %}">
+                                                            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                                                                <!-- Left: Category Icon & Info -->
+                                                                <div class="d-flex align-items-start align-items-md-center gap-3">
+                                                                    {% if doc.doc_type == 'RESUME' %}
+                                                                        <div class="doc-avatar-box" style="background: linear-gradient(135deg, #4338CA 0%, #6366F1 100%); color: #ffffff;" title="Resume / CV">
+                                                                            <i class="bi bi-file-earmark-person-fill"></i>
+                                                                        </div>
+                                                                    {% elif doc.doc_type == 'PHOTO' %}
+                                                                        <div class="doc-avatar-box" style="background: linear-gradient(135deg, #7C3AED 0%, #A855F7 100%); color: #ffffff;" title="Profile Photo">
+                                                                            <i class="bi bi-person-bounding-box"></i>
+                                                                        </div>
+                                                                    {% elif doc.doc_type == 'CERTIFICATE' %}
+                                                                        <div class="doc-avatar-box" style="background: linear-gradient(135deg, #0284C7 0%, #38BDF8 100%); color: #ffffff;" title="Degree Certificate / Marksheet">
+                                                                            <i class="bi bi-mortarboard-fill"></i>
+                                                                        </div>
+                                                                    {% elif doc.doc_type == 'EXPERIENCE_LETTER' %}
+                                                                        <div class="doc-avatar-box" style="background: linear-gradient(135deg, #0D9488 0%, #14B8A6 100%); color: #ffffff;" title="Experience / Relieving Letter">
+                                                                            <i class="bi bi-briefcase-fill"></i>
+                                                                        </div>
+                                                                    {% elif doc.doc_type == 'PAYSLIP' %}
+                                                                        <div class="doc-avatar-box" style="background: linear-gradient(135deg, #059669 0%, #10B981 100%); color: #ffffff;" title="Recent Payslip / Form 16">
+                                                                            <i class="bi bi-receipt-cutoff"></i>
+                                                                        </div>
+                                                                    {% elif doc.doc_type == 'PAN_CARD' %}
+                                                                        <div class="doc-avatar-box" style="background: linear-gradient(135deg, #EA580C 0%, #F97316 100%); color: #ffffff;" title="Income Tax PAN Card">
+                                                                            <i class="bi bi-card-heading"></i>
+                                                                        </div>
+                                                                    {% elif doc.doc_type == 'AADHAAR_CARD' %}
+                                                                        <div class="doc-avatar-box" style="background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%); color: #ffffff;" title="Aadhaar / National ID">
+                                                                            <i class="bi bi-person-vcard-fill"></i>
+                                                                        </div>
+                                                                    {% elif doc.doc_type == 'BANK_PROOF' %}
+                                                                        <div class="doc-avatar-box" style="background: linear-gradient(135deg, #047857 0%, #34D399 100%); color: #ffffff;" title="Cancelled Cheque / Bank Passbook">
+                                                                            <i class="bi bi-bank2"></i>
+                                                                        </div>
+                                                                    {% else %}
+                                                                        <div class="doc-avatar-box" style="background: linear-gradient(135deg, #475569 0%, #64748B 100%); color: #ffffff;" title="Verification Document">
+                                                                            <i class="bi bi-file-earmark-check-fill"></i>
+                                                                        </div>
+                                                                    {% endif %}
+
+                                                                    <div class="flex-grow-1">
+                                                                        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                                                            <h6 class="fw-bold text-dark mb-0 fs-6">{{ doc.title }}</h6>
+                                                                            <span id="docBadge{{ doc.id }}">
+                                                                                {% if doc.is_verified %}
+                                                                                    <span class="doc-live-badge badge-verified-glow">
+                                                                                        <i class="bi bi-patch-check-fill"></i> Verified
+                                                                                    </span>
+                                                                                {% elif doc.is_rejected %}
+                                                                                    <span class="doc-live-badge badge-rejected-glow">
+                                                                                        <i class="bi bi-x-circle-fill"></i> Rejected
+                                                                                    </span>
+                                                                                {% else %}
+                                                                                    <span class="doc-live-badge badge-pending-glow">
+                                                                                        <i class="bi bi-hourglass-split"></i> Pending Verification
+                                                                                    </span>
+                                                                                {% endif %}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div class="small text-muted d-flex align-items-center gap-2 flex-wrap">
+                                                                            <span class="badge bg-light text-secondary border px-2 py-0.5 fw-medium">{{ doc.get_doc_type_display }}</span>
+                                                                            <span>&bull;</span>
+                                                                            <span><i class="bi bi-clock me-1"></i>Uploaded: {{ doc.uploaded_at|date:"d M Y, h:i A" }}</span>
+                                                                        </div>
+                                                                        <div id="docNotes{{ doc.id }}" class="small text-danger mt-2 {% if not doc.is_rejected or not doc.rejection_notes %}d-none{% endif %} bg-danger bg-opacity-10 p-2 rounded-2 border border-danger border-opacity-25">
+                                                                            <i class="bi bi-chat-left-dots-fill me-1"></i> <strong>Rejection Reason:</strong> <span class="notes-text">{{ doc.rejection_notes }}</span>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
-                                                            </div>
-                                                            <div class="d-flex gap-2">
-                                                                <a href="{{ doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                                                    <i class="bi bi-eye me-1"></i> View / Download
-                                                                </a>
+
+                                                                <!-- Right: Action Buttons with Professional Spacing -->
+                                                                <div class="d-flex align-items-center gap-2 ms-auto flex-shrink-0 mt-2 mt-md-0">
+                                                                    <a href="{{ doc.file.url }}" target="_blank" class="btn btn-outline-secondary btn-doc-action" title="Open and inspect document in new tab">
+                                                                        <i class="bi bi-eye"></i>
+                                                                        <span>View</span>
+                                                                    </a>
+                                                                    <!-- Verify Button -->
+                                                                    <button type="button" 
+                                                                            class="btn {% if doc.is_verified %}btn-success text-white{% else %}btn-outline-success{% endif %} btn-doc-action" 
+                                                                            id="docVerifyBtn{{ doc.id }}" 
+                                                                            onclick="verifySingleDoc({{ doc.id }}, this, {{ app.id }})" 
+                                                                            title="Mark document as authentic and verified">
+                                                                        <i class="bi bi-check-lg"></i>
+                                                                        <span>{% if doc.is_verified %}Verified{% else %}Verify{% endif %}</span>
+                                                                    </button>
+                                                                    <!-- Reject Button -->
+                                                                    <button type="button" 
+                                                                            class="btn {% if doc.is_rejected %}btn-danger text-white{% else %}btn-outline-danger{% endif %} btn-doc-action" 
+                                                                            id="docRejectBtn{{ doc.id }}" 
+                                                                            onclick="promptRejectSingleDoc({{ doc.id }}, '{{ doc.title|escapejs }}', this, {{ app.id }})" 
+                                                                            title="Reject document with re-upload feedback">
+                                                                        <i class="bi bi-x-lg"></i>
+                                                                        <span>{% if doc.is_rejected %}Rejected{% else %}Reject{% endif %}</span>
+                                                                    </button>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     {% endfor %}
                                                 </div>
                                             {% else %}
-                                                <div class="alert alert-secondary text-center py-4 mb-4">
-                                                    <i class="bi bi-folder-x fs-2 d-block text-muted mb-2"></i>
-                                                    No verification documents uploaded yet for this candidate.
+                                                <div class="card border text-center py-5 mb-4 rounded-3 bg-white shadow-sm">
+                                                    <i class="bi bi-folder-x fs-1 text-muted mb-2"></i>
+                                                    <h6 class="fw-bold text-dark">No Verification Documents Attached</h6>
+                                                    <p class="text-muted small mb-0">Candidate has not submitted any documents for verification yet.</p>
                                                 </div>
                                             {% endif %}
                                         {% endwith %}
 
-                                        <!-- Verification Action Form -->
-                                        <div class="card border-0 bg-light p-3">
-                                            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-shield-shaded me-2 text-primary"></i>HR Verification Actions</h6>
-                                            <p class="small text-muted mb-3">
-                                                If all documents are authentic and match statutory records, mark as <b>Verified</b>. If any documents are blurry, incomplete, or invalid, mark as <b>Documentation Error</b> with feedback so the candidate can re-upload.
-                                            </p>
-                                            
-                                            <form method="POST" action="{% url 'recruitment:verify_candidate_documents' app.application_id %}">
-                                                {% csrf_token %}
-                                                
-                                                <div class="mb-3">
-                                                    <label class="form-label small fw-semibold text-muted">Rejection Feedback / Notes (Required only if rejecting due to documentation error):</label>
-                                                    <textarea name="rejection_reason" class="form-control" rows="2" placeholder="e.g. Aadhaar copy is blurry; Degree passing certificate missing graduation year. Please re-upload.">{{ app.document_rejection_reason }}</textarea>
-                                                </div>
+                                        <!-- Batch Verification Remarks Form -->
+                                        <form method="POST" id="verifyForm-{{ app.id }}" action="{% url 'recruitment:verify_candidate_documents' app.application_id %}">
+                                            {% csrf_token %}
+                                            <div class="card border rounded-3 p-3 bg-white shadow-sm" style="border-color: #E2E8F0 !important;">
+                                                <label class="form-label fw-bold text-dark mb-1.5 d-flex align-items-center gap-2 small">
+                                                    <i class="bi bi-chat-left-text text-primary"></i>
+                                                    <span>HR Verification Remarks / Audit Notes (Optional)</span>
+                                                </label>
+                                                <textarea name="rejection_reason" class="form-control bg-light" rows="2" placeholder="Enter optional review feedback or batch documentation remarks..." style="font-size: 0.86rem; border-radius: 8px;">{{ app.document_rejection_reason }}</textarea>
+                                            </div>
+                                        </form>
+                                    </div>
 
-                                                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-                                                    <button type="submit" name="action" value="REJECT" class="btn btn-outline-danger fw-semibold">
-                                                        <i class="bi bi-x-circle me-1"></i> Reject Documents with Error Feedback
-                                                    </button>
-                                                    <div class="d-flex gap-2">
-                                                        <button type="submit" name="action" value="VERIFY" class="btn btn-success fw-bold">
-                                                            <i class="bi bi-check2-circle me-1"></i> Verify Documents
-                                                        </button>
-                                                        {% if app.document_verification_status == 'VERIFIED' and app.status != 'HIRED' %}
-                                                            <a href="{% url 'recruitment:appoint_employee' %}?app_id={{ app.application_id }}" class="btn btn-primary fw-bold">
-                                                                <i class="bi bi-person-plus-fill me-1"></i> Proceed to Appoint Employee
-                                                            </a>
-                                                        {% endif %}
+                                    <!-- Footer: Unified Single Row, Proper Sizing, Zero Overlaps -->
+                                    <div class="modal-footer bg-white px-4 py-3 border-top">
+                                        <div class="d-flex flex-wrap align-items-center justify-content-between w-100 gap-2">
+                                            <!-- Left: Navigation / Secondary -->
+                                            <div class="d-flex align-items-center gap-2">
+                                                <button type="button" class="btn btn-outline-secondary btn-doc-action" data-bs-dismiss="modal">
+                                                    <i class="bi bi-x-lg"></i>
+                                                    <span>Close</span>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-primary btn-doc-action" onclick="switchToProfileModal({{ app.id }})" title="View Candidate Onboarding Particulars">
+                                                    <i class="bi bi-person-lines-fill"></i>
+                                                    <span>View Candidate Profile</span>
+                                                </button>
+                                            </div>
+                                            <!-- Right: Verification & Appointment Actions -->
+                                            <div class="d-flex align-items-center gap-2 flex-wrap ms-auto" id="modalFooterActions{{ app.id }}">
+                                                <button type="submit" form="verifyForm-{{ app.id }}" name="action" value="REJECT" class="btn btn-outline-danger btn-doc-action" title="Reject all pending with error remarks">
+                                                    <i class="bi bi-x-circle"></i>
+                                                    <span>Reject Documents</span>
+                                                </button>
+                                                <button type="submit" form="verifyForm-{{ app.id }}" name="action" value="VERIFY" class="btn btn-success text-white btn-doc-action fw-bold shadow-sm" title="Mark all documents as verified">
+                                                    <i class="bi bi-check2-circle"></i>
+                                                    <span>Verify All Documents</span>
+                                                </button>
+                                                {% if app.document_verification_status == 'VERIFIED' and app.status != 'HIRED' %}
+                                                    <a href="{% url 'recruitment:appoint_employee' %}?app_id={{ app.application_id }}" class="btn btn-primary text-white btn-doc-action fw-bold shadow-sm" title="Appoint Employee into HRMS">
+                                                        <i class="bi bi-person-plus-fill"></i>
+                                                        <span>Appoint Employee</span>
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- MODAL 2: FULL CANDIDATE ONBOARDING PROFILE (OPENS ON ROW CLICK OR VIEW DETAILS) -->
+                        <div class="modal fade" id="profileModal-{{ app.id }}" tabindex="-1" aria-labelledby="profileModalLabel-{{ app.id }}" aria-hidden="true">
+                            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                                <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                                    <!-- Hero Header -->
+                                    <div class="modal-header bg-white px-4 py-3.5 border-bottom d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="candidate-avatar" style="width: 52px; height: 52px; font-size: 1.25rem;">
+                                                {{ app.candidate.full_name|slice:":1"|upper }}
+                                            </div>
+                                            <div>
+                                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                    <h4 class="fw-bold text-dark mb-0 fs-5" id="profileModalLabel-{{ app.id }}">
+                                                        {{ app.candidate.full_name }}
+                                                    </h4>
+                                                    {% if app.status == 'HIRED' %}
+                                                        <span class="status-badge status-badge-hired">
+                                                            <i class="bi bi-person-badge-fill"></i> Appointed Employee
+                                                        </span>
+                                                    {% elif app.document_verification_status == 'VERIFIED' %}
+                                                        <span class="status-badge status-badge-verified">
+                                                            <i class="bi bi-patch-check-fill"></i> Documents Verified
+                                                        </span>
+                                                    {% elif app.document_verification_status == 'REJECTED' %}
+                                                        <span class="status-badge status-badge-rejected">
+                                                            <i class="bi bi-exclamation-octagon-fill"></i> Documentation Error
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="status-badge status-badge-pending">
+                                                            <i class="bi bi-hourglass-split"></i> Pending HR Review
+                                                        </span>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="small text-muted mt-1 d-flex align-items-center gap-2 flex-wrap">
+                                                    <span class="badge bg-light text-primary border"><i class="bi bi-hash"></i>{{ app.application_id }}</span>
+                                                    <span class="badge bg-light text-secondary border"><i class="bi bi-briefcase me-1 text-primary"></i>{{ app.job.title|default:"Role" }}</span>
+                                                    {% if app.job.department %}<span class="badge bg-light text-secondary border">{{ app.job.department.name }}</span>{% endif %}
+                                                    {% if app.job.site %}<span class="badge bg-light text-secondary border"><i class="bi bi-geo-alt me-1 text-danger"></i>{{ app.job.site.name }}</span>{% endif %}
+                                                    <span class="badge bg-light text-secondary border"><i class="bi bi-calendar-event me-1"></i>Submitted: {{ app.applied_at|date:"d M Y, h:i A" }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+
+                                    <!-- Profile Nav Tabs -->
+                                    <ul class="nav profile-nav-tabs" id="profileTabs-{{ app.id }}" role="tablist">
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link active" id="tabPersonalBtn-{{ app.id }}" data-bs-toggle="tab" data-bs-target="#tabPersonal-{{ app.id }}" type="button" role="tab" aria-selected="true">
+                                                <i class="bi bi-person-lines-fill text-primary"></i>
+                                                <span>Personal Particulars</span>
+                                            </button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="tabBankingBtn-{{ app.id }}" data-bs-toggle="tab" data-bs-target="#tabBanking-{{ app.id }}" type="button" role="tab" aria-selected="false">
+                                                <i class="bi bi-bank2 text-success"></i>
+                                                <span>Statutory & Banking</span>
+                                            </button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="tabCareerBtn-{{ app.id }}" data-bs-toggle="tab" data-bs-target="#tabCareer-{{ app.id }}" type="button" role="tab" aria-selected="false">
+                                                <i class="bi bi-mortarboard-fill text-info"></i>
+                                                <span>Education & Experience</span>
+                                            </button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="tabDocsBtn-{{ app.id }}" data-bs-toggle="tab" data-bs-target="#tabDocs-{{ app.id }}" type="button" role="tab" aria-selected="false">
+                                                <i class="bi bi-paperclip text-warning"></i>
+                                                <span>Attached Documents</span>
+                                                {% with docs=app.candidate.documents.all %}
+                                                    <span class="badge bg-primary-subtle text-primary ms-1 px-2 py-0.5 rounded-pill">{{ docs|length }}</span>
+                                                {% endwith %}
+                                            </button>
+                                        </li>
+                                    </ul>
+
+                                    <!-- Tab Content -->
+                                    <div class="modal-body p-4 bg-light">
+                                        <!-- Status Alert Banner -->
+                                        {% if app.document_verification_status == 'VERIFIED' %}
+                                            <div class="alert alert-success d-flex align-items-center gap-3 p-3 mb-4 rounded-3 border-success-subtle shadow-sm bg-white">
+                                                <i class="bi bi-patch-check-fill fs-3 text-success flex-shrink-0"></i>
+                                                <div>
+                                                    <strong class="text-success">Candidate Documents Verified & Authentic.</strong>
+                                                    {% if app.documents_verified_at %}
+                                                        <div class="small text-muted mt-0.5">Verified on {{ app.documents_verified_at|date:"d M Y, h:i A" }}{% if app.documents_verified_by %} by {{ app.documents_verified_by.get_full_name|default:app.documents_verified_by.username }}{% endif %}. Eligible for immediate appointment.</div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        {% elif app.document_verification_status == 'REJECTED' %}
+                                            <div class="alert alert-danger d-flex align-items-center gap-3 p-3 mb-4 rounded-3 border-danger-subtle shadow-sm bg-white">
+                                                <i class="bi bi-exclamation-octagon-fill fs-3 text-danger flex-shrink-0"></i>
+                                                <div>
+                                                    <strong class="text-danger">Documentation Error / Re-upload Required</strong>
+                                                    <div class="small text-dark mt-0.5">HR Remarks: "{{ app.document_rejection_reason }}"</div>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+
+                                        <div class="tab-content" id="profileTabContent-{{ app.id }}">
+                                            <!-- TAB 1: PERSONAL PARTICULARS -->
+                                            <div class="tab-pane fade show active" id="tabPersonal-{{ app.id }}" role="tabpanel">
+                                                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3 mb-3">
+                                                    <!-- Full Name -->
+                                                    <div class="col">
+                                                        <div class="info-card-tile">
+                                                            <div class="info-tile-icon bg-primary bg-opacity-10 text-primary">
+                                                                <i class="bi bi-person-fill"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="info-tile-label">Full Name</div>
+                                                                <div class="info-tile-value">{{ app.candidate.full_name }}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Email Address -->
+                                                    <div class="col">
+                                                        <div class="info-card-tile">
+                                                            <div class="info-tile-icon" style="background: rgba(147, 51, 234, 0.1); color: #9333EA;">
+                                                                <i class="bi bi-envelope-fill"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="info-tile-label">Email Address</div>
+                                                                <div class="info-tile-value">{{ app.candidate.email }}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Primary Phone -->
+                                                    <div class="col">
+                                                        <div class="info-card-tile">
+                                                            <div class="info-tile-icon bg-success bg-opacity-10 text-success">
+                                                                <i class="bi bi-telephone-fill"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="info-tile-label">Primary Contact</div>
+                                                                <div class="info-tile-value font-monospace">{{ app.candidate.phone }}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Alternative Phone -->
+                                                    <div class="col">
+                                                        <div class="info-card-tile">
+                                                            <div class="info-tile-icon bg-info bg-opacity-10 text-info">
+                                                                <i class="bi bi-phone-fill"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="info-tile-label">Alternative Phone</div>
+                                                                <div class="info-tile-value font-monospace">{{ app.candidate.alt_phone|default:"Not Provided" }}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Date of Birth -->
+                                                    <div class="col">
+                                                        <div class="info-card-tile">
+                                                            <div class="info-tile-icon bg-warning bg-opacity-10 text-warning">
+                                                                <i class="bi bi-calendar-event-fill"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="info-tile-label">Date of Birth</div>
+                                                                <div class="info-tile-value">{{ app.candidate.date_of_birth|date:"d M Y"|default:"Not Provided" }}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Gender -->
+                                                    <div class="col">
+                                                        <div class="info-card-tile">
+                                                            <div class="info-tile-icon" style="background: rgba(236, 72, 153, 0.1); color: #EC4899;">
+                                                                <i class="bi bi-gender-ambiguous"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="info-tile-label">Gender</div>
+                                                                <div class="info-tile-value">{{ app.candidate.get_gender_display|default:app.candidate.gender|default:"Not Provided" }}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Father's / Guardian's Name -->
+                                                    <div class="col">
+                                                        <div class="info-card-tile">
+                                                            <div class="info-tile-icon" style="background: rgba(20, 184, 166, 0.1); color: #0D9488;">
+                                                                <i class="bi bi-people-fill"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="info-tile-label">Father / Guardian</div>
+                                                                <div class="info-tile-value">{{ app.candidate.father_name|default:"Not Provided" }}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Blood Group & Marital Status -->
+                                                    <div class="col">
+                                                        <div class="info-card-tile">
+                                                            <div class="info-tile-icon bg-danger bg-opacity-10 text-danger">
+                                                                <i class="bi bi-droplet-fill"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="info-tile-label">Blood Group / Marital</div>
+                                                                <div class="info-tile-value">{{ app.candidate.blood_group|default:"-" }} &bull; {{ app.candidate.marital_status|default:"Single" }}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Emergency Contact -->
+                                                    <div class="col">
+                                                        <div class="info-card-tile">
+                                                            <div class="info-tile-icon bg-danger bg-opacity-10 text-danger">
+                                                                <i class="bi bi-shield-exclamation"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="info-tile-label">Emergency Contact</div>
+                                                                <div class="info-tile-value">
+                                                                    {{ app.candidate.emergency_contact_name|default:"Not Provided" }}
+                                                                    {% if app.candidate.emergency_contact_relation %}<span class="text-muted fw-normal">({{ app.candidate.emergency_contact_relation }})</span>{% endif %}
+                                                                    {% if app.candidate.emergency_contact_phone %}<br><span class="font-monospace text-primary small">{{ app.candidate.emergency_contact_phone }}</span>{% endif %}
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </form>
-                                        </div>
 
+                                                <!-- Addresses Row -->
+                                                <div class="row g-3">
+                                                    <div class="col-12 col-md-6">
+                                                        <div class="info-card-tile">
+                                                            <div class="info-tile-icon" style="background: rgba(99, 102, 241, 0.1); color: #6366F1;">
+                                                                <i class="bi bi-house-door-fill"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="info-tile-label">Current Residential Address</div>
+                                                                <div class="info-tile-value">{{ app.candidate.current_address|default:"Not Provided" }}{% if app.candidate.city %}, {{ app.candidate.city }}{% endif %}{% if app.candidate.state %}, {{ app.candidate.state }}{% endif %}{% if app.candidate.postal_code %} - {{ app.candidate.postal_code }}{% endif %}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12 col-md-6">
+                                                        <div class="info-card-tile">
+                                                            <div class="info-tile-icon bg-secondary bg-opacity-10 text-secondary">
+                                                                <i class="bi bi-geo-alt-fill"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="info-tile-label">Permanent Hometown Address</div>
+                                                                <div class="info-tile-value">{{ app.candidate.permanent_address|default:"Same as current residential address" }}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- TAB 2: STATUTORY & BANKING -->
+                                            <div class="tab-pane fade" id="tabBanking-{{ app.id }}" role="tabpanel">
+                                                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+                                                    <!-- Income Tax PAN -->
+                                                    <div class="col">
+                                                        <div class="info-card-tile">
+                                                            <div class="info-tile-icon bg-primary bg-opacity-10 text-primary">
+                                                                <i class="bi bi-card-text"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="info-tile-label">Income Tax PAN Number</div>
+                                                                <div class="info-tile-value font-monospace text-primary">{{ app.candidate.pan_number|default:"Not Provided" }}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Aadhaar Number -->
+                                                    <div class="col">
+                                                        <div class="info-card-tile">
+                                                            <div class="info-tile-icon bg-success bg-opacity-10 text-success">
+                                                                <i class="bi bi-person-vcard"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="info-tile-label">Aadhaar / National ID</div>
+                                                                <div class="info-tile-value font-monospace">{{ app.candidate.aadhaar_number|default:"Not Provided" }}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- PF UAN Number -->
+                                                    <div class="col">
+                                                        <div class="info-card-tile">
+                                                            <div class="info-tile-icon bg-info bg-opacity-10 text-info">
+                                                                <i class="bi bi-file-lock2"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="info-tile-label">Provident Fund UAN Number</div>
+                                                                <div class="info-tile-value font-monospace">{{ app.candidate.pf_uan_number|default:"Not Applicable / New" }}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Bank Name -->
+                                                    <div class="col">
+                                                        <div class="info-card-tile">
+                                                            <div class="info-tile-icon bg-primary bg-opacity-10 text-primary">
+                                                                <i class="bi bi-bank2"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="info-tile-label">Salary Bank Name</div>
+                                                                <div class="info-tile-value">{{ app.candidate.bank_name|default:"Not Provided" }}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Bank Account Number -->
+                                                    <div class="col">
+                                                        <div class="info-card-tile">
+                                                            <div class="info-tile-icon bg-dark bg-opacity-10 text-dark">
+                                                                <i class="bi bi-credit-card-2-front"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="info-tile-label">Bank Account Number</div>
+                                                                <div class="info-tile-value font-monospace">{{ app.candidate.bank_account_number|default:"Not Provided" }}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- IFSC Code -->
+                                                    <div class="col">
+                                                        <div class="info-card-tile">
+                                                            <div class="info-tile-icon bg-warning bg-opacity-10 text-warning">
+                                                                <i class="bi bi-upc-scan"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="info-tile-label">Bank IFSC Code</div>
+                                                                <div class="info-tile-value font-monospace">{{ app.candidate.bank_ifsc_code|default:"Not Provided" }}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Bank Branch -->
+                                                    <div class="col-12 col-md-6">
+                                                        <div class="info-card-tile">
+                                                            <div class="info-tile-icon bg-secondary bg-opacity-10 text-secondary">
+                                                                <i class="bi bi-building"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="info-tile-label">Bank Branch Particulars</div>
+                                                                <div class="info-tile-value">{{ app.candidate.bank_branch|default:"Not Provided" }}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- TAB 3: EDUCATION & EXPERIENCE -->
+                                            <div class="tab-pane fade" id="tabCareer-{{ app.id }}" role="tabpanel">
+                                                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+                                                    <!-- Degree -->
+                                                    <div class="col">
+                                                        <div class="info-card-tile">
+                                                            <div class="info-tile-icon bg-primary bg-opacity-10 text-primary">
+                                                                <i class="bi bi-mortarboard-fill"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="info-tile-label">Degree / Qualification</div>
+                                                                <div class="info-tile-value">{{ app.candidate.education.degree_name|default:app.candidate.education.highest_qualification|default:"Graduate" }}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Specialization -->
+                                                    <div class="col">
+                                                        <div class="info-card-tile">
+                                                            <div class="info-tile-icon bg-info bg-opacity-10 text-info">
+                                                                <i class="bi bi-journal-code"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="info-tile-label">Specialization / Stream</div>
+                                                                <div class="info-tile-value">{{ app.candidate.education.specialization|default:"General" }}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- College / University -->
+                                                    <div class="col">
+                                                        <div class="info-card-tile">
+                                                            <div class="info-tile-icon bg-secondary bg-opacity-10 text-secondary">
+                                                                <i class="bi bi-building-fill"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="info-tile-label">College / University</div>
+                                                                <div class="info-tile-value">{{ app.candidate.education.institution|default:"Not Provided" }}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Passing Year & Score -->
+                                                    <div class="col">
+                                                        <div class="info-card-tile">
+                                                            <div class="info-tile-icon bg-success bg-opacity-10 text-success">
+                                                                <i class="bi bi-award-fill"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="info-tile-label">Graduation Year & Score</div>
+                                                                <div class="info-tile-value">{{ app.candidate.education.passing_year|default:"-" }}{% if app.candidate.education.percentage_cgpa %} &bull; {{ app.candidate.education.percentage_cgpa }}{% endif %}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Experience Type -->
+                                                    <div class="col">
+                                                        <div class="info-card-tile">
+                                                            <div class="info-tile-icon bg-warning bg-opacity-10 text-warning">
+                                                                <i class="bi bi-briefcase-fill"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="info-tile-label">Experience Type & Years</div>
+                                                                <div class="info-tile-value">{{ app.candidate.experience.get_experience_type_display|default:app.candidate.experience.experience_type|default:"Fresher" }}{% if app.candidate.experience.total_experience_years %} ({{ app.candidate.experience.total_experience_years }} Yrs {{ app.candidate.experience.total_experience_months|default:0 }} Mos){% endif %}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Previous / Current Employer -->
+                                                    <div class="col">
+                                                        <div class="info-card-tile">
+                                                            <div class="info-tile-icon bg-dark bg-opacity-10 text-dark">
+                                                                <i class="bi bi-buildings-fill"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="info-tile-label">Previous / Current Employer</div>
+                                                                <div class="info-tile-value">{{ app.candidate.experience.previous_company|default:app.candidate.experience.current_company|default:"N/A" }}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Designation & Notice -->
+                                                    <div class="col">
+                                                        <div class="info-card-tile">
+                                                            <div class="info-tile-icon" style="background: rgba(14, 165, 233, 0.1); color: #0EA5E9;">
+                                                                <i class="bi bi-person-workspace"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="info-tile-label">Designation & Notice Period</div>
+                                                                <div class="info-tile-value">{{ app.candidate.experience.current_designation|default:"N/A" }}{% if app.candidate.experience.notice_period_days %} &bull; {{ app.candidate.experience.notice_period_days }} Days{% endif %}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- TAB 4: ATTACHED DOCUMENTS OVERVIEW -->
+                                            <div class="tab-pane fade" id="tabDocs-{{ app.id }}" role="tabpanel">
+                                                <div class="card border mb-3 bg-white shadow-sm p-3 rounded-3 d-flex flex-row align-items-center justify-content-between flex-wrap gap-2">
+                                                    <div>
+                                                        <h6 class="fw-bold text-dark mb-0"><i class="bi bi-shield-check text-success me-1.5"></i>Verification & Compliance Status</h6>
+                                                        <div class="small text-muted mt-0.5">Need to verify, approve, or reject candidate documents? Switch to Document Review Mode.</div>
+                                                    </div>
+                                                    <button type="button" class="btn btn-sm btn-primary fw-bold px-3 py-2 shadow-sm" onclick="switchToDocsModal({{ app.id }})">
+                                                        <i class="bi bi-file-earmark-check me-1"></i> Open Document Review Mode
+                                                    </button>
+                                                </div>
+                                                {% with docs=app.candidate.documents.all %}
+                                                    {% if docs %}
+                                                        <div class="row row-cols-1 row-cols-md-2 g-3">
+                                                            {% for doc in docs %}
+                                                                <div class="col">
+                                                                    <div class="card border rounded-3 p-3 bg-white h-100 shadow-sm">
+                                                                        <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                                                            <span class="badge bg-light text-dark border">{{ doc.get_doc_type_display }}</span>
+                                                                            {% if doc.is_verified %}
+                                                                                <span class="badge bg-success-subtle text-success border border-success-subtle py-1 px-2"><i class="bi bi-patch-check-fill me-1"></i> Verified</span>
+                                                                            {% elif doc.is_rejected %}
+                                                                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle py-1 px-2"><i class="bi bi-x-circle-fill me-1"></i> Rejected</span>
+                                                                            {% else %}
+                                                                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle py-1 px-2"><i class="bi bi-hourglass-split me-1"></i> Pending</span>
+                                                                            {% endif %}
+                                                                        </div>
+                                                                        <div class="fw-bold text-dark mb-1 text-truncate" title="{{ doc.title }}">{{ doc.title }}</div>
+                                                                        <div class="small text-muted mb-2.5">Uploaded: {{ doc.uploaded_at|date:"d M Y, h:i A" }}</div>
+                                                                        <div class="mt-auto pt-2 border-top d-flex justify-content-end">
+                                                                            <a href="{{ doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary px-3">
+                                                                                <i class="bi bi-eye me-1"></i> View Document
+                                                                            </a>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            {% endfor %}
+                                                        </div>
+                                                    {% else %}
+                                                        <div class="alert alert-secondary text-center py-4 mb-0 rounded-3 bg-white border">
+                                                            <i class="bi bi-folder-x fs-2 d-block text-muted mb-2"></i>
+                                                            No documents attached yet for this candidate.
+                                                        </div>
+                                                    {% endif %}
+                                                {% endwith %}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="modal-footer bg-light">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+
+                                    <!-- Footer -->
+                                    <div class="modal-footer bg-white px-4 py-3 d-flex flex-wrap justify-content-between align-items-center gap-2 border-top">
+                                        <button type="button" class="btn btn-outline-secondary px-3" data-bs-dismiss="modal">
+                                            <i class="bi bi-x-lg me-1"></i> Close
+                                        </button>
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            <button type="button" class="btn btn-outline-primary fw-semibold px-3" onclick="switchToDocsModal({{ app.id }})">
+                                                <i class="bi bi-file-earmark-check me-1"></i> Review Documents
+                                            </button>
+                                            {% if app.document_verification_status == 'VERIFIED' and app.status != 'HIRED' %}
+                                                <a href="{% url 'recruitment:appoint_employee' %}?app_id={{ app.application_id }}" class="btn btn-primary fw-bold px-3">
+                                                    <i class="bi bi-person-plus-fill me-1"></i> Appoint Employee
+                                                </a>
+                                            {% endif %}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -560,24 +1641,389 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- TABLE FOOTER WITH ROW SELECTOR FIRST, SHOWING INFO SECOND, AND PAGINATION ON RIGHT SIDE -->
+        <div class="card-footer bg-white px-3 px-md-4 py-3 border-top d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+            <!-- Left Side: 1st Show Row Dropdown, THEN Showing 1 to X of Y candidates -->
+            <div class="d-flex align-items-center flex-wrap" style="gap: 12px;">
+                <!-- 1. Show Row Selector First -->
+                <div class="d-inline-flex align-items-center small text-muted" style="gap: 8px;">
+                    <label for="footerPerPageSelect" class="mb-0 fw-semibold text-secondary text-nowrap">Show:</label>
+                    <select id="footerPerPageSelect" 
+                            class="form-select form-select-sm bg-light border-secondary-subtle" 
+                            style="width: 74px; height: 32px; font-size: 0.82rem; border-radius: 7px; font-weight: 600; cursor: pointer;" 
+                            onchange="changePerPage(this.value);" 
+                            title="Number of candidates to show">
+                        {% for opt in per_page_options %}
+                            <option value="{{ opt }}" {% if per_page == opt %}selected{% endif %}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <span class="text-muted opacity-50 d-none d-sm-inline">|</span>
+
+                <!-- 2. Showing 1 to X of Y candidates Then -->
+                <div class="text-muted small">
+                    {% if paginator.count > 0 %}
+                        Showing <strong class="text-dark">{{ page_obj.start_index }}</strong> to <strong class="text-dark">{{ page_obj.end_index }}</strong> of <strong class="text-dark">{{ paginator.count }}</strong> candidate{{ paginator.count|pluralize }}
+                    {% else %}
+                        No candidate records found matching your filters.
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Right Side: Pagination (Always Visible) -->
+            <nav aria-label="Onboarding candidates pagination">
+                <ul class="pagination pagination-sm mb-0" style="gap: 4px;">
+                    <!-- Previous Page Button -->
+                    <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                        {% if page_obj.has_previous %}
+                            <a class="page-link rounded-2 px-2.5 py-1.5" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}" aria-label="Previous">
+                                <i class="bi bi-chevron-left me-1"></i> Previous
+                            </a>
+                        {% else %}
+                            <span class="page-link rounded-2 px-2.5 py-1.5 text-muted opacity-75" style="pointer-events: none;"><i class="bi bi-chevron-left me-1"></i> Prev</span>
+                        {% endif %}
+                    </li>
+
+                    <!-- Page Numbers -->
+                    {% for page_num in paginator.page_range %}
+                        {% if page_num == page_obj.number %}
+                            <li class="page-item active" aria-current="page">
+                                <span class="page-link rounded-2 px-3 py-1.5 fw-bold">{{ page_num }}</span>
+                            </li>
+                        {% elif page_num > page_obj.number|add:'-3' and page_num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link rounded-2 px-3 py-1.5" href="?page={{ page_num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">{{ page_num }}</a>
+                            </li>
+                        {% endif %}
+                    {% empty %}
+                        <li class="page-item active" aria-current="page">
+                            <span class="page-link rounded-2 px-3 py-1.5 fw-bold">1</span>
+                        </li>
+                    {% endfor %}
+
+                    <!-- Next Page Button -->
+                    <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                        {% if page_obj.has_next %}
+                            <a class="page-link rounded-2 px-2.5 py-1.5" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}" aria-label="Next">
+                                Next <i class="bi bi-chevron-right ms-1"></i>
+                            </a>
+                        {% else %}
+                            <span class="page-link rounded-2 px-2.5 py-1.5 text-muted opacity-75" style="pointer-events: none;">Next <i class="bi bi-chevron-right ms-1"></i></span>
+                        {% endif %}
+                    </li>
+                </ul>
+            </nav>
+        </div>
     </div>
 
 </div>
 
+<!-- REUSABLE SINGLE DOCUMENT REJECTION MODAL -->
+<div class="modal fade" id="singleDocRejectModal" tabindex="-1" aria-labelledby="singleDocRejectModalLabel" aria-hidden="true" style="z-index: 1070;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow border-0" style="border-radius: 14px; overflow: hidden;">
+            <div class="modal-header bg-danger text-white py-3 px-4">
+                <h6 class="modal-title fw-bold mb-0 d-flex align-items-center gap-2" id="singleDocRejectModalLabel">
+                    <i class="bi bi-x-circle-fill"></i>
+                    <span>Reject Candidate Document</span>
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <label class="form-label small text-muted mb-1">Target Document:</label>
+                    <div id="rejectDocTitleSpan" class="fw-bold text-dark font-monospace bg-light p-2 rounded border">Document</div>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small fw-semibold text-dark mb-1">Rejection Feedback / Notes for Candidate <span class="text-danger">*</span>:</label>
+                    <textarea id="singleDocRejectReasonInput" class="form-control" rows="3" placeholder="e.g. Document image is blurry or expired. Please re-upload a clear and valid copy."></textarea>
+                    <div class="form-text small text-muted">The candidate will see this feedback in their onboarding portal so they know what to fix.</div>
+                </div>
+                <input type="hidden" id="singleDocRejectIdInput" value="">
+                <input type="hidden" id="singleDocRejectAppIdInput" value="">
+            </div>
+            <div class="modal-footer bg-light px-4 py-3 d-flex justify-content-end gap-2 border-top">
+                <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-sm btn-danger fw-semibold px-3" id="confirmRejectBtn" onclick="confirmRejectSingleDoc()">
+                    <i class="bi bi-x-circle me-1"></i> Reject & Request Re-upload
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+function changePerPage(val) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('per_page', val);
+    url.searchParams.set('page', '1');
+    window.location.href = url.toString();
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('onboardingSearchInput');
     const filterForm = document.getElementById('onboardingFilterForm');
+    const pageInput = document.getElementById('pageNumberInput');
     if (searchInput && filterForm) {
         let debounceTimer = null;
         searchInput.addEventListener('input', function() {
+            if (pageInput) pageInput.value = '1';
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(function() {
                 filterForm.submit();
-            }, 450);
+            }, 500);
         });
     }
 });
+
+function updateModalProgress(appId) {
+    if (!appId) return;
+    const cards = document.querySelectorAll(`.doc-review-card-wow[data-app-id="${appId}"]`);
+    if (!cards.length) return;
+    let verifiedCount = 0;
+    let rejectedCount = 0;
+    cards.forEach(c => {
+        if (c.getAttribute('data-verified') === '1') verifiedCount++;
+        if (c.classList.contains('status-rejected')) rejectedCount++;
+    });
+    const total = cards.length;
+    const pct = Math.round((verifiedCount / total) * 100);
+
+    const countText = document.getElementById(`verifiedCount${appId}`);
+    if (countText) countText.textContent = verifiedCount;
+
+    const pctText = document.getElementById(`statsPercentText${appId}`);
+    if (pctText) pctText.textContent = `${pct}%`;
+
+    const bar = document.getElementById(`progressBar${appId}`);
+    if (bar) {
+        bar.style.width = `${pct}%`;
+        bar.setAttribute('aria-valuenow', pct);
+        if (pct === 100) {
+            bar.className = 'progress-bar progress-bar-striped progress-bar-animated bg-success';
+        } else {
+            bar.className = 'progress-bar progress-bar-striped progress-bar-animated bg-primary';
+        }
+    }
+
+    const glowBadgeContainer = document.getElementById(`statusGlowBadgeContainer${appId}`);
+    if (glowBadgeContainer) {
+        if (pct === 100) {
+            glowBadgeContainer.innerHTML = `<span class="doc-live-badge badge-verified-glow" id="statusGlowBadge${appId}"><i class="bi bi-patch-check-fill"></i> Ready for Appointment</span>`;
+        } else if (rejectedCount > 0) {
+            glowBadgeContainer.innerHTML = `<span class="doc-live-badge badge-rejected-glow" id="statusGlowBadge${appId}"><i class="bi bi-exclamation-octagon-fill"></i> Corrections Needed</span>`;
+        } else {
+            glowBadgeContainer.innerHTML = `<span class="doc-live-badge badge-pending-glow" id="statusGlowBadge${appId}"><i class="bi bi-hourglass-split"></i> Under Verification</span>`;
+        }
+    }
+
+    const headerBadge = document.getElementById(`modalHeaderBadge${appId}`);
+    if (headerBadge) {
+        if (pct === 100) {
+            headerBadge.innerHTML = '<span class="status-badge status-badge-verified"><i class="bi bi-patch-check-fill"></i> Verified</span>';
+        } else if (rejectedCount > 0) {
+            headerBadge.innerHTML = '<span class="status-badge status-badge-rejected"><i class="bi bi-exclamation-octagon-fill"></i> Doc Error</span>';
+        } else {
+            headerBadge.innerHTML = '<span class="status-badge status-badge-pending"><i class="bi bi-hourglass-split"></i> Pending Review</span>';
+        }
+    }
+}
+
+function promptRejectSingleDoc(docId, docTitle, btn, appId) {
+    document.getElementById('singleDocRejectIdInput').value = docId;
+    document.getElementById('rejectDocTitleSpan').textContent = docTitle;
+    document.getElementById('singleDocRejectReasonInput').value = '';
+    const appIdInput = document.getElementById('singleDocRejectAppIdInput');
+    if (appIdInput) appIdInput.value = appId || '';
+    const modalEl = document.getElementById('singleDocRejectModal');
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+}
+
+function confirmRejectSingleDoc() {
+    const docId = document.getElementById('singleDocRejectIdInput').value;
+    const appIdInput = document.getElementById('singleDocRejectAppIdInput');
+    let appId = appIdInput ? appIdInput.value : '';
+    const reasonInput = document.getElementById('singleDocRejectReasonInput');
+    const reason = (reasonInput.value || '').trim() || 'Document unclear or invalid. Please re-upload a clear copy.';
+    const confirmBtn = document.getElementById('confirmRejectBtn');
+
+    if (!docId) return;
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Rejecting...';
+
+    const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    const csrfToken = csrfInput ? csrfInput.value : '';
+
+    fetch(`/hr/onboarding/documents/${docId}/reject/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ reason: reason })
+    })
+    .then(res => res.json())
+    .then(data => {
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Reject & Request Re-upload';
+
+        const modalEl = document.getElementById('singleDocRejectModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+
+        if (data.success) {
+            const cardEl = document.getElementById(`docRow${docId}`);
+            if (cardEl) {
+                cardEl.classList.remove('status-verified', 'status-pending');
+                cardEl.classList.add('status-rejected');
+                cardEl.setAttribute('data-verified', '0');
+                if (!appId) appId = cardEl.getAttribute('data-app-id');
+            }
+            const badgeEl = document.getElementById(`docBadge${docId}`);
+            if (badgeEl) {
+                badgeEl.innerHTML = `<span class="doc-live-badge badge-rejected-glow"><i class="bi bi-x-circle-fill"></i> Rejected</span>`;
+            }
+            const notesEl = document.getElementById(`docNotes${docId}`);
+            if (notesEl) {
+                notesEl.classList.remove('d-none');
+                const textSpan = notesEl.querySelector('.notes-text');
+                if (textSpan) textSpan.textContent = data.rejection_notes;
+            }
+            const rejectBtn = document.getElementById(`docRejectBtn${docId}`);
+            if (rejectBtn) {
+                rejectBtn.className = 'btn btn-danger text-white btn-doc-action fw-semibold';
+                rejectBtn.innerHTML = '<i class="bi bi-x-lg"></i> <span>Rejected</span>';
+            }
+            const verifyBtn = document.getElementById(`docVerifyBtn${docId}`);
+            if (verifyBtn) {
+                verifyBtn.className = 'btn btn-outline-success btn-doc-action fw-semibold';
+                verifyBtn.innerHTML = '<i class="bi bi-check-lg"></i> <span>Verify</span>';
+            }
+            if (appId) {
+                updateModalProgress(appId);
+            }
+            if (typeof showToast === 'function') {
+                showToast(data.message || 'Document marked as rejected with feedback.', 'warning');
+            }
+        } else {
+            if (typeof showToast === 'function') {
+                showToast(data.error || 'Failed to reject document.', 'danger');
+            } else {
+                alert(data.error || 'Failed to reject document.');
+            }
+        }
+    })
+    .catch(err => {
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Reject & Request Re-upload';
+        if (typeof showToast === 'function') {
+            showToast('Error connecting to server.', 'danger');
+        } else {
+            alert('Error connecting to server.');
+        }
+    });
+}
+
+function verifySingleDoc(docId, btn, appId) {
+    if (!btn) return;
+    btn.disabled = true;
+    const origHtml = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>';
+
+    const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    const csrfToken = csrfInput ? csrfInput.value : '';
+
+    fetch(`/hr/onboarding/documents/${docId}/verify/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        btn.disabled = false;
+
+        if (data.success) {
+            const cardEl = document.getElementById(`docRow${docId}`);
+            if (cardEl) {
+                cardEl.classList.remove('status-rejected', 'status-pending');
+                cardEl.classList.add('status-verified');
+                cardEl.setAttribute('data-verified', '1');
+                if (!appId) appId = cardEl.getAttribute('data-app-id');
+            }
+            const badgeEl = document.getElementById(`docBadge${docId}`);
+            if (badgeEl) {
+                badgeEl.innerHTML = `<span class="doc-live-badge badge-verified-glow"><i class="bi bi-patch-check-fill"></i> Verified</span>`;
+            }
+            const notesEl = document.getElementById(`docNotes${docId}`);
+            if (notesEl) {
+                notesEl.classList.add('d-none');
+            }
+            btn.className = 'btn btn-success text-white btn-doc-action fw-semibold';
+            btn.innerHTML = '<i class="bi bi-check-lg"></i> <span>Verified</span>';
+            const rejectBtn = document.getElementById(`docRejectBtn${docId}`);
+            if (rejectBtn) {
+                rejectBtn.className = 'btn btn-outline-danger btn-doc-action fw-semibold';
+                rejectBtn.innerHTML = '<i class="bi bi-x-lg"></i> <span>Reject</span>';
+            }
+            if (appId) {
+                updateModalProgress(appId);
+            }
+            if (typeof showToast === 'function') {
+                showToast(data.message || 'Document verified successfully in database!', 'success');
+            }
+        } else {
+            btn.innerHTML = origHtml;
+            if (typeof showToast === 'function') {
+                showToast(data.error || 'Failed to verify document.', 'danger');
+            } else {
+                alert(data.error || 'Failed to verify document.');
+            }
+        }
+    })
+    .catch(err => {
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+        if (typeof showToast === 'function') {
+            showToast('Error connecting to server.', 'danger');
+        } else {
+            alert('Error connecting to server.');
+        }
+    });
+}
+function switchToDocsModal(appId) {
+    const profileModalEl = document.getElementById(`profileModal-${appId}`);
+    if (profileModalEl) {
+        const profileModal = bootstrap.Modal.getInstance(profileModalEl);
+        if (profileModal) profileModal.hide();
+    }
+    setTimeout(function() {
+        const docsModalEl = document.getElementById(`reviewDocsModal-${appId}`);
+        if (docsModalEl) {
+            const docsModal = bootstrap.Modal.getOrCreateInstance(docsModalEl);
+            docsModal.show();
+        }
+    }, 280);
+}
+
+function switchToProfileModal(appId) {
+    const docsModalEl = document.getElementById(`reviewDocsModal-${appId}`);
+    if (docsModalEl) {
+        const docsModal = bootstrap.Modal.getInstance(docsModalEl);
+        if (docsModal) docsModal.hide();
+    }
+    setTimeout(function() {
+        const profileModalEl = document.getElementById(`profileModal-${appId}`);
+        if (profileModalEl) {
+            const profileModal = bootstrap.Modal.getOrCreateInstance(profileModalEl);
+            profileModal.show();
+        }
+    }, 280);
+}
 </script>
 {% endblock %}
 

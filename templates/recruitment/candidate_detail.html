@@ -285,8 +285,13 @@
                                         <i class="bi bi-file-earmark-text text-secondary me-2"></i>
                                         <span>{{ doc.title }}</span>
                                         <span class="badge bg-light text-secondary ms-1">{{ doc.get_doc_type_display }}</span>
+                                        {% if doc.is_verified or application.document_verification_status == 'VERIFIED' %}
+                                            <span class="badge bg-success-subtle text-success ms-1"><i class="bi bi-patch-check-fill me-1"></i>Verified</span>
+                                        {% endif %}
                                     </div>
-                                    <a href="{{ doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-secondary py-0 px-2">View</a>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <a href="{{ doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-secondary py-0 px-2">View</a>
+                                    </div>
                                 </li>
                             {% endfor %}
                         </ul>
@@ -355,7 +360,7 @@
                                     </p>
                                     <div class="input-group input-group-sm mb-2">
                                         <input type="text" class="form-control font-monospace" id="onboardUrlInput" value="{{ request.scheme }}://{{ request.get_host }}{% url 'recruitment:candidate_onboarding' application_id=application.application_id %}" readonly>
-                                        <button class="btn btn-outline-success" type="button" onclick="navigator.clipboard.writeText(document.getElementById('onboardUrlInput').value); alert('Onboarding Link copied to clipboard!');">
+                                        <button class="btn btn-outline-success" type="button" onclick="navigator.clipboard.writeText(document.getElementById('onboardUrlInput').value); showToast('Onboarding Link copied to clipboard!', 'success');">
                                             <i class="bi bi-clipboard"></i> Copy
                                         </button>
                                     </div>

@@ -294,15 +294,19 @@ class PreInterviewApplicationForm(forms.Form):
         widget=forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://github.com/profile'})
     )
 
-    def __init__(self, *args, default_job=None, selected_job=None, **kwargs):
+    def __init__(self, *args, default_job=None, selected_job=None, has_saved_resume=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.default_job = default_job or selected_job
+        self.has_saved_resume = has_saved_resume
         self.fields['job'].queryset = RecruitmentJob.objects.filter(
             status=RecruitmentJob.Status.OPEN
         ).select_related('department')
         if self.default_job:
             job_id = self.default_job.id if hasattr(self.default_job, 'id') else self.default_job
             self.fields['job'].initial = job_id
+        if self.has_saved_resume:
+            self.fields['resume'].required = False
+            self.fields['resume'].widget.attrs.pop('required', None)
 
     def clean(self):
         cleaned_data = super().clean()
@@ -312,6 +316,22 @@ class PreInterviewApplicationForm(forms.Form):
             job = self.default_job
         if not job:
             self.add_error('job', "Please select the position you are applying for from the dropdown.")
+
+        # If resume was not re-uploaded, auto-link previously saved resume from database
+        if not cleaned_data.get('resume'):
+            email = (cleaned_data.get('email') or '').strip().lower()
+            if email:
+                from recruitment.models import JobApplication, CandidateDocument
+                existing_app = JobApplication.objects.filter(candidate__email=email).order_by('-applied_at').first()
+                if existing_app and existing_app.resume:
+                    cleaned_data['resume'] = existing_app.resume
+                else:
+                    resume_doc = CandidateDocument.objects.filter(candidate__email=email, doc_type='RESUME').first()
+                    if resume_doc and resume_doc.file:
+                        cleaned_data['resume'] = resume_doc.file
+            if not cleaned_data.get('resume') and not getattr(self, 'has_saved_resume', False):
+                self.add_error('resume', "Please upload your resume file.")
+
         return cleaned_data
 
     def clean_phone(self):

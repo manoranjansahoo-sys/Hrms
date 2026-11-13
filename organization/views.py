@@ -9,7 +9,7 @@ from django.http import JsonResponse, HttpResponseForbidden
 
 from accounts.models import CustomUser
 from accounts.decorators import head_required
-from organization.models import Site, Holiday, OperatingSchedule, MasterDataPermission
+from organization.models import Site, Holiday, OperatingSchedule, MasterDataPermission, Department
 from organization.decorators import master_data_access_required
 from leave_management.models import LeaveType, LeaveBalance
 from attendance.models import Shift
@@ -55,6 +55,12 @@ def master_data_dashboard(request):
         })
     eligible_managers = CustomUser.objects.filter(is_active=True).order_by('first_name', 'username')
 
+    # 3B. Departments Data
+    departments_qs = Department.objects.annotate(
+        emp_count=Count('employees', filter=Q(employees__status='ACTIVE')),
+        job_count=Count('recruitment_jobs')
+    ).order_by('name')
+
     # 4. Leave Policy Data
     leave_types = LeaveType.objects.all().order_by('name')
     leave_data = []
@@ -83,6 +89,8 @@ def master_data_dashboard(request):
         'schedules': schedules,
         'default_shift': default_shift,
         'locations_data': locations_data,
+        'departments_data': departments_qs,
+        'departments_count': departments_qs.count(),
         'eligible_managers': eligible_managers,
         'leave_data': leave_data,
         'active_employees_count': active_employees_count,
@@ -409,6 +417,123 @@ def location_delete(request, site_id):
         return redirect('/master-data/?tab=locations')
 
     return redirect('/master-data/?tab=locations')
+
+
+# =========================================================================
+# COMPANY DEPARTMENTS MANAGEMENT (ADD, EDIT, DELETE - ADMIN ONLY)
+# =========================================================================
+
+@login_required
+@head_required
+def department_create(request):
+    """Add a new company department in Master Data (Admin Only)."""
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        code = request.POST.get('code', '').strip()
+        description = request.POST.get('description', '').strip()
+        hod_id = request.POST.get('head_of_department')
+
+        if not name:
+            messages.error(request, "Department Name is required.")
+            return redirect('/master-data/?tab=departments')
+
+        if Department.objects.filter(name__iexact=name).exists():
+            messages.error(request, f"Department '{name}' already exists.")
+            return redirect('/master-data/?tab=departments')
+
+        if not code:
+            words = [w for w in name.split() if w]
+            base_code = ("".join(w[0] for w in words[:4]) if len(words) > 1 else name[:4]).upper()
+            code = base_code
+            count = 1
+            while Department.objects.filter(code=code).exists():
+                code = f"{base_code[:3]}{count}"
+                count += 1
+
+        if Department.objects.filter(code=code).exists():
+            messages.error(request, f"Department code '{code}' already exists. Please choose a unique code.")
+            return redirect('/master-data/?tab=departments')
+
+        hod = None
+        if hod_id:
+            hod = CustomUser.objects.filter(id=hod_id).first()
+
+        dept = Department.objects.create(
+            name=name,
+            code=code,
+            description=description,
+            head_of_department=hod
+        )
+        messages.success(request, f"Company Department '{dept.name}' ({dept.code}) successfully created!")
+        return redirect('/master-data/?tab=departments')
+
+    return redirect('/master-data/?tab=departments')
+
+
+@login_required
+@head_required
+def department_edit(request, dept_id):
+    """Update details of an existing company department (Admin Only)."""
+    dept = get_object_or_404(Department, id=dept_id)
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        code = request.POST.get('code', '').strip()
+        description = request.POST.get('description', '').strip()
+        hod_id = request.POST.get('head_of_department')
+
+        if not name:
+            messages.error(request, "Department Name is required.")
+            return redirect('/master-data/?tab=departments')
+
+        if Department.objects.filter(name__iexact=name).exclude(id=dept.id).exists():
+            messages.error(request, f"Another department with name '{name}' already exists.")
+            return redirect('/master-data/?tab=departments')
+
+        if code and Department.objects.filter(code=code).exclude(id=dept.id).exists():
+            messages.error(request, f"Department code '{code}' is already assigned to another department.")
+            return redirect('/master-data/?tab=departments')
+
+        hod = None
+        if hod_id:
+            hod = CustomUser.objects.filter(id=hod_id).first()
+
+        dept.name = name
+        if code:
+            dept.code = code
+        dept.description = description
+        dept.head_of_department = hod
+        dept.save()
+
+        messages.success(request, f"Department '{dept.name}' updated successfully.")
+        return redirect('/master-data/?tab=departments')
+
+    return redirect('/master-data/?tab=departments')
+
+
+@login_required
+@head_required
+def department_delete(request, dept_id):
+    """
+    Safely delete a department if no employees or jobs are linked to it (Admin Only).
+    """
+    dept = get_object_or_404(Department, id=dept_id)
+    if request.method == 'POST':
+        dept_name = dept.name
+        emp_count = dept.employees.filter(status='ACTIVE').count()
+        job_count = dept.recruitment_jobs.count()
+
+        if emp_count > 0 or job_count > 0:
+            messages.warning(
+                request,
+                f"Cannot delete Department '{dept_name}' because it currently has {emp_count} active employees and {job_count} job positions assigned to it. Reassign them first."
+            )
+        else:
+            dept.delete()
+            messages.success(request, f"Department '{dept_name}' has been permanently deleted.")
+
+        return redirect('/master-data/?tab=departments')
+
+    return redirect('/master-data/?tab=departments')
 
 
 # =========================================================================
