@@ -19,8 +19,6 @@
         --dash-amber-bg: #fffbeb;
         --dash-rose: #dc2626;
         --dash-rose-bg: #fef2f2;
-        --dash-indigo: #4f46e5;
-        --dash-indigo-bg: #eef2ff;
         --dash-sky: #0284c7;
         --dash-sky-bg: #f0f9ff;
     }
@@ -71,7 +69,7 @@
     }
 
     .formula-step-pill {
-        background: #f8fafc;
+        background: var(--dash-card);
         border: 1px solid var(--dash-border);
         border-radius: 10px;
         padding: 1rem 1.15rem;
@@ -87,7 +85,7 @@
     }
 
     .card-header-clean {
-        background: #f8fafc;
+        background: var(--dash-card);
         border-bottom: 1px solid var(--dash-border);
         padding: 1rem 1.5rem;
         display: flex;
@@ -102,7 +100,7 @@
     }
 
     .dash-table thead th {
-        background: #f8fafc;
+        background: var(--dash-card);
         color: var(--dash-text-muted);
         font-weight: 600;
         font-size: 0.76rem;
@@ -146,8 +144,8 @@
         border: 1px solid rgba(217, 119, 6, 0.2);
     }
     .badge-soft-indigo {
-        background: var(--dash-indigo-bg);
-        color: var(--dash-indigo);
+        background: var(--hrms-primary-light);
+        color: var(--hrms-primary);
         border: 1px solid rgba(79, 70, 229, 0.2);
     }
     .badge-soft-secondary {
@@ -159,7 +157,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid p-0">
+<div class="container-fluid p-0 hrms-dashboard" data-bs-theme="light">
     <!-- Hero Header -->
     <div class="dash-hero">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
@@ -210,7 +208,7 @@
             <div class="dash-stat-card">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <span class="text-muted small fw-semibold text-uppercase letter-spacing-1">Processed Cycles</span>
-                    <div class="stat-icon-box" style="background: var(--dash-indigo-bg); color: var(--dash-indigo);">
+                    <div class="stat-icon-box" style="background: var(--hrms-primary-light); color: var(--hrms-primary);">
                         <i class="bi bi-calendar2-check"></i>
                     </div>
                 </div>

@@ -2,7 +2,7 @@
 {% block title %}Employee Dashboard{% endblock %}
 
 {% block content %}
-<div class="container-fluid p-0">
+<div class="container-fluid p-0 hrms-dashboard" data-bs-theme="light">
     <!-- PAGE HEADER -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
@@ -90,10 +90,10 @@
             <div class="hrms-card mb-4">
                 <div class="hrms-card-header">
                     <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-calendar-week text-success fs-5"></i>
+                        <i class="bi bi-calendar-week text-primary fs-5"></i>
                         <h5 class="fw-bold mb-0">Recent Attendance Records</h5>
                     </div>
-                    <a href="{% url 'attendance:my_attendance' %}" class="small text-success text-decoration-none fw-semibold">View Full History</a>
+                    <a href="{% url 'attendance:my_attendance' %}" class="small text-primary text-decoration-none fw-semibold">View Full History</a>
                 </div>
                 <div class="table-responsive">
                     <table class="table hrms-table">
@@ -142,10 +142,10 @@
             <div class="hrms-card mb-4">
                 <div class="hrms-card-header">
                     <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-airplane-fill text-info fs-5"></i>
+                        <i class="bi bi-airplane-fill text-primary fs-5"></i>
                         <h5 class="fw-bold mb-0">My Recent Leave Requests</h5>
                     </div>
-                    <a href="{% url 'leave_management:my_leaves' %}" class="small text-success text-decoration-none fw-semibold">Manage Leaves</a>
+                    <a href="{% url 'leave_management:my_leaves' %}" class="small text-primary text-decoration-none fw-semibold">Manage Leaves</a>
                 </div>
                 <div class="table-responsive">
                     <table class="table hrms-table">
@@ -194,7 +194,7 @@
                         <i class="bi bi-bullseye text-danger fs-5"></i>
                         <h5 class="fw-bold mb-0">Assigned Goals & Key Results</h5>
                     </div>
-                    <a href="{% url 'performance:goals_list' %}" class="small text-success text-decoration-none fw-semibold">View All</a>
+                    <a href="{% url 'performance:goals_list' %}" class="small text-primary text-decoration-none fw-semibold">View All</a>
                 </div>
                 <div class="hrms-card-body">
                     {% for goal in my_goals %}
@@ -239,14 +239,14 @@
                         </div>
                     </div>
 
-                    <a href="{% url 'employees:employee_detail' emp_id=profile.emp_id %}" class="btn btn-outline-success btn-sm w-100">
+                    <a href="{% url 'employees:employee_detail' emp_id=profile.emp_id %}" class="btn btn-outline-primary btn-sm w-100">
                         <i class="bi bi-person-lines-fill me-1"></i> View Full Profile & Documents
                     </a>
                 </div>
             </div>
 
             <!-- LATEST PAYSLIP WIDGET -->
-            <div class="hrms-card mb-4" style="background: linear-gradient(135deg, #F0FDF4, #DCFCE7); border-color: #86EFAC;">
+            <div class="hrms-card mb-4">
                 <div class="hrms-card-body p-4">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <span class="badge bg-success text-white">Latest Payslip</span>
@@ -257,10 +257,10 @@
                         <small class="text-muted d-block mb-3">Net Disbursed &bull; {{ latest_payslip.payroll_period.get_month_display }} {{ latest_payslip.year }}</small>
 
                         <div class="d-grid gap-2">
-                            <a href="{% url 'payroll:download_pdf' payslip_id=latest_payslip.id %}" class="btn btn-success btn-sm fw-semibold shadow-sm">
+                            <a href="{% url 'payroll:download_pdf' payslip_id=latest_payslip.id %}" class="btn btn-primary btn-sm fw-semibold shadow-sm">
                                 <i class="bi bi-download me-1"></i> Download PDF Payslip
                             </a>
-                            <a href="{% url 'payroll:my_payslips' %}" class="btn btn-outline-success btn-sm">
+                            <a href="{% url 'payroll:my_payslips' %}" class="btn btn-outline-primary btn-sm">
                                 View Salary History
                             </a>
                         </div>
@@ -274,7 +274,7 @@
             <div class="hrms-card">
                 <div class="hrms-card-header">
                     <h6 class="fw-bold mb-0">My Support Tickets</h6>
-                    <a href="{% url 'support:create_ticket' %}" class="small text-success text-decoration-none">+ New</a>
+                    <a href="{% url 'support:create_ticket' %}" class="small text-primary text-decoration-none">+ New</a>
                 </div>
                 <div class="hrms-card-body p-0">
                     <ul class="list-group list-group-flush">

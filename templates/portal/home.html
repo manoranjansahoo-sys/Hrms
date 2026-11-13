@@ -1,154 +1,316 @@
 {% extends 'base.html' %}
 {% block title %}Company Home Portal{% endblock %}
 
+{% block extra_css %}
+<style>
+    .portal-home {
+        color: var(--workspace-slate);
+        overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 575.98px) {
+        .page-container:has(> .portal-home) {
+            padding-inline: 1rem;
+        }
+    }
+
+    .portal-home > .home-welcome,
+    .portal-home .home-section {
+        border-radius: var(--hrms-radius-sm);
+        box-shadow: none;
+    }
+
+    .home-welcome {
+        display: grid;
+        gap: 1.25rem 2rem;
+        align-items: center;
+        padding: clamp(1rem, 2.4vw, 1.75rem);
+    }
+
+    .home-avatar {
+        flex-shrink: 0;
+        border: 1px solid var(--workspace-border);
+        border-radius: 6px;
+        object-fit: cover;
+    }
+
+    .home-avatar-initials {
+        display: grid;
+        place-items: center;
+        background: var(--workspace-navy);
+        color: var(--hrms-card-bg);
+        font-weight: 600;
+    }
+
+    .home-birthday-avatar {
+        align-self: stretch;
+        inline-size: 2rem;
+        block-size: auto;
+        min-block-size: 2rem;
+        font-size: .75rem;
+    }
+
+    .home-birthday-person {
+        font-size: .875rem;
+        line-height: 1rem;
+    }
+
+    .home-birthday-person small {
+        display: block;
+        font-size: .75rem;
+    }
+
+    @media (max-width: 359.98px) {
+        .home-birthday-list > li {
+            flex-wrap: wrap;
+        }
+    }
+
+    .home-welcome-title {
+        color: var(--workspace-navy);
+        font-size: clamp(1.375rem, 2.25vw, 1.875rem);
+        font-weight: 750;
+        letter-spacing: -.025em;
+    }
+
+    .home-welcome-role {
+        border: 1px solid var(--workspace-border);
+        border-radius: 5px;
+    }
+
+    .home-attendance {
+        padding: 1rem;
+        border: 1px solid var(--workspace-border);
+        border-radius: var(--hrms-radius-sm);
+        background: var(--hrms-card-subsurface);
+    }
+
+    .home-icon {
+        display: grid;
+        place-items: center;
+        flex: 0 0 2rem;
+        height: 2rem;
+        border-radius: 5px;
+        background: var(--workspace-icon-bg);
+        color: var(--workspace-navy);
+    }
+
+    .home-section .hrms-card-header {
+        flex-wrap: wrap;
+        gap: .5rem 1rem;
+        padding: .875rem 1rem;
+        border-bottom-color: var(--hrms-border);
+    }
+
+    .home-section .hrms-card-body {
+        padding: 1rem;
+    }
+
+    .home-section-title {
+        color: var(--workspace-navy);
+        font-size: .9375rem;
+        font-weight: 700;
+    }
+
+    .home-section-link {
+        margin-inline-start: auto;
+        text-underline-offset: .18em;
+    }
+
+    .home-section-link:hover {
+        text-decoration: underline !important;
+    }
+
+    .home-section .list-group-item:last-child {
+        border-bottom: 0 !important;
+    }
+
+    .home-section .badge {
+        border-radius: 5px;
+        white-space: normal;
+    }
+
+    .home-date {
+        display: grid;
+        place-items: center;
+        flex: 0 0 2.75rem;
+        gap: .125rem;
+        padding-block: .375rem;
+        border: 1px solid var(--workspace-border);
+        border-radius: 6px;
+        background: var(--hrms-primary-light);
+        color: var(--workspace-navy);
+        font-variant-numeric: tabular-nums;
+        line-height: 1.1;
+    }
+
+    .home-quick-link {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .375rem .5rem;
+        text-align: start;
+        font-weight: 600;
+    }
+
+    .home-quick-link .bi-chevron-right {
+        margin-inline-start: auto;
+        font-size: .75rem;
+    }
+
+    .home-attendance-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .5rem;
+        padding-top: .875rem;
+        border-top: 1px solid var(--hrms-border);
+    }
+
+    .home-attendance-actions .btn {
+        display: flex;
+        min-height: 2.375rem;
+        justify-content: center;
+        align-items: center;
+        gap: .375rem;
+        padding: .375rem .5rem;
+        border-radius: 6px;
+        font-weight: 600;
+    }
+
+    .home-attendance-actions .btn:disabled {
+        background: var(--workspace-icon-bg);
+        opacity: .75;
+    }
+
+    @media (min-width: 768px) and (max-width: 991.98px), (min-width: 1100px) {
+        .home-welcome {
+            grid-template-columns: minmax(0, 1fr) minmax(17rem, 20rem);
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid p-0">
+<div class="container-fluid p-0 hrms-dashboard portal-home" data-bs-theme="light">
     <!-- WELCOME DASHBOARD HEADER -->
-    <div class="hrms-card mb-4 border-0" style="background: var(--hrms-hero-gradient); color: white;">
-        <div class="p-4 p-lg-5">
-            <div class="row align-items-center g-4">
-                <div class="col-lg-8">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <img src="{{ request.user.get_avatar_url }}" alt="Profile" class="rounded-circle border border-3 border-white shadow" width="70" height="70" style="object-fit: cover;">
-                        <div>
-                            <span class="badge bg-white text-success fw-bold px-3 py-1 mb-1">{{ request.user.get_role_display }}</span>
-                            <h2 class="fw-bold mb-0">Welcome, {{ request.user.get_full_name|default:request.user.username }}!</h2>
-                            <p class="mb-0 text-white-50">
-                                {% if emp_profile %}
-                                    {{ emp_profile.designation.title|default:"Team Member" }} &bull; {{ emp_profile.department.name|default:"General" }} &bull; {{ emp_profile.site.name|default:"Bengaluru HQ" }}
-                                {% else %}
-                                    System Administrator &bull; Enterprise Workspace
-                                {% endif %}
-                            </p>
-                        </div>
-                    </div>
-                    <p class="text-white-75 mb-0" style="max-width: 650px;">
-                        Stay updated with real-time company announcements, official holiday calendars, cultural events, work anniversaries, and manage your daily attendance punches.
-                    </p>
-                </div>
-
-                <!-- TODAY'S ATTENDANCE & PUNCH WIDGET -->
-                <div class="col-lg-4">
-                    <div class="p-3 rounded-3 bg-black bg-opacity-25 border border-white-10 text-center">
-                        <div class="small text-white-50 text-uppercase letter-spacing-1 mb-1">Today's Attendance Status</div>
-                        <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
-                            {% if today_attendance and today_attendance.punch_in %}
-                                <span class="badge bg-success px-3 py-2 fs-6"><i class="bi bi-check-circle-fill me-1"></i> PUNCHED IN</span>
-                            {% else %}
-                                <span class="badge bg-secondary px-3 py-2 fs-6"><i class="bi bi-clock me-1"></i> NOT PUNCHED IN</span>
-                            {% endif %}
-                        </div>
-
-                        <div class="small text-white-75 mb-3">
-                            {% if today_attendance and today_attendance.punch_in %}
-                                Punch In: <b>{{ today_attendance.punch_in|time:"h:i A" }}</b>
-                                {% if today_attendance.punch_out %}
-                                    | Punch Out: <b>{{ today_attendance.punch_out|time:"h:i A" }}</b>
-                                    <div class="fw-bold mt-1 text-warning">{{ today_attendance.working_hours }} hrs worked</div>
-                                {% endif %}
-                            {% else %}
-                                Ready to begin your workday?
-                            {% endif %}
-                        </div>
-
-                        <div class="d-flex justify-content-center align-items-center gap-2">
-                            {% if not today_attendance or not today_attendance.punch_in %}
-                                <a href="{% url 'attendance:punch_in' %}" class="btn btn-warning btn-sm px-4 fw-bold shadow-sm">
-                                    <i class="bi bi-box-arrow-in-right"></i> Punch In Now
-                                </a>
-                                <button type="button" class="btn btn-outline-light btn-sm px-3 opacity-50" disabled title="Punch In required before you can Punch Out" style="cursor: not-allowed;">
-                                    <i class="bi bi-box-arrow-right"></i> Punch Out
-                                </button>
-                            {% elif not today_attendance.punch_out %}
-                                <button type="button" class="btn btn-outline-light btn-sm px-3 opacity-50" disabled title="Already Punched In today" style="cursor: not-allowed;">
-                                    <i class="bi bi-box-arrow-in-right"></i> Punch In
-                                </button>
-                                <a href="{% url 'attendance:punch_out' %}" class="btn btn-outline-light btn-sm px-4 fw-bold">
-                                    <i class="bi bi-box-arrow-right"></i> Punch Out
-                                </a>
-                            {% else %}
-                                <button type="button" class="btn btn-outline-light btn-sm px-3 opacity-50" disabled title="Already punched out for today. Punch In closed." style="cursor: not-allowed;">
-                                    <i class="bi bi-box-arrow-in-right"></i> Punch In
-                                </button>
-                                <button type="button" class="btn btn-outline-light btn-sm px-3 opacity-50" disabled title="Already punched out for today." style="cursor: not-allowed;">
-                                    <i class="bi bi-box-arrow-right"></i> Punch Out
-                                </button>
-                            {% endif %}
-                        </div>
-                    </div>
+    <section class="hrms-card home-welcome mb-4" aria-labelledby="home-welcome-title">
+        <div>
+            <div class="d-flex align-items-center gap-3 mb-3">
+                {% if request.user.avatar %}
+                    <img src="{{ request.user.avatar.url }}" alt="" class="home-avatar" width="56" height="56">
+                {% else %}
+                    <span class="home-avatar home-avatar-initials" aria-hidden="true" style="inline-size: 3.5rem; block-size: 3.5rem;">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</span>
+                {% endif %}
+                <div>
+                    <h2 id="home-welcome-title" class="home-welcome-title mb-1">Welcome, {{ request.user.get_full_name|default:request.user.username }}!</h2>
+                    <span class="badge bg-primary-subtle text-primary home-welcome-role mt-2">{{ request.user.get_role_display }}</span>
                 </div>
             </div>
+            <p class="small mb-0" style="max-width: 65ch;">
+                Stay updated with real-time company announcements, official holiday calendars, cultural events, work anniversaries, and manage your daily attendance punches.
+            </p>
         </div>
-    </div>
+
+        <!-- TODAY'S ATTENDANCE & PUNCH WIDGET -->
+        <section class="home-attendance" aria-labelledby="home-attendance-title">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="home-icon" aria-hidden="true"><i class="bi bi-clock"></i></span>
+                <h3 id="home-attendance-title" class="h6 fw-bold text-primary mb-0">Today's Attendance</h3>
+            </div>
+            <div class="d-flex flex-wrap align-items-center gap-2 small mb-3">
+                {% if today_attendance and today_attendance.punch_in %}
+                    <span class="badge bg-primary-subtle text-primary"><i class="bi bi-check-circle me-1" aria-hidden="true"></i> Punched in</span>
+                    <span>Punch In <strong class="text-primary">{{ today_attendance.punch_in|time:"h:i A" }}</strong></span>
+                    {% if today_attendance.punch_out %}
+                        <span>Punch Out <strong class="text-primary">{{ today_attendance.punch_out|time:"h:i A" }}</strong></span>
+                        <span>{{ today_attendance.working_hours }} hrs worked</span>
+                    {% endif %}
+                {% else %}
+                    <span class="badge bg-primary-subtle text-primary">Not punched in</span>
+                {% endif %}
+            </div>
+            <div class="home-attendance-actions">
+                {% if not today_attendance or not today_attendance.punch_in %}
+                    <a href="{% url 'attendance:punch_in' %}" class="btn btn-primary btn-sm"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Punch In</a>
+                    <button type="button" class="btn btn-outline-primary btn-sm" disabled title="Punch In required before you can Punch Out"><i class="bi bi-box-arrow-right" aria-hidden="true"></i> Punch Out</button>
+                {% elif not today_attendance.punch_out %}
+                    <button type="button" class="btn btn-outline-primary btn-sm" disabled title="Already Punched In today"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Punch In</button>
+                    <a href="{% url 'attendance:punch_out' %}" class="btn btn-primary btn-sm"><i class="bi bi-box-arrow-right" aria-hidden="true"></i> Punch Out</a>
+                {% else %}
+                    <button type="button" class="btn btn-outline-primary btn-sm" disabled title="Already punched out for today. Punch In closed."><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Punch In</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm" disabled title="Already punched out for today."><i class="bi bi-box-arrow-right" aria-hidden="true"></i> Punch Out</button>
+                {% endif %}
+            </div>
+        </section>
+    </section>
 
     <!-- MAIN GRID SECTION -->
     <div class="row g-4 mb-4">
         <!-- LEFT COLUMN: ANNOUNCEMENTS & EVENTS -->
-        <div class="col-lg-8">
+        <div class="col-xl-8">
             <!-- COMPANY ANNOUNCEMENTS -->
-            <div class="hrms-card mb-4">
+            <div class="hrms-card home-section mb-4">
                 <div class="hrms-card-header">
                     <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-megaphone-fill text-success fs-5"></i>
-                        <h5 class="fw-bold mb-0">Company Announcements</h5>
+                        <span class="home-icon" aria-hidden="true"><i class="bi bi-megaphone"></i></span>
+                        <h3 class="home-section-title mb-0">Company Announcements</h3>
                     </div>
-                    <span class="badge bg-success bg-opacity-10 text-success">Official Notices</span>
                 </div>
                 <div class="hrms-card-body p-0">
                     <div class="list-group list-group-flush">
                         {% for a in announcements %}
                             <div class="list-group-item p-3 border-0 border-bottom">
-                                <div class="d-flex justify-content-between align-items-start mb-1">
-                                    <div class="d-flex align-items-center gap-2">
+                                <div class="d-flex flex-wrap justify-content-between align-items-start gap-1 mb-2">
+                                    <div class="d-flex flex-wrap align-items-center gap-2">
                                         {% if a.priority == 'URGENT' %}
-                                            <span class="badge bg-danger">URGENT</span>
+                                            <span class="badge bg-danger-subtle text-danger-emphasis">Urgent</span>
                                         {% elif a.priority == 'HIGH' %}
-                                            <span class="badge bg-warning text-dark">HIGH</span>
+                                            <span class="badge bg-warning-subtle text-warning-emphasis">High</span>
                                         {% else %}
-                                            <span class="badge bg-secondary">{{ a.get_category_display }}</span>
+                                            <span class="badge bg-primary-subtle text-primary">{{ a.get_category_display }}</span>
                                         {% endif %}
                                         <h6 class="fw-bold mb-0 text-dark">{{ a.title }}</h6>
                                         {% if a.is_pinned %}
-                                            <i class="bi bi-pin-angle-fill text-success" title="Pinned Announcement"></i>
+                                            <i class="bi bi-pin-angle-fill text-primary" title="Pinned Announcement"></i>
                                         {% endif %}
                                     </div>
                                     <small class="text-muted">{{ a.created_at|date:"M d, Y" }}</small>
                                 </div>
                                 <p class="text-muted small mb-2">{{ a.content }}</p>
-                                <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
                                     <small class="text-muted">
                                         Posted by <b>{{ a.created_by.get_full_name|default:"Management" }}</b>
                                         {% if a.target_site %} &bull; Site: {{ a.target_site.name }}{% endif %}
                                     </small>
                                     {% if a.attachment %}
-                                        <a href="{{ a.attachment.url }}" target="_blank" class="badge bg-light text-primary text-decoration-none border">
+                                        <a href="{{ a.attachment.url }}" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm">
                                             <i class="bi bi-paperclip"></i> Attachment
                                         </a>
                                     {% endif %}
                                 </div>
                             </div>
                         {% empty %}
-                            <div class="p-4 text-center text-muted">No current announcements.</div>
+                            <div class="p-3 small text-muted">No current announcements.</div>
                         {% endfor %}
                     </div>
                 </div>
             </div>
 
             <!-- OFFICIAL EVENTS & CELEBRATIONS -->
-            <div class="hrms-card mb-4">
+            <div class="hrms-card home-section mb-4">
                 <div class="hrms-card-header">
                     <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-calendar-event-fill text-warning fs-5"></i>
-                        <h5 class="fw-bold mb-0">Official Events & Celebrations</h5>
+                        <span class="home-icon" aria-hidden="true"><i class="bi bi-calendar-event"></i></span>
+                        <h3 class="home-section-title mb-0">Official Events & Celebrations</h3>
                     </div>
-                    <a href="{% url 'portal:events_list' %}" class="small text-success text-decoration-none fw-semibold">View All</a>
+                    <a href="{% url 'portal:events_list' %}" class="home-section-link small text-primary text-decoration-none fw-semibold">View All</a>
                 </div>
                 <div class="hrms-card-body">
                     <div class="row g-3">
                         {% for event in upcoming_events %}
                             <div class="col-md-6">
-                                <div class="border rounded p-3 h-100 bg-body">
-                                    <span class="badge bg-success bg-opacity-10 text-success mb-2">{{ event.get_event_type_display }}</span>
+                                <div class="d-flex flex-column border rounded p-3 h-100">
+                                    <span class="badge bg-primary-subtle text-primary align-self-start mb-2">{{ event.get_event_type_display }}</span>
                                     <h6 class="fw-bold mb-1">{{ event.title }}</h6>
                                     <div class="text-muted small mb-2">
                                         <i class="bi bi-clock me-1"></i> {{ event.start_datetime|date:"d M Y, h:i A" }}
@@ -157,13 +319,13 @@
                                         <i class="bi bi-geo-alt me-1"></i> {{ event.venue }}
                                     </div>
                                     <p class="text-muted small mb-3 text-truncate">{{ event.description }}</p>
-                                    <a href="{% url 'portal:register_event' event_id=event.id %}" class="btn btn-outline-success btn-sm w-100">
+                                    <a href="{% url 'portal:register_event' event_id=event.id %}" class="btn btn-outline-primary btn-sm align-self-start mt-auto">
                                         <i class="bi bi-check2-circle"></i> Register / Attend
                                     </a>
                                 </div>
                             </div>
                         {% empty %}
-                            <div class="col-12 text-center text-muted py-3">No upcoming events scheduled right now.</div>
+                            <div class="col-12 small text-muted">No upcoming events scheduled right now.</div>
                         {% endfor %}
                     </div>
                 </div>
@@ -171,22 +333,25 @@
 
             <!-- EMPLOYEE OF THE MONTH & AWARDS SECTION -->
             {% if featured_awards %}
-            <div class="hrms-card">
+            <div class="hrms-card home-section">
                 <div class="hrms-card-header">
                     <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-trophy-fill text-warning fs-5"></i>
-                        <h5 class="fw-bold mb-0">Employee Recognition & Awards</h5>
+                        <span class="home-icon" aria-hidden="true"><i class="bi bi-trophy"></i></span>
+                        <h3 class="home-section-title mb-0">Employee Recognition & Awards</h3>
                     </div>
-                    <span class="badge bg-warning bg-opacity-25 text-warning fw-bold">Star Performers</span>
                 </div>
                 <div class="hrms-card-body">
                     <div class="row g-3">
                         {% for award in featured_awards %}
                             <div class="col-md-6">
-                                <div class="d-flex gap-3 align-items-center p-3 rounded border bg-light">
-                                    <img src="{{ award.employee.user.get_avatar_url }}" class="rounded-circle border border-warning border-2" width="60" height="60" style="object-fit: cover;">
+                                <div class="d-flex gap-2 align-items-start p-3 rounded border h-100">
+                                    {% if award.employee.user.avatar %}
+                                        <img src="{{ award.employee.user.avatar.url }}" alt="" class="home-avatar" width="40" height="40" loading="lazy">
+                                    {% else %}
+                                        <span class="home-avatar home-avatar-initials small" aria-hidden="true" style="inline-size: 2.5rem; block-size: 2.5rem;">{{ award.employee.user.first_name|default:award.employee.full_name|slice:":1"|upper }}{{ award.employee.user.last_name|slice:":1"|upper }}</span>
+                                    {% endif %}
                                     <div>
-                                        <span class="badge bg-warning text-dark mb-1">{{ award.award_title }}</span>
+                                        <span class="badge bg-primary-subtle text-primary mb-1">{{ award.award_title }}</span>
                                         <h6 class="fw-bold mb-0 text-dark">{{ award.employee.full_name }}</h6>
                                         <small class="text-muted">{{ award.employee.designation.title }} &bull; {{ award.month_year }}</small>
                                         <p class="small text-secondary mb-0 mt-1 fst-italic">"{{ award.citation }}"</p>
@@ -201,56 +366,58 @@
         </div>
 
         <!-- RIGHT COLUMN: HOLIDAYS, BIRTHDAYS, ANNIVERSARIES -->
-        <div class="col-lg-4">
+        <div class="col-xl-4">
             <!-- COMPANY DECLARED HOLIDAYS -->
-            <div class="hrms-card mb-4">
+            <div class="hrms-card home-section mb-4">
                 <div class="hrms-card-header">
                     <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-sun-fill text-danger fs-5"></i>
-                        <h5 class="fw-bold mb-0">Upcoming Holidays</h5>
+                        <span class="home-icon" aria-hidden="true"><i class="bi bi-sun"></i></span>
+                        <h3 class="home-section-title mb-0">Upcoming Holidays</h3>
                     </div>
-                    <a href="{% url 'portal:holidays_list' %}" class="small text-success text-decoration-none fw-semibold">Annual List</a>
+                    <a href="{% url 'portal:holidays_list' %}" class="home-section-link small text-primary text-decoration-none fw-semibold">Annual List</a>
                 </div>
                 <div class="hrms-card-body p-0">
                     <div class="list-group list-group-flush">
                         {% for h in upcoming_holidays %}
                             <div class="list-group-item p-3 border-0 border-bottom d-flex align-items-center gap-3">
-                                <div class="text-center p-2 rounded bg-light border" style="min-width: 55px;">
-                                    <div class="fw-bold text-success fs-5 lh-1">{{ h.date|date:"d" }}</div>
-                                    <small class="text-muted text-uppercase" style="font-size: 0.68rem;">{{ h.date|date:"M" }}</small>
-                                </div>
+                                <time datetime="{{ h.date|date:'Y-m-d' }}" class="home-date">
+                                    <strong>{{ h.date|date:"d" }}</strong>
+                                    <small class="text-uppercase">{{ h.date|date:"M" }}</small>
+                                </time>
                                 <div class="flex-grow-1">
                                     <div class="fw-bold text-dark mb-0">{{ h.title }}</div>
                                     <small class="text-muted">{{ h.get_holiday_type_display }} &bull; {{ h.date|date:"l" }}</small>
                                 </div>
                             </div>
                         {% empty %}
-                            <div class="p-3 text-center text-muted small">No upcoming holidays this period.</div>
+                            <div class="p-3 text-muted small">No upcoming holidays this period.</div>
                         {% endfor %}
                     </div>
                 </div>
             </div>
 
             <!-- EMPLOYEE BIRTHDAYS (With Privacy Protected Filter) -->
-            <div class="hrms-card mb-4">
+            <div class="hrms-card home-section mb-4">
                 <div class="hrms-card-header">
                     <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-gift-fill text-danger fs-5"></i>
-                        <h5 class="fw-bold mb-0">Celebrations & Birthdays</h5>
+                        <span class="home-icon" aria-hidden="true"><i class="bi bi-gift"></i></span>
+                        <h3 class="home-section-title mb-0">Celebrations & Birthdays</h3>
                     </div>
-                    <span class="badge bg-danger bg-opacity-10 text-danger">Wishes</span>
                 </div>
                 <div class="hrms-card-body">
                     <!-- Today's Birthdays -->
                     {% if today_birthdays %}
-                        <div class="p-3 mb-3 rounded bg-danger bg-opacity-10 border border-danger border-opacity-25 text-center">
-                            <i class="bi bi-balloon-fill text-danger fs-3"></i>
-                            <h6 class="fw-bold text-danger mb-1 mt-1">Today's Birthday!</h6>
+                        <div class="p-3 mb-3 rounded bg-primary-subtle border">
+                            <h4 class="h6 fw-bold text-primary mb-2">Today's Birthday</h4>
                             {% for b in today_birthdays %}
-                                <div class="d-flex align-items-center justify-content-center gap-2 my-2">
-                                    <img src="{{ b.user.get_avatar_url }}" class="rounded-circle" width="36" height="36" style="object-fit: cover;">
-                                    <div class="text-start">
-                                        <div class="fw-bold text-dark">{{ b.full_name }}</div>
+                                <div class="d-flex align-items-center gap-2 my-2">
+                                    {% if b.user.avatar %}
+                                        <img src="{{ b.user.avatar.url }}" alt="" class="home-avatar home-birthday-avatar" width="32" height="32" loading="lazy">
+                                    {% else %}
+                                        <span class="home-avatar home-avatar-initials home-birthday-avatar" aria-hidden="true">{{ b.user.first_name|default:b.full_name|slice:":1"|upper }}{{ b.user.last_name|slice:":1"|upper }}</span>
+                                    {% endif %}
+                                    <div class="home-birthday-person">
+                                        <div class="fw-semibold text-dark">{{ b.full_name }}</div>
                                         <small class="text-muted">{{ b.department.name }}</small>
                                     </div>
                                 </div>
@@ -260,18 +427,22 @@
                     {% endif %}
 
                     <!-- Upcoming Birthdays -->
-                    <h6 class="fw-bold text-secondary small text-uppercase mb-2">Upcoming in next 15 days</h6>
-                    <ul class="list-unstyled mb-0">
+                    <h4 class="fw-bold text-secondary small mb-2">Upcoming in the next 15 days</h4>
+                    <ul class="list-unstyled mb-0 home-birthday-list">
                         {% for item in upcoming_birthdays %}
-                            <li class="d-flex align-items-center justify-content-between py-2 border-bottom">
+                            <li class="d-flex align-items-center justify-content-between gap-2 py-2 border-bottom">
                                 <div class="d-flex align-items-center gap-2">
-                                    <img src="{{ item.0.user.get_avatar_url }}" class="rounded-circle" width="32" height="32" style="object-fit: cover;">
-                                    <div>
-                                        <div class="fw-semibold small text-dark">{{ item.0.full_name }}</div>
+                                    {% if item.0.user.avatar %}
+                                        <img src="{{ item.0.user.avatar.url }}" alt="" class="home-avatar home-birthday-avatar" width="32" height="32" loading="lazy">
+                                    {% else %}
+                                        <span class="home-avatar home-avatar-initials home-birthday-avatar" aria-hidden="true">{{ item.0.user.first_name|default:item.0.full_name|slice:":1"|upper }}{{ item.0.user.last_name|slice:":1"|upper }}</span>
+                                    {% endif %}
+                                    <div class="home-birthday-person">
+                                        <div class="fw-semibold text-dark">{{ item.0.full_name }}</div>
                                         <small class="text-muted">{{ item.0.department.name }}</small>
                                     </div>
                                 </div>
-                                <span class="badge bg-light text-secondary border font-monospace">{{ item.2|date:"M d" }}</span>
+                                <time datetime="{{ item.2|date:'Y-m-d' }}" class="badge bg-primary-subtle text-primary border flex-shrink-0">{{ item.2|date:"M d" }}</time>
                             </li>
                         {% empty %}
                             <li class="text-muted small py-2">No other birthdays this fortnight.</li>
@@ -281,52 +452,65 @@
             </div>
 
             <!-- WORK ANNIVERSARIES -->
-            <div class="hrms-card mb-4">
+            <div class="hrms-card home-section mb-4">
                 <div class="hrms-card-header">
                     <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-award-fill text-primary fs-5"></i>
-                        <h5 class="fw-bold mb-0">Work Anniversaries</h5>
+                        <span class="home-icon" aria-hidden="true"><i class="bi bi-award"></i></span>
+                        <h3 class="home-section-title mb-0">Work Anniversaries</h3>
                     </div>
-                    <span class="badge bg-primary bg-opacity-10 text-primary">Milestones</span>
                 </div>
                 <div class="hrms-card-body p-0">
                     <ul class="list-group list-group-flush">
                         {% for emp in work_anniversaries %}
-                            <li class="list-group-item d-flex align-items-center justify-content-between p-3 border-0 border-bottom">
+                            <li class="list-group-item d-flex align-items-center gap-2 p-3 border-0 border-bottom">
                                 <div class="d-flex align-items-center gap-2">
-                                    <img src="{{ emp.user.get_avatar_url }}" class="rounded-circle" width="32" height="32" style="object-fit: cover;">
+                                    {% if emp.user.avatar %}
+                                        <img src="{{ emp.user.avatar.url }}" alt="" class="home-avatar" width="32" height="32" loading="lazy">
+                                    {% else %}
+                                        <span class="home-avatar home-avatar-initials small" aria-hidden="true" style="inline-size: 2rem; block-size: 2rem;">{{ emp.user.first_name|default:emp.full_name|slice:":1"|upper }}{{ emp.user.last_name|slice:":1"|upper }}</span>
+                                    {% endif %}
                                     <div>
                                         <div class="fw-semibold small text-dark">{{ emp.full_name }}</div>
                                         <small class="text-muted">Joined: {{ emp.joining_date|date:"d M Y" }}</small>
                                     </div>
                                 </div>
-                                <span class="badge bg-success bg-opacity-10 text-success">Anniversary</span>
                             </li>
                         {% empty %}
-                            <li class="p-3 text-center text-muted small">No anniversaries this month.</li>
+                            <li class="p-3 text-muted small">No anniversaries this month.</li>
                         {% endfor %}
                     </ul>
                 </div>
             </div>
 
             <!-- QUICK LINKS & COMPANY POLICIES -->
-            <div class="hrms-card">
+            <div class="hrms-card home-section">
                 <div class="hrms-card-header">
-                    <h6 class="fw-bold mb-0">Quick Workplace Links</h6>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="home-icon" aria-hidden="true"><i class="bi bi-link-45deg"></i></span>
+                        <h3 class="home-section-title mb-0">Quick Workplace Links</h3>
+                    </div>
                 </div>
                 <div class="hrms-card-body p-3">
                     <div class="d-grid gap-2">
-                        <a href="{% url 'portal:policies_list' %}" class="btn btn-outline-secondary btn-sm text-start">
-                            <i class="bi bi-file-earmark-lock me-2 text-success"></i> Corporate Policies & Compliance
+                        <a href="{% url 'portal:policies_list' %}" class="btn btn-outline-primary btn-sm home-quick-link">
+                            <span class="home-icon" aria-hidden="true"><i class="bi bi-file-earmark-lock"></i></span>
+                            <span>Corporate Policies & Compliance</span>
+                            <i class="bi bi-chevron-right" aria-hidden="true"></i>
                         </a>
-                        <a href="{% url 'support:tickets_list' %}" class="btn btn-outline-secondary btn-sm text-start">
-                            <i class="bi bi-headset me-2 text-info"></i> IT & Workplace Helpdesk
+                        <a href="{% url 'support:tickets_list' %}" class="btn btn-outline-primary btn-sm home-quick-link">
+                            <span class="home-icon" aria-hidden="true"><i class="bi bi-headset"></i></span>
+                            <span>IT & Workplace Helpdesk</span>
+                            <i class="bi bi-chevron-right" aria-hidden="true"></i>
                         </a>
-                        <a href="{% url 'support:documents_list' %}" class="btn btn-outline-secondary btn-sm text-start">
-                            <i class="bi bi-file-text me-2 text-warning"></i> Request Certificate / ID Card
+                        <a href="{% url 'support:documents_list' %}" class="btn btn-outline-primary btn-sm home-quick-link">
+                            <span class="home-icon" aria-hidden="true"><i class="bi bi-file-text"></i></span>
+                            <span>Request Certificate / ID Card</span>
+                            <i class="bi bi-chevron-right" aria-hidden="true"></i>
                         </a>
-                        <a href="{% url 'leave_management:apply_leave' %}" class="btn btn-outline-secondary btn-sm text-start">
-                            <i class="bi bi-calendar-plus me-2 text-danger"></i> Apply for Time Off
+                        <a href="{% url 'leave_management:apply_leave' %}" class="btn btn-outline-primary btn-sm home-quick-link">
+                            <span class="home-icon" aria-hidden="true"><i class="bi bi-calendar-plus"></i></span>
+                            <span>Apply for Time Off</span>
+                            <i class="bi bi-chevron-right" aria-hidden="true"></i>
                         </a>
                     </div>
                 </div>

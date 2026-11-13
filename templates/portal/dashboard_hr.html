@@ -1,33 +1,169 @@
 {% extends 'base.html' %}
 {% block title %}HR Administration Dashboard{% endblock %}
 
-{% block content %}
-<div class="container-fluid p-0">
-    <!-- PAGE HEADER -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-        <div>
-            <div class="d-flex align-items-center gap-2">
-                <span class="badge role-hr">Authority 2</span>
-                <h3 class="fw-bold text-dark mb-0">Human Resources Command Center</h3>
-            </div>
-            <p class="text-muted small mb-0">Centralized workforce analytics, attendance registers, approval queues, and payroll processing.</p>
-        </div>
-        <div class="d-flex gap-2">
-            <a href="{% url 'recruitment:links_list' %}" class="btn btn-warning btn-sm text-dark fw-bold shadow-sm">
-                <i class="bi bi-link-45deg me-1"></i> Candidate Registration Links
-            </a>
-            <a href="{% url 'employees:employee_create' %}" class="btn btn-hrms btn-sm shadow-sm">
-                <i class="bi bi-person-plus-fill"></i> Add New Employee
-            </a>
-            <a href="{% url 'attendance:admin_register' %}" class="btn btn-outline-success btn-sm shadow-sm">
-                <i class="bi bi-calendar-check"></i> Attendance Register
-            </a>
-            <a href="{% url 'payroll:dashboard' %}" class="btn btn-outline-primary btn-sm shadow-sm">
-                <i class="bi bi-cash-stack"></i> Payroll Operations
-            </a>
-        </div>
-    </div>
+{% block extra_css %}
+<style>
+    #leave-approvals {
+        border-radius: var(--hrms-radius-sm);
+        box-shadow: none;
+    }
 
+    .leave-queue-heading {
+        flex-wrap: wrap;
+        gap: 1rem;
+        padding: 1rem 1.125rem;
+    }
+
+    #leave-approvals:has(.leave-queue-filter .dropdown-menu.show) {
+        overflow: visible;
+    }
+
+    .leave-queue-toolbar {
+        flex: 0 1 23rem;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .leave-queue-mark {
+        display: grid;
+        place-items: center;
+        flex: 0 0 2.5rem;
+        height: 2.5rem;
+        border-radius: var(--hrms-radius-sm);
+        background: var(--hrms-primary-light);
+        color: var(--hrms-primary);
+    }
+
+    .leave-queue-search {
+        padding: .1875rem;
+        border: 1px solid var(--hrms-border);
+        border-radius: var(--hrms-radius-sm);
+        background: var(--hrms-card-bg);
+    }
+
+    .leave-queue-search :is(.form-control, .form-select) {
+        border: 0 !important;
+        background-color: var(--hrms-card-bg) !important;
+    }
+
+    .leave-queue-search .form-control {
+        flex: 1;
+        min-width: 0;
+        padding: .25rem .375rem;
+        font-size: .8125rem;
+    }
+
+    .leave-queue-search .form-control:focus {
+        box-shadow: inset 0 0 0 1px var(--hrms-primary) !important;
+    }
+
+    .leave-queue-search .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        padding: 0;
+        color: var(--hrms-primary);
+    }
+
+    .leave-queue-search .btn:hover {
+        background: var(--hrms-card-subsurface);
+    }
+
+    .leave-queue-search .form-select {
+        width: 7.25rem;
+        padding-block: .25rem;
+    }
+
+    .leave-queue-filter {
+        border-inline-start: 1px solid var(--hrms-border);
+        margin-inline-start: .1875rem;
+        padding-inline-start: .1875rem;
+    }
+
+    .leave-queue-filter .dropdown-menu {
+        min-width: 8.5rem;
+        padding: .25rem;
+        border-radius: var(--hrms-radius-sm);
+    }
+
+    .leave-queue-filter .dropdown-item {
+        padding: .3125rem .5rem;
+        font-size: .8125rem;
+    }
+
+    .leave-queue-filter .dropdown-item[aria-pressed="true"],
+    .leave-queue-filter .btn.show {
+        background-color: var(--hrms-primary-light) !important;
+        color: var(--hrms-primary) !important;
+    }
+
+    .leave-queue-filter .dropdown-item[aria-pressed="false"] i {
+        visibility: hidden;
+    }
+
+    .leave-queue-scroll:focus-visible {
+        outline: 2px solid var(--hrms-primary);
+        outline-offset: -2px;
+    }
+
+    .leave-queue-table {
+        min-width: 40rem;
+    }
+
+    .leave-queue-table th,
+    .leave-queue-table td {
+        padding: .75rem 1rem;
+        white-space: nowrap;
+    }
+
+    .leave-queue-table :is(th, td):first-child {
+        width: 1%;
+        padding-inline: 1.125rem;
+        color: var(--hrms-text-muted);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .leave-queue-avatar {
+        display: grid;
+        place-items: center;
+        flex: 0 0 2.125rem;
+        width: 2.125rem;
+        height: 2.125rem;
+        border: 1px solid var(--hrms-border);
+        border-radius: 6px;
+        object-fit: cover;
+        background: var(--hrms-primary-light);
+        color: var(--hrms-primary);
+    }
+
+    .leave-queue-sort {
+        display: inline-flex;
+        align-items: center;
+        gap: .375rem;
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .leave-queue-sort:hover,
+    .leave-queue-table [aria-sort] .leave-queue-sort {
+        color: var(--hrms-primary);
+    }
+
+    .leave-queue-footer {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+        min-height: 3.75rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0 hrms-dashboard" data-bs-theme="light">
     <!-- WORKFORCE METRIC STAT CARDS -->
     <div class="row g-3 mb-4">
         <div class="col-sm-6 col-xl-3">
@@ -76,7 +212,7 @@
                 </div>
                 <div>
                     <div class="stat-label">Pending Leaves</div>
-                    <div class="stat-value text-warning">{{ pending_leaves|length }}</div>
+                    <div class="stat-value text-warning">{{ pending_leave_count }}</div>
                     <small class="text-muted">Awaiting HR/Manager action</small>
                 </div>
             </div>
@@ -90,7 +226,7 @@
             <div class="hrms-card h-100">
                 <div class="hrms-card-header">
                     <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-pie-chart-fill text-success"></i>
+                        <i class="bi bi-pie-chart-fill text-primary"></i>
                         <h6 class="fw-bold mb-0">Today's Attendance Ratio</h6>
                     </div>
                     <small class="text-muted">{{ today|date:"M d, Y" }}</small>
@@ -117,7 +253,7 @@
                         <i class="bi bi-bar-chart-fill text-primary"></i>
                         <h6 class="fw-bold mb-0">Workforce Headcount by Department</h6>
                     </div>
-                    <a href="{% url 'employees:employee_list' %}" class="small text-success text-decoration-none">View Directory</a>
+                    <a href="{% url 'employees:employee_list' %}" class="small text-primary text-decoration-none">View Directory</a>
                 </div>
                 <div class="hrms-card-body">
                     <div style="height: 250px; width: 100%;">
@@ -131,75 +267,159 @@
     <!-- QUEUES GRID -->
     <div class="row g-4 mb-4">
         <!-- PENDING LEAVE APPROVALS -->
-        <div class="col-lg-7">
-            <div class="hrms-card">
-                <div class="hrms-card-header">
+        <div class="col-12">
+            <section class="hrms-card" id="leave-approvals" aria-labelledby="leave-queue-title">
+                <div class="hrms-card-header leave-queue-heading">
                     <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-check2-circle text-danger fs-5"></i>
-                        <h6 class="fw-bold mb-0">Pending Leave Approvals Queue</h6>
+                        <span class="leave-queue-mark" aria-hidden="true"><i class="bi bi-calendar2-check"></i></span>
+                        <h2 class="h6 fw-bold mb-0" id="leave-queue-title">Pending Leave Approvals Queue</h2>
                     </div>
-                    <a href="{% url 'leave_management:admin_queue' %}" class="small text-success text-decoration-none fw-semibold">Open Full Queue</a>
+
+                    <form id="leave-queue-search" method="get" action="#leave-approvals" class="leave-queue-toolbar" role="search" aria-label="Search pending leaves">
+                        {% if leave_sort %}<input type="hidden" name="leave_sort" value="{{ leave_sort }}">{% endif %}
+                        <div class="d-flex align-items-center leave-queue-search">
+                            <button type="submit" class="btn" aria-label="Search pending leave requests" title="Search">
+                                <i class="bi bi-search" aria-hidden="true"></i>
+                            </button>
+                            <input type="search" name="leave_search" class="form-control" aria-label="Search value" placeholder="Search leave requests" value="{{ leave_search }}" maxlength="120">
+                            <select id="leave-column" name="leave_column" class="form-select form-select-sm" aria-label="Search column">
+                                {% for key, label in leave_search_columns.items %}
+                                    <option value="{{ key }}"{% if key == leave_column %} selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="dropdown leave-queue-filter d-none" id="leave-column-filter">
+                                <button type="button" class="btn btn-sm" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Filter by column" title="Filter by column">
+                                    <i class="bi bi-funnel" aria-hidden="true"></i>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end mt-1">
+                                    {% for key, label in leave_search_columns.items %}
+                                        <button type="button" class="dropdown-item d-flex justify-content-between align-items-center gap-2" data-column="{{ key }}" aria-pressed="{% if key == leave_column %}true{% else %}false{% endif %}">
+                                            {{ label }} <i class="bi bi-check2" aria-hidden="true"></i>
+                                        </button>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <a href="{% querystring leave_search=None leave_page=None %}#leave-approvals" class="btn" aria-label="Reset search and reload results" title="Reset search">
+                                <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+                            </a>
+                        </div>
+                    </form>
                 </div>
-                <div class="table-responsive">
-                    <table class="table hrms-table">
+
+                <div class="table-responsive leave-queue-scroll" tabindex="0" role="region" aria-labelledby="leave-queue-title">
+                    <table class="table hrms-table leave-queue-table">
                         <thead>
                             <tr>
-                                <th>Employee</th>
-                                <th>Leave Type</th>
-                                <th>Dates</th>
-                                <th>Days</th>
-                                <th>Status</th>
-                                <th class="text-end">Action</th>
+                                <th scope="col" class="text-center"><span aria-hidden="true">#</span><span class="visually-hidden">Row</span></th>
+                                {% for label, sort, direction in leave_headers %}
+                                    <th scope="col"{% if direction %} aria-sort="{{ direction }}"{% endif %}>
+                                        <a class="leave-queue-sort" href="{% querystring leave_sort=sort leave_page=None %}#leave-approvals">
+                                            {{ label }}
+                                            <i class="bi {% if direction == 'ascending' %}bi-arrow-up{% elif direction == 'descending' %}bi-arrow-down{% else %}bi-arrow-down-up{% endif %}" aria-hidden="true"></i>
+                                        </a>
+                                    </th>
+                                {% endfor %}
+                                <th scope="col" class="text-end">Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for req in pending_leaves %}
+                            {% for req in leave_page %}
                                 <tr>
+                                    <td class="text-center">{{ leave_page.start_index|add:forloop.counter0 }}</td>
                                     <td>
-                                        <div class="fw-bold text-dark">{{ req.employee.full_name }}</div>
-                                        <small class="text-muted">{{ req.employee.emp_id }} &bull; {{ req.employee.department.name }}</small>
+                                        <div class="d-flex align-items-center gap-2">
+                                            {% if req.employee.user.avatar %}
+                                                <img class="leave-queue-avatar" src="{{ req.employee.user.avatar.url }}" width="34" height="34" alt="" loading="lazy">
+                                            {% else %}
+                                                <span class="leave-queue-avatar small fw-semibold" aria-hidden="true">{{ req.employee.full_name|first|upper }}</span>
+                                            {% endif %}
+                                            <div>
+                                                <div class="fw-semibold text-dark">{{ req.employee.full_name }}</div>
+                                                <small class="d-block text-muted">{{ req.employee.emp_id }}</small>
+                                            </div>
+                                        </div>
                                     </td>
-                                    <td><span class="badge bg-light text-dark border">{{ req.leave_type.code }}</span></td>
-                                    <td>{{ req.start_date|date:"d M" }} - {{ req.end_date|date:"d M" }}</td>
-                                    <td>{{ req.total_days }}</td>
+                                    <td><span class="badge bg-light text-dark border">{{ req.leave_type.name }}</span></td>
                                     <td>
-                                        <span class="badge {% if req.status == 'PENDING_HR' %}bg-info text-dark{% else %}bg-warning text-dark{% endif %}">
-                                            {{ req.get_status_display }}
+                                        {% if req.start_date == req.end_date %}
+                                            <time datetime="{{ req.start_date|date:'Y-m-d' }}">{{ req.start_date|date:"j M" }}</time>
+                                        {% else %}
+                                            <time datetime="{{ req.start_date|date:'Y-m-d' }}">{% if req.start_date|date:"Y-m" == req.end_date|date:"Y-m" %}{{ req.start_date|date:"j" }}{% else %}{{ req.start_date|date:"j M" }}{% endif %}</time> to <time datetime="{{ req.end_date|date:'Y-m-d' }}">{{ req.end_date|date:"j M" }}</time>
+                                        {% endif %}
+                                    </td>
+                                    <td class="font-monospace">{{ req.total_days }}</td>
+                                    <td>
+                                        <span class="badge {% if req.status == 'PENDING_HR' %}bg-primary-subtle text-primary-emphasis{% else %}bg-warning-subtle text-warning-emphasis{% endif %}" title="{{ req.get_status_display }}">
+                                            {% if req.status == 'PENDING_HR' %}Pending HR{% else %}Pending Manager{% endif %}
                                         </span>
                                     </td>
                                     <td class="text-end">
-                                        <form method="POST" action="{% url 'leave_management:process_leave' request_id=req.id %}" class="d-inline">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="action" value="APPROVE">
-                                            <button type="submit" class="btn btn-sm btn-success py-1 px-2" title="Approve Leave">
-                                                <i class="bi bi-check-lg"></i>
-                                            </button>
-                                        </form>
-                                        <form method="POST" action="{% url 'leave_management:process_leave' request_id=req.id %}" class="d-inline">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="action" value="REJECT">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Reject Leave">
-                                                <i class="bi bi-x-lg"></i>
-                                            </button>
-                                        </form>
+                                        <div class="d-inline-flex gap-1">
+                                            <form method="post" action="{% url 'leave_management:process_leave' request_id=req.id %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="APPROVE">
+                                                <button type="submit" class="btn btn-sm btn-outline-success" aria-label="Approve leave for {{ req.employee.full_name }}">
+                                                    <i class="bi bi-check-lg" aria-hidden="true"></i> Approve
+                                                </button>
+                                            </form>
+                                            <form method="post" action="{% url 'leave_management:process_leave' request_id=req.id %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="REJECT">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Reject leave for {{ req.employee.full_name }}">
+                                                    <i class="bi bi-x-lg" aria-hidden="true"></i> Reject
+                                                </button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                             {% empty %}
-                                <tr><td colspan="6" class="text-center py-3 text-muted">No pending leave requests.</td></tr>
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">
+                                        {% if leave_search %}No pending leave requests match your search.{% else %}No pending leave requests.{% endif %}
+                                    </td>
+                                </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
-            </div>
+
+                <div class="leave-queue-footer px-3 py-2">
+                    <div class="d-flex flex-wrap align-items-center gap-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <label for="leave-size" class="small text-muted text-nowrap">Rows per page</label>
+                            <select id="leave-size" name="leave_size" form="leave-queue-search" class="form-select form-select-sm w-auto" onchange="this.form.requestSubmit()">
+                                {% for size in leave_page_sizes %}
+                                    <option value="{{ size }}"{% if size == leave_size %} selected{% endif %}>{{ size }}</option>
+                                {% endfor %}
+                            </select>
+                            <noscript><button type="submit" form="leave-queue-search" class="btn btn-sm btn-outline-secondary">Apply</button></noscript>
+                        </div>
+                        <small class="text-muted ps-3 border-start">{{ leave_page.start_index }}–{{ leave_page.end_index }} of {{ leave_page.paginator.count }}</small>
+                    </div>
+                    <nav class="d-flex align-items-center gap-2" aria-label="Leave queue pages">
+                        {% if leave_page.has_previous %}
+                            <a href="{% querystring leave_page=leave_page.previous_page_number %}#leave-approvals" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Prev</a>
+                        {% else %}
+                            <button type="button" class="btn btn-sm btn-outline-secondary" disabled><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Prev</button>
+                        {% endif %}
+                        <small class="text-muted text-nowrap">Page {{ leave_page.number }} of {{ leave_page.paginator.num_pages }}</small>
+                        {% if leave_page.has_next %}
+                            <a href="{% querystring leave_page=leave_page.next_page_number %}#leave-approvals" class="btn btn-sm btn-outline-secondary">Next<i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+                        {% else %}
+                            <button type="button" class="btn btn-sm btn-outline-secondary" disabled>Next<i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></button>
+                        {% endif %}
+                    </nav>
+                </div>
+            </section>
         </div>
 
         <!-- PENDING ATTENDANCE CORRECTIONS & PROFILE REQUESTS -->
-        <div class="col-lg-5">
+        <div class="col-12">
             <!-- ATTENDANCE CORRECTIONS -->
             <div class="hrms-card mb-4">
                 <div class="hrms-card-header">
-                    <h6 class="fw-bold mb-0"><i class="bi bi-clock-history text-warning me-2"></i>Attendance Corrections</h6>
-                    <a href="{% url 'attendance:corrections_list' %}" class="small text-success text-decoration-none">Manage</a>
+                    <h6 class="fw-bold mb-0"><i class="bi bi-clock-history text-primary me-2"></i>Attendance Corrections</h6>
+                    <a href="{% url 'attendance:corrections_list' %}" class="small text-primary text-decoration-none">Manage</a>
                 </div>
                 <div class="p-0">
                     <ul class="list-group list-group-flush">
@@ -226,7 +446,7 @@
             <div class="hrms-card">
                 <div class="hrms-card-header">
                     <h6 class="fw-bold mb-0"><i class="bi bi-person-gear text-primary me-2"></i>Profile Update Requests</h6>
-                    <a href="{% url 'employees:profile_corrections_list' %}" class="small text-success text-decoration-none">Manage</a>
+                    <a href="{% url 'employees:profile_corrections_list' %}" class="small text-primary text-decoration-none">Manage</a>
                 </div>
                 <div class="p-0">
                     <ul class="list-group list-group-flush">
@@ -251,6 +471,34 @@
 
 {% block extra_js %}
 <script>
+if (window.bootstrap?.Dropdown) {
+    const columnSelect = document.getElementById('leave-column');
+    const columnFilter = document.getElementById('leave-column-filter');
+    const filterToggle = columnFilter.querySelector('[data-bs-toggle="dropdown"]');
+    const filterMenu = columnFilter.querySelector('.dropdown-menu');
+    const filterChoices = filterMenu.querySelectorAll('[data-column]');
+
+    function showSelectedColumn() {
+        filterChoices.forEach(choice => {
+            choice.setAttribute('aria-pressed', String(choice.dataset.column === columnSelect.value));
+        });
+    }
+
+    columnFilter.addEventListener('show.bs.dropdown', showSelectedColumn);
+    filterMenu.addEventListener('click', event => {
+        const choice = event.target.closest('[data-column]');
+        if (!choice) return;
+
+        columnSelect.value = choice.dataset.column;
+        showSelectedColumn();
+        bootstrap.Dropdown.getOrCreateInstance(filterToggle).hide();
+        filterToggle.focus();
+    });
+
+    columnSelect.hidden = true;
+    columnFilter.classList.remove('d-none');
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     // 1. Attendance Donut Chart
     const attCtx = document.getElementById('attendanceDonutChart').getContext('2d');
@@ -273,7 +521,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // 2. Department Bar Chart
-    const deptCtx = document.getElementById('deptBarChart').getContext('2d');
+    const deptChart = document.getElementById('deptBarChart');
+    const deptCtx = deptChart.getContext('2d');
     const deptData = {{ dept_stats|safe }};
     const labels = deptData.map(d => d.name);
     const counts = deptData.map(d => d.emp_count);
@@ -285,7 +534,7 @@ document.addEventListener('DOMContentLoaded', function () {
             datasets: [{
                 label: 'Employees',
                 data: counts,
-                backgroundColor: '#1B5E20',
+                backgroundColor: getComputedStyle(deptChart).getPropertyValue('--hrms-primary').trim(),
                 borderRadius: 6
             }]
         },

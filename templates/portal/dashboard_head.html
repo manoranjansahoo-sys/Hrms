@@ -2,7 +2,7 @@
 {% block title %}Executive Head Dashboard{% endblock %}
 
 {% block content %}
-<div class="container-fluid p-0">
+<div class="container-fluid p-0 hrms-dashboard" data-bs-theme="light">
     <!-- PAGE HEADER -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
@@ -94,7 +94,7 @@
             {% for p in pending_payroll_approvals %}
                 <form method="POST" action="{% url 'payroll:approve_payroll' period_id=p.id %}">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-success fw-bold px-4 shadow-sm">
+                    <button type="submit" class="btn btn-primary fw-bold px-4 shadow-sm">
                         <i class="bi bi-check2-all me-1"></i> Sign & Authorize Payout
                     </button>
                 </form>
@@ -109,7 +109,7 @@
             <div class="hrms-card h-100">
                 <div class="hrms-card-header">
                     <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-pie-chart-fill text-success"></i>
+                        <i class="bi bi-pie-chart-fill text-primary"></i>
                         <h6 class="fw-bold mb-0">Workforce Distribution by Department</h6>
                     </div>
                 </div>
@@ -149,7 +149,7 @@
                         <i class="bi bi-file-earmark-check-fill text-warning fs-5"></i>
                         <h6 class="fw-bold mb-0">Executive Leave Approvals Queue</h6>
                     </div>
-                    <a href="{% url 'leave_management:admin_queue' %}" class="small text-success text-decoration-none">Full Queue</a>
+                    <a href="{% url 'leave_management:admin_queue' %}" class="small text-primary text-decoration-none">Full Queue</a>
                 </div>
                 <div class="table-responsive">
                     <table class="table hrms-table">
@@ -199,7 +199,7 @@
                         <i class="bi bi-shield-shaded text-danger fs-5"></i>
                         <h6 class="fw-bold mb-0">System Security & Activity Audit Log</h6>
                     </div>
-                    <a href="{% url 'accounts:audit_logs' %}" class="small text-success text-decoration-none">Complete Audit Log</a>
+                    <a href="{% url 'accounts:audit_logs' %}" class="small text-primary text-decoration-none">Complete Audit Log</a>
                 </div>
                 <div class="p-0">
                     <ul class="list-group list-group-flush">
@@ -252,7 +252,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // 2. Site Bar Chart
-    const siteCtx = document.getElementById('headSiteChart').getContext('2d');
+    const siteChart = document.getElementById('headSiteChart');
+    const siteCtx = siteChart.getContext('2d');
     const siteData = {{ site_distribution|safe }};
     new Chart(siteCtx, {
         type: 'bar',
@@ -261,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function () {
             datasets: [{
                 label: 'Employees Assigned',
                 data: siteData.map(s => s.total),
-                backgroundColor: '#2E7D32',
+                backgroundColor: getComputedStyle(siteChart).getPropertyValue('--hrms-primary').trim(),
                 borderRadius: 6
             }]
         },

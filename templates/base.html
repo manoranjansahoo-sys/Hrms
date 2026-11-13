@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="light">
+<html lang="en" class="hrms-workspace" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +9,7 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400..800&display=swap" rel="stylesheet">
 
     <!-- Bootstrap 5 & Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
@@ -35,23 +35,21 @@
 
 <div class="app-wrapper">
     <!-- SIDEBAR NAVIGATION -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="workspace-sidebar" aria-label="Primary navigation">
         <div class="sidebar-header">
-            <div class="d-flex align-items-center gap-2.5">
-                <div class="brand-logo-icon">
+            <div class="sidebar-brand-row">
+                <div class="brand-logo-icon" aria-hidden="true">
                     <i class="bi bi-buildings-fill"></i>
                 </div>
-                <div>
-                    <div class="fw-bold text-white lh-1 fs-5">Company HRMS</div>
-                    <small class="text-white-50 d-flex align-items-center gap-1.5 mt-1" style="font-size: 0.70rem;">
-                        <span class="status-pulse-dot"></span> Enterprise Workspace
-                    </small>
-                </div>
+                <span class="sidebar-version">v2.5</span>
             </div>
+            <div class="sidebar-brand-name">Company HRMS</div>
+            <div class="sidebar-brand-workspace">Enterprise Workspace</div>
         </div>
 
-        <ul class="sidebar-menu">
+        <ul class="sidebar-menu" tabindex="0" aria-label="Navigation menu">
             <!-- PORTAL / HOME -->
+            <li class="menu-category">Overview</li>
             <li class="menu-item">
                 <a href="{% url 'portal:home' %}" class="menu-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
                     <i class="bi bi-house-door-fill text-success"></i>
@@ -92,7 +90,7 @@
                         <i class="bi bi-person-check-fill text-success"></i>
                         <span>Onboarding Employees</span>
                         {% if pending_onboarding_count > 0 %}
-                            <span class="badge bg-warning text-dark menu-badge">{{ pending_onboarding_count }}</span>
+                            <span class="menu-badge">{{ pending_onboarding_count }}</span>
                         {% endif %}
                     </a>
                 </li>
@@ -101,7 +99,7 @@
                         <i class="bi bi-check2-circle"></i>
                         <span>Leave Approvals</span>
                         {% if pending_leaves_count > 0 %}
-                            <span class="badge bg-warning text-dark menu-badge">{{ pending_leaves_count }}</span>
+                            <span class="menu-badge">{{ pending_leaves_count }}</span>
                         {% endif %}
                     </a>
                 </li>
@@ -113,27 +111,27 @@
                         </div>
                         <div class="d-flex align-items-center gap-1.5">
                             {% if pending_corrections_count > 0 %}
-                                <span class="badge bg-warning text-dark rounded-pill" style="font-size: 0.68rem;">{{ pending_corrections_count }}</span>
+                                <span class="menu-badge">{{ pending_corrections_count }}</span>
                             {% endif %}
                             <i class="bi bi-chevron-down small" style="font-size: 0.72rem;"></i>
                         </div>
                     </a>
                     <div class="collapse {% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}show{% endif %}" id="attendanceSubmenuHead">
-                        <ul class="list-unstyled ps-3 pt-1 pb-1 mb-0" style="background: rgba(0,0,0,0.18); border-radius: 8px; margin-top: 3px;">
+                        <ul class="sidebar-submenu">
                             <li>
-                                <a href="{% url 'attendance:admin_register' %}" class="menu-link py-1.5 px-3 {% if 'admin_register' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
-                                    <i class="bi bi-calendar-check-fill me-2" style="font-size: 0.85rem;"></i>
+                                <a href="{% url 'attendance:admin_register' %}" class="menu-link {% if 'admin_register' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}active{% endif %}">
+                                    <i class="bi bi-calendar-check-fill"></i>
                                     <span>Daily Attendance</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="{% url 'attendance:corrections_list' %}" class="menu-link py-1.5 px-3 d-flex align-items-center justify-content-between {% if 'corrections' in request.resolver_match.url_name %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
+                                <a href="{% url 'attendance:corrections_list' %}" class="menu-link justify-content-between {% if 'corrections' in request.resolver_match.url_name %}active{% endif %}">
                                     <div class="d-flex align-items-center">
-                                        <i class="bi bi-clock-history me-2" style="font-size: 0.85rem;"></i>
+                                        <i class="bi bi-clock-history"></i>
                                         <span>Attendance Corrections</span>
                                     </div>
                                     {% if pending_corrections_count > 0 %}
-                                        <span class="badge bg-warning text-dark menu-badge">{{ pending_corrections_count }}</span>
+                                        <span class="menu-badge">{{ pending_corrections_count }}</span>
                                     {% endif %}
                                 </a>
                             </li>
@@ -197,7 +195,7 @@
                         <i class="bi bi-person-check-fill text-success"></i>
                         <span>Onboarding Employees</span>
                         {% if pending_onboarding_count > 0 %}
-                            <span class="badge bg-warning text-dark menu-badge">{{ pending_onboarding_count }}</span>
+                            <span class="menu-badge">{{ pending_onboarding_count }}</span>
                         {% endif %}
                     </a>
                 </li>
@@ -211,27 +209,27 @@
                         </div>
                         <div class="d-flex align-items-center gap-1.5">
                             {% if pending_corrections_count > 0 %}
-                                <span class="badge bg-warning text-dark rounded-pill" style="font-size: 0.68rem;">{{ pending_corrections_count }}</span>
+                                <span class="menu-badge">{{ pending_corrections_count }}</span>
                             {% endif %}
                             <i class="bi bi-chevron-down small" style="font-size: 0.72rem;"></i>
                         </div>
                     </a>
                     <div class="collapse {% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}show{% endif %}" id="attendanceSubmenuHR">
-                        <ul class="list-unstyled ps-3 pt-1 pb-1 mb-0" style="background: rgba(0,0,0,0.18); border-radius: 8px; margin-top: 3px;">
+                        <ul class="sidebar-submenu">
                             <li>
-                                <a href="{% url 'attendance:admin_register' %}" class="menu-link py-1.5 px-3 {% if 'admin_register' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
-                                    <i class="bi bi-calendar-check-fill me-2" style="font-size: 0.85rem;"></i>
+                                <a href="{% url 'attendance:admin_register' %}" class="menu-link {% if 'admin_register' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}active{% endif %}">
+                                    <i class="bi bi-calendar-check-fill"></i>
                                     <span>Daily Register</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="{% url 'attendance:corrections_list' %}" class="menu-link py-1.5 px-3 d-flex align-items-center justify-content-between {% if 'corrections' in request.resolver_match.url_name %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
+                                <a href="{% url 'attendance:corrections_list' %}" class="menu-link justify-content-between {% if 'corrections' in request.resolver_match.url_name %}active{% endif %}">
                                     <div class="d-flex align-items-center">
-                                        <i class="bi bi-clock-history me-2" style="font-size: 0.85rem;"></i>
+                                        <i class="bi bi-clock-history"></i>
                                         <span>Attendance Corrections</span>
                                     </div>
                                     {% if pending_corrections_count > 0 %}
-                                        <span class="badge bg-warning text-dark menu-badge">{{ pending_corrections_count }}</span>
+                                        <span class="menu-badge">{{ pending_corrections_count }}</span>
                                     {% endif %}
                                 </a>
                             </li>
@@ -243,7 +241,7 @@
                         <i class="bi bi-calendar2-week"></i>
                         <span>Leave Management</span>
                         {% if pending_leaves_count > 0 %}
-                            <span class="badge bg-danger menu-badge">{{ pending_leaves_count }}</span>
+                            <span class="menu-badge">{{ pending_leaves_count }}</span>
                         {% endif %}
                     </a>
                 </li>
@@ -271,7 +269,7 @@
                         <i class="bi bi-person-badge"></i>
                         <span>Profile Corrections</span>
                         {% if pending_profile_requests_count > 0 %}
-                            <span class="badge bg-danger menu-badge">{{ pending_profile_requests_count }}</span>
+                            <span class="menu-badge">{{ pending_profile_requests_count }}</span>
                         {% endif %}
                     </a>
                 </li>
@@ -329,27 +327,27 @@
                         </div>
                         <div class="d-flex align-items-center gap-1.5">
                             {% if pending_corrections_count > 0 %}
-                                <span class="badge bg-warning text-dark rounded-pill" style="font-size: 0.68rem;">{{ pending_corrections_count }}</span>
+                                <span class="menu-badge">{{ pending_corrections_count }}</span>
                             {% endif %}
                             <i class="bi bi-chevron-down small" style="font-size: 0.72rem;"></i>
                         </div>
                     </a>
                     <div class="collapse {% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}show{% endif %}" id="attendanceSubmenuSM">
-                        <ul class="list-unstyled ps-3 pt-1 pb-1 mb-0" style="background: rgba(0,0,0,0.18); border-radius: 8px; margin-top: 3px;">
+                        <ul class="sidebar-submenu">
                             <li>
-                                <a href="{% url 'attendance:admin_register' %}" class="menu-link py-1.5 px-3 {% if 'admin_register' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
-                                    <i class="bi bi-calendar-check-fill me-2" style="font-size: 0.85rem;"></i>
+                                <a href="{% url 'attendance:admin_register' %}" class="menu-link {% if 'admin_register' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}active{% endif %}">
+                                    <i class="bi bi-calendar-check-fill"></i>
                                     <span>Daily Register</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="{% url 'attendance:corrections_list' %}" class="menu-link py-1.5 px-3 d-flex align-items-center justify-content-between {% if 'corrections' in request.resolver_match.url_name %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
+                                <a href="{% url 'attendance:corrections_list' %}" class="menu-link justify-content-between {% if 'corrections' in request.resolver_match.url_name %}active{% endif %}">
                                     <div class="d-flex align-items-center">
-                                        <i class="bi bi-hourglass-split me-2" style="font-size: 0.85rem;"></i>
+                                        <i class="bi bi-hourglass-split"></i>
                                         <span>Punch Corrections</span>
                                     </div>
                                     {% if pending_corrections_count > 0 %}
-                                        <span class="badge bg-warning text-dark menu-badge">{{ pending_corrections_count }}</span>
+                                        <span class="menu-badge">{{ pending_corrections_count }}</span>
                                     {% endif %}
                                 </a>
                             </li>
@@ -361,7 +359,7 @@
                         <i class="bi bi-calendar-event"></i>
                         <span>Team Leave Approvals</span>
                         {% if pending_leaves_count > 0 %}
-                            <span class="badge bg-danger menu-badge">{{ pending_leaves_count }}</span>
+                            <span class="menu-badge">{{ pending_leaves_count }}</span>
                         {% endif %}
                     </a>
                 </li>
@@ -413,37 +411,30 @@
         </ul>
 
         <!-- SIDEBAR FOOTER -->
-        <div class="sidebar-footer text-center small">
-            <span class="badge mb-1 px-2.5 py-1" style="background: rgba(143, 130, 240, 0.2); color: #8F82F0; border: 1px solid rgba(143, 130, 240, 0.35);">Company HRMS v2.5</span>
-            <div class="text-white-50" style="font-size: 0.70rem;">Enterprise Operations Active</div>
-        </div>
+        <div class="sidebar-footer">Enterprise Operations Active</div>
     </aside>
 
     <!-- MAIN CONTENT AREA -->
     <div class="main-content">
         <!-- TOPBAR -->
-        <header class="topbar">
-            <div class="d-flex align-items-center gap-3">
-                <button class="btn btn-sm btn-outline-secondary d-lg-none" id="sidebarToggle" aria-label="Toggle Sidebar">
-                    <i class="bi bi-list fs-5"></i>
-                </button>
-                <div class="live-clock-display d-none d-sm-block fw-semibold text-secondary">
-                    <!-- Updated by hrms.js -->
-                </div>
-            </div>
+        <header class="topbar" data-bs-theme="light">
+            <button type="button" class="btn topbar-control topbar-icon-button d-lg-none" id="sidebarToggle" aria-label="Toggle Sidebar" aria-controls="workspace-sidebar" aria-expanded="false">
+                <i class="bi bi-list" aria-hidden="true"></i>
+            </button>
 
-            <div class="d-flex align-items-center gap-3">
+            <div class="topbar-actions">
                 <!-- DEMO 4-ROLE SWITCHER (Instant Presentation Feature) -->
                 <div class="dropdown">
-                    <button class="btn btn-sm btn-outline-success dropdown-toggle d-flex align-items-center gap-1 shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Switch Demo Authority">
-                        <i class="bi bi-person-lines-fill"></i>
-                        <span class="d-none d-md-inline fw-semibold">Switch Authority</span>
+                    <button class="btn topbar-control" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false" aria-label="Switch Authority">
+                        <i class="bi bi-person-lines-fill" aria-hidden="true"></i>
+                        <span class="d-none d-sm-inline">Switch Authority</span>
+                        <i class="bi bi-chevron-down topbar-chevron d-none d-sm-inline" aria-hidden="true"></i>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow">
-                        <li class="dropdown-header text-uppercase" style="font-size: 0.72rem;">Four Authority Test Switcher</li>
+                    <ul class="dropdown-menu dropdown-menu-end topbar-menu">
+                        <li class="dropdown-header">Switch Authority</li>
                         <li>
                             <a class="dropdown-item d-flex align-items-center gap-2 {% if request.user.username == 'admin' %}active{% endif %}" href="{% url 'accounts:quick_switch_role' username='admin' %}">
-                                <span class="badge role-head">Head</span>
+                                <span class="badge topbar-role">Head</span>
                                 <div>
                                     <div class="fw-semibold">Debasish Mohapatra</div>
                                     <small class="text-muted">Head of Company (Executive MD)</small>
@@ -452,7 +443,7 @@
                         </li>
                         <li>
                             <a class="dropdown-item d-flex align-items-center gap-2 {% if request.user.username == 'hr_admin' %}active{% endif %}" href="{% url 'accounts:quick_switch_role' username='hr_admin' %}">
-                                <span class="badge role-hr">HR</span>
+                                <span class="badge topbar-role">HR</span>
                                 <div>
                                     <div class="fw-semibold">Smruti Rekha Swain</div>
                                     <small class="text-muted">HR Administrator</small>
@@ -461,7 +452,7 @@
                         </li>
                         <li>
                             <a class="dropdown-item d-flex align-items-center gap-2 {% if request.user.username == 'site_manager' %}active{% endif %}" href="{% url 'accounts:quick_switch_role' username='site_manager' %}">
-                                <span class="badge role-manager">Site Mgr</span>
+                                <span class="badge topbar-role">Site Mgr</span>
                                 <div>
                                     <div class="fw-semibold">Rajesh Kumar Jena</div>
                                     <small class="text-muted">Site Manager </small>
@@ -470,7 +461,7 @@
                         </li>
                         <li>
                             <a class="dropdown-item d-flex align-items-center gap-2 {% if request.user.username == 'john_doe' %}active{% endif %}" href="{% url 'accounts:quick_switch_role' username='john_doe' %}">
-                                <span class="badge role-employee">Employee</span>
+                                <span class="badge topbar-role">Employee</span>
                                 <div>
                                     <div class="fw-semibold">Soumya Ranjan Sahoo</div>
                                     <small class="text-muted">Senior Software Engineer</small>
@@ -480,66 +471,36 @@
                     </ul>
                 </div>
 
-                <!-- QUICK PUNCH IN / OUT WIDGET IN TOPBAR -->
-                {% if request.user.employee_profile %}
-                    {% with today_att=user_today_attendance %}
-                    <div class="d-none d-md-flex align-items-center gap-1">
-                        {% if not today_att or not today_att.punch_in %}
-                            <a href="{% url 'attendance:punch_in' %}" class="btn btn-sm btn-outline-success" title="Punch In">
-                                <i class="bi bi-box-arrow-in-right"></i> Punch In
-                            </a>
-                            <button type="button" class="btn btn-sm btn-outline-secondary opacity-50" disabled title="Punch In required before you can Punch Out" style="cursor: not-allowed;">
-                                <i class="bi bi-box-arrow-right"></i> Punch Out
-                            </button>
-                        {% elif not today_att.punch_out %}
-                            <button type="button" class="btn btn-sm btn-outline-secondary opacity-50" disabled title="Already Punched In today" style="cursor: not-allowed;">
-                                <i class="bi bi-box-arrow-in-right"></i> Punch In
-                            </button>
-                            <a href="{% url 'attendance:punch_out' %}" class="btn btn-sm btn-outline-danger" title="Punch Out">
-                                <i class="bi bi-box-arrow-right"></i> Punch Out
-                            </a>
-                        {% else %}
-                            <button type="button" class="btn btn-sm btn-outline-secondary opacity-50" disabled title="Already punched out for today. Punch In closed." style="cursor: not-allowed;">
-                                <i class="bi bi-box-arrow-in-right"></i> Punch In
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary opacity-50" disabled title="Already punched out for today." style="cursor: not-allowed;">
-                                <i class="bi bi-box-arrow-right"></i> Punch Out
-                            </button>
-                        {% endif %}
-                    </div>
-                    {% endwith %}
-                {% endif %}
-
                 <!-- THEME TOGGLE (LIGHT / DARK) -->
-                <button class="btn btn-sm btn-light border" id="themeToggleBtn" title="Toggle Light/Dark Theme" aria-label="Toggle Theme">
-                    <i class="bi bi-moon-stars text-secondary"></i>
+                <button type="button" class="btn topbar-control topbar-icon-button" id="themeToggleBtn" title="Toggle Light/Dark Theme" aria-label="Toggle Theme">
+                    <i class="bi bi-moon-stars" aria-hidden="true"></i>
                 </button>
 
                 <!-- NOTIFICATIONS DROPDOWN -->
                 <div class="dropdown">
-                    <button class="btn btn-sm btn-light border position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
-                        <i class="bi bi-bell-fill text-secondary"></i>
+                    <button class="btn topbar-control topbar-icon-button position-relative" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false" aria-label="Notifications{% if unread_notifications_count > 0 %}, {{ unread_notifications_count }} unread{% endif %}">
+                        <i class="bi bi-bell" aria-hidden="true"></i>
                         {% if unread_notifications_count > 0 %}
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
+                            <span class="badge topbar-count" aria-hidden="true">
                                 {{ unread_notifications_count }}
                             </span>
                         {% endif %}
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow" style="width: 320px; max-height: 400px; overflow-y: auto;">
-                        <li class="dropdown-header d-flex justify-content-between align-items-center">
+                    <ul class="dropdown-menu dropdown-menu-end topbar-menu">
+                        <li class="dropdown-header d-flex justify-content-between align-items-center gap-2">
                             <span class="fw-bold">Notifications</span>
                             <a href="{% url 'notifications:mark_all_read' %}" class="small text-decoration-none">Mark all read</a>
                         </li>
                         <li><hr class="dropdown-divider my-1"></li>
                         {% for n in recent_notifications %}
                             <li>
-                                <a class="dropdown-item py-2 px-3 {% if not n.is_read %}bg-light{% endif %}" href="{% url 'notifications:mark_read' notif_id=n.id %}">
+                                <a class="dropdown-item{% if not n.is_read %} topbar-unread{% endif %}" href="{% url 'notifications:mark_read' notif_id=n.id %}">
                                     <div class="d-flex align-items-start gap-2">
-                                        <i class="bi bi-info-circle-fill text-success mt-1"></i>
+                                        <i class="bi bi-info-circle mt-1" aria-hidden="true"></i>
                                         <div class="text-truncate">
                                             <div class="fw-semibold small text-truncate">{{ n.title }}</div>
                                             <div class="text-muted small text-truncate">{{ n.message }}</div>
-                                            <div class="text-muted" style="font-size: 0.7rem;">{{ n.created_at|timesince }} ago</div>
+                                            <div class="small text-muted">{{ n.created_at|timesince }} ago</div>
                                         </div>
                                     </div>
                                 </a>
@@ -549,7 +510,7 @@
                         {% endfor %}
                         <li><hr class="dropdown-divider my-1"></li>
                         <li>
-                            <a class="dropdown-item text-center text-success small fw-semibold" href="{% url 'notifications:list' %}">
+                            <a class="dropdown-item fw-semibold" href="{% url 'notifications:list' %}">
                                 View all notifications
                             </a>
                         </li>
@@ -558,40 +519,40 @@
 
                 <!-- USER PROFILE MENU -->
                 <div class="dropdown">
-                    <button class="btn p-0 border-0 d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img src="{{ request.user.get_avatar_url }}" alt="{{ request.user.username }}" class="rounded-circle" width="38" height="38" style="object-fit: cover; border: 2px solid #2E7D32;">
-                        <div class="text-start d-none d-md-block lh-sm">
-                            <div class="fw-bold text-truncate" style="max-width: 130px; font-size: 0.9rem;">
+                    <button class="btn topbar-control topbar-profile" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false" aria-label="Account menu">
+                        {% if request.user.avatar %}
+                            <img src="{{ request.user.avatar.url }}" alt="" class="topbar-avatar" width="30" height="30">
+                        {% else %}
+                            <span class="topbar-avatar" aria-hidden="true">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</span>
+                        {% endif %}
+                        <span class="text-start d-none d-sm-block lh-sm">
+                            <span class="topbar-profile-name d-block text-truncate">
                                 {{ request.user.get_full_name|default:request.user.username }}
-                            </div>
-                            <span class="badge 
-                                {% if request.user.is_head_role %}role-head
-                                {% elif request.user.is_hr_role %}role-hr
-                                {% elif request.user.is_site_manager_role %}role-manager
-                                {% else %}role-employee{% endif %} badge-role">
+                            </span>
+                            <span class="topbar-profile-role d-block text-truncate">
                                 {{ request.user.get_role_display }}
                             </span>
-                        </div>
-                        <i class="bi bi-chevron-down text-muted small d-none d-md-inline"></i>
+                        </span>
+                        <i class="bi bi-chevron-down topbar-chevron d-none d-sm-inline" aria-hidden="true"></i>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow">
-                        <li class="px-3 py-2 border-bottom">
-                            <div class="fw-bold">{{ request.user.get_full_name }}</div>
+                    <ul class="dropdown-menu dropdown-menu-end topbar-menu">
+                        <li class="topbar-menu-profile">
+                            <div class="fw-bold">{{ request.user.get_full_name|default:request.user.username }}</div>
                             <small class="text-muted">{{ request.user.email }}</small>
                         </li>
-                        <li><a class="dropdown-item py-2" href="{% url 'accounts:profile' %}"><i class="bi bi-person me-2"></i>Account Profile</a></li>
-                        <li><a class="dropdown-item py-2" href="{% url 'accounts:change_password' %}"><i class="bi bi-key me-2"></i>Change Password</a></li>
+                        <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="bi bi-person me-2" aria-hidden="true"></i>Account Profile</a></li>
+                        <li><a class="dropdown-item" href="{% url 'accounts:change_password' %}"><i class="bi bi-key me-2" aria-hidden="true"></i>Change Password</a></li>
                         {% if request.user.employee_profile %}
                         <li><hr class="dropdown-divider my-1"></li>
-                        <li class="dropdown-header text-uppercase" style="font-size: 0.70rem;">My Workspace</li>
-                        <li><a class="dropdown-item py-1.5" href="{% url 'employees:employee_detail' emp_id=request.user.employee_profile.emp_id %}"><i class="bi bi-person-circle text-primary me-2"></i>My Profile</a></li>
-                        <li><a class="dropdown-item py-1.5" href="{% url 'attendance:my_attendance' %}"><i class="bi bi-stopwatch text-success me-2"></i>My Attendance</a></li>
-                        <li><a class="dropdown-item py-1.5" href="{% url 'leave_management:my_leaves' %}"><i class="bi bi-calendar-plus text-warning me-2"></i>My Leaves</a></li>
-                        <li><a class="dropdown-item py-1.5" href="{% url 'payroll:my_payslips' %}"><i class="bi bi-wallet2 text-info me-2"></i>My Salary & Payslips</a></li>
-                        <li><a class="dropdown-item py-1.5" href="{% url 'support:tickets_list' %}"><i class="bi bi-chat-left-dots text-secondary me-2"></i>Service Tickets</a></li>
+                        <li class="dropdown-header">My Workspace</li>
+                        <li><a class="dropdown-item" href="{% url 'employees:employee_detail' emp_id=request.user.employee_profile.emp_id %}"><i class="bi bi-person-circle me-2" aria-hidden="true"></i>My Profile</a></li>
+                        <li><a class="dropdown-item" href="{% url 'attendance:my_attendance' %}"><i class="bi bi-stopwatch me-2" aria-hidden="true"></i>My Attendance</a></li>
+                        <li><a class="dropdown-item" href="{% url 'leave_management:my_leaves' %}"><i class="bi bi-calendar-plus me-2" aria-hidden="true"></i>My Leaves</a></li>
+                        <li><a class="dropdown-item" href="{% url 'payroll:my_payslips' %}"><i class="bi bi-wallet2 me-2" aria-hidden="true"></i>My Salary & Payslips</a></li>
+                        <li><a class="dropdown-item" href="{% url 'support:tickets_list' %}"><i class="bi bi-chat-left-dots me-2" aria-hidden="true"></i>Service Tickets</a></li>
                         {% endif %}
                         <li><hr class="dropdown-divider my-1"></li>
-                        <li><a class="dropdown-item py-2 text-danger" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Sign Out</a></li>
+                        <li><a class="dropdown-item" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right me-2" aria-hidden="true"></i>Sign Out</a></li>
                     </ul>
                 </div>
             </div>

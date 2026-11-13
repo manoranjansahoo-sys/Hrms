@@ -1,8 +1,12 @@
+import re
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+from django.utils.dates import MONTHS_3
 from datetime import timedelta, date
 from django.db.models import Count, Sum, Q, Avg
+from django.core.paginator import Paginator
 from decimal import Decimal
 from accounts.models import CustomUser, AuditLog
 from accounts.decorators import role_required, hr_required, site_manager_required, head_required
@@ -164,6 +168,37 @@ def dashboard_employee(request):
 # -------------------------------------------------------------------------
 # AUTHORITY 2: HR DASHBOARD
 # -------------------------------------------------------------------------
+def _leave_date_filter(search):
+    months = {str(label).lower(): number for number, label in MONTHS_3.items()}
+    parts = re.split(r'\s+to\s+', search.lower(), maxsplit=1)
+
+    def date_fields(value, default_month=None):
+        try:
+            day = date.fromisoformat(value)
+        except ValueError:
+            match = re.fullmatch(r'(\d{1,2})(?:\s+(\S+))?', value)
+            if match:
+                day = int(match[1])
+                month = months.get(match[2]) if match[2] else default_month
+                if 1 <= day <= 31 and (month or not match[2]):
+                    return {'__day': day, **({'__month': month} if month else {})}
+            elif value in months:
+                return {'__month': months[value]}
+            return None
+        return {'': day}
+
+    def condition(field, fields):
+        return Q(**{f'{field}{suffix}': value for suffix, value in fields.items()})
+
+    end = date_fields(parts[-1])
+    if not end:
+        return None
+    if len(parts) == 1:
+        return condition('start_date', end) | condition('end_date', end)
+    start = date_fields(parts[0], end.get('__month'))
+    return condition('start_date', start) & condition('end_date', end) if start else None
+
+
 @login_required
 @hr_required
 def dashboard_hr(request):
@@ -182,7 +217,66 @@ def dashboard_hr(request):
     absent_today = max(0, active_employees - present_today - half_day_today - on_leave_today)
 
     # Pending Action Queues
-    pending_leaves = LeaveRequest.objects.filter(status__in=[LeaveRequest.Status.PENDING_HR, LeaveRequest.Status.PENDING_MANAGER]).select_related('employee__user', 'leave_type')[:6]
+    leave_stages = {
+        LeaveRequest.Status.PENDING_HR: 'Pending HR',
+        LeaveRequest.Status.PENDING_MANAGER: 'Pending Manager',
+    }
+    pending_leaves = LeaveRequest.objects.filter(status__in=leave_stages).select_related('employee__user', 'leave_type')
+    pending_leave_count = pending_leaves.count()
+
+    leave_columns = (
+        ('employee', 'Employee', 'employee__emp_id'),
+        ('type', 'Leave Type', 'leave_type__name'),
+        ('dates', 'Dates', 'start_date'),
+        ('days', 'Days', 'total_days'),
+        ('status', 'Status', 'status'),
+    )
+    leave_search_columns = {key: label for key, label, _ in leave_columns}
+    leave_search = ' '.join(request.GET.get('leave_search', '')[:120].split())
+    leave_column = request.GET.get('leave_column', 'employee')
+    if leave_column not in leave_search_columns:
+        leave_column = 'employee'
+
+    if leave_search:
+        if leave_column == 'employee':
+            for term in leave_search.split():
+                pending_leaves = pending_leaves.filter(
+                    Q(employee__emp_id__icontains=term)
+                    | Q(employee__user__first_name__icontains=term)
+                    | Q(employee__user__last_name__icontains=term)
+                    | Q(employee__user__username__icontains=term)
+                )
+        elif leave_column == 'type':
+            pending_leaves = pending_leaves.filter(
+                Q(leave_type__name__icontains=leave_search) | Q(leave_type__code__icontains=leave_search)
+            )
+        elif leave_column == 'dates':
+            dates = _leave_date_filter(leave_search)
+            pending_leaves = pending_leaves.filter(dates) if dates is not None else pending_leaves.none()
+        elif leave_column == 'days':
+            days = re.fullmatch(r'[0-9]{1,3}(?:[.,][0-9]0*)?', leave_search)
+            pending_leaves = pending_leaves.filter(total_days=Decimal(leave_search.replace(',', '.'))) if days else pending_leaves.none()
+        elif leave_column == 'status':
+            search = leave_search.lower()
+            pending_leaves = pending_leaves.filter(status__in=[
+                stage for stage, label in leave_stages.items()
+                if search in label.lower() or search in stage.label.lower() or search == stage.lower()
+            ])
+
+    leave_sort = request.GET.get('leave_sort', '')
+    descending = leave_sort.startswith('-')
+    sort_key = leave_sort.removeprefix('-')
+    sort_field = next((field for key, _, field in leave_columns if key == sort_key), None)
+    ordering = f'-{sort_field}' if sort_field and descending else sort_field or '-applied_at'
+    leave_headers = [
+        (label, key if leave_sort != key else f'-{key}',
+         ('descending' if descending else 'ascending') if key == sort_key else '')
+        for key, label, _ in leave_columns
+    ]
+    page_sizes = (6, 12, 24)
+    selected_size = request.GET.get('leave_size', '')
+    leave_size = next((size for size in page_sizes if str(size) == selected_size), page_sizes[0])
+    leave_page = Paginator(pending_leaves.order_by(ordering, '-pk'), leave_size).get_page(request.GET.get('leave_page'))
     pending_corrections = AttendanceCorrectionRequest.objects.filter(status='PENDING').select_related('employee__user')[:5]
     pending_profile_requests = ProfileCorrectionRequest.objects.filter(status='PENDING').select_related('employee__user')[:5]
     pending_doc_requests = OfficialDocumentRequest.objects.filter(status='PENDING').select_related('employee__user')[:5]
@@ -202,7 +296,15 @@ def dashboard_hr(request):
         'half_day_today': half_day_today,
         'on_leave_today': on_leave_today,
         'late_today': late_today,
-        'pending_leaves': pending_leaves,
+        'pending_leave_count': pending_leave_count,
+        'leave_page': leave_page,
+        'leave_headers': leave_headers,
+        'leave_search': leave_search,
+        'leave_search_columns': leave_search_columns,
+        'leave_column': leave_column,
+        'leave_sort': leave_sort,
+        'leave_size': leave_size,
+        'leave_page_sizes': page_sizes,
         'pending_corrections': pending_corrections,
         'pending_profile_requests': pending_profile_requests,
         'pending_doc_requests': pending_doc_requests,

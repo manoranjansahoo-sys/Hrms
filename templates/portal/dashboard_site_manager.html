@@ -2,7 +2,7 @@
 {% block title %}Site Operations Dashboard{% endblock %}
 
 {% block content %}
-<div class="container-fluid p-0">
+<div class="container-fluid p-0 hrms-dashboard" data-bs-theme="light">
     <!-- PAGE HEADER -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
@@ -15,7 +15,7 @@
             </p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{% url 'attendance:admin_register' %}?site={{ current_site.id }}" class="btn btn-outline-success btn-sm shadow-sm">
+            <a href="{% url 'attendance:admin_register' %}?site={{ current_site.id }}" class="btn btn-outline-primary btn-sm shadow-sm">
                 <i class="bi bi-clock"></i> Daily Team Register
             </a>
             <a href="{% url 'leave_management:admin_queue' %}" class="btn btn-warning btn-sm text-dark fw-bold shadow-sm">
@@ -188,7 +188,7 @@
             <div class="hrms-card mb-4">
                 <div class="hrms-card-header">
                     <h6 class="fw-bold mb-0">Assigned Team Members</h6>
-                    <a href="{% url 'employees:employee_list' %}?site={{ current_site.id }}" class="small text-success text-decoration-none">Full List</a>
+                    <a href="{% url 'employees:employee_list' %}?site={{ current_site.id }}" class="small text-primary text-decoration-none">Full List</a>
                 </div>
                 <div class="p-0">
                     <ul class="list-group list-group-flush">
@@ -215,7 +215,7 @@
             <!-- SITE SPECIFIC ANNOUNCEMENTS -->
             <div class="hrms-card">
                 <div class="hrms-card-header">
-                    <h6 class="fw-bold mb-0"><i class="bi bi-broadcast text-success me-2"></i>Site Bulletins</h6>
+                    <h6 class="fw-bold mb-0"><i class="bi bi-broadcast text-primary me-2"></i>Site Bulletins</h6>
                 </div>
                 <div class="p-3">
                     {% for a in site_announcements %}

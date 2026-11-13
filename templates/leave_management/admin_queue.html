@@ -263,18 +263,11 @@
 }
 
 /* ==========================================================================
-   SCHEDULE TABLE SPECIFICATIONS (100% WIDTH, ZERO SIDE SCROLL, NO OVERLAPPING)
+   SCHEDULE TABLE
    ========================================================================== */
 .lq-table-responsive {
   width: 100%;
-  overflow-x: hidden; /* Zero horizontal side scrolling on desktop */
-}
-
-@media (max-width: 1024px) {
-  .lq-table-responsive {
-    overflow-x: auto; /* Graceful touch scroll on small tablet / mobile */
-    -webkit-overflow-scrolling: touch;
-  }
+  overflow-x: auto;
 }
 
 .lq-schedule-table {

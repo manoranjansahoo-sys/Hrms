@@ -1,34 +1,7 @@
 // Enterprise HRMS JavaScript Suite
 
 document.addEventListener('DOMContentLoaded', function () {
-    // 1. Live Clock
-    function updateClock() {
-        const clockEls = document.querySelectorAll('.live-clock-display');
-        const now = new Date();
-        const timeStr = now.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true
-        });
-        const dateStr = now.toLocaleDateString('en-US', {
-            weekday: 'short',
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-        });
-
-        clockEls.forEach(el => {
-            el.innerHTML = `<span class="time-part">${timeStr}</span> <span class="text-muted small ms-2">${dateStr}</span>`;
-        });
-    }
-
-    if (document.querySelector('.live-clock-display')) {
-        updateClock();
-        setInterval(updateClock, 1000);
-    }
-
-    // 2. Theme Toggle (Light / Dark)
+    // Theme Toggle (Light / Dark)
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     const htmlEl = document.documentElement;
 
@@ -51,38 +24,81 @@ document.addEventListener('DOMContentLoaded', function () {
         const icon = themeToggleBtn.querySelector('i');
         if (icon) {
             if (theme === 'dark') {
-                icon.className = 'bi bi-sun-fill text-warning';
+                icon.className = 'bi bi-sun';
             } else {
-                icon.className = 'bi bi-moon-stars text-secondary';
+                icon.className = 'bi bi-moon-stars';
             }
         }
     }
 
-    // 3. Mobile Sidebar Toggle
+    // Mobile Sidebar Toggle
     const sidebarToggle = document.getElementById('sidebarToggle');
     const sidebar = document.querySelector('.sidebar');
 
     if (sidebarToggle && sidebar) {
-        sidebarToggle.addEventListener('click', function () {
-            sidebar.classList.toggle('show');
-            let backdrop = document.querySelector('.sidebar-backdrop');
-            if (sidebar.classList.contains('show')) {
-                if (!backdrop) {
-                    backdrop = document.createElement('div');
-                    backdrop.className = 'sidebar-backdrop';
-                    document.body.appendChild(backdrop);
-                    backdrop.addEventListener('click', function () {
-                        sidebar.classList.remove('show');
-                        backdrop.remove();
-                    });
-                }
-            } else if (backdrop) {
-                backdrop.remove();
+        const desktopLayout = window.matchMedia('(min-width: 992px)');
+        const sidebarMenu = sidebar.querySelector('.sidebar-menu');
+        const backdrop = document.createElement('div');
+        backdrop.className = 'sidebar-backdrop';
+
+        // A fixed sidebar does not reliably pass vertical wheel input to the page at its edges.
+        sidebarMenu.addEventListener('wheel', function (event) {
+            if (!desktopLayout.matches || !event.cancelable || event.ctrlKey || event.shiftKey) return;
+
+            const deltaMode = event.deltaMode;
+            const { deltaX, deltaY } = event;
+            if (Math.abs(deltaY) <= Math.abs(deltaX)) return;
+
+            const remaining = sidebarMenu.scrollHeight - sidebarMenu.clientHeight - sidebarMenu.scrollTop;
+            if (deltaY > 0 ? remaining > 1 : sidebarMenu.scrollTop > 0) return;
+
+            event.preventDefault();
+            const page = document.scrollingElement;
+            let pixels = deltaY;
+            if (deltaMode === WheelEvent.DOM_DELTA_LINE) {
+                pixels *= parseFloat(getComputedStyle(sidebarMenu).lineHeight) || 16;
+            } else if (deltaMode === WheelEvent.DOM_DELTA_PAGE) {
+                pixels *= page.clientHeight;
             }
+            page.scrollBy({ top: pixels, behavior: 'instant' });
+        }, { passive: false });
+
+        function closeSidebar() {
+            sidebar.classList.remove('show');
+            sidebarToggle.setAttribute('aria-expanded', 'false');
+            backdrop.remove();
+        }
+
+        sidebarToggle.addEventListener('click', function () {
+            if (sidebar.classList.contains('show')) {
+                closeSidebar();
+                return;
+            }
+
+            sidebar.classList.add('show');
+            sidebarToggle.setAttribute('aria-expanded', 'true');
+            document.body.appendChild(backdrop);
+            sidebarMenu.focus({ preventScroll: true });
+        });
+
+        backdrop.addEventListener('click', function () {
+            closeSidebar();
+            sidebarToggle.focus({ preventScroll: true });
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && sidebar.classList.contains('show')) {
+                closeSidebar();
+                sidebarToggle.focus({ preventScroll: true });
+            }
+        });
+
+        desktopLayout.addEventListener('change', function (event) {
+            if (event.matches) closeSidebar();
         });
     }
 
-    // 4. Auto dismiss alerts after 6 seconds
+    // Auto dismiss alerts after 6 seconds
     const alerts = document.querySelectorAll('.alert-dismissible');
     alerts.forEach(function (alert) {
         setTimeout(function () {
