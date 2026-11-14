@@ -329,6 +329,30 @@ def location_create(request):
         if site_manager_id:
             manager = CustomUser.objects.filter(id=site_manager_id).first()
 
+        lat = request.POST.get('latitude', '').strip()
+        lng = request.POST.get('longitude', '').strip()
+        radius = request.POST.get('geofence_radius_meters', '').strip()
+
+        latitude = None
+        longitude = None
+        if lat:
+            try:
+                latitude = Decimal(lat)
+            except Exception:
+                latitude = None
+        if lng:
+            try:
+                longitude = Decimal(lng)
+            except Exception:
+                longitude = None
+
+        geofence_radius = 200
+        if radius:
+            try:
+                geofence_radius = int(radius)
+            except Exception:
+                geofence_radius = 200
+
         site = Site.objects.create(
             name=name,
             code=code,
@@ -336,6 +360,10 @@ def location_create(request):
             address=address,
             contact_phone=contact_phone,
             site_manager=manager,
+            latitude=latitude,
+            longitude=longitude,
+            geofence_radius_meters=geofence_radius,
+            qr_rotation_seconds=4,
             is_active=True
         )
         messages.success(request, f"Company Location '{site.name}' ({site.city}) successfully registered!")
@@ -357,6 +385,9 @@ def location_edit(request, site_id):
         contact_phone = request.POST.get('contact_phone', '').strip()
         site_manager_id = request.POST.get('site_manager')
         is_active = request.POST.get('is_active') == 'on'
+        lat = request.POST.get('latitude', '').strip()
+        lng = request.POST.get('longitude', '').strip()
+        radius = request.POST.get('geofence_radius_meters', '').strip()
 
         if not name or not city:
             messages.error(request, "Location Name and City are required.")
@@ -378,6 +409,29 @@ def location_edit(request, site_id):
         site.contact_phone = contact_phone
         site.site_manager = manager
         site.is_active = is_active
+
+        if lat:
+            try:
+                site.latitude = Decimal(lat)
+            except Exception:
+                pass
+        else:
+            site.latitude = None
+
+        if lng:
+            try:
+                site.longitude = Decimal(lng)
+            except Exception:
+                pass
+        else:
+            site.longitude = None
+
+        if radius:
+            try:
+                site.geofence_radius_meters = int(radius)
+            except Exception:
+                pass
+
         site.save()
 
         messages.success(request, f"Location '{site.name}' updated successfully.")

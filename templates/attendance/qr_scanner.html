@@ -1,0 +1,892 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dynamic QR Attendance Scanner{% endblock %}
+
+{% block extra_css %}
+<style>
+    .scanner-card {
+        background: var(--card-bg, #ffffff);
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-radius: 1.25rem;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+    }
+
+    /* Video Viewfinder */
+    .viewfinder-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 440px;
+        min-height: 320px;
+        aspect-ratio: 1 / 1;
+        margin: 0 auto;
+        background: #000000;
+        border-radius: 1rem;
+        overflow: hidden;
+        border: 2px solid #3b82f6;
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.25);
+    }
+
+    #qrReader {
+        width: 100% !important;
+        height: 100% !important;
+        position: relative;
+    }
+
+    #qrReader video {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        border-radius: 0.85rem;
+    }
+
+    #qrReader__scan_region {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    /* Laser Scanning Line Animation */
+    .scanner-laser {
+        position: absolute;
+        top: 0;
+        left: 5%;
+        width: 90%;
+        height: 3px;
+        background: linear-gradient(90deg, rgba(59, 130, 246, 0), #3b82f6, #10b981, #3b82f6, rgba(59, 130, 246, 0));
+        box-shadow: 0 0 15px #3b82f6;
+        z-index: 10;
+        animation: scanAnimation 2.2s infinite ease-in-out;
+        pointer-events: none;
+    }
+
+    @keyframes scanAnimation {
+        0% { top: 6%; opacity: 0.2; }
+        50% { top: 90%; opacity: 1; }
+        100% { top: 6%; opacity: 0.2; }
+    }
+
+    /* Viewfinder Corner Overlays */
+    .corner-bracket {
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        border-color: #3b82f6;
+        border-style: solid;
+        z-index: 11;
+        pointer-events: none;
+    }
+    .corner-tl { top: 12px; left: 12px; border-width: 3px 0 0 3px; border-top-left-radius: 6px; }
+    .corner-tr { top: 12px; right: 12px; border-width: 3px 3px 0 0; border-top-right-radius: 6px; }
+    .corner-bl { bottom: 12px; left: 12px; border-width: 0 0 3px 3px; border-bottom-left-radius: 6px; }
+    .corner-br { bottom: 12px; right: 12px; border-width: 0 3px 3px 0; border-bottom-right-radius: 6px; }
+
+    /* Punch Mode Selector Buttons */
+    .punch-mode-btn-group .btn-check:checked + .btn {
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+
+    .btn-check:checked + .btn-outline-success {
+        background-color: #10b981 !important;
+        border-color: #10b981 !important;
+        color: #ffffff !important;
+    }
+
+    .btn-check:checked + .btn-outline-danger {
+        background-color: #ef4444 !important;
+        border-color: #ef4444 !important;
+        color: #ffffff !important;
+    }
+
+    .btn-check:checked + .btn-outline-primary {
+        background-color: #2563eb !important;
+        border-color: #2563eb !important;
+        color: #ffffff !important;
+    }
+
+    /* GPS Status pill */
+    .gps-status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.35rem 0.85rem;
+        border-radius: 9999px;
+        font-size: 0.78rem;
+        font-weight: 600;
+    }
+
+    .gps-ready {
+        background: rgba(16, 185, 129, 0.12);
+        color: #059669;
+        border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+
+    .gps-waiting {
+        background: rgba(245, 158, 11, 0.12);
+        color: #d97706;
+        border: 1px solid rgba(245, 158, 11, 0.25);
+    }
+
+    .gps-denied {
+        background: rgba(239, 68, 68, 0.12);
+        color: #dc2626;
+        border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3" style="max-width: 900px;">
+
+    <!-- TOP BREADCRUMB & HEADER -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1" style="font-size: 0.82rem;">
+                    <li class="breadcrumb-item"><a href="{% url 'portal:smart_dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'attendance:my_attendance' %}">Attendance</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">QR Scanner</li>
+                </ol>
+            </nav>
+            <h4 class="fw-bold mb-0 text-body d-flex align-items-center gap-2">
+                <i class="bi bi-camera-fill text-primary"></i> Dynamic QR Attendance Scanner
+            </h4>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+            {% if request.user.is_superuser or request.user.is_head_role %}
+            <a href="{% url 'attendance:qr_kiosk' %}" class="btn btn-sm btn-outline-dark d-flex align-items-center gap-1.5" target="_blank">
+                <i class="bi bi-display"></i>
+                <span>Open Entrance Kiosk</span>
+            </a>
+            {% endif %}
+            <a href="{% url 'attendance:my_attendance' %}" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1.5">
+                <i class="bi bi-calendar3"></i>
+                <span>My Attendance</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- MAIN SCANNER GRID -->
+    <div class="row g-4">
+        
+        <!-- SCANNER CAMERA CARD -->
+        <div class="col-12 col-lg-7">
+            <div class="scanner-card p-3 p-md-4">
+                
+                <!-- PUNCH MODE TOGGLE -->
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-muted text-uppercase mb-1.5">Select Attendance Mode:</label>
+                    <div class="btn-group w-100 punch-mode-btn-group" role="group">
+                        <input type="radio" class="btn-check" name="punchMode" id="modeAuto" value="AUTO" checked autocomplete="off">
+                        <label class="btn btn-outline-primary py-2" for="modeAuto">
+                            <i class="bi bi-magic me-1"></i> Auto-Detect
+                        </label>
+
+                        <input type="radio" class="btn-check" name="punchMode" id="modeIn" value="IN" autocomplete="off">
+                        <label class="btn btn-outline-success py-2" for="modeIn">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> Punch In
+                        </label>
+
+                        <input type="radio" class="btn-check" name="punchMode" id="modeOut" value="OUT" autocomplete="off">
+                        <label class="btn btn-outline-danger py-2" for="modeOut">
+                            <i class="bi bi-box-arrow-right me-1"></i> Punch Out
+                        </label>
+                    </div>
+                </div>
+
+                <!-- PERMISSION ALERT (CAMERA & GPS) -->
+                <div class="alert alert-danger d-none align-items-center gap-2 py-2 px-3 mb-3" id="cameraPermAlert">
+                    <i class="bi bi-camera-video-off fs-5 flex-shrink-0"></i>
+                    <div class="small">
+                        <strong>Camera Permission Denied:</strong> Please turn on camera and location permissions in your browser or device settings to punch in.
+                    </div>
+                </div>
+
+                <div class="alert alert-warning d-none align-items-center gap-2 py-2 px-3 mb-3" id="gpsPermAlert">
+                    <i class="bi bi-geo-alt-fill fs-5 text-danger flex-shrink-0"></i>
+                    <div class="small">
+                        <strong>Location (GPS) Required:</strong> Please turn on your device GPS location to punch in. Attendance requires GPS geofence verification within 200 meters.
+                    </div>
+                </div>
+
+                <!-- GPS STATUS STRIP -->
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 p-2.5 rounded-3 mb-3" style="background: rgba(0,0,0,0.03); border: 1px solid var(--border-color, #e2e8f0);">
+                    <div class="d-flex align-items-center gap-2">
+                        <span id="gpsStatusPill" class="gps-status-pill gps-waiting">
+                            <span class="spinner-border spinner-border-sm" role="status" id="gpsSpinner" style="width: 12px; height: 12px;"></span>
+                            <i class="bi bi-geo-alt-fill d-none" id="gpsIcon"></i>
+                            <span id="gpsStatusText">Acquiring GPS...</span>
+                        </span>
+                    </div>
+                    <button class="btn btn-xs btn-link text-decoration-none p-0 text-muted" id="btnRefreshGps" style="font-size: 0.75rem;">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh GPS
+                    </button>
+                </div>
+
+                <!-- CAMERA VIEWFINDER -->
+                <div class="viewfinder-wrapper position-relative" id="viewfinderWrapper">
+                    <div id="qrReader"></div>
+                    <div class="scanner-laser" id="scannerLaser"></div>
+                    <div class="corner-bracket corner-tl"></div>
+                    <div class="corner-bracket corner-tr"></div>
+                    <div class="corner-bracket corner-bl"></div>
+                    <div class="corner-bracket corner-br"></div>
+
+                    <!-- Camera Permission / Start Overlay -->
+                    <div id="cameraStartOverlay" class="position-absolute top-0 start-0 w-100 h-100 d-none flex-column align-items-center justify-content-center text-center p-3 text-white" style="background: rgba(15, 23, 42, 0.94); z-index: 20;">
+                        <i class="bi bi-camera-video fs-1 text-primary mb-2"></i>
+                        <h6 class="fw-bold mb-1 text-white" id="camOverlayTitle">Camera Access Required</h6>
+                        <p class="small text-white-50 mb-3" id="camOverlayDesc" style="max-width: 280px;">Allow camera access in your browser so you can scan the kiosk dynamic QR code.</p>
+                        <button type="button" class="btn btn-primary btn-sm px-4 py-2 rounded-pill fw-bold shadow d-inline-flex align-items-center gap-1.5" id="btnRequestCameraPerm">
+                            <i class="bi bi-camera-fill"></i>
+                            <span>Allow & Start Camera</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CAMERA CONTROLS -->
+                <div class="d-flex align-items-center justify-content-between gap-2 mt-3">
+                    <div class="small text-muted" id="scannerStatus">
+                        <i class="bi bi-info-circle text-primary me-1"></i> Point your camera at the office dynamic QR screen.
+                    </div>
+                    <div class="d-flex align-items-center gap-1.5">
+                        <button class="btn btn-sm btn-outline-primary" id="btnStartCamera" title="Start / Restart Camera">
+                            <i class="bi bi-play-circle"></i> Start
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" id="btnToggleCamera" title="Switch Camera (Front / Back)">
+                            <i class="bi bi-arrow-repeat"></i> Flip
+                        </button>
+                    </div>
+                </div>
+
+                <!-- MANUAL TOKEN FALLBACK (FOR RESTRICTED CAMERAS OR TESTING) -->
+                <div class="mt-3 pt-3 border-top">
+                    <button class="btn btn-link btn-sm text-decoration-none p-0 text-muted" type="button" data-bs-toggle="collapse" data-bs-target="#manualTokenCollapse">
+                        <i class="bi bi-keyboard me-1"></i> Enter / Paste QR token manually
+                    </button>
+                    <div class="collapse mt-2" id="manualTokenCollapse">
+                        <div class="input-group">
+                            <input type="text" class="form-control form-control-sm font-monospace" id="manualTokenInput" placeholder="SITE_ID:SLOT:SIGNATURE (e.g. 1:12345:abcdef)">
+                            <button class="btn btn-sm btn-primary" type="button" id="btnSubmitManualToken">
+                                Punch Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- RIGHT SIDE: EMPLOYEE STATUS & TODAY'S LOG -->
+        <div class="col-12 col-lg-5">
+            <!-- EMPLOYEE BADGE -->
+            <div class="scanner-card p-3 mb-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold fs-5" style="width: 48px; height: 48px;">
+                        {{ employee.first_name|default:request.user.username|slice:":1"|upper }}
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0">{{ employee.full_name|default:request.user.get_full_name|default:request.user.username }}</h6>
+                        <small class="text-muted">{{ employee.emp_id|default:"Emp ID Pending" }} &bull; {{ employee.designation.title|default:"Staff" }}</small>
+                    </div>
+                </div>
+
+                <hr class="my-2.5">
+
+                <!-- OFFICE SITE SELECTION (Auto-detected from employee profile) -->
+                <div class="mb-2">
+                    <label class="form-label small text-muted mb-1 fw-semibold">Target Office Site:</label>
+                    <select class="form-select form-select-sm" id="siteSelect">
+                        {% for s in sites %}
+                            <option value="{{ s.id }}" {% if user_site and user_site.id == s.id %}selected{% endif %}>
+                                {{ s.name }} ({{ s.city }}) - Geofence: {{ s.geofence_radius_meters }}m
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="small text-secondary" style="font-size: 0.78rem;">
+                    <i class="bi bi-shield-check text-success me-1"></i> Security: Rotates every 4s &bull; Strictly verified via Device GPS (200m office geofence).
+                </div>
+            </div>
+
+            <!-- TODAY'S ATTENDANCE SUMMARY -->
+            <div class="scanner-card p-3">
+                <h6 class="fw-bold text-muted text-uppercase mb-2.5" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                    Today's Attendance Status ({{ today_date|date:"D, d M Y" }})
+                </h6>
+
+                {% if today_att %}
+                    <div class="p-2.5 rounded-3 mb-2 {% if today_att.punch_out %}bg-success-subtle text-success-emphasis border border-success-subtle{% elif today_att.punch_in %}bg-primary-subtle text-primary-emphasis border border-primary-subtle{% else %}bg-secondary-subtle text-secondary-emphasis{% endif %}">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <span class="badge {% if today_att.status == 'PRESENT' %}bg-success{% else %}bg-secondary{% endif %}">
+                                {{ today_att.get_status_display }}
+                            </span>
+                            {% if today_att.is_late %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Late Arrival</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="row g-2 text-center mt-1">
+                            <div class="col-6">
+                                <small class="text-muted d-block" style="font-size: 0.7rem;">PUNCH IN</small>
+                                <span class="fw-bold fs-6">
+                                    {{ today_att.punch_in|date:"I:i A"|default:"--" }}
+                                </span>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block" style="font-size: 0.7rem;">PUNCH OUT</small>
+                                <span class="fw-bold fs-6">
+                                    {{ today_att.punch_out|date:"I:i A"|default:"--" }}
+                                </span>
+                            </div>
+                        </div>
+
+                        {% if today_att.working_hours %}
+                            <div class="text-center mt-2 pt-2 border-top border-white-50 small">
+                                Total Working Hours: <strong>{{ today_att.working_hours }} hrs</strong>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="p-3 text-center rounded-3 bg-light text-muted border">
+                        <i class="bi bi-clock-history fs-3 d-block mb-1 text-secondary"></i>
+                        <span class="small">No attendance recorded today yet. Scan QR to Punch In!</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- SUCCESS / ERROR RESULT MODAL -->
+<div class="modal fade" id="resultModal" tabindex="-1" aria-labelledby="resultModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 1.25rem; overflow: hidden;">
+            <div class="modal-header border-0 pb-0" id="resultModalHeader">
+                <h5 class="modal-title fw-bold" id="resultModalLabel">Scan Result</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <div class="mb-3" id="resultModalIcon">
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                </div>
+                <h4 class="fw-bold mb-2" id="resultModalTitle">Punch Successful!</h4>
+                <p class="text-muted mb-4" id="resultModalMessage">Your attendance punch has been recorded successfully.</p>
+
+                <!-- Detailed Audit Pills -->
+                <div class="p-3 rounded-3 text-start mb-3" style="background: rgba(0,0,0,0.03); border: 1px solid var(--border-color, #e2e8f0); font-size: 0.85rem;" id="resultDetailsBox">
+                    <div class="d-flex justify-content-between py-1 border-bottom">
+                        <span class="text-muted">Punch Action:</span>
+                        <strong id="resAction">--</strong>
+                    </div>
+                    <div class="d-flex justify-content-between py-1 border-bottom">
+                        <span class="text-muted">Recorded Time:</span>
+                        <strong id="resTime" class="text-primary font-monospace">--</strong>
+                    </div>
+                    <div class="d-flex justify-content-between py-1 border-bottom">
+                        <span class="text-muted">Office Site:</span>
+                        <strong id="resSite">--</strong>
+                    </div>
+                    <div class="d-flex justify-content-between py-1 border-bottom" id="resHoursRow" style="display: none;">
+                        <span class="text-muted">Working Hours:</span>
+                        <strong class="text-success" id="resHours">--</strong>
+                    </div>
+                    <div class="d-flex justify-content-between py-1">
+                        <span class="text-muted">GPS Geofence:</span>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle" id="resVerification">Within 200m</span>
+                    </div>
+                </div>
+
+                <!-- VIEW ATTENDANCE & DONE BUTTONS -->
+                <a href="{% url 'attendance:my_attendance' %}" class="btn btn-success w-100 py-2.5 rounded-pill fw-bold mb-2 shadow-sm" id="btnViewAttendance">
+                    <i class="bi bi-calendar-check me-1.5"></i> View Attendance
+                </a>
+                <button type="button" class="btn btn-outline-secondary w-100 py-2 rounded-pill fw-semibold" id="btnResultDone" data-bs-dismiss="modal">
+                    Scan Again / Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- HTML5-QRCODE Local Static with CDN Fallback -->
+<script src="{% static 'js/html5-qrcode.min.js' %}"></script>
+<script>
+    if (typeof Html5Qrcode === 'undefined') {
+        document.write('<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"><\/script>');
+    }
+</script>
+
+<script>
+    (function() {
+        const punchApiUrl = "{% url 'attendance:qr_punch_api' %}";
+        const csrfToken = "{{ csrf_token }}";
+
+        let currentLat = null;
+        let currentLng = null;
+        let isProcessingPunch = false;
+        let html5QrCode = null;
+        let currentCameraFacing = "environment"; // Back camera by default
+        let isCameraRunning = false;
+
+        const resultModalEl = document.getElementById('resultModal');
+        const resultModal = new bootstrap.Modal(resultModalEl);
+
+        // Web Audio Feedback (Success & Error tones)
+        function playFeedbackSound(isSuccess) {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                if (isSuccess) {
+                    osc.frequency.setValueAtTime(659.25, ctx.currentTime);
+                    osc.frequency.setValueAtTime(880.00, ctx.currentTime + 0.12);
+                    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+                    osc.start(ctx.currentTime);
+                    osc.stop(ctx.currentTime + 0.35);
+                } else {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, ctx.currentTime);
+                    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                    osc.start(ctx.currentTime);
+                    osc.stop(ctx.currentTime + 0.3);
+                }
+            } catch (e) {
+                // Audio not allowed or unsupported
+            }
+        }
+
+        // 1. Geolocation Acquisition & Permission Monitoring
+        function acquireGpsLocation() {
+            const pill = document.getElementById('gpsStatusPill');
+            const text = document.getElementById('gpsStatusText');
+            const icon = document.getElementById('gpsIcon');
+            const spinner = document.getElementById('gpsSpinner');
+            const gpsAlert = document.getElementById('gpsPermAlert');
+
+            pill.className = 'gps-status-pill gps-waiting';
+            spinner.classList.remove('d-none');
+            icon.classList.add('d-none');
+            text.textContent = 'Acquiring GPS...';
+
+            if (!navigator.geolocation) {
+                pill.className = 'gps-status-pill gps-denied';
+                spinner.classList.add('d-none');
+                icon.classList.remove('d-none');
+                text.textContent = 'GPS Unsupported';
+                if (gpsAlert) gpsAlert.classList.remove('d-none');
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    currentLat = pos.coords.latitude;
+                    currentLng = pos.coords.longitude;
+                    const acc = Math.round(pos.coords.accuracy);
+
+                    pill.className = 'gps-status-pill gps-ready';
+                    spinner.classList.add('d-none');
+                    icon.classList.remove('d-none');
+                    text.textContent = `GPS Ready (${acc}m accuracy)`;
+                    if (gpsAlert) gpsAlert.classList.add('d-none');
+                },
+                (err) => {
+                    console.warn("GPS error:", err);
+                    pill.className = 'gps-status-pill gps-denied';
+                    spinner.classList.add('d-none');
+                    icon.classList.remove('d-none');
+                    if (err.code === 1) {
+                        text.textContent = 'GPS Denied (Turn on Location)';
+                    } else {
+                        text.textContent = 'GPS Signal Weak';
+                    }
+                    if (gpsAlert) gpsAlert.classList.remove('d-none');
+                },
+                { enableHighAccuracy: true, timeout: 8000, maximumAge: 3000 }
+            );
+        }
+
+        document.getElementById('btnRefreshGps').addEventListener('click', acquireGpsLocation);
+        acquireGpsLocation();
+
+        // Listen for Geolocation permission change in browser settings
+        if (navigator.permissions && navigator.permissions.query) {
+            navigator.permissions.query({ name: 'geolocation' }).then((geoStatus) => {
+                geoStatus.onchange = () => {
+                    if (geoStatus.state === 'granted') {
+                        acquireGpsLocation();
+                    }
+                };
+            }).catch(e => {});
+        }
+
+        // 2. Submit QR Punch to Server
+        async function submitQrPunch(tokenStr, siteId) {
+            if (isProcessingPunch) return;
+
+            // Enforce device GPS location check before submitting
+            if (!currentLat || !currentLng) {
+                acquireGpsLocation();
+                handlePunchResponse({
+                    success: false,
+                    title: 'Location (GPS) Required',
+                    message: 'Please turn on location (GPS) and camera on your device to punch in. Office verification requires you to be within 200 meters of the office.'
+                });
+                return;
+            }
+
+            isProcessingPunch = true;
+
+            const scannerStatus = document.getElementById('scannerStatus');
+            scannerStatus.innerHTML = '<span class="spinner-border spinner-border-sm me-1 text-primary"></span> Validating dynamic QR & 200m GPS geofence...';
+
+            const punchMode = document.querySelector('input[name="punchMode"]:checked').value;
+
+            try {
+                const response = await fetch(punchApiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        token: tokenStr,
+                        site_id: siteId,
+                        latitude: currentLat,
+                        longitude: currentLng,
+                        punch_mode: punchMode
+                    })
+                });
+
+                const data = await response.json();
+                handlePunchResponse(data);
+            } catch (err) {
+                console.error("Punch error:", err);
+                handlePunchResponse({
+                    success: false,
+                    title: 'Network Error',
+                    message: 'Could not connect to HRMS server. Please verify your connection.'
+                });
+            } finally {
+                setTimeout(() => {
+                    isProcessingPunch = false;
+                    if (scannerStatus && isCameraRunning) {
+                        scannerStatus.innerHTML = '<i class="bi bi-camera-fill text-success me-1"></i> Camera active &bull; Point at office dynamic QR screen.';
+                    }
+                }, 2000);
+            }
+        }
+
+        // 3. Handle and Display Modal Result
+        function handlePunchResponse(data) {
+            const iconEl = document.getElementById('resultModalIcon');
+            const titleEl = document.getElementById('resultModalTitle');
+            const msgEl = document.getElementById('resultModalMessage');
+            const detailsBox = document.getElementById('resultDetailsBox');
+            const hoursRow = document.getElementById('resHoursRow');
+            const btnViewAtt = document.getElementById('btnViewAttendance');
+
+            if (data.success) {
+                playFeedbackSound(true);
+                iconEl.innerHTML = '<i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>';
+                titleEl.textContent = data.action === 'PUNCH_IN' ? 'Successfully Punched In!' : 'Successfully Punched Out!';
+                titleEl.className = 'fw-bold mb-2 text-success';
+                msgEl.textContent = data.message;
+
+                document.getElementById('resAction').textContent = data.action === 'PUNCH_IN' ? 'Punch In (Office Arrival)' : 'Punch Out (Office Departure)';
+                document.getElementById('resTime').textContent = data.time || 'Just now';
+                document.getElementById('resSite').textContent = data.site_name || 'Office Site';
+                document.getElementById('resVerification').textContent = data.distance_meters !== undefined ? `${data.distance_meters}m from office (Within 200m)` : 'GPS Verified (Within 200m)';
+
+                if (data.action === 'PUNCH_OUT' && data.working_hours !== undefined) {
+                    hoursRow.style.display = 'flex';
+                    document.getElementById('resHours').textContent = `${data.working_hours} hours`;
+                } else {
+                    hoursRow.style.display = 'none';
+                }
+
+                detailsBox.style.display = 'block';
+                if (btnViewAtt) btnViewAtt.style.display = 'block';
+
+                document.getElementById('btnResultDone').onclick = function() {
+                    window.location.reload();
+                };
+            } else {
+                playFeedbackSound(false);
+                iconEl.innerHTML = '<i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 4rem;"></i>';
+                titleEl.textContent = data.title || 'Verification Failed';
+                titleEl.className = 'fw-bold mb-2 text-danger';
+                msgEl.textContent = data.message;
+
+                detailsBox.style.display = 'none';
+                if (btnViewAtt) btnViewAtt.style.display = 'none';
+            }
+
+            resultModal.show();
+        }
+
+        // 4. Initialize & Start Camera Scanner using html5-qrcode
+        async function startCameraScanner(facingMode) {
+            const overlay = document.getElementById('cameraStartOverlay');
+            const camAlert = document.getElementById('cameraPermAlert');
+            const scannerLaser = document.getElementById('scannerLaser');
+            const scannerStatus = document.getElementById('scannerStatus');
+
+            if (scannerStatus) {
+                scannerStatus.innerHTML = '<span class="spinner-border spinner-border-sm me-1 text-primary"></span> Starting camera...';
+            }
+
+            // Stop any running camera instance first & clear element
+            if (html5QrCode) {
+                try {
+                    if (html5QrCode.isScanning) {
+                        await html5QrCode.stop();
+                    }
+                    await html5QrCode.clear();
+                } catch (e) {
+                    console.warn("Clearing prior scanner instance:", e);
+                }
+            }
+
+            const qrContainer = document.getElementById("qrReader");
+            if (qrContainer) {
+                qrContainer.innerHTML = "";
+            }
+
+            // Secure Context verification
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                isCameraRunning = false;
+                if (overlay) overlay.classList.remove('d-none');
+                if (scannerLaser) scannerLaser.style.display = 'none';
+                if (camAlert) {
+                    camAlert.classList.remove('d-none');
+                    camAlert.innerHTML = `
+                        <i class="bi bi-shield-lock-fill fs-5 flex-shrink-0 text-danger"></i>
+                        <div class="small">
+                            <strong>Secure Origin (HTTPS) Required:</strong> Modern web browsers restrict in-browser camera access to secure connections (HTTPS or localhost).
+                            <div class="mt-1">Tip: You can scan the entrance kiosk QR directly using your phone's built-in Camera app, or access HRMS via HTTPS.</div>
+                        </div>`;
+                }
+                if (scannerStatus) {
+                    scannerStatus.innerHTML = '<span class="text-danger fw-semibold"><i class="bi bi-shield-x me-1"></i> Camera blocked on insecure origin (HTTPS required).</span>';
+                }
+                return;
+            }
+
+            html5QrCode = new Html5Qrcode("qrReader");
+
+            const qrCodeSuccessCallback = (decodedText, decodedResult) => {
+                if (isProcessingPunch) return;
+
+                let tokenStr = decodedText;
+                let siteId = document.getElementById('siteSelect') ? document.getElementById('siteSelect').value : null;
+
+                if (decodedText.includes('token=')) {
+                    try {
+                        const url = new URL(decodedText, window.location.origin);
+                        tokenStr = url.searchParams.get('token') || tokenStr;
+                        const urlSite = url.searchParams.get('site');
+                        if (urlSite) siteId = urlSite;
+                    } catch (e) {
+                        const match = decodedText.match(/token=([^&]+)/);
+                        if (match) tokenStr = match[1];
+                    }
+                } else if (decodedText.startsWith('HRMS-QR:')) {
+                    tokenStr = decodedText.replace('HRMS-QR:', '');
+                }
+
+                submitQrPunch(tokenStr, siteId);
+            };
+
+            const config = {
+                fps: 15,
+                qrbox: (viewfinderWidth, viewfinderHeight) => {
+                    const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+                    const boxSize = Math.max(180, Math.floor(minEdge * 0.72));
+                    return { width: boxSize, height: boxSize };
+                },
+                aspectRatio: 1.0
+            };
+
+            const requestedMode = facingMode || currentCameraFacing;
+
+            // Attempt 1: Start with requested facingMode
+            try {
+                await html5QrCode.start(
+                    { facingMode: requestedMode },
+                    config,
+                    qrCodeSuccessCallback
+                );
+
+                isCameraRunning = true;
+                if (overlay) overlay.classList.add('d-none');
+                if (camAlert) camAlert.classList.add('d-none');
+                if (scannerLaser) scannerLaser.style.display = 'block';
+                if (scannerStatus) {
+                    scannerStatus.innerHTML = '<i class="bi bi-camera-fill text-success me-1"></i> Camera active &bull; Point at office dynamic QR screen.';
+                }
+                return;
+            } catch (err1) {
+                console.warn("Primary camera start error:", err1);
+            }
+
+            // Attempt 2: Fallback to query available cameras
+            try {
+                const devices = await Html5Qrcode.getCameras();
+                if (devices && devices.length > 0) {
+                    let selectedCamId = devices[0].id;
+                    if (requestedMode === "environment") {
+                        const backCam = devices.find(d => {
+                            const lbl = (d.label || '').toLowerCase();
+                            return lbl.includes('back') || lbl.includes('rear') || lbl.includes('environment');
+                        });
+                        if (backCam) selectedCamId = backCam.id;
+                    }
+
+                    await html5QrCode.start(
+                        selectedCamId,
+                        config,
+                        qrCodeSuccessCallback
+                    );
+
+                    isCameraRunning = true;
+                    if (overlay) overlay.classList.add('d-none');
+                    if (camAlert) camAlert.classList.add('d-none');
+                    if (scannerLaser) scannerLaser.style.display = 'block';
+                    if (scannerStatus) {
+                        scannerStatus.innerHTML = '<i class="bi bi-camera-fill text-success me-1"></i> Camera active &bull; Point at office dynamic QR screen.';
+                    }
+                    return;
+                }
+            } catch (err2) {
+                console.warn("Camera fallback by device ID error:", err2);
+            }
+
+            // If permissions not yet granted or blocked:
+            isCameraRunning = false;
+            if (overlay) overlay.classList.remove('d-none');
+            if (scannerLaser) scannerLaser.style.display = 'none';
+            if (camAlert) {
+                camAlert.classList.remove('d-none');
+                camAlert.innerHTML = `
+                    <i class="bi bi-camera-video-off fs-5 flex-shrink-0 text-danger"></i>
+                    <div class="small">
+                        <strong>Camera Permission Needed:</strong> Please click <b>"Allow"</b> when prompted by your browser, or tap the button below to turn camera permission ON.
+                        <div class="mt-1">In browser address bar: Click lock/tune icon &rarr; Permissions &rarr; Camera: <b>Allow</b>.</div>
+                    </div>`;
+            }
+            if (scannerStatus) {
+                scannerStatus.innerHTML = '<span class="text-danger fw-semibold"><i class="bi bi-camera-video-off me-1"></i> Camera permission needed. Tap "Allow & Start Camera" below.</span>';
+            }
+        }
+
+        // 5. Explicit Permission Request via User Gesture (opens browser permission prompt)
+        async function requestCameraPermissionAndStart() {
+            const overlay = document.getElementById('cameraStartOverlay');
+            const camAlert = document.getElementById('cameraPermAlert');
+            const scannerStatus = document.getElementById('scannerStatus');
+
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                startCameraScanner(currentCameraFacing);
+                return;
+            }
+
+            try {
+                if (scannerStatus) {
+                    scannerStatus.innerHTML = '<span class="spinner-border spinner-border-sm me-1 text-primary"></span> Requesting camera permission from browser...';
+                }
+
+                // Explicit getUserMedia call on click prompts browser's native permission pop-up
+                const probeStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: currentCameraFacing }
+                }).catch(async (e) => {
+                    return await navigator.mediaDevices.getUserMedia({ video: true });
+                });
+
+                // Permission is now ON! Stop probe stream and let html5QrCode bind cleanly
+                if (probeStream) {
+                    probeStream.getTracks().forEach(t => t.stop());
+                }
+
+                if (overlay) overlay.classList.add('d-none');
+                if (camAlert) camAlert.classList.add('d-none');
+
+                await startCameraScanner(currentCameraFacing);
+            } catch (err) {
+                console.warn("Camera permission rejected or error:", err);
+                if (overlay) overlay.classList.remove('d-none');
+                if (camAlert) {
+                    camAlert.classList.remove('d-none');
+                    camAlert.innerHTML = `
+                        <i class="bi bi-camera-video-off fs-5 flex-shrink-0 text-danger"></i>
+                        <div class="small">
+                            <strong>Camera Permission Denied:</strong> Camera was blocked. To enable it:
+                            <div class="mt-1">Click the lock icon in your browser address bar &rarr; Permissions &rarr; <b>Turn Camera ON</b>, then tap Start Camera.</div>
+                        </div>`;
+                }
+                if (scannerStatus) {
+                    scannerStatus.innerHTML = '<span class="text-danger fw-semibold"><i class="bi bi-camera-video-off me-1"></i> Permission denied. Turn on camera permission in browser settings.</span>';
+                }
+            }
+        }
+
+        // 6. Monitor Camera Permission State in Browser Settings
+        if (navigator.permissions && navigator.permissions.query) {
+            navigator.permissions.query({ name: 'camera' }).then((permStatus) => {
+                // If user toggles Camera to "ON" in browser site settings, open camera immediately
+                permStatus.onchange = () => {
+                    if (permStatus.state === 'granted') {
+                        const overlay = document.getElementById('cameraStartOverlay');
+                        if (overlay) overlay.classList.add('d-none');
+                        startCameraScanner(currentCameraFacing);
+                    }
+                };
+            }).catch(e => {});
+        }
+
+        // 7. Controls: Start, Request Perm, Flip, Manual
+        const btnRequestPerm = document.getElementById('btnRequestCameraPerm');
+        if (btnRequestPerm) {
+            btnRequestPerm.addEventListener('click', requestCameraPermissionAndStart);
+        }
+
+        const btnStartCam = document.getElementById('btnStartCamera');
+        if (btnStartCam) {
+            btnStartCam.addEventListener('click', requestCameraPermissionAndStart);
+        }
+
+        document.getElementById('btnToggleCamera').addEventListener('click', () => {
+            currentCameraFacing = currentCameraFacing === "environment" ? "user" : "environment";
+            startCameraScanner(currentCameraFacing);
+        });
+
+        // 8. Manual Token Input Handler
+        document.getElementById('btnSubmitManualToken').addEventListener('click', () => {
+            const tokenInput = document.getElementById('manualTokenInput').value.trim();
+            const siteId = document.getElementById('siteSelect') ? document.getElementById('siteSelect').value : null;
+            if (!tokenInput) {
+                alert("Please enter a valid QR token.");
+                return;
+            }
+            submitQrPunch(tokenInput, siteId);
+        });
+
+        // Auto-start Scanner on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            startCameraScanner(currentCameraFacing);
+        });
+    })();
+</script>
+{% endblock %}
+

@@ -200,8 +200,14 @@
     <!-- PAGE HEADER WITH STATS PILLS ON THE RIGHT SIDE (CLICKABLE FILTER BUTTONS, NO "ALL" BUTTON) -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
-            <h3 class="fw-bold mb-1 text-dark" style="font-size: 1.45rem; letter-spacing: -0.02em;">Daily Attendance Register</h3>
-            <p class="text-muted small mb-0">Daily live attendance roster aggregated across all employees and site locations.</p>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <h3 class="fw-bold mb-0 text-dark" style="font-size: 1.45rem; letter-spacing: -0.02em;">Daily Attendance Register</h3>
+                <span class="badge bg-success-subtle text-success border border-success-subtle py-1 px-2.5 rounded-pill d-inline-flex align-items-center gap-1.5" style="font-size: 0.74rem;" title="Real-time synchronization with Dynamic QR Kiosk Terminal">
+                    <span class="spinner-grow spinner-grow-sm text-success" style="width: 0.4rem; height: 0.4rem;"></span>
+                    Live Kiosk Sync
+                </span>
+            </div>
+            <p class="text-muted small mb-0">Daily live attendance roster aggregated across all employees and site locations &bull; Reflects dynamic QR kiosk punches in real time.</p>
         </div>
 
         <!-- STATS PILLS (INTERACTIVE FILTER BUTTONS) -->
@@ -264,6 +270,10 @@
                                 {% endfor %}
                             </select>
                         </div>
+                        <a href="javascript:location.reload();" class="btn btn-sm btn-outline-secondary py-1 px-2.5 rounded-pill text-nowrap d-inline-flex align-items-center gap-1 shadow-none" style="font-size: 0.78rem;" title="Refresh Register Data">
+                            <i class="bi bi-arrow-repeat"></i>
+                            <span>Refresh</span>
+                        </a>
                         {% if selected_dept or selected_site %}
                             <a href="{% url 'attendance:admin_register' %}" class="btn btn-sm btn-outline-secondary py-1 px-2.5 rounded-pill text-nowrap d-inline-flex align-items-center gap-1 shadow-none" style="font-size: 0.78rem;" title="Reset Filters">
                                 <i class="bi bi-arrow-counterclockwise"></i>
@@ -549,6 +559,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Run initial pagination
     applyFilterAndPaginate();
+
+    // Auto-refresh register every 30s when viewing today's roster for live dynamic QR reflections
+    const dateInput = document.querySelector('input[name="date"]');
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (dateInput && dateInput.value === todayStr) {
+        let refreshSec = 30;
+        setInterval(() => {
+            refreshSec--;
+            if (refreshSec <= 0) {
+                location.reload();
+            }
+        }, 1000);
+    }
 });
 </script>
 {% endblock %}

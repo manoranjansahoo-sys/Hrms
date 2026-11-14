@@ -1499,7 +1499,7 @@
         const editRequirements = document.getElementById('edit_requirements');
 
         function populateEditModal(data) {
-            editForm.action = '/hr/jobs/' + data.id + '/edit/';
+            editForm.action = "{% url 'recruitment:edit_job' job_id=0 %}".replace('/0/', '/' + data.id + '/');
             editTitle.value = data.title || '';
             editVacancies.value = data.vacancies || '1';
             editExperience.value = data.exp || '';

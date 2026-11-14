@@ -33,6 +33,7 @@ class Attendance(models.Model):
     SOURCE_CHOICES = [
         ('WEB', 'Web Self-Service'),
         ('KIOSK', 'Office Kiosk'),
+        ('QR_KIOSK', 'Dynamic QR Kiosk'),
         ('BIOMETRIC', 'Biometric / Access Device'),
         ('MANUAL', 'HR Manual Override'),
     ]
@@ -51,6 +52,16 @@ class Attendance(models.Model):
     punch_in_ip = models.GenericIPAddressField(null=True, blank=True)
     punch_out_ip = models.GenericIPAddressField(null=True, blank=True)
     device_source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default='WEB')
+    
+    # Location Security & Dynamic QR Verification Details
+    punch_in_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    punch_in_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    punch_out_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    punch_out_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    verification_method = models.CharField(max_length=50, blank=True, default="", help_text="e.g. GPS, WEB, KIOSK")
+    location_verified = models.BooleanField(default=False)
+    scan_distance_meters = models.FloatField(null=True, blank=True)
+
     notes = models.TextField(blank=True)
 
     class Meta:
@@ -162,3 +173,48 @@ class AttendanceAuditLog(models.Model):
 
     def __str__(self):
         return f"Audit: {self.attendance} - {self.action} at {self.timestamp}"
+
+
+class QRCodeScanLog(models.Model):
+    STATUS_CHOICES = [
+        ('SUCCESS', 'Success - Punch Recorded'),
+        ('EXPIRED_QR', 'Failed - QR Code Expired (4s Exceeded)'),
+        ('SLOT_ALREADY_USED', 'Failed - Dynamic QR Slot Already Used'),
+        ('GPS_REQUIRED', 'Failed - Location (GPS) Turned Off or Denied'),
+        ('INVALID_TOKEN', 'Failed - Invalid Cryptographic Token'),
+        ('LOCATION_FAILED', 'Failed - Outside 200m Office Geofence'),
+        ('ALREADY_COMPLETED', 'Info - Attendance Already Completed Today'),
+        ('ERROR', 'Failed - Server Error'),
+    ]
+
+    PUNCH_MODE_CHOICES = [
+        ('IN', 'Punch In'),
+        ('OUT', 'Punch Out'),
+        ('AUTO', 'Auto Detected'),
+    ]
+
+    site = models.ForeignKey('organization.Site', on_delete=models.CASCADE, related_name='qr_scan_logs')
+    employee = models.ForeignKey(EmployeeProfile, on_delete=models.SET_NULL, null=True, blank=True, related_name='qr_scan_logs')
+    attendance = models.ForeignKey(Attendance, on_delete=models.SET_NULL, null=True, blank=True, related_name='qr_scans')
+    punch_mode = models.CharField(max_length=10, choices=PUNCH_MODE_CHOICES, default='AUTO')
+    actual_punch_type = models.CharField(max_length=10, blank=True, help_text="Resulting punch: IN or OUT")
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='SUCCESS')
+    token_str = models.CharField(max_length=120, blank=True, db_index=True, help_text="Dynamic token string")
+    slot_index = models.PositiveBigIntegerField(null=True, blank=True, db_index=True, help_text="4-second epoch slot index")
+    client_ip = models.GenericIPAddressField(null=True, blank=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    distance_meters = models.FloatField(null=True, blank=True)
+    verification_details = models.CharField(max_length=255, blank=True)
+    error_message = models.TextField(blank=True)
+    token_age_seconds = models.FloatField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'QR Code Scan Log'
+        verbose_name_plural = 'QR Code Scan Logs'
+
+    def __str__(self):
+        emp_text = self.employee.emp_id if self.employee else "Unknown"
+        return f"{self.created_at.strftime('%d %b %H:%M:%S')} - {emp_text} ({self.status})"

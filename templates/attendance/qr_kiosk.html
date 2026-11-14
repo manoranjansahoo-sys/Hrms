@@ -1,0 +1,762 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic QR Attendance Kiosk | {{ site.name }}</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5 & Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #2563eb, #1d4ed8);
+            --accent-glow: rgba(37, 99, 235, 0.45);
+            --bg-dark: #0a0f1d;
+            --card-dark: #111827;
+            --border-dark: rgba(255, 255, 255, 0.08);
+            --green-glow: #10b981;
+            --amber-glow: #f59e0b;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #f1f5f9;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            margin: 0;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(37, 99, 235, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.08) 0%, transparent 40%);
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Top Kiosk Navbar */
+        .kiosk-nav {
+            background: rgba(17, 24, 39, 0.85);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--border-dark);
+            padding: 0.85rem 1.75rem;
+        }
+
+        .terminal-badge {
+            background: rgba(37, 99, 235, 0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.35);
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            font-weight: 700;
+            padding: 0.35rem 0.75rem;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        /* Live Punch Pop-up Toast next to Live Kiosk Active */
+        .live-punch-popup {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.98));
+            border: 1px solid rgba(16, 185, 129, 0.5);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 0 20px rgba(16, 185, 129, 0.25);
+            backdrop-filter: blur(12px);
+            z-index: 1050;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: popInBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .live-punch-popup.punch-out-style {
+            border-color: rgba(245, 158, 11, 0.5);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 0 20px rgba(245, 158, 11, 0.25);
+        }
+
+        @keyframes popInBounce {
+            0% { opacity: 0; transform: translateY(-8px) scale(0.92); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .live-punch-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4);
+            flex-shrink: 0;
+        }
+
+        .live-punch-avatar.out {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 10px #10b981;
+            animation: pulse-ring 1.8s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1.15); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        /* Main Kiosk Card */
+        .kiosk-card {
+            background: var(--card-dark);
+            border: 1px solid var(--border-dark);
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.65), 0 0 40px rgba(37, 99, 235, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kiosk-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #2563eb, #10b981, #f59e0b, #2563eb);
+            background-size: 300% 100%;
+            animation: barFlow 8s linear infinite;
+        }
+
+        @keyframes barFlow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 300% 50%; }
+        }
+
+        /* Digital Clock */
+        .clock-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 3.2rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: #ffffff;
+            line-height: 1;
+            text-shadow: 0 2px 20px rgba(255, 255, 255, 0.15);
+        }
+
+        .clock-ampm {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #94a3b8;
+            margin-left: 0.35rem;
+        }
+
+        .date-display {
+            color: #94a3b8;
+            font-size: 1.05rem;
+            font-weight: 500;
+        }
+
+        /* QR Container */
+        .qr-outer-wrapper {
+            position: relative;
+            display: inline-block;
+            padding: 1.25rem;
+            background: #ffffff;
+            border-radius: 1.25rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 25px rgba(255,255,255,0.1);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .qr-image {
+            width: 280px;
+            height: 280px;
+            display: block;
+            image-rendering: pixelated;
+            border-radius: 0.5rem;
+            transition: opacity 0.2s ease-in-out;
+        }
+
+        /* 5-Second Timer Bar */
+        .rotation-timer-bar-container {
+            width: 100%;
+            max-width: 320px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 999px;
+            overflow: hidden;
+            margin: 0.85rem auto 0;
+            position: relative;
+        }
+
+        .rotation-timer-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #10b981, #2563eb);
+            border-radius: 999px;
+            transform-origin: left;
+            transition: width 0.1s linear;
+        }
+
+        /* Badges */
+        .mode-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .mode-pill.in {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .mode-pill.out {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .security-badge {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-dark);
+            border-radius: 0.75rem;
+            padding: 0.65rem 1rem;
+        }
+
+        /* Sound / Fullscreen controls */
+        .control-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-dark);
+            color: #cbd5e1;
+            padding: 0.45rem 0.85rem;
+            border-radius: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- KIOSK NAVBAR -->
+    <header class="kiosk-nav d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center gap-2.5">
+                <img src="{% static 'img/logo.png' %}" alt="Company Logo" style="height: 36px; max-width: 195px; object-fit: contain;">
+                <span class="text-white-50 ms-1 d-none d-sm-inline" style="font-size: 0.8rem; border-left: 1px solid rgba(255,255,255,0.18); padding-left: 0.75rem;">Dynamic Attendance Terminal</span>
+            </div>
+
+            <!-- Terminal Status Pill -->
+            <div class="terminal-badge" id="terminalStatusContainer">
+                <span class="pulse-dot"></span>
+                <span>Live Kiosk Active</span>
+            </div>
+
+            <!-- Terminal GPS Status Pill -->
+            <div class="terminal-badge d-none d-sm-inline-flex" id="terminalGpsStatusContainer" style="background: rgba(16, 185, 129, 0.12); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">
+                <i class="bi bi-geo-alt-fill text-success" id="gpsStatusIcon"></i>
+                <span id="gpsStatusText">Verifying Device Location...</span>
+            </div>
+
+            <!-- LIVE PUNCH TOAST POP-UP (Right next to Live Kiosk Active) -->
+            <div id="liveKioskPunchPopup" class="live-punch-popup d-none align-items-center gap-2 px-3 py-1.5 rounded-pill shadow-lg" role="alert" aria-live="assertive">
+                <div class="live-punch-avatar" id="kioskPopupAvatar">JD</div>
+                <div class="text-start">
+                    <div class="d-flex align-items-center gap-1.5 lh-1 mb-0.5">
+                        <span class="fw-bold text-white small" id="kioskPopupName">Employee Name</span>
+                        <span class="badge rounded-pill" id="kioskPopupBadge" style="font-size: 0.68rem; padding: 2px 7px;">Punch In</span>
+                    </div>
+                    <div class="text-white-50" style="font-size: 0.72rem; line-height: 1.1;" id="kioskPopupStatus">
+                        Punched In Successfully &bull; <span id="kioskPopupTime">09:30 AM</span>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white ms-1 opacity-75" style="font-size: 0.6rem;" onclick="dismissLivePopup()" aria-label="Close"></button>
+            </div>
+        </div>
+
+        <!-- Right Controls -->
+        <div class="d-flex align-items-center gap-2">
+            {% if not is_terminal_device %}
+            <!-- Site Selector Dropdown -->
+            <div class="dropdown">
+                <button class="btn btn-sm control-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-geo-alt-fill text-danger"></i>
+                    <span>{{ site.name }}</span>
+                    <span class="badge bg-secondary ms-1">{{ site.code }}</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark shadow">
+                    <li class="dropdown-header text-uppercase" style="font-size: 0.7rem;">Switch Office Site</li>
+                    {% for s in sites %}
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center justify-content-between py-2 {% if s.id == site.id %}active{% endif %}" href="{% url 'attendance:qr_kiosk_site' site_id=s.id %}">
+                                <span>{{ s.name }}</span>
+                                <small class="text-muted">{{ s.code }}</small>
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% else %}
+            <!-- Entrance Terminal Station Badge -->
+            <div class="d-inline-flex align-items-center gap-1.5 px-2.5 py-1 rounded-pill bg-dark border border-secondary text-white-50" style="font-size: 0.8rem;">
+                <i class="bi bi-geo-alt-fill text-danger"></i>
+                <span class="text-white fw-semibold">{{ site.name }}</span>
+                <span class="badge bg-secondary ms-1">{{ site.code }}</span>
+            </div>
+            {% endif %}
+
+            <!-- Fullscreen Button -->
+            <button class="control-btn" id="btnFullscreen" title="Toggle Fullscreen Mode">
+                <i class="bi bi-fullscreen" id="fsIcon"></i>
+                <span class="d-none d-md-inline">Fullscreen</span>
+            </button>
+
+            <!-- Dashboard Exit (Hidden on dedicated entrance terminal) -->
+            {% if not is_terminal_device %}
+            <a href="{% url 'attendance:qr_dashboard' %}" class="control-btn" title="Back to QR Hub">
+                <i class="bi bi-shield-check text-info"></i>
+                <span class="d-none d-md-inline">QR Hub</span>
+            </a>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- MAIN TERMINAL CONTENT -->
+    <main class="flex-grow-1 d-flex align-items-center justify-content-center p-3 p-md-4">
+        <div class="container" style="max-width: 980px;">
+            <div class="kiosk-card p-4 p-md-5">
+                <div class="row align-items-center g-4 g-lg-5">
+                    
+                    <!-- LEFT COLUMN: LIVE CLOCK, SITE INFO & MODES -->
+                    <div class="col-12 col-lg-6 text-center text-lg-start">
+                        <!-- Site Badge -->
+                        <div class="d-inline-flex align-items-center gap-2 px-3 py-1.5 rounded-pill mb-3" style="background: rgba(37, 99, 235, 0.15); border: 1px solid rgba(59, 130, 246, 0.25);">
+                            <i class="bi bi-building text-primary"></i>
+                            <span class="fw-semibold text-primary-emphasis" style="font-size: 0.85rem;">{{ site.name }} &bull; {{ site.city }}</span>
+                        </div>
+
+                        <!-- LIVE DIGITAL CLOCK -->
+                        <div class="mb-2">
+                            <div class="d-flex align-items-baseline justify-content-center justify-content-lg-start">
+                                <span class="clock-display" id="liveClockTime">00:00:00</span>
+                                <span class="clock-ampm" id="liveClockAmPm">AM</span>
+                            </div>
+                            <div class="date-display mt-1" id="liveClockDate">Loading date...</div>
+                        </div>
+
+                        <hr style="border-color: var(--border-dark); margin: 1.5rem 0;">
+
+                        <!-- ATTENDANCE MODES SUPPORTED -->
+                        <div class="mb-3">
+                            <label class="text-uppercase text-secondary fw-bold mb-2" style="font-size: 0.72rem; letter-spacing: 0.05em;">Supported Attendance Modes</label>
+                            <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-lg-start">
+                                <div class="mode-pill in">
+                                    <i class="bi bi-box-arrow-in-right fs-5"></i>
+                                    <div>
+                                        <div class="fw-bold">PUNCH IN</div>
+                                        <small class="text-white-50" style="font-size: 0.7rem;">Arrival / Start Shift</small>
+                                    </div>
+                                </div>
+                                <div class="mode-pill out">
+                                    <i class="bi bi-box-arrow-right fs-5"></i>
+                                    <div>
+                                        <div class="fw-bold">PUNCH OUT</div>
+                                        <small class="text-white-50" style="font-size: 0.7rem;">Departure / End Shift</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- LOCATION SECURITY PROTOCOL -->
+                        <div class="security-badge mt-3">
+                            <div class="d-flex align-items-start gap-2.5">
+                                <i class="bi bi-shield-check text-success fs-5 mt-0.5"></i>
+                                <div style="font-size: 0.82rem;">
+                                    <strong class="text-white d-block mb-0.5">Strict GPS Geofence Security (200m)</strong>
+                                    <div class="text-secondary">
+                                        GPS Radius: <span class="text-info fw-semibold">{{ site.geofence_radius_meters|default:200 }}m radius</span> &bull; 
+                                        Device GPS: <span class="text-warning fw-semibold">Location Must Be Turned On</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- QUICK LINKS FOR EMPLOYEES (Hidden on entrance terminal tablet) -->
+                        {% if not is_terminal_device %}
+                        <div class="mt-4 pt-2 d-flex flex-wrap gap-2 justify-content-center justify-content-lg-start">
+                            <a href="{% url 'attendance:qr_scanner' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1.5" target="_blank">
+                                <i class="bi bi-camera me-1"></i> Open Web Scanner
+                            </a>
+                            <a href="{% url 'attendance:my_attendance' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1.5" target="_blank">
+                                <i class="bi bi-clock-history me-1"></i> My Attendance
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- RIGHT COLUMN: DYNAMIC ROTATING QR CODE DISPLAY -->
+                    <div class="col-12 col-lg-6 text-center">
+                        <div class="p-3 rounded-4" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-dark);">
+                            
+                            <!-- 4-Second Rotation Counter Badge -->
+                            <div class="d-flex align-items-center justify-content-center gap-2 mb-3">
+                                <span class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle px-3 py-1.5 fw-bold" style="font-size: 0.8rem;">
+                                    <i class="bi bi-arrow-repeat spin-icon me-1"></i> Dynamic 4s Rotation
+                                </span>
+                                <span class="badge rounded-pill bg-dark border border-secondary px-3 py-1.5 mono text-warning fw-bold" id="countdownLabel">
+                                    Next in: <span id="countdownSeconds">{{ payload.countdown_seconds|default:"4.0" }}</span>s
+                                </span>
+                            </div>
+
+                            <!-- QR CODE IMAGE WRAPPER -->
+                            <div class="qr-outer-wrapper mx-auto" id="qrWrapper">
+                                <img src="{{ payload.qr_image_base64 }}" alt="Dynamic Attendance QR Code" class="qr-image" id="qrImage">
+                            </div>
+
+                            <!-- 4-Second Animated Progress Bar -->
+                            <div class="rotation-timer-bar-container">
+                                <div class="rotation-timer-bar" id="rotationTimerBar"></div>
+                            </div>
+
+                            <!-- Instruction -->
+                            <div class="mt-3 text-secondary" style="font-size: 0.85rem;">
+                                <i class="bi bi-phone me-1 text-primary"></i> Scan with your mobile camera or HRMS scanner
+                            </div>
+
+                            <div class="text-white-50 mt-1 mono" style="font-size: 0.72rem;" id="tokenDisplay">
+                                Token Slot: <span class="text-info">{{ payload.slot }}</span> &bull; Site #{{ site.id }}
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- DYNAMIC 4-SECOND QR ENGINE JAVASCRIPT -->
+    <script>
+        (function() {
+            const siteId = {{ site.id }};
+            const rotationWindow = {{ rotation_seconds|default:4 }};
+            const tokenUrl = "{% url 'attendance:qr_kiosk_token_api' site_id=site.id %}{% if terminal_key %}?terminal_key={{ terminal_key }}{% endif %}";
+            const targetLat = {{ site_lat|default:"null" }};
+            const targetLng = {{ site_lng|default:"null" }};
+            const geofenceRadius = {{ geofence_radius|default:200 }};
+
+            // Device GPS Location Verification
+            function calculateDistance(lat1, lon1, lat2, lon2) {
+                const R = 6371e3;
+                const phi1 = lat1 * Math.PI / 180;
+                const phi2 = lat2 * Math.PI / 180;
+                const deltaPhi = (lat2 - lat1) * Math.PI / 180;
+                const deltaLambda = (lon2 - lon1) * Math.PI / 180;
+                const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+                          Math.cos(phi1) * Math.cos(phi2) *
+                          Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                return Math.round(R * c);
+            }
+
+            const gpsContainer = document.getElementById('terminalGpsStatusContainer');
+            const gpsText = document.getElementById('gpsStatusText');
+            const gpsIcon = document.getElementById('gpsStatusIcon');
+
+            function fetchDeviceLocation() {
+                if (!navigator.geolocation) {
+                    if (gpsText) gpsText.textContent = "GPS Not Available";
+                    return;
+                }
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        const devLat = pos.coords.latitude;
+                        const devLng = pos.coords.longitude;
+                        if (targetLat !== null && targetLng !== null) {
+                            const dist = calculateDistance(devLat, devLng, targetLat, targetLng);
+                            if (dist <= geofenceRadius) {
+                                if (gpsContainer) {
+                                    gpsContainer.style.background = 'rgba(16, 185, 129, 0.16)';
+                                    gpsContainer.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+                                    gpsContainer.style.color = '#34d399';
+                                }
+                                if (gpsIcon) gpsIcon.className = 'bi bi-geo-alt-fill text-success';
+                                if (gpsText) gpsText.innerHTML = `GPS Verified &bull; ${dist}m from site`;
+                            } else {
+                                if (gpsContainer) {
+                                    gpsContainer.style.background = 'rgba(239, 68, 68, 0.16)';
+                                    gpsContainer.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+                                    gpsContainer.style.color = '#f87171';
+                                }
+                                if (gpsIcon) gpsIcon.className = 'bi bi-exclamation-diamond-fill text-danger';
+                                if (gpsText) gpsText.innerHTML = `GPS Notice: ${dist}m away (${geofenceRadius}m limit)`;
+                            }
+                        } else {
+                            if (gpsText) gpsText.innerHTML = `GPS Active &bull; ${devLat.toFixed(3)}, ${devLng.toFixed(3)}`;
+                        }
+                    },
+                    (err) => {
+                        console.warn("Entrance terminal GPS check:", err.message);
+                        if (gpsContainer) {
+                            gpsContainer.style.background = 'rgba(245, 158, 11, 0.15)';
+                            gpsContainer.style.borderColor = 'rgba(245, 158, 11, 0.35)';
+                            gpsContainer.style.color = '#fbbf24';
+                        }
+                        if (gpsIcon) gpsIcon.className = 'bi bi-geo-fill text-warning';
+                        if (gpsText) gpsText.textContent = "GPS Permission Needed";
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            }
+            fetchDeviceLocation();
+
+            let countdownVal = parseFloat("{{ payload.countdown_seconds|default:4.0 }}") || rotationWindow;
+            let lastTick = performance.now();
+            let isFetching = false;
+
+            const qrImageEl = document.getElementById('qrImage');
+            const countdownSecEl = document.getElementById('countdownSeconds');
+            const timerBarEl = document.getElementById('rotationTimerBar');
+            const tokenDisplayEl = document.getElementById('tokenDisplay');
+
+            // 1. Live Digital Clock
+            function updateClock() {
+                const now = new Date();
+                let hours = now.getHours();
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12;
+                const hoursStr = String(hours).padStart(2, '0');
+
+                document.getElementById('liveClockTime').textContent = `${hoursStr}:${minutes}:${seconds}`;
+                document.getElementById('liveClockAmPm').textContent = ampm;
+
+                const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+                document.getElementById('liveClockDate').textContent = now.toLocaleDateString('en-US', options);
+            }
+            setInterval(updateClock, 500);
+            updateClock();
+
+            // 1.5 Live Punch Toast Popup Notifications
+            const seenPunchIds = new Set();
+            let initialPunchLoadDone = false;
+            let popupDismissTimer = null;
+
+            const popupEl = document.getElementById('liveKioskPunchPopup');
+            const popupAvatarEl = document.getElementById('kioskPopupAvatar');
+            const popupNameEl = document.getElementById('kioskPopupName');
+            const popupBadgeEl = document.getElementById('kioskPopupBadge');
+            const popupStatusEl = document.getElementById('kioskPopupStatus');
+
+            window.dismissLivePopup = function() {
+                if (popupEl) {
+                    popupEl.classList.add('d-none');
+                    popupEl.classList.remove('d-flex');
+                }
+                if (popupDismissTimer) {
+                    clearTimeout(popupDismissTimer);
+                    popupDismissTimer = null;
+                }
+            };
+
+            function playTerminalChime() {
+                try {
+                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(880.0, ctx.currentTime + 0.12);
+                    gain.gain.setValueAtTime(0.12, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.35);
+                } catch (e) {
+                    // Audio context may be restricted by browser until user interaction
+                }
+            }
+
+            function triggerKioskPunchToast(punch) {
+                if (!popupEl) return;
+                if (popupDismissTimer) clearTimeout(popupDismissTimer);
+
+                const isPunchIn = (punch.punch_type === 'IN');
+                if (popupAvatarEl) popupAvatarEl.textContent = punch.avatar_letter || 'E';
+
+                if (isPunchIn) {
+                    if (popupAvatarEl) popupAvatarEl.className = 'live-punch-avatar';
+                    popupEl.className = 'live-punch-popup d-flex align-items-center gap-2 px-3 py-1.5 rounded-pill shadow-lg';
+                    if (popupBadgeEl) {
+                        popupBadgeEl.className = 'badge bg-success-subtle text-success border border-success-subtle';
+                        popupBadgeEl.textContent = 'Punch In';
+                    }
+                    if (popupStatusEl) {
+                        popupStatusEl.innerHTML = `<span class="text-success fw-semibold">Punched In Successfully</span> &bull; <span>${punch.time_str}</span>`;
+                    }
+                } else {
+                    if (popupAvatarEl) popupAvatarEl.className = 'live-punch-avatar out';
+                    popupEl.className = 'live-punch-popup punch-out-style d-flex align-items-center gap-2 px-3 py-1.5 rounded-pill shadow-lg';
+                    if (popupBadgeEl) {
+                        popupBadgeEl.className = 'badge bg-warning-subtle text-warning-emphasis border border-warning-subtle';
+                        popupBadgeEl.textContent = 'Punch Out';
+                    }
+                    if (popupStatusEl) {
+                        popupStatusEl.innerHTML = `<span class="text-warning fw-semibold">Punched Out Successfully</span> &bull; <span>${punch.time_str}</span>`;
+                    }
+                }
+
+                if (popupNameEl) popupNameEl.textContent = punch.employee_name;
+
+                playTerminalChime();
+
+                // Auto dismiss after 6 seconds
+                popupDismissTimer = setTimeout(() => {
+                    dismissLivePopup();
+                }, 6000);
+            }
+
+            function handleRecentPunches(punches) {
+                if (!punches || !punches.length) return;
+
+                if (!initialPunchLoadDone) {
+                    // Populate seen IDs on first load so past punches don't flash
+                    punches.forEach(p => seenPunchIds.add(p.id));
+                    initialPunchLoadDone = true;
+                    return;
+                }
+
+                // Check for new punches (ordered by -created_at so punches[0] is newest)
+                for (let i = punches.length - 1; i >= 0; i--) {
+                    const p = punches[i];
+                    if (!seenPunchIds.has(p.id)) {
+                        seenPunchIds.add(p.id);
+                        triggerKioskPunchToast(p);
+                        break;
+                    }
+                }
+            }
+
+            // 2. Fetch new Dynamic QR token from Server
+            async function refreshDynamicQR() {
+                if (isFetching) return;
+                isFetching = true;
+
+                try {
+                    const response = await fetch(tokenUrl, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        cache: 'no-store'
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success && data.payload) {
+                            // Update image with smooth fade effect
+                            qrImageEl.style.opacity = '0.35';
+                            setTimeout(() => {
+                                qrImageEl.src = data.payload.qr_image_base64;
+                                qrImageEl.style.opacity = '1';
+                            }, 100);
+
+                            // Sync countdown seconds and slot
+                            countdownVal = data.payload.countdown_seconds || rotationWindow;
+                            if (tokenDisplayEl) {
+                                tokenDisplayEl.innerHTML = `Token Slot: <span class="text-info">${data.payload.slot}</span> &bull; Site #${siteId}`;
+                            }
+                        }
+
+                        // Live Toast Pop-up when employee scans & punches
+                        if (data.recent_punches) {
+                            handleRecentPunches(data.recent_punches);
+                        }
+                    }
+                } catch (err) {
+                    console.error("Error refreshing dynamic QR:", err);
+                } finally {
+                    isFetching = false;
+                }
+            }
+
+            // 3. High-precision animation loop for 5.0-second countdown and progress bar
+            function animationLoop(currentTime) {
+                const delta = (currentTime - lastTick) / 1000;
+                lastTick = currentTime;
+
+                countdownVal -= delta;
+
+                if (countdownVal <= 0.05) {
+                    countdownVal = rotationWindow;
+                    refreshDynamicQR();
+                }
+
+                // Update UI elements
+                const displaySec = Math.max(0, countdownVal).toFixed(1);
+                countdownSecEl.textContent = displaySec;
+
+                // Timer bar shrinks from 100% to 0%
+                const percentage = Math.max(0, Math.min(100, (countdownVal / rotationWindow) * 100));
+                timerBarEl.style.width = percentage + '%';
+
+                requestAnimationFrame(animationLoop);
+            }
+            requestAnimationFrame(animationLoop);
+
+            // 4. Fullscreen Button Handler
+            const fsBtn = document.getElementById('btnFullscreen');
+            const fsIcon = document.getElementById('fsIcon');
+            if (fsBtn) {
+                fsBtn.addEventListener('click', () => {
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen().catch(err => {
+                            console.warn("Fullscreen request error:", err);
+                        });
+                        fsIcon.classList.replace('bi-fullscreen', 'bi-fullscreen-exit');
+                    } else {
+                        document.exitFullscreen();
+                        fsIcon.classList.replace('bi-fullscreen-exit', 'bi-fullscreen');
+                    }
+                });
+            }
+        })();
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,738 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dynamic QR Attendance & Geofencing Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+
+    <!-- BREADCRUMB & HEADER -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1" style="font-size: 0.82rem;">
+                    <li class="breadcrumb-item"><a href="{% url 'portal:smart_dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'attendance:admin_register' %}">Attendance</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">QR Kiosk & Geofencing</li>
+                </ol>
+            </nav>
+            <h4 class="fw-bold mb-0 text-body d-flex align-items-center gap-2">
+                <i class="bi bi-shield-check text-primary"></i> Dynamic QR Attendance & Security Hub
+            </h4>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-sm btn-success d-flex align-items-center gap-1.5 shadow-sm" id="btnShareTopKiosk" data-bs-toggle="modal" data-bs-target="#shareKioskModal">
+                <i class="bi bi-share"></i>
+                <span>Share Kiosk Link</span>
+            </button>
+            <a href="{% url 'attendance:qr_kiosk' %}" class="btn btn-sm btn-primary d-flex align-items-center gap-1.5" target="_blank">
+                <i class="bi bi-display"></i>
+                <span>Launch Kiosk Terminal</span>
+            </a>
+            <a href="{% url 'attendance:qr_scanner' %}" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1.5">
+                <i class="bi bi-camera"></i>
+                <span>Open Scanner</span>
+            </a>
+            <a href="{% url 'attendance:admin_register' %}" class="btn btn-sm btn-outline-dark d-flex align-items-center gap-1.5">
+                <i class="bi bi-calendar-check"></i>
+                <span>Attendance Register</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- STATS CARDS ROW -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-3 p-3">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small fw-semibold text-uppercase">Total Scans (Today)</div>
+                        <h3 class="fw-bold mb-0 mt-1 text-dark">{{ stats.total_scans }}</h3>
+                    </div>
+                    <div class="p-2.5 rounded-circle bg-primary-subtle text-primary">
+                        <i class="bi bi-qr-code fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-3 p-3">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small fw-semibold text-uppercase">Successful Punches</div>
+                        <h3 class="fw-bold mb-0 mt-1 text-success">{{ stats.successful_punches }}</h3>
+                    </div>
+                    <div class="p-2.5 rounded-circle bg-success-subtle text-success">
+                        <i class="bi bi-check-circle fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-3 p-3">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small fw-semibold text-uppercase">Expired QR Blocked</div>
+                        <h3 class="fw-bold mb-0 mt-1 text-warning">{{ stats.expired_scans }}</h3>
+                    </div>
+                    <div class="p-2.5 rounded-circle bg-warning-subtle text-warning">
+                        <i class="bi bi-hourglass-bottom fs-4"></i>
+                    </div>
+                </div>
+                <small class="text-muted mt-1" style="font-size: 0.72rem;">Blocked after 5s window</small>
+            </div>
+        </div>
+
+        <div class="col-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-3 p-3">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small fw-semibold text-uppercase">Location Check Failed</div>
+                        <h3 class="fw-bold mb-0 mt-1 text-danger">{{ stats.location_failures }}</h3>
+                    </div>
+                    <div class="p-2.5 rounded-circle bg-danger-subtle text-danger">
+                        <i class="bi bi-geo-alt-fill fs-4"></i>
+                    </div>
+                </div>
+                <small class="text-muted mt-1" style="font-size: 0.72rem;">Outside 200m GPS geofence</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- SITES & GEOFENCING CONFIGURATION ACCORDION / CARD -->
+    <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-geo-fill text-primary"></i>
+                <h6 class="fw-bold mb-0">Office Sites & Geofencing Parameters</h6>
+            </div>
+            <span class="badge bg-secondary-subtle text-secondary border">{{ sites.count }} Office Sites Active</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size: 0.86rem;">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Site Name & Code</th>
+                            <th>GPS Coordinates</th>
+                            <th>Geofence Radius</th>
+                            <th>Security Verification</th>
+                            <th>QR Rotation</th>
+                            <th>Status</th>
+                            <th class="text-end pe-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in sites %}
+                            <tr>
+                                <td class="ps-3">
+                                    <div class="fw-bold text-dark">{{ s.name }}</div>
+                                    <small class="text-muted">{{ s.code }} &bull; {{ s.city }}</small>
+                                </td>
+                                <td>
+                                    {% if s.latitude and s.longitude %}
+                                        <div class="font-monospace text-primary fw-semibold" style="font-size: 0.8rem;">
+                                            <i class="bi bi-pin-map text-danger me-1"></i>{{ s.latitude|floatformat:4 }}, {{ s.longitude|floatformat:4 }}
+                                        </div>
+                                    {% else %}
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle">
+                                            <i class="bi bi-exclamation-circle me-1"></i>GPS Unconfigured
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle font-monospace">
+                                        {{ s.geofence_radius_meters }}m radius
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-1.5 text-success">
+                                        <i class="bi bi-shield-check"></i>
+                                        <span class="small fw-semibold">Strict Device GPS</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                        {{ s.qr_rotation_seconds|default:4 }}s rotation
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if s.is_qr_attendance_enabled %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Disabled</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-3">
+                                    <div class="d-flex align-items-center justify-content-end gap-1.5">
+                                        <button type="button" class="btn btn-xs btn-outline-success btn-share-site-kiosk"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#shareKioskModal"
+                                            data-site-id="{{ s.id }}"
+                                            data-site-name="{{ s.name }}"
+                                            data-site-code="{{ s.code }}"
+                                            data-site-city="{{ s.city }}"
+                                            data-site-radius="{{ s.geofence_radius_meters|default:200 }}"
+                                            data-kiosk-url="{{ request.scheme }}://{{ request.get_host }}{% url 'attendance:qr_kiosk_site' site_id=s.id %}?terminal_key={{ s.get_qr_secret_key }}"
+                                            title="Share Dedicated Kiosk Link to Entrance Tablet">
+                                            <i class="bi bi-share"></i> Share Link
+                                        </button>
+                                        <a href="{% url 'attendance:qr_kiosk_site' site_id=s.id %}" class="btn btn-xs btn-outline-primary" target="_blank" title="Open Kiosk Terminal">
+                                            <i class="bi bi-display"></i> Kiosk
+                                        </a>
+                                        <button type="button" class="btn btn-xs btn-outline-secondary btn-edit-site" 
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#siteConfigModal"
+                                            data-site-id="{{ s.id }}"
+                                            data-site-name="{{ s.name }}"
+                                            data-lat="{{ s.latitude|default:'' }}"
+                                            data-lng="{{ s.longitude|default:'' }}"
+                                            data-radius="{{ s.geofence_radius_meters }}"
+                                            data-rotation="{{ s.qr_rotation_seconds }}"
+                                            data-enabled="{{ s.is_qr_attendance_enabled }}">
+                                            <i class="bi bi-gear"></i> Configure
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- REAL-TIME AUDIT LOGS CARD -->
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-header bg-white py-3 border-bottom">
+            <div class="row align-items-center g-2">
+                <div class="col-12 col-md-4">
+                    <h6 class="fw-bold mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-list-check text-primary"></i> QR Scan & Attendance Audit Trail
+                    </h6>
+                </div>
+
+                <!-- FILTER FORM -->
+                <div class="col-12 col-md-8">
+                    <form method="get" class="d-flex flex-wrap align-items-center justify-content-md-end gap-2">
+                        <!-- Date Filter -->
+                        <input type="date" name="date" class="form-control form-control-sm" style="width: 140px;" value="{{ selected_date }}">
+
+                        <!-- Site Filter -->
+                        <select name="site" class="form-select form-select-sm" style="width: 130px;">
+                            <option value="">All Sites</option>
+                            {% for s in sites %}
+                                <option value="{{ s.id }}" {% if selected_site == s.id|stringformat:"i" %}selected{% endif %}>{{ s.code }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <!-- Status Filter -->
+                        <select name="status" class="form-select form-select-sm" style="width: 140px;">
+                            <option value="">All Statuses</option>
+                            <option value="SUCCESS" {% if selected_status == 'SUCCESS' %}selected{% endif %}>Success</option>
+                            <option value="EXPIRED_QR" {% if selected_status == 'EXPIRED_QR' %}selected{% endif %}>Expired QR</option>
+                            <option value="LOCATION_FAILED" {% if selected_status == 'LOCATION_FAILED' %}selected{% endif %}>Location Failed</option>
+                            <option value="ALREADY_COMPLETED" {% if selected_status == 'ALREADY_COMPLETED' %}selected{% endif %}>Already Completed</option>
+                        </select>
+
+                        <!-- Filter Button -->
+                        <button type="submit" class="btn btn-sm btn-secondary">
+                            <i class="bi bi-funnel"></i> Filter
+                        </button>
+                        <a href="{% url 'attendance:qr_dashboard' %}" class="btn btn-sm btn-outline-secondary">Reset</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- LOG TABLE -->
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size: 0.85rem;">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Time</th>
+                            <th>Employee</th>
+                            <th>Office Site</th>
+                            <th>Punch Mode</th>
+                            <th>Result Status</th>
+                            <th>Location Verification</th>
+                            <th>Token Age</th>
+                            <th class="pe-3">IP Address</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in page_obj %}
+                            <tr>
+                                <td class="ps-3 font-monospace text-nowrap">
+                                    {{ log.created_at|date:"d M, H:i:s" }}
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="rounded-circle bg-primary-subtle text-primary fw-bold d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; font-size: 0.75rem;">
+                                            {{ log.employee.first_name|slice:":1"|upper }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold text-dark">{{ log.employee.full_name }}</div>
+                                            <small class="text-muted">{{ log.employee.emp_id }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">{{ log.site.code }}</span>
+                                </td>
+                                <td>
+                                    {% if log.actual_punch_type == 'IN' %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                            <i class="bi bi-box-arrow-in-right me-0.5"></i> PUNCH IN
+                                        </span>
+                                    {% elif log.actual_punch_type == 'OUT' %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                            <i class="bi bi-box-arrow-right me-0.5"></i> PUNCH OUT
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary-subtle text-secondary">{{ log.punch_mode }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if log.status == 'SUCCESS' %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle me-1"></i>SUCCESS
+                                        </span>
+                                    {% elif log.status == 'EXPIRED_QR' %}
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="bi bi-hourglass-bottom me-1"></i>EXPIRED QR
+                                        </span>
+                                    {% elif log.status == 'LOCATION_FAILED' %}
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-x-circle me-1"></i>LOCATION FAILED
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ log.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if log.distance_meters is not None %}
+                                        <span class="font-monospace text-muted" style="font-size: 0.78rem;">
+                                            <i class="bi bi-geo-alt text-primary"></i> {{ log.distance_meters }}m away
+                                        </span>
+                                    {% endif %}
+                                    <div class="small text-truncate" style="max-width: 220px;" title="{{ log.verification_details|default:log.error_message }}">
+                                        {{ log.verification_details|default:log.error_message }}
+                                    </div>
+                                </td>
+                                <td class="font-monospace">
+                                    {% if log.token_age_seconds is not None %}
+                                        <span class="{% if log.token_age_seconds <= 5.5 %}text-success{% else %}text-danger{% endif %} fw-semibold">
+                                            {{ log.token_age_seconds|floatformat:1 }}s
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">--</span>
+                                    {% endif %}
+                                </td>
+                                <td class="pe-3 font-monospace text-muted" style="font-size: 0.78rem;">
+                                    {{ log.client_ip }}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center py-4 text-muted">
+                                    <i class="bi bi-inbox fs-3 d-block mb-1"></i>
+                                    No scan records found matching the filter criteria.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- PAGINATION -->
+            {% if page_obj.has_other_pages %}
+                <div class="d-flex align-items-center justify-content-between p-3 border-top">
+                    <small class="text-muted">Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} logs</small>
+                    <ul class="pagination pagination-sm mb-0">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&date={{ selected_date }}&site={{ selected_site }}&status={{ selected_status }}">Previous</a></li>
+                        {% endif %}
+                        <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+                        {% if page_obj.has_next %}
+                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&date={{ selected_date }}&site={{ selected_site }}&status={{ selected_status }}">Next</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<!-- CONFIGURE SITE LOCATION MODAL -->
+<div class="modal fade" id="siteConfigModal" tabindex="-1" aria-labelledby="siteConfigModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold" id="siteConfigModalLabel">Configure Site Location Security</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="siteConfigForm">
+                <div class="modal-body p-4">
+                    <input type="hidden" id="modalSiteId" value="">
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Office Site:</label>
+                        <input type="text" class="form-control form-control-sm" id="modalSiteName" readonly disabled>
+                    </div>
+
+                    <!-- GPS Coordinates -->
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">GPS Latitude:</label>
+                            <input type="text" class="form-control form-control-sm font-monospace" id="modalLat" placeholder="e.g. 12.971598">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">GPS Longitude:</label>
+                            <input type="text" class="form-control form-control-sm font-monospace" id="modalLng" placeholder="e.g. 77.594562">
+                        </div>
+                    </div>
+
+                    <!-- Quick GPS Capture Button -->
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-xs btn-outline-primary" id="btnUseCurrentLocation">
+                            <i class="bi bi-crosshair me-1"></i> Capture My Current Location (Device GPS)
+                        </button>
+                    </div>
+
+                    <!-- Geofence Radius -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Geofence Radius (meters):</label>
+                        <input type="number" class="form-control form-control-sm" id="modalRadius" value="200" min="20" max="5000">
+                        <small class="text-muted" style="font-size: 0.72rem;">Employees must be physically within this radius to punch (default: 200m)</small>
+                    </div>
+
+                    <!-- QR Rotation Window -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">QR Code Rotation Seconds:</label>
+                        <input type="number" class="form-control form-control-sm" id="modalRotation" value="4" min="3" max="60">
+                        <small class="text-muted" style="font-size: 0.72rem;">Recommended: 4 seconds for anti-proxy dynamic QR</small>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-primary" id="btnSaveSiteConfig">
+                        <i class="bi bi-check-lg me-1"></i> Save Configuration
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- SHARE ENTRANCE KIOSK TERMINAL MODAL -->
+<div class="modal fade" id="shareKioskModal" tabindex="-1" aria-labelledby="shareKioskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-3">
+            <div class="modal-header bg-light py-3 border-bottom">
+                <h6 class="modal-title fw-bold text-dark d-flex align-items-center gap-2" id="shareKioskModalLabel">
+                    <i class="bi bi-tablet-landscape text-success fs-5"></i>
+                    <span>Share Entrance Kiosk Terminal Link</span>
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- Location Info -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-muted text-uppercase">Target Office Location</label>
+                    <select class="form-select" id="shareModalSiteSelect">
+                        {% for s in sites %}
+                            <option value="{{ s.id }}" 
+                                data-name="{{ s.name }}" 
+                                data-url="{{ request.scheme }}://{{ request.get_host }}{% url 'attendance:qr_kiosk_site' site_id=s.id %}?terminal_key={{ s.get_qr_secret_key }}"
+                                data-radius="{{ s.geofence_radius_meters|default:200 }}"
+                                data-city="{{ s.city }}">
+                                {{ s.name }} ({{ s.city }} &bull; {{ s.code }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Explanation Banner -->
+                <div class="alert alert-info border-info-subtle small d-flex align-items-start gap-2 mb-3 py-2.5">
+                    <i class="bi bi-shield-lock-fill fs-5 text-primary mt-0.5"></i>
+                    <div style="line-height: 1.4;">
+                        <strong>Dedicated Kiosk Security:</strong> Send this link to the tablet or screen at your office entrance. When opened on the device, it fetches device GPS, verifies office proximity (<span id="shareModalRadiusDisplay">200</span>m), and launches the dynamic 4-second rotating QR terminal without requiring an admin login.
+                    </div>
+                </div>
+
+                <!-- Link Input & Copy Button -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-muted text-uppercase">Terminal Device Link</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control font-monospace" id="shareModalKioskUrl" readonly style="font-size: 0.82rem; background: #f8fafc;">
+                        <button class="btn btn-primary px-3 d-flex align-items-center gap-1.5" type="button" id="btnCopyShareUrl">
+                            <i class="bi bi-clipboard" id="copyShareIcon"></i>
+                            <span id="copyShareText">Copy Link</span>
+                        </button>
+                    </div>
+                    <div class="text-success small mt-1.5 fw-semibold d-none" id="copySuccessFeedback">
+                        <i class="bi bi-check-circle-fill me-1"></i> Link copied to clipboard! Paste into browser on the entrance device.
+                    </div>
+                </div>
+
+                <!-- Quick Share Channels -->
+                <div class="pt-2 border-top d-flex flex-wrap gap-2">
+                    <a href="#" id="btnOpenKioskDirect" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1" target="_blank">
+                        <i class="bi bi-box-arrow-up-right"></i> Open Terminal
+                    </a>
+                    <a href="#" id="btnShareWhatsApp" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1" target="_blank">
+                        <i class="bi bi-whatsapp"></i> WhatsApp
+                    </a>
+                    <a href="#" id="btnShareEmail" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1" target="_blank">
+                        <i class="bi bi-envelope"></i> Email Link
+                    </a>
+                </div>
+            </div>
+            <div class="modal-footer border-top py-2 bg-light">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Done</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const configModalEl = document.getElementById('siteConfigModal');
+    const shareModalEl = document.getElementById('shareKioskModal');
+    const csrfToken = "{{ csrf_token }}";
+
+    function getModalInstance(el) {
+        if (!el || typeof bootstrap === 'undefined') return null;
+        if (typeof bootstrap.Modal.getOrCreateInstance === 'function') {
+            return bootstrap.Modal.getOrCreateInstance(el);
+        }
+        return bootstrap.Modal.getInstance(el) || new bootstrap.Modal(el);
+    }
+
+    // Share Kiosk Modal Logic
+    const siteSelect = document.getElementById('shareModalSiteSelect');
+    const urlInput = document.getElementById('shareModalKioskUrl');
+    const radiusDisplay = document.getElementById('shareModalRadiusDisplay');
+    const btnOpenDirect = document.getElementById('btnOpenKioskDirect');
+    const btnShareWA = document.getElementById('btnShareWhatsApp');
+    const btnShareEmail = document.getElementById('btnShareEmail');
+    const btnCopy = document.getElementById('btnCopyShareUrl');
+    const copyIcon = document.getElementById('copyShareIcon');
+    const copyText = document.getElementById('copyShareText');
+    const copyFeedback = document.getElementById('copySuccessFeedback');
+
+    function updateShareModalContent() {
+        if (!siteSelect) return;
+        const selectedOpt = siteSelect.options[siteSelect.selectedIndex];
+        if (!selectedOpt) return;
+
+        const url = selectedOpt.dataset.url || '';
+        const siteName = selectedOpt.dataset.name || 'Office';
+        const radius = selectedOpt.dataset.radius || '200';
+
+        if (urlInput) urlInput.value = url;
+        if (radiusDisplay) radiusDisplay.textContent = radius;
+        if (btnOpenDirect) btnOpenDirect.href = url;
+
+        const shareText = `Enterprise HRMS Dynamic Attendance Kiosk for ${siteName}:\n${url}`;
+        if (btnShareWA) {
+            btnShareWA.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+        }
+        if (btnShareEmail) {
+            btnShareEmail.href = `mailto:?subject=${encodeURIComponent(`Entrance Attendance Kiosk Link - ${siteName}`)}&body=${encodeURIComponent(`Please open this link on the entrance kiosk display/tablet:\n\n${url}\n\nIt will verify physical GPS location and run the dynamic 4-second rotating attendance terminal.`)}`;
+        }
+
+        if (copyFeedback) copyFeedback.classList.add('d-none');
+        if (copyIcon) copyIcon.className = 'bi bi-clipboard';
+        if (copyText) copyText.textContent = 'Copy Link';
+    }
+
+    if (siteSelect) {
+        siteSelect.addEventListener('change', updateShareModalContent);
+    }
+
+    // Modal show event listener for Share Kiosk Modal
+    if (shareModalEl) {
+        shareModalEl.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            if (button && button.dataset && button.dataset.siteId && siteSelect) {
+                siteSelect.value = button.dataset.siteId;
+            }
+            updateShareModalContent();
+        });
+    }
+
+    // Top Share Button
+    const btnTopShare = document.getElementById('btnShareTopKiosk');
+    if (btnTopShare) {
+        btnTopShare.addEventListener('click', function() {
+            updateShareModalContent();
+            const modal = getModalInstance(shareModalEl);
+            if (modal) modal.show();
+        });
+    }
+
+    // Per-Row Share Buttons in Office Sites Table
+    document.querySelectorAll('.btn-share-site-kiosk').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const siteId = this.dataset.siteId;
+            if (siteSelect && siteId) {
+                siteSelect.value = siteId;
+            }
+            updateShareModalContent();
+            const modal = getModalInstance(shareModalEl);
+            if (modal) modal.show();
+        });
+    });
+
+    // Modal show event listener for Site Config Modal
+    if (configModalEl) {
+        configModalEl.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            if (button && button.dataset) {
+                const siteIdEl = document.getElementById('modalSiteId');
+                const siteNameEl = document.getElementById('modalSiteName');
+                const latEl = document.getElementById('modalLat');
+                const lngEl = document.getElementById('modalLng');
+                const radiusEl = document.getElementById('modalRadius');
+                const rotationEl = document.getElementById('modalRotation');
+
+                if (siteIdEl) siteIdEl.value = button.dataset.siteId || '';
+                if (siteNameEl) siteNameEl.value = button.dataset.siteName || '';
+                if (latEl) latEl.value = button.dataset.lat || '';
+                if (lngEl) lngEl.value = button.dataset.lng || '';
+                if (radiusEl) radiusEl.value = button.dataset.radius || 200;
+                if (rotationEl) rotationEl.value = button.dataset.rotation || 4;
+            }
+        });
+    }
+
+    // Direct click fallback for Configure buttons
+    document.querySelectorAll('.btn-edit-site').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const siteIdEl = document.getElementById('modalSiteId');
+            const siteNameEl = document.getElementById('modalSiteName');
+            const latEl = document.getElementById('modalLat');
+            const lngEl = document.getElementById('modalLng');
+            const radiusEl = document.getElementById('modalRadius');
+            const rotationEl = document.getElementById('modalRotation');
+
+            if (siteIdEl) siteIdEl.value = this.dataset.siteId || '';
+            if (siteNameEl) siteNameEl.value = this.dataset.siteName || '';
+            if (latEl) latEl.value = this.dataset.lat || '';
+            if (lngEl) lngEl.value = this.dataset.lng || '';
+            if (radiusEl) radiusEl.value = this.dataset.radius || 200;
+            if (rotationEl) rotationEl.value = this.dataset.rotation || 4;
+
+            const modal = getModalInstance(configModalEl);
+            if (modal) modal.show();
+        });
+    });
+
+    // Copy Link to Clipboard
+    if (btnCopy) {
+        btnCopy.addEventListener('click', async function() {
+            if (!urlInput) return;
+            try {
+                await navigator.clipboard.writeText(urlInput.value);
+                if (copyIcon) copyIcon.className = 'bi bi-check2-circle text-white';
+                if (copyText) copyText.textContent = 'Copied!';
+                if (copyFeedback) copyFeedback.classList.remove('d-none');
+                setTimeout(() => {
+                    if (copyIcon) copyIcon.className = 'bi bi-clipboard';
+                    if (copyText) copyText.textContent = 'Copy Link';
+                }, 3000);
+            } catch (err) {
+                urlInput.select();
+                document.execCommand('copy');
+                if (copyFeedback) copyFeedback.classList.remove('d-none');
+            }
+        });
+    }
+
+    // Device GPS Capture
+    const btnGPS = document.getElementById('btnUseCurrentLocation');
+    if (btnGPS) {
+        btnGPS.addEventListener('click', function() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        const latEl = document.getElementById('modalLat');
+                        const lngEl = document.getElementById('modalLng');
+                        if (latEl) latEl.value = pos.coords.latitude.toFixed(6);
+                        if (lngEl) lngEl.value = pos.coords.longitude.toFixed(6);
+                        if (typeof showToast === 'function') {
+                            showToast(`Captured GPS: ${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`, 'success');
+                        } else {
+                            alert(`Captured GPS coordinates: ${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`);
+                        }
+                    },
+                    (err) => {
+                        if (typeof showToast === 'function') {
+                            showToast("Could not acquire location: " + err.message, 'danger');
+                        } else {
+                            alert("Could not acquire location: " + err.message);
+                        }
+                    },
+                    { enableHighAccuracy: true }
+                );
+            } else {
+                alert("Geolocation not supported by your browser.");
+            }
+        });
+    }
+
+    // Save Configuration
+    const siteConfigForm = document.getElementById('siteConfigForm');
+    if (siteConfigForm) {
+        siteConfigForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const siteId = document.getElementById('modalSiteId').value;
+            const url = `/attendance/sites/${siteId}/location-config/`;
+
+            const payload = {
+                latitude: (document.getElementById('modalLat').value || '').trim() || null,
+                longitude: (document.getElementById('modalLng').value || '').trim() || null,
+                geofence_radius_meters: parseInt(document.getElementById('modalRadius').value) || 200,
+                qr_rotation_seconds: parseInt(document.getElementById('modalRotation').value) || 4
+            };
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    if (typeof showToast === 'function') {
+                        showToast(data.message, 'success');
+                    } else {
+                        alert(data.message);
+                    }
+                    setTimeout(() => window.location.reload(), 800);
+                } else {
+                    alert("Error saving: " + data.message);
+                }
+            } catch (err) {
+                alert("Network error: " + err.message);
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

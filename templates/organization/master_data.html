@@ -968,7 +968,7 @@
                                         {% endif %}
                                     </div>
 
-                                    <div class="p-2.5 bg-light rounded-3 mb-3 small d-flex justify-content-between align-items-center">
+                                    <div class="p-2.5 bg-light rounded-3 mb-2 small d-flex justify-content-between align-items-center">
                                         <span class="text-muted">Site Manager:</span>
                                         {% if s.site_manager %}
                                             <span class="fw-semibold text-dark">
@@ -976,6 +976,19 @@
                                             </span>
                                         {% else %}
                                             <span class="text-muted fst-italic">Not assigned</span>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="p-2 bg-light rounded-3 mb-3 small d-flex justify-content-between align-items-center">
+                                        <span class="text-muted" style="font-size: 0.75rem;"><i class="bi bi-geo-alt-fill text-danger me-1"></i>GPS (200m):</span>
+                                        {% if s.latitude and s.longitude %}
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace" style="font-size: 0.72rem;">
+                                                {{ s.latitude|floatformat:4 }}, {{ s.longitude|floatformat:4 }} ({{ s.geofence_radius_meters|default:200 }}m)
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.72rem;">
+                                                <i class="bi bi-exclamation-triangle"></i> Not Configured
+                                            </span>
                                         {% endif %}
                                     </div>
                                 </div>
@@ -1014,11 +1027,12 @@
                                 <th style="width: 200px;" class="ps-4">Location Name</th>
                                 <th style="width: 120px;">City</th>
                                 <th style="width: 110px;">Code</th>
-                                <th style="width: 180px;">Site Manager</th>
-                                <th style="width: 110px;">Status</th>
-                                <th style="width: 130px;">Open Jobs</th>
-                                <th style="width: 110px;">Employees</th>
-                                <th style="width: 120px;" class="text-end pe-4">Actions</th>
+                                <th style="width: 170px;">GPS Geofence</th>
+                                <th style="width: 160px;">Site Manager</th>
+                                <th style="width: 100px;">Status</th>
+                                <th style="width: 120px;">Open Jobs</th>
+                                <th style="width: 100px;">Employees</th>
+                                <th style="width: 100px;" class="text-end pe-4">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1030,6 +1044,15 @@
                                         </td>
                                         <td><span class="badge bg-light text-dark border">{{ s.city }}</span></td>
                                         <td><span class="badge bg-secondary-subtle text-secondary font-monospace">{{ s.code }}</span></td>
+                                        <td>
+                                            {% if s.latitude and s.longitude %}
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace" style="font-size: 0.72rem;">
+                                                    <i class="bi bi-geo-alt-fill text-danger me-0.5"></i>{{ s.latitude|floatformat:4 }}, {{ s.longitude|floatformat:4 }}
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.72rem;">Unset</span>
+                                            {% endif %}
+                                        </td>
                                         <td>
                                             {% if s.site_manager %}
                                                 <span class="fw-semibold text-dark small">{{ s.site_manager.get_full_name|default:s.site_manager.username }}</span>
@@ -1090,6 +1113,34 @@
                                             <label class="form-label small fw-bold">Contact Phone</label>
                                             <input type="text" name="contact_phone" class="form-control" value="{{ s.contact_phone }}">
                                         </div>
+
+                                        <!-- Office GPS Coordinates (Geofencing 200m) -->
+                                        <div class="p-3 bg-light rounded-3 mb-3 border">
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                                <label class="form-label small fw-bold mb-0 text-primary">
+                                                    <i class="bi bi-geo-alt-fill me-1"></i>Office GPS Geofence (200m Verification)
+                                                </label>
+                                                <button type="button" class="btn btn-xs btn-outline-primary py-0 px-2" style="font-size: 0.72rem;" onclick="captureLocationGPS('editLat{{ s.id }}', 'editLng{{ s.id }}')">
+                                                    <i class="bi bi-crosshair"></i> Current GPS
+                                                </button>
+                                            </div>
+                                            <div class="row g-2">
+                                                <div class="col-6">
+                                                    <label class="form-label text-muted" style="font-size: 0.72rem;">Latitude (e.g. 12.971598)</label>
+                                                    <input type="text" name="latitude" id="editLat{{ s.id }}" class="form-control form-control-sm font-monospace" value="{{ s.latitude|default:'' }}" placeholder="e.g. 12.971598">
+                                                </div>
+                                                <div class="col-6">
+                                                    <label class="form-label text-muted" style="font-size: 0.72rem;">Longitude (e.g. 77.594562)</label>
+                                                    <input type="text" name="longitude" id="editLng{{ s.id }}" class="form-control form-control-sm font-monospace" value="{{ s.longitude|default:'' }}" placeholder="e.g. 77.594562">
+                                                </div>
+                                            </div>
+                                            <div class="mt-2">
+                                                <label class="form-label text-muted" style="font-size: 0.72rem;">Geofence Radius (meters)</label>
+                                                <input type="number" name="geofence_radius_meters" class="form-control form-control-sm" value="{{ s.geofence_radius_meters|default:200 }}" min="20" max="1000" placeholder="200">
+                                                <small class="text-muted" style="font-size: 0.68rem;">Employees must be within this radius to punch in/out (Default: 200m).</small>
+                                            </div>
+                                        </div>
+
                                         <div class="mb-3">
                                             <label class="form-label small fw-bold">Assigned Site Manager</label>
                                             <select name="site_manager" class="form-select">
@@ -1690,6 +1741,34 @@
                         <label class="form-label small fw-bold">Contact Phone</label>
                         <input type="text" name="contact_phone" class="form-control" placeholder="+91 98765 43210">
                     </div>
+
+                    <!-- Office GPS Coordinates (Geofencing 200m) -->
+                    <div class="p-3 bg-light rounded-3 mb-3 border">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label small fw-bold mb-0 text-primary">
+                                <i class="bi bi-geo-alt-fill me-1"></i>Office GPS Geofence (200m Verification)
+                            </label>
+                            <button type="button" class="btn btn-xs btn-outline-primary py-0 px-2" style="font-size: 0.72rem;" onclick="captureLocationGPS('addLatInput', 'addLngInput')">
+                                <i class="bi bi-crosshair"></i> Current GPS
+                            </button>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label text-muted" style="font-size: 0.72rem;">Latitude (e.g. 12.971598)</label>
+                                <input type="text" name="latitude" id="addLatInput" class="form-control form-control-sm font-monospace" placeholder="e.g. 12.971598">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label text-muted" style="font-size: 0.72rem;">Longitude (e.g. 77.594562)</label>
+                                <input type="text" name="longitude" id="addLngInput" class="form-control form-control-sm font-monospace" placeholder="e.g. 77.594562">
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <label class="form-label text-muted" style="font-size: 0.72rem;">Geofence Radius (meters)</label>
+                            <input type="number" name="geofence_radius_meters" class="form-control form-control-sm" value="200" min="20" max="1000" placeholder="200">
+                            <small class="text-muted" style="font-size: 0.68rem;">Employees must be within this radius to punch in/out (Default: 200m).</small>
+                        </div>
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Assigned Site Manager</label>
                         <select name="site_manager" class="form-select">
@@ -2033,5 +2112,26 @@
         // Initialize duration calculation
         calculateDuration();
     });
+
+    // 11. GPS Geolocation Capture for Office Sites
+    function captureLocationGPS(latInputId, lngInputId) {
+        if (!navigator.geolocation) {
+            alert("Geolocation is not supported by your browser.");
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(
+            function(pos) {
+                const latEl = document.getElementById(latInputId);
+                const lngEl = document.getElementById(lngInputId);
+                if (latEl) latEl.value = pos.coords.latitude.toFixed(6);
+                if (lngEl) lngEl.value = pos.coords.longitude.toFixed(6);
+                alert("Captured GPS coordinates: " + pos.coords.latitude.toFixed(6) + ", " + pos.coords.longitude.toFixed(6) + " (Accuracy: " + Math.round(pos.coords.accuracy) + "m)");
+            },
+            function(err) {
+                alert("Could not acquire GPS: " + err.message + ". Please ensure location permissions are granted.");
+            },
+            { enableHighAccuracy: true, timeout: 8000 }
+        );
+    }
 </script>
 {% endblock %}

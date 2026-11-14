@@ -1,4 +1,8 @@
+import json
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
+from django.core.exceptions import PermissionDenied
+from django.http import JsonResponse, HttpResponseBadRequest
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
@@ -6,8 +10,13 @@ from datetime import datetime, date, time, timedelta
 from decimal import Decimal
 from django.core.paginator import Paginator
 from accounts.models import CustomUser
-from accounts.decorators import role_required, hr_required, site_manager_required, log_audit_trail
-from attendance.models import Attendance, Shift, AttendanceCorrectionRequest, AttendanceAuditLog
+from accounts.decorators import role_required, hr_required, head_required, site_manager_required, log_audit_trail
+from attendance.models import Attendance, Shift, AttendanceCorrectionRequest, AttendanceAuditLog, QRCodeScanLog
+from attendance.qr_services import (
+    generate_dynamic_qr_payload,
+    validate_dynamic_qr_token,
+    process_qr_attendance_punch,
+)
 from employees.models import EmployeeProfile
 from organization.models import Department, Site
 from notifications.models import create_notification
@@ -453,3 +462,426 @@ def approve_attendance_correction(request, request_id):
         messages.info(request, f"Attendance correction for {corr.employee.full_name} has been rejected.")
 
     return redirect('attendance:corrections_list')
+
+
+# ==============================================================================
+# DYNAMIC QR ATTENDANCE SYSTEM (4-SECOND ROTATING HMAC TOKEN + DEVICE GPS GEOFENCING)
+# ==============================================================================
+
+def qr_kiosk_view(request, site_id=None):
+    """
+    Live fullscreen terminal display for tablets/monitors at office entrances.
+    Rotates dynamic QR code every 4 seconds.
+    Can be accessed by authenticated administrators OR dedicated entrance devices
+    using a secure terminal_key shared by the admin.
+    """
+    sites = Site.objects.filter(is_active=True).order_by('name')
+    if not sites.exists():
+        messages.error(request, "No active office sites configured. Please configure an office site first.")
+        return redirect('portal:smart_dashboard')
+
+    site = None
+    if site_id:
+        site = sites.filter(id=site_id).first()
+
+    if not site:
+        emp = getattr(request.user, 'employee_profile', None) if request.user.is_authenticated else None
+        if emp and emp.site:
+            site = emp.site
+        else:
+            site = sites.first()
+
+    terminal_key = request.GET.get('terminal_key') or request.session.get(f'kiosk_terminal_key_{site.id}') or request.session.get('kiosk_terminal_key')
+    is_terminal_authorized = False
+
+    if terminal_key and terminal_key == site.get_qr_secret_key():
+        is_terminal_authorized = True
+        request.session[f'kiosk_authorized_site_{site.id}'] = True
+        request.session[f'kiosk_terminal_key_{site.id}'] = terminal_key
+        request.session['kiosk_terminal_key'] = terminal_key
+    elif request.session.get(f'kiosk_authorized_site_{site.id}') is True:
+        is_terminal_authorized = True
+
+    # Check access permission:
+    # 1. Device terminal with valid terminal_key
+    # 2. Authenticated user with Head, HR, Site Manager, or Superuser role
+    is_admin_user = (
+        request.user.is_authenticated and (
+            request.user.is_superuser or
+            getattr(request.user, 'is_head_role', False) or
+            getattr(request.user, 'is_hr_role', False) or
+            request.user.role == CustomUser.Role.SITE_MANAGER
+        )
+    )
+
+    if not (is_terminal_authorized or is_admin_user):
+        if not request.user.is_authenticated:
+            return redirect(f"{reverse('accounts:login')}?next={request.path}")
+        raise PermissionDenied("You do not have permission to access the attendance kiosk terminal.")
+
+    is_terminal_device = bool(is_terminal_authorized and not is_admin_user)
+    if request.GET.get('mode') == 'terminal' or 'terminal_key' in request.GET:
+        is_terminal_device = True
+
+    payload = generate_dynamic_qr_payload(site, request)
+
+    return render(request, 'attendance/qr_kiosk.html', {
+        'site': site,
+        'sites': sites,
+        'payload': payload,
+        'rotation_seconds': site.qr_rotation_seconds or 4,
+        'is_terminal_device': is_terminal_device,
+        'terminal_key': site.get_qr_secret_key(),
+        'site_lat': float(site.latitude) if site.latitude is not None else None,
+        'site_lng': float(site.longitude) if site.longitude is not None else None,
+        'geofence_radius': site.geofence_radius_meters or 200,
+    })
+
+
+def qr_kiosk_token_api(request, site_id):
+    """
+    Lightweight API polled by the kiosk display every 4 seconds
+    to retrieve the newly rotated HMAC token and Base64 QR code image,
+    along with recent successful punches for live toast notification.
+    Authorized for authenticated users or validated entrance kiosk devices.
+    """
+    site = get_object_or_404(Site, id=site_id, is_active=True)
+
+    terminal_key = request.GET.get('terminal_key') or request.session.get(f'kiosk_terminal_key_{site.id}') or request.session.get('kiosk_terminal_key')
+    is_terminal_authorized = (
+        (terminal_key and terminal_key == site.get_qr_secret_key()) or
+        request.session.get(f'kiosk_authorized_site_{site.id}') is True
+    )
+
+    is_admin_user = (
+        request.user.is_authenticated and (
+            request.user.is_superuser or
+            getattr(request.user, 'is_head_role', False) or
+            getattr(request.user, 'is_hr_role', False) or
+            request.user.role == CustomUser.Role.SITE_MANAGER
+        )
+    )
+
+    if not (is_terminal_authorized or is_admin_user):
+        return JsonResponse({'success': False, 'message': 'Terminal unauthorized. Access denied.'}, status=403)
+
+    payload = generate_dynamic_qr_payload(site, request)
+
+    # Fetch recent successful punches at this site within the last 60 seconds (max 5)
+    recent_cutoff = timezone.now() - timedelta(seconds=60)
+    recent_scans = QRCodeScanLog.objects.filter(
+        site=site,
+        status='SUCCESS',
+        created_at__gte=recent_cutoff
+    ).select_related('employee', 'employee__user').order_by('-created_at')[:5]
+
+    recent_punches = []
+    for scan in recent_scans:
+        emp_name = "Employee"
+        if scan.employee:
+            emp_name = scan.employee.full_name or (scan.employee.user.get_full_name() if scan.employee.user else f"Employee {scan.employee.emp_id}")
+        punch_type_display = "Punch In" if scan.actual_punch_type == 'IN' else "Punch Out"
+        local_time = timezone.localtime(scan.created_at)
+        recent_punches.append({
+            'id': scan.id,
+            'employee_name': emp_name,
+            'punch_type': scan.actual_punch_type,  # 'IN' or 'OUT'
+            'punch_label': punch_type_display,
+            'time_str': local_time.strftime('%I:%M:%S %p'),
+            'avatar_letter': emp_name[0].upper() if emp_name else 'E'
+        })
+
+    return JsonResponse({
+        'success': True,
+        'payload': payload,
+        'recent_punches': recent_punches,
+    })
+
+
+@login_required
+def qr_scanner_view(request):
+    """
+    Mobile / Web scanner interface for employees.
+    Accesses device camera, captures GPS coordinates, and provides
+    both Punch In and Punch Out modes.
+    """
+    emp = getattr(request.user, 'employee_profile', None)
+    today = timezone.localdate()
+    today_att = None
+    if emp:
+        today_att = Attendance.objects.filter(employee=emp, date=today).first()
+
+    sites = Site.objects.filter(is_active=True, is_qr_attendance_enabled=True).order_by('name')
+    user_site = emp.site if emp and emp.site else sites.first()
+
+    return render(request, 'attendance/qr_scanner.html', {
+        'employee': emp,
+        'today_att': today_att,
+        'sites': sites,
+        'user_site': user_site,
+        'today_date': today,
+    })
+
+
+@login_required
+def qr_punch_api(request):
+    """
+    Processes a dynamic QR scan submission from web scanner or mobile app.
+    Enforces:
+    - 4-second dynamic token validity
+    - Location security (Strict Device GPS Geofencing 200m)
+    - Punch In / Punch Out modes
+    """
+    if request.method != 'POST':
+        return HttpResponseBadRequest("Only POST method allowed.")
+
+    data = {}
+    if request.content_type == 'application/json':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+        except Exception:
+            return JsonResponse({'success': False, 'message': 'Invalid JSON body.'}, status=400)
+    else:
+        data = request.POST
+
+    token = data.get('token')
+    site_id = data.get('site_id')
+    lat = data.get('latitude')
+    lng = data.get('longitude')
+    punch_mode = data.get('punch_mode', 'AUTO')
+
+    if not token or not site_id:
+        return JsonResponse({
+            'success': False,
+            'status': 'MISSING_DATA',
+            'title': 'Scan Data Missing',
+            'message': 'Token or Site ID missing from scanner submission.',
+        }, status=400)
+
+    try:
+        site = Site.objects.get(id=site_id, is_active=True)
+    except Site.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'status': 'SITE_NOT_FOUND',
+            'title': 'Invalid Office Site',
+            'message': f'Office site ID #{site_id} is inactive or not found.',
+        }, status=404)
+
+    latitude = None
+    longitude = None
+    if lat not in (None, '', 'null'):
+        try:
+            latitude = Decimal(str(lat))
+        except Exception:
+            latitude = None
+    if lng not in (None, '', 'null'):
+        try:
+            longitude = Decimal(str(lng))
+        except Exception:
+            longitude = None
+
+    result = process_qr_attendance_punch(
+        request=request,
+        user=request.user,
+        site=site,
+        token_str=token,
+        latitude=latitude,
+        longitude=longitude,
+        punch_mode=punch_mode,
+    )
+
+    return JsonResponse(result, status=200)
+
+
+@login_required
+def qr_punch_direct(request):
+    """
+    Direct handler when an employee scans the kiosk QR code using their
+    phone's built-in Camera app (URL: /attendance/qr-punch/?token=...&site=...).
+    """
+    token = request.GET.get('token') or request.POST.get('token')
+    site_id = request.GET.get('site') or request.POST.get('site')
+
+    emp = getattr(request.user, 'employee_profile', None)
+    today = timezone.localdate()
+    today_att = None
+    if emp:
+        today_att = Attendance.objects.filter(employee=emp, date=today).first()
+
+    site = None
+    if site_id:
+        site = Site.objects.filter(id=site_id, is_active=True).first()
+
+    if request.method == 'POST':
+        lat = request.POST.get('latitude')
+        lng = request.POST.get('longitude')
+        punch_mode = request.POST.get('punch_mode', 'AUTO')
+
+        latitude = None
+        longitude = None
+        if lat not in (None, '', 'null'):
+            try:
+                latitude = Decimal(str(lat))
+            except Exception:
+                pass
+        if lng not in (None, '', 'null'):
+            try:
+                longitude = Decimal(str(lng))
+            except Exception:
+                pass
+
+        if not site:
+            messages.error(request, "Office site not recognized.")
+            return redirect('attendance:my_attendance')
+
+        result = process_qr_attendance_punch(
+            request=request,
+            user=request.user,
+            site=site,
+            token_str=token,
+            latitude=latitude,
+            longitude=longitude,
+            punch_mode=punch_mode,
+        )
+
+        if result.get('success'):
+            messages.success(request, f"{result.get('title')}: {result.get('message')}")
+            return redirect('attendance:my_attendance')
+        else:
+            messages.error(request, f"{result.get('title')}: {result.get('message')}")
+
+    return render(request, 'attendance/qr_direct_punch.html', {
+        'site': site,
+        'token': token,
+        'today_att': today_att,
+        'employee': emp,
+    })
+
+
+@head_required
+def qr_dashboard_view(request):
+    """
+    Admin QR Attendance Dashboard.
+    Provides real-time scan logs, location security stats, shareable kiosk links, and site configuration.
+    """
+    sites = Site.objects.all().order_by('name')
+    today = timezone.localdate()
+
+    logs_qs = QRCodeScanLog.objects.select_related('employee', 'site', 'attendance').order_by('-created_at')
+
+    site_filter = request.GET.get('site')
+    status_filter = request.GET.get('status')
+    mode_filter = request.GET.get('mode')
+    date_filter = request.GET.get('date', today.isoformat())
+
+    if site_filter:
+        logs_qs = logs_qs.filter(site_id=site_filter)
+    if status_filter:
+        logs_qs = logs_qs.filter(status=status_filter)
+    if mode_filter:
+        logs_qs = logs_qs.filter(actual_punch_type=mode_filter)
+
+    filter_d = today
+    if date_filter:
+        try:
+            filter_d = datetime.strptime(date_filter, '%Y-%m-%d').date()
+            logs_qs = logs_qs.filter(created_at__date=filter_d)
+        except ValueError:
+            pass
+
+    day_logs = QRCodeScanLog.objects.filter(created_at__date=filter_d)
+    total_scans = day_logs.count()
+    successful_punches = day_logs.filter(status='SUCCESS').count()
+    expired_scans = day_logs.filter(status='EXPIRED_QR').count()
+    location_failures = day_logs.filter(status='LOCATION_FAILED').count()
+
+    paginator = Paginator(logs_qs, 25)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'attendance/qr_dashboard.html', {
+        'sites': sites,
+        'page_obj': page_obj,
+        'selected_site': site_filter,
+        'selected_status': status_filter,
+        'selected_mode': mode_filter,
+        'selected_date': date_filter,
+        'stats': {
+            'total_scans': total_scans,
+            'successful_punches': successful_punches,
+            'expired_scans': expired_scans,
+            'location_failures': location_failures,
+        }
+    })
+
+
+@head_required
+def site_location_config_api(request, site_id):
+    """
+    Allows Admin to update office GPS geofence coordinates
+    and radius.
+    """
+    if request.method != 'POST':
+        return HttpResponseBadRequest("Only POST method allowed.")
+
+    site = get_object_or_404(Site, id=site_id)
+    data = {}
+    if request.content_type == 'application/json':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+        except Exception:
+            return JsonResponse({'success': False, 'message': 'Invalid JSON body.'}, status=400)
+    else:
+        data = request.POST
+
+    try:
+        lat = data.get('latitude')
+        lng = data.get('longitude')
+        radius = data.get('geofence_radius_meters')
+        ips = data.get('authorized_ips')
+        wifi = data.get('authorized_wifi_ssids')
+        rotation = data.get('qr_rotation_seconds')
+        enabled = data.get('is_qr_attendance_enabled')
+
+        if lat not in (None, '', 'null'):
+            site.latitude = Decimal(str(lat))
+        else:
+            site.latitude = None
+
+        if lng not in (None, '', 'null'):
+            site.longitude = Decimal(str(lng))
+        else:
+            site.longitude = None
+
+        if radius:
+            site.geofence_radius_meters = int(radius)
+
+        if ips is not None:
+            site.authorized_ips = ips.strip()
+
+        if wifi is not None:
+            site.authorized_wifi_ssids = wifi.strip()
+
+        if rotation:
+            site.qr_rotation_seconds = max(3, int(rotation))
+
+        if enabled is not None:
+            site.is_qr_attendance_enabled = (str(enabled).lower() in ('true', '1', 'yes'))
+
+        site.save()
+        return JsonResponse({
+            'success': True,
+            'message': f"Location security configuration updated for {site.name}.",
+            'site': {
+                'id': site.id,
+                'name': site.name,
+                'latitude': float(site.latitude) if site.latitude else None,
+                'longitude': float(site.longitude) if site.longitude else None,
+                'geofence_radius_meters': site.geofence_radius_meters,
+                'qr_rotation_seconds': site.qr_rotation_seconds,
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=400)
+

@@ -56,6 +56,21 @@ class Site(models.Model):
     )
     contact_phone = models.CharField(max_length=20, blank=True)
     is_active = models.BooleanField(default=True)
+    
+    # Location Security & Dynamic QR Settings
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, help_text="Office GPS Latitude (e.g. 20.296059)")
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, help_text="Office GPS Longitude (e.g. 85.824540)")
+    geofence_radius_meters = models.PositiveIntegerField(default=200, help_text="Allowed scan radius in meters (e.g. 200m)")
+    authorized_ips = models.TextField(
+        blank=True, 
+        default="",
+        help_text="Comma/newline separated authorized IP addresses or CIDRs (optional)"
+    )
+    authorized_wifi_ssids = models.CharField(max_length=255, blank=True, default="", help_text="Office Wi-Fi SSIDs (legacy/unused)")
+    qr_rotation_seconds = models.PositiveIntegerField(default=4, help_text="Dynamic QR rotation window in seconds (default: 4s)")
+    qr_secret_key = models.CharField(max_length=64, blank=True, default="", help_text="Cryptographic secret key for dynamic QR tokens")
+    is_qr_attendance_enabled = models.BooleanField(default=True, help_text="Enable Dynamic QR Attendance for this site")
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -69,6 +84,74 @@ class Site(models.Model):
     @property
     def employee_count(self):
         return self.employees.filter(status='ACTIVE').count()
+
+    def get_qr_secret_key(self):
+        """Returns or initializes the unique cryptographic secret key for this office kiosk."""
+        if not self.qr_secret_key:
+            import secrets
+            self.qr_secret_key = secrets.token_hex(24)
+            Site.objects.filter(id=self.id).update(qr_secret_key=self.qr_secret_key)
+        return self.qr_secret_key
+
+    def calculate_gps_distance(self, user_lat, user_lon):
+        """Calculates distance in meters between user GPS and site using the Haversine formula."""
+        if self.latitude is None or self.longitude is None or user_lat is None or user_lon is None:
+            return None
+        import math
+        try:
+            lat1, lon1 = math.radians(float(self.latitude)), math.radians(float(self.longitude))
+            lat2, lon2 = math.radians(float(user_lat)), math.radians(float(user_lon))
+            dlat = lat2 - lat1
+            dlon = lon2 - lon1
+            a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
+            c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+            r = 6371000  # Earth radius in meters
+            return round(r * c, 1)
+        except (ValueError, TypeError):
+            return None
+
+    def is_gps_verified(self, user_lat, user_lon):
+        """Returns tuple (is_verified: bool, distance_meters: float|None, message: str)"""
+        if self.latitude is None or self.longitude is None:
+            return True, 0.0, "Office GPS coordinates not yet configured (Allowed by policy)"
+        dist = self.calculate_gps_distance(user_lat, user_lon)
+        if dist is None:
+            return False, None, "GPS coordinates missing or unreadable from device"
+        radius = self.geofence_radius_meters or 200
+        if dist <= radius:
+            return True, dist, f"GPS Verified: Within office geofence ({dist}m from office, max {radius}m)"
+        return False, dist, f"GPS Rejected: Outside office geofence ({dist}m away, max allowed is {radius}m)"
+
+    def is_ip_verified(self, client_ip):
+        """Returns tuple (is_verified: bool, message: str) checking client IP against authorized networks."""
+        if not client_ip:
+            return False, "Client IP address could not be identified"
+
+        # Local development / loopback addresses
+        if client_ip in ['127.0.0.1', '::1', 'localhost', 'testserver']:
+            return True, f"Network Verified: Localhost/Intranet connection ({client_ip})"
+
+        if not self.authorized_ips:
+            return True, f"Office IP whitelist not configured (Allowed: {client_ip})"
+
+        import ipaddress
+        ip_entries = [ip.strip() for ip in self.authorized_ips.replace('\n', ',').split(',') if ip.strip()]
+        try:
+            client_obj = ipaddress.ip_address(client_ip)
+            for entry in ip_entries:
+                try:
+                    if '/' in entry:
+                        if client_obj in ipaddress.ip_network(entry, strict=False):
+                            return True, f"Network Verified: Connected to authorized Office Network ({entry})"
+                    else:
+                        if client_obj == ipaddress.ip_address(entry):
+                            return True, f"Network Verified: Connected to authorized Office IP ({entry})"
+                except ValueError:
+                    continue
+        except ValueError:
+            pass
+
+        return False, f"Unauthorized Network: {client_ip}"
 
 
 class Holiday(models.Model):

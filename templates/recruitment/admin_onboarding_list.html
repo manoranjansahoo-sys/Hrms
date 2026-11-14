@@ -1857,7 +1857,8 @@ function confirmRejectSingleDoc() {
     const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
     const csrfToken = csrfInput ? csrfInput.value : '';
 
-    fetch(`/hr/onboarding/documents/${docId}/reject/`, {
+    const rejectDocUrl = "{% url 'recruitment:reject_single_candidate_document' doc_id=0 %}".replace('/0/', '/' + docId + '/');
+    fetch(rejectDocUrl, {
         method: 'POST',
         headers: {
             'X-CSRFToken': csrfToken,
@@ -1936,7 +1937,8 @@ function verifySingleDoc(docId, btn, appId) {
     const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
     const csrfToken = csrfInput ? csrfInput.value : '';
 
-    fetch(`/hr/onboarding/documents/${docId}/verify/`, {
+    const verifyDocUrl = "{% url 'recruitment:verify_single_candidate_document' doc_id=0 %}".replace('/0/', '/' + docId + '/');
+    fetch(verifyDocUrl, {
         method: 'POST',
         headers: {
             'X-CSRFToken': csrfToken,

@@ -37,17 +37,9 @@
     <!-- SIDEBAR NAVIGATION -->
     <aside class="sidebar">
         <div class="sidebar-header">
-            <div class="d-flex align-items-center gap-2.5">
-                <div class="brand-logo-icon">
-                    <i class="bi bi-buildings-fill"></i>
-                </div>
-                <div>
-                    <div class="fw-bold text-white lh-1 fs-5">Company HRMS</div>
-                    <small class="text-white-50 d-flex align-items-center gap-1.5 mt-1" style="font-size: 0.70rem;">
-                        <span class="status-pulse-dot"></span> Enterprise Workspace
-                    </small>
-                </div>
-            </div>
+            <a href="{% url 'portal:smart_dashboard' %}" class="d-flex align-items-center text-decoration-none py-1">
+                <img src="{% static 'img/logo.png' %}" alt="Company Logo" style="height: 38px; max-width: 195px; object-fit: contain;">
+            </a>
         </div>
 
         <ul class="sidebar-menu">
@@ -106,7 +98,7 @@
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="#attendanceSubmenuHead" class="menu-link d-flex align-items-center justify-content-between {% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="collapse" role="button" aria-expanded="{% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}true{% else %}false{% endif %}" aria-controls="attendanceSubmenuHead">
+                    <a href="#attendanceSubmenuHead" class="menu-link d-flex align-items-center justify-content-between {% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name or 'qr_dashboard' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="collapse" role="button" aria-expanded="{% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name or 'qr_dashboard' in request.resolver_match.url_name %}true{% else %}false{% endif %}" aria-controls="attendanceSubmenuHead">
                         <div class="d-flex align-items-center gap-2">
                             <i class="bi bi-calendar-check"></i>
                             <span>Attendance</span>
@@ -118,12 +110,18 @@
                             <i class="bi bi-chevron-down small" style="font-size: 0.72rem;"></i>
                         </div>
                     </a>
-                    <div class="collapse {% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}show{% endif %}" id="attendanceSubmenuHead">
+                    <div class="collapse {% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name or 'qr_dashboard' in request.resolver_match.url_name %}show{% endif %}" id="attendanceSubmenuHead">
                         <ul class="list-unstyled ps-3 pt-1 pb-1 mb-0" style="background: rgba(0,0,0,0.18); border-radius: 8px; margin-top: 3px;">
                             <li>
                                 <a href="{% url 'attendance:admin_register' %}" class="menu-link py-1.5 px-3 {% if 'admin_register' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
                                     <i class="bi bi-calendar-check-fill me-2" style="font-size: 0.85rem;"></i>
                                     <span>Daily Attendance</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{% url 'attendance:qr_dashboard' %}" class="menu-link py-1.5 px-3 {% if 'qr_dashboard' in request.resolver_match.url_name %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
+                                    <i class="bi bi-shield-check me-2 text-info" style="font-size: 0.85rem;"></i>
+                                    <span>QR & Geofence Hub</span>
                                 </a>
                             </li>
                             <li>
@@ -165,7 +163,7 @@
                     </a>
                 </li> -->
                 <!-- <li class="menu-item">
-                    <a href="/admin/" target="_blank" class="menu-link">
+                    <a href="{% url 'admin:index' %}" target="_blank" class="menu-link">
                         <i class="bi bi-gear-fill"></i>
                         <span>Django Admin Panel</span>
                     </a>
@@ -480,31 +478,28 @@
                     </ul>
                 </div>
 
-                <!-- QUICK PUNCH IN / OUT WIDGET IN TOPBAR -->
+                <!-- DYNAMIC QR SCANNER ATTENDANCE ACTION IN TOPBAR -->
                 {% if request.user.employee_profile %}
                     {% with today_att=user_today_attendance %}
-                    <div class="d-none d-md-flex align-items-center gap-1">
-                        {% if not today_att or not today_att.punch_in %}
-                            <a href="{% url 'attendance:punch_in' %}" class="btn btn-sm btn-outline-success" title="Punch In">
-                                <i class="bi bi-box-arrow-in-right"></i> Punch In
-                            </a>
-                            <button type="button" class="btn btn-sm btn-outline-secondary opacity-50" disabled title="Punch In required before you can Punch Out" style="cursor: not-allowed;">
-                                <i class="bi bi-box-arrow-right"></i> Punch Out
-                            </button>
-                        {% elif not today_att.punch_out %}
-                            <button type="button" class="btn btn-sm btn-outline-secondary opacity-50" disabled title="Already Punched In today" style="cursor: not-allowed;">
-                                <i class="bi bi-box-arrow-in-right"></i> Punch In
-                            </button>
-                            <a href="{% url 'attendance:punch_out' %}" class="btn btn-sm btn-outline-danger" title="Punch Out">
-                                <i class="bi bi-box-arrow-right"></i> Punch Out
-                            </a>
+                    <div class="d-none d-md-flex align-items-center gap-2">
+                        <a href="{% url 'attendance:qr_scanner' %}" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1.5 shadow-sm fw-semibold" title="Dynamic QR Attendance Scanner (Punch In / Out)">
+                            <i class="bi bi-qr-code-scan"></i>
+                            <span>Scan QR to Punch</span>
+                        </a>
+                        {% if today_att and today_att.punch_in %}
+                            {% if today_att.punch_out %}
+                                <span class="badge bg-secondary-subtle text-secondary border px-2 py-1 small" title="Attendance completed for today">
+                                    <i class="bi bi-check2-all text-success"></i> Done ({{ today_att.working_hours }}h)
+                                </span>
+                            {% else %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 small" title="Currently Punched In">
+                                    <i class="bi bi-clock-history"></i> In: {{ today_att.punch_in|time:"h:i A" }}
+                                </span>
+                            {% endif %}
                         {% else %}
-                            <button type="button" class="btn btn-sm btn-outline-secondary opacity-50" disabled title="Already punched out for today. Punch In closed." style="cursor: not-allowed;">
-                                <i class="bi bi-box-arrow-in-right"></i> Punch In
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary opacity-50" disabled title="Already punched out for today." style="cursor: not-allowed;">
-                                <i class="bi bi-box-arrow-right"></i> Punch Out
-                            </button>
+                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 small" title="Not Checked In Today">
+                                <i class="bi bi-exclamation-circle"></i> Not Punched In
+                            </span>
                         {% endif %}
                     </div>
                     {% endwith %}
@@ -585,6 +580,7 @@
                         <li><hr class="dropdown-divider my-1"></li>
                         <li class="dropdown-header text-uppercase" style="font-size: 0.70rem;">My Workspace</li>
                         <li><a class="dropdown-item py-1.5" href="{% url 'employees:employee_detail' emp_id=request.user.employee_profile.emp_id %}"><i class="bi bi-person-circle text-primary me-2"></i>My Profile</a></li>
+                        <li><a class="dropdown-item py-1.5" href="{% url 'attendance:qr_scanner' %}"><i class="bi bi-qr-code-scan text-primary me-2"></i>Dynamic QR Punch</a></li>
                         <li><a class="dropdown-item py-1.5" href="{% url 'attendance:my_attendance' %}"><i class="bi bi-stopwatch text-success me-2"></i>My Attendance</a></li>
                         <li><a class="dropdown-item py-1.5" href="{% url 'leave_management:my_leaves' %}"><i class="bi bi-calendar-plus text-warning me-2"></i>My Leaves</a></li>
                         <li><a class="dropdown-item py-1.5" href="{% url 'payroll:my_payslips' %}"><i class="bi bi-wallet2 text-info me-2"></i>My Salary & Payslips</a></li>

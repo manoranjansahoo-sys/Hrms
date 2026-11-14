@@ -29,14 +29,13 @@ if not SECRET_KEY:
 
 DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() == "true"
 
-ALLOWED_HOSTS = [
+_allowed_env = os.getenv("DJANGO_ALLOWED_HOSTS", "")
+_built_in_hosts = ["localhost", "127.0.0.1", "testserver", "designlope.in", "www.designlope.in"]
+ALLOWED_HOSTS = list(set([
     host.strip()
-    for host in os.getenv(
-        "DJANGO_ALLOWED_HOSTS",
-        "localhost,127.0.0.1"
-    ).split(",")
+    for host in (_allowed_env.split(",") if _allowed_env else []) + _built_in_hosts
     if host.strip()
-]
+]))
 
 # =====================================================
 # CUSTOM USER MODEL
@@ -99,6 +98,7 @@ EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True").lower() == "true"
 # =====================================================
 
 MIDDLEWARE = [
+    "company_hrms.middleware.SubpathRoutingMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -194,7 +194,8 @@ USE_TZ = True
 
 FORCE_SCRIPT_NAME = os.getenv("FORCE_SCRIPT_NAME") or None
 
-STATIC_URL = os.getenv("STATIC_URL", "/static/")
+_subpath = (FORCE_SCRIPT_NAME or "").rstrip("/")
+STATIC_URL = os.getenv("STATIC_URL", f"{_subpath}/static/" if _subpath else "/static/")
 
 STATICFILES_DIRS = [
     BASE_DIR / "static",
@@ -206,7 +207,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # MEDIA FILES
 # =====================================================
 
-MEDIA_URL = "/media/"
+MEDIA_URL = os.getenv("MEDIA_URL", f"{_subpath}/media/" if _subpath else "/media/")
 
 MEDIA_ROOT = BASE_DIR / "media"
 

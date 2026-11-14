@@ -19,6 +19,7 @@ def hrms_global_context(request):
         'today_attendance': None,
         'can_manage_master_data': False,
         'pending_onboarding_count': 0,
+        'subpath_prefix': request.META.get('SCRIPT_NAME', '').rstrip('/'),
     }
 
     if request.user.is_authenticated:

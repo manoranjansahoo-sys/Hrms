@@ -70,8 +70,8 @@ def candidate_links_list(request):
 
     host = request.get_host()
     scheme = request.scheme
-    universal_apply_url = f"{scheme}://{host}/candidate/apply/"
-    fast_apply_url = f"{scheme}://{host}/candidate/fast-apply/"
+    universal_apply_url = request.build_absolute_uri(reverse('recruitment:candidate_apply'))
+    fast_apply_url = request.build_absolute_uri(reverse('recruitment:candidate_fast_apply'))
     quick_job_form = JobOpeningForm()
 
     # Applications separated by registration stage
@@ -466,8 +466,8 @@ def candidates_list(request):
 
     host = request.get_host()
     scheme = request.scheme
-    universal_apply_url = f"{scheme}://{host}/candidate/apply/"
-    fast_apply_url = f"{scheme}://{host}/candidate/fast-apply/"
+    universal_apply_url = request.build_absolute_uri(reverse('recruitment:candidate_apply'))
+    fast_apply_url = request.build_absolute_uri(reverse('recruitment:candidate_fast_apply'))
 
     page_title = "Candidate Applications & Talent Roster" if is_office else "Candidate Job Applications (Online)"
     page_subtitle = "In-person registered candidates who completed full pre-interview verification." if is_office else "Online fast-apply applications submitted via website and social channels."
@@ -868,6 +868,7 @@ def schedule_candidate_interview(request):
                 pass
 
             subject = f"Interview Scheduled: {app.job.title} at Company HRMS"
+            track_url = request.build_absolute_uri(reverse('recruitment:candidate_track_id', kwargs={'application_id': app.application_id}))
             message = (
                 f"Dear {app.candidate.full_name},\n\n"
                 f"We are pleased to invite you for an interview round for the position of {app.job.title}.\n\n"
@@ -879,7 +880,7 @@ def schedule_candidate_interview(request):
                 f"Candidate Guidelines / Agenda:\n"
                 f"{app.interview_notes or 'Please be ready with your portfolio and technical setup 5 minutes prior to the scheduled slot.'}\n\n"
                 f"Track your application status live at:\n"
-                f"{request.scheme}://{request.get_host()}/candidate/track/{app.application_id}/\n\n"
+                f"{track_url}\n\n"
                 f"Best regards,\n"
                 f"HR & Talent Acquisition Team\n"
             )
@@ -973,6 +974,7 @@ def candidate_detail(request, application_id):
                 # Send email notification to candidate
                 try:
                     subject = f"Interview Scheduled: {app.job.title} at Company HRMS"
+                    track_url = request.build_absolute_uri(reverse('recruitment:candidate_track_id', kwargs={'application_id': app.application_id}))
                     message = (
                         f"Dear {app.candidate.full_name},\n\n"
                         f"We are pleased to invite you for an interview for the {app.job.title} role.\n\n"
@@ -983,7 +985,7 @@ def candidate_detail(request, application_id):
                         f"- Location/Meeting Link: {scheduled_app.interview_location_link}\n\n"
                         f"Guidelines / Agenda:\n{scheduled_app.interview_notes or 'Please be ready with your portfolio and technical setup 5 minutes prior to the scheduled slot.'}\n\n"
                         f"You can track your real-time application status here:\n"
-                        f"{request.scheme}://{request.get_host()}/candidate/track/{app.application_id}/\n\n"
+                        f"{track_url}\n\n"
                         f"Best regards,\nHR & Talent Acquisition Team\nCompany HRMS"
                     )
                     send_mail(
@@ -1553,13 +1555,13 @@ def candidate_register(request, token=None):
                         title=f"New Candidate Application: {candidate.full_name}",
                         message=f"{candidate.full_name} applied for {selected_job.title}." + (f" via link '{link.title}'." if link else " via Universal Application Portal."),
                         notification_type='SYSTEM',
-                        target_url=f"/hr/candidates/{application.id}/"
+                        target_url=reverse('recruitment:candidate_detail', kwargs={'application_id': application.id})
                     )
 
                 # 8. Send Confirmation Email to Candidate
                 try:
                     subject = f"Application Received: {selected_job.title} - Company HRMS"
-                    track_url = f"{request.scheme}://{request.get_host()}/candidate/track/{application.application_id}/"
+                    track_url = request.build_absolute_uri(reverse('recruitment:candidate_track_id', kwargs={'application_id': application.application_id}))
                     email_body = (
                         f"Dear {candidate.full_name},\n\n"
                         f"Thank you for applying for the position of {selected_job.title} at Company HRMS.\n\n"
@@ -1790,13 +1792,13 @@ def candidate_fast_apply(request, job_id=None):
                         title=f"New Direct Fast-Apply Candidate: {candidate.full_name}",
                         message=f"{candidate.full_name} submitted a direct application for {selected_job.title} via LinkedIn/Website portal.",
                         notification_type='SYSTEM',
-                        target_url=f"/hr/candidates/{application.id}/"
+                        target_url=reverse('recruitment:candidate_detail', kwargs={'application_id': application.id})
                     )
 
                 # Send confirmation email
                 try:
                     subject = f"Application Received: {selected_job.title} - Company HRMS"
-                    track_url = f"{request.scheme}://{request.get_host()}/candidate/track/{application.application_id}/"
+                    track_url = request.build_absolute_uri(reverse('recruitment:candidate_track_id', kwargs={'application_id': application.application_id}))
                     email_body = (
                         f"Dear {candidate.full_name},\n\n"
                         f"Thank you for applying directly for the position of {selected_job.title} at Company HRMS via our LinkedIn & Website Fast-Apply Portal.\n\n"
