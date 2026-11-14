@@ -18,10 +18,10 @@
         position: relative;
         width: 100%;
         max-width: 440px;
-        min-height: 320px;
+        min-height: 350px;
         aspect-ratio: 1 / 1;
         margin: 0 auto;
-        background: #000000;
+        background: #0a0f1d;
         border-radius: 1rem;
         overflow: hidden;
         border: 2px solid #3b82f6;
@@ -31,14 +31,20 @@
     #qrReader {
         width: 100% !important;
         height: 100% !important;
+        min-height: 350px !important;
         position: relative;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
 
     #qrReader video {
         width: 100% !important;
         height: 100% !important;
+        min-height: 350px !important;
         object-fit: cover !important;
         border-radius: 0.85rem;
+        display: block !important;
     }
 
     #qrReader__scan_region {
@@ -248,15 +254,15 @@
                 </div>
 
                 <!-- CAMERA CONTROLS -->
-                <div class="d-flex align-items-center justify-content-between gap-2 mt-3">
-                    <div class="small text-muted" id="scannerStatus">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3">
+                    <div class="small text-muted flex-grow-1" id="scannerStatus">
                         <i class="bi bi-info-circle text-primary me-1"></i> Point your camera at the office dynamic QR screen.
                     </div>
                     <div class="d-flex align-items-center gap-1.5">
-                        <button class="btn btn-sm btn-outline-primary" id="btnStartCamera" title="Start / Restart Camera">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="btnStartCamera" title="Start / Restart Camera">
                             <i class="bi bi-play-circle"></i> Start
                         </button>
-                        <button class="btn btn-sm btn-outline-secondary" id="btnToggleCamera" title="Switch Camera (Front / Back)">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btnToggleCamera" title="Switch Camera (Front / Back)">
                             <i class="bi bi-arrow-repeat"></i> Flip
                         </button>
                     </div>
@@ -413,14 +419,12 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
-<!-- HTML5-QRCODE Local Static with CDN Fallback -->
+{% block extra_js %}
+<!-- HTML5-QRCODE Library: unpkg CDN + local static fallback -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="{% static 'js/html5-qrcode.min.js' %}"></script>
-<script>
-    if (typeof Html5Qrcode === 'undefined') {
-        document.write('<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"><\/script>');
-    }
-</script>
 
 <script>
     (function() {
@@ -431,11 +435,43 @@
         let currentLng = null;
         let isProcessingPunch = false;
         let html5QrCode = null;
-        let currentCameraFacing = "environment"; // Back camera by default
+        const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        let currentCameraFacing = isMobileDevice ? "environment" : "user";
         let isCameraRunning = false;
 
-        const resultModalEl = document.getElementById('resultModal');
-        const resultModal = new bootstrap.Modal(resultModalEl);
+        // Dynamic library resolver to guarantee Html5Qrcode is available
+        function ensureHtml5QrCode() {
+            return new Promise((resolve, reject) => {
+                if (typeof Html5Qrcode !== 'undefined') {
+                    return resolve(window.Html5Qrcode);
+                }
+                const s1 = document.createElement('script');
+                s1.src = 'https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js';
+                s1.onload = () => resolve(window.Html5Qrcode);
+                s1.onerror = () => {
+                    const s2 = document.createElement('script');
+                    s2.src = 'https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js';
+                    s2.onload = () => resolve(window.Html5Qrcode);
+                    s2.onerror = () => reject(new Error("Unable to load Html5Qrcode scanner library"));
+                    document.head.appendChild(s2);
+                };
+                document.head.appendChild(s1);
+            });
+        }
+
+        // Safe Bootstrap Modal retriever (never throws ReferenceError)
+        function getResultModal() {
+            const el = document.getElementById('resultModal');
+            if (!el) return null;
+            try {
+                if (window.bootstrap && bootstrap.Modal) {
+                    return bootstrap.Modal.getOrCreateInstance(el);
+                }
+            } catch (e) {
+                console.warn("Bootstrap modal warning:", e);
+            }
+            return null;
+        }
 
         // Web Audio Feedback (Success & Error tones)
         function playFeedbackSound(isSuccess) {
@@ -474,16 +510,16 @@
             const spinner = document.getElementById('gpsSpinner');
             const gpsAlert = document.getElementById('gpsPermAlert');
 
-            pill.className = 'gps-status-pill gps-waiting';
-            spinner.classList.remove('d-none');
-            icon.classList.add('d-none');
-            text.textContent = 'Acquiring GPS...';
+            if (pill) pill.className = 'gps-status-pill gps-waiting';
+            if (spinner) spinner.classList.remove('d-none');
+            if (icon) icon.classList.add('d-none');
+            if (text) text.textContent = 'Acquiring GPS...';
 
             if (!navigator.geolocation) {
-                pill.className = 'gps-status-pill gps-denied';
-                spinner.classList.add('d-none');
-                icon.classList.remove('d-none');
-                text.textContent = 'GPS Unsupported';
+                if (pill) pill.className = 'gps-status-pill gps-denied';
+                if (spinner) spinner.classList.add('d-none');
+                if (icon) icon.classList.remove('d-none');
+                if (text) text.textContent = 'GPS Unsupported';
                 if (gpsAlert) gpsAlert.classList.remove('d-none');
                 return;
             }
@@ -494,21 +530,21 @@
                     currentLng = pos.coords.longitude;
                     const acc = Math.round(pos.coords.accuracy);
 
-                    pill.className = 'gps-status-pill gps-ready';
-                    spinner.classList.add('d-none');
-                    icon.classList.remove('d-none');
-                    text.textContent = `GPS Ready (${acc}m accuracy)`;
+                    if (pill) pill.className = 'gps-status-pill gps-ready';
+                    if (spinner) spinner.classList.add('d-none');
+                    if (icon) icon.classList.remove('d-none');
+                    if (text) text.textContent = `GPS Ready (${acc}m accuracy)`;
                     if (gpsAlert) gpsAlert.classList.add('d-none');
                 },
                 (err) => {
                     console.warn("GPS error:", err);
-                    pill.className = 'gps-status-pill gps-denied';
-                    spinner.classList.add('d-none');
-                    icon.classList.remove('d-none');
+                    if (pill) pill.className = 'gps-status-pill gps-denied';
+                    if (spinner) spinner.classList.add('d-none');
+                    if (icon) icon.classList.remove('d-none');
                     if (err.code === 1) {
-                        text.textContent = 'GPS Denied (Turn on Location)';
+                        if (text) text.textContent = 'GPS Denied (Turn on Location)';
                     } else {
-                        text.textContent = 'GPS Signal Weak';
+                        if (text) text.textContent = 'GPS Signal Weak';
                     }
                     if (gpsAlert) gpsAlert.classList.remove('d-none');
                 },
@@ -516,8 +552,10 @@
             );
         }
 
-        document.getElementById('btnRefreshGps').addEventListener('click', acquireGpsLocation);
-        acquireGpsLocation();
+        const btnRefreshGps = document.getElementById('btnRefreshGps');
+        if (btnRefreshGps) {
+            btnRefreshGps.addEventListener('click', acquireGpsLocation);
+        }
 
         // Listen for Geolocation permission change in browser settings
         if (navigator.permissions && navigator.permissions.query) {
@@ -528,6 +566,30 @@
                     }
                 };
             }).catch(e => {});
+        }
+
+        // Helper: Extract token and site ID from QR data
+        function parseAndSubmitDecodedText(decodedText) {
+            if (isProcessingPunch) return;
+
+            let tokenStr = (decodedText || '').trim();
+            let siteId = document.getElementById('siteSelect') ? document.getElementById('siteSelect').value : null;
+
+            if (tokenStr.includes('token=')) {
+                try {
+                    const url = new URL(tokenStr, window.location.origin);
+                    tokenStr = url.searchParams.get('token') || tokenStr;
+                    const urlSite = url.searchParams.get('site');
+                    if (urlSite) siteId = urlSite;
+                } catch (e) {
+                    const match = tokenStr.match(/token=([^&]+)/);
+                    if (match) tokenStr = match[1];
+                }
+            } else if (tokenStr.startsWith('HRMS-QR:')) {
+                tokenStr = tokenStr.replace('HRMS-QR:', '');
+            }
+
+            submitQrPunch(tokenStr, siteId);
         }
 
         // 2. Submit QR Punch to Server
@@ -548,9 +610,12 @@
             isProcessingPunch = true;
 
             const scannerStatus = document.getElementById('scannerStatus');
-            scannerStatus.innerHTML = '<span class="spinner-border spinner-border-sm me-1 text-primary"></span> Validating dynamic QR & 200m GPS geofence...';
+            if (scannerStatus) {
+                scannerStatus.innerHTML = '<span class="spinner-border spinner-border-sm me-1 text-primary"></span> Validating dynamic QR & 200m GPS geofence...';
+            }
 
-            const punchMode = document.querySelector('input[name="punchMode"]:checked').value;
+            const punchModeEl = document.querySelector('input[name="punchMode"]:checked');
+            const punchMode = punchModeEl ? punchModeEl.value : 'AUTO';
 
             try {
                 const response = await fetch(punchApiUrl, {
@@ -599,41 +664,61 @@
 
             if (data.success) {
                 playFeedbackSound(true);
-                iconEl.innerHTML = '<i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>';
-                titleEl.textContent = data.action === 'PUNCH_IN' ? 'Successfully Punched In!' : 'Successfully Punched Out!';
-                titleEl.className = 'fw-bold mb-2 text-success';
-                msgEl.textContent = data.message;
+                if (iconEl) iconEl.innerHTML = '<i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>';
+                if (titleEl) {
+                    titleEl.textContent = data.action === 'PUNCH_IN' ? 'Successfully Punched In!' : 'Successfully Punched Out!';
+                    titleEl.className = 'fw-bold mb-2 text-success';
+                }
+                if (msgEl) msgEl.textContent = data.message;
 
-                document.getElementById('resAction').textContent = data.action === 'PUNCH_IN' ? 'Punch In (Office Arrival)' : 'Punch Out (Office Departure)';
-                document.getElementById('resTime').textContent = data.time || 'Just now';
-                document.getElementById('resSite').textContent = data.site_name || 'Office Site';
-                document.getElementById('resVerification').textContent = data.distance_meters !== undefined ? `${data.distance_meters}m from office (Within 200m)` : 'GPS Verified (Within 200m)';
+                const resAction = document.getElementById('resAction');
+                if (resAction) resAction.textContent = data.action === 'PUNCH_IN' ? 'Punch In (Office Arrival)' : 'Punch Out (Office Departure)';
+                
+                const resTime = document.getElementById('resTime');
+                if (resTime) resTime.textContent = data.time || 'Just now';
+
+                const resSite = document.getElementById('resSite');
+                if (resSite) resSite.textContent = data.site_name || 'Office Site';
+
+                const resVerif = document.getElementById('resVerification');
+                if (resVerif) resVerif.textContent = data.distance_meters !== undefined ? `${data.distance_meters}m from office (Within 200m)` : 'GPS Verified (Within 200m)';
 
                 if (data.action === 'PUNCH_OUT' && data.working_hours !== undefined) {
-                    hoursRow.style.display = 'flex';
-                    document.getElementById('resHours').textContent = `${data.working_hours} hours`;
+                    if (hoursRow) hoursRow.style.display = 'flex';
+                    const resHours = document.getElementById('resHours');
+                    if (resHours) resHours.textContent = `${data.working_hours} hours`;
                 } else {
-                    hoursRow.style.display = 'none';
+                    if (hoursRow) hoursRow.style.display = 'none';
                 }
 
-                detailsBox.style.display = 'block';
+                if (detailsBox) detailsBox.style.display = 'block';
                 if (btnViewAtt) btnViewAtt.style.display = 'block';
 
-                document.getElementById('btnResultDone').onclick = function() {
-                    window.location.reload();
-                };
+                const btnResultDone = document.getElementById('btnResultDone');
+                if (btnResultDone) {
+                    btnResultDone.onclick = function() {
+                        window.location.reload();
+                    };
+                }
             } else {
                 playFeedbackSound(false);
-                iconEl.innerHTML = '<i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 4rem;"></i>';
-                titleEl.textContent = data.title || 'Verification Failed';
-                titleEl.className = 'fw-bold mb-2 text-danger';
-                msgEl.textContent = data.message;
+                if (iconEl) iconEl.innerHTML = '<i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 4rem;"></i>';
+                if (titleEl) {
+                    titleEl.textContent = data.title || 'Verification Failed';
+                    titleEl.className = 'fw-bold mb-2 text-danger';
+                }
+                if (msgEl) msgEl.textContent = data.message;
 
-                detailsBox.style.display = 'none';
+                if (detailsBox) detailsBox.style.display = 'none';
                 if (btnViewAtt) btnViewAtt.style.display = 'none';
             }
 
-            resultModal.show();
+            const modal = getResultModal();
+            if (modal) {
+                modal.show();
+            } else {
+                alert(data.message || (data.success ? 'Punch recorded successfully!' : 'Verification failed'));
+            }
         }
 
         // 4. Initialize & Start Camera Scanner using html5-qrcode
@@ -644,7 +729,7 @@
             const scannerStatus = document.getElementById('scannerStatus');
 
             if (scannerStatus) {
-                scannerStatus.innerHTML = '<span class="spinner-border spinner-border-sm me-1 text-primary"></span> Starting camera...';
+                scannerStatus.innerHTML = '<span class="spinner-border spinner-border-sm me-1 text-primary"></span> Initializing camera...';
             }
 
             // Stop any running camera instance first & clear element
@@ -665,6 +750,7 @@
             }
 
             // Secure Context verification
+            const isSecure = window.isSecureContext || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 isCameraRunning = false;
                 if (overlay) overlay.classList.remove('d-none');
@@ -674,8 +760,8 @@
                     camAlert.innerHTML = `
                         <i class="bi bi-shield-lock-fill fs-5 flex-shrink-0 text-danger"></i>
                         <div class="small">
-                            <strong>Secure Origin (HTTPS) Required:</strong> Modern web browsers restrict in-browser camera access to secure connections (HTTPS or localhost).
-                            <div class="mt-1">Tip: You can scan the entrance kiosk QR directly using your phone's built-in Camera app, or access HRMS via HTTPS.</div>
+                            <strong>Secure Connection (HTTPS) Required:</strong> Direct in-browser camera streaming requires HTTPS on deployed websites.
+                            <div class="mt-1">Please ensure you are accessing HRMS via https:// and have granted camera permission.</div>
                         </div>`;
                 }
                 if (scannerStatus) {
@@ -684,29 +770,19 @@
                 return;
             }
 
-            html5QrCode = new Html5Qrcode("qrReader");
+            try {
+                await ensureHtml5QrCode();
+                html5QrCode = new Html5Qrcode("qrReader");
+            } catch (loadErr) {
+                console.error("Failed to initialize Html5Qrcode:", loadErr);
+                if (scannerStatus) {
+                    scannerStatus.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-octagon me-1"></i> Scanner library load issue. Please refresh page.</span>';
+                }
+                return;
+            }
 
             const qrCodeSuccessCallback = (decodedText, decodedResult) => {
-                if (isProcessingPunch) return;
-
-                let tokenStr = decodedText;
-                let siteId = document.getElementById('siteSelect') ? document.getElementById('siteSelect').value : null;
-
-                if (decodedText.includes('token=')) {
-                    try {
-                        const url = new URL(decodedText, window.location.origin);
-                        tokenStr = url.searchParams.get('token') || tokenStr;
-                        const urlSite = url.searchParams.get('site');
-                        if (urlSite) siteId = urlSite;
-                    } catch (e) {
-                        const match = decodedText.match(/token=([^&]+)/);
-                        if (match) tokenStr = match[1];
-                    }
-                } else if (decodedText.startsWith('HRMS-QR:')) {
-                    tokenStr = decodedText.replace('HRMS-QR:', '');
-                }
-
-                submitQrPunch(tokenStr, siteId);
+                parseAndSubmitDecodedText(decodedText);
             };
 
             const config = {
@@ -720,15 +796,63 @@
             };
 
             const requestedMode = facingMode || currentCameraFacing;
+            let cameraStarted = false;
 
-            // Attempt 1: Start with requested facingMode
+            // Attempt 1: Start with preferred facingMode
             try {
                 await html5QrCode.start(
                     { facingMode: requestedMode },
                     config,
                     qrCodeSuccessCallback
                 );
+                cameraStarted = true;
+            } catch (err1) {
+                console.warn("Primary camera start error:", err1);
+            }
 
+            // Attempt 2: Fallback to opposite facingMode (desktop webcam vs mobile back cam)
+            if (!cameraStarted) {
+                const altMode = requestedMode === "environment" ? "user" : "environment";
+                try {
+                    await html5QrCode.start(
+                        { facingMode: altMode },
+                        config,
+                        qrCodeSuccessCallback
+                    );
+                    currentCameraFacing = altMode;
+                    cameraStarted = true;
+                } catch (err2) {
+                    console.warn("Alternate camera start error:", err2);
+                }
+            }
+
+            // Attempt 3: Fallback to query available camera devices
+            if (!cameraStarted) {
+                try {
+                    const devices = await Html5Qrcode.getCameras().catch(() => []);
+                    if (devices && devices.length > 0) {
+                        let selectedCamId = devices[0].id;
+                        if (requestedMode === "environment") {
+                            const backCam = devices.find(d => {
+                                const lbl = (d.label || '').toLowerCase();
+                                return lbl.includes('back') || lbl.includes('rear') || lbl.includes('environment');
+                            });
+                            if (backCam) selectedCamId = backCam.id;
+                        }
+
+                        await html5QrCode.start(
+                            selectedCamId,
+                            config,
+                            qrCodeSuccessCallback
+                        );
+                        cameraStarted = true;
+                    }
+                } catch (err3) {
+                    console.warn("Camera fallback by device ID error:", err3);
+                }
+            }
+
+            if (cameraStarted) {
                 isCameraRunning = true;
                 if (overlay) overlay.classList.add('d-none');
                 if (camAlert) camAlert.classList.add('d-none');
@@ -737,43 +861,9 @@
                     scannerStatus.innerHTML = '<i class="bi bi-camera-fill text-success me-1"></i> Camera active &bull; Point at office dynamic QR screen.';
                 }
                 return;
-            } catch (err1) {
-                console.warn("Primary camera start error:", err1);
             }
 
-            // Attempt 2: Fallback to query available cameras
-            try {
-                const devices = await Html5Qrcode.getCameras();
-                if (devices && devices.length > 0) {
-                    let selectedCamId = devices[0].id;
-                    if (requestedMode === "environment") {
-                        const backCam = devices.find(d => {
-                            const lbl = (d.label || '').toLowerCase();
-                            return lbl.includes('back') || lbl.includes('rear') || lbl.includes('environment');
-                        });
-                        if (backCam) selectedCamId = backCam.id;
-                    }
-
-                    await html5QrCode.start(
-                        selectedCamId,
-                        config,
-                        qrCodeSuccessCallback
-                    );
-
-                    isCameraRunning = true;
-                    if (overlay) overlay.classList.add('d-none');
-                    if (camAlert) camAlert.classList.add('d-none');
-                    if (scannerLaser) scannerLaser.style.display = 'block';
-                    if (scannerStatus) {
-                        scannerStatus.innerHTML = '<i class="bi bi-camera-fill text-success me-1"></i> Camera active &bull; Point at office dynamic QR screen.';
-                    }
-                    return;
-                }
-            } catch (err2) {
-                console.warn("Camera fallback by device ID error:", err2);
-            }
-
-            // If permissions not yet granted or blocked:
+            // If permissions not yet granted or blocked by browser policy:
             isCameraRunning = false;
             if (overlay) overlay.classList.remove('d-none');
             if (scannerLaser) scannerLaser.style.display = 'none';
@@ -782,16 +872,16 @@
                 camAlert.innerHTML = `
                     <i class="bi bi-camera-video-off fs-5 flex-shrink-0 text-danger"></i>
                     <div class="small">
-                        <strong>Camera Permission Needed:</strong> Please click <b>"Allow"</b> when prompted by your browser, or tap the button below to turn camera permission ON.
-                        <div class="mt-1">In browser address bar: Click lock/tune icon &rarr; Permissions &rarr; Camera: <b>Allow</b>.</div>
+                        <strong>Camera Permission Needed:</strong> Tap <b>"Allow & Start Camera"</b> or allow camera access in browser site settings.
+                        <div class="mt-1">In browser address bar: Click the tune/lock icon &rarr; Permissions &rarr; Camera: <b>Allow</b>.</div>
                     </div>`;
             }
             if (scannerStatus) {
-                scannerStatus.innerHTML = '<span class="text-danger fw-semibold"><i class="bi bi-camera-video-off me-1"></i> Camera permission needed. Tap "Allow & Start Camera" below.</span>';
+                scannerStatus.innerHTML = '<span class="text-danger fw-semibold"><i class="bi bi-camera-video-off me-1"></i> Camera permission needed. Tap "Allow & Start Camera".</span>';
             }
         }
 
-        // 5. Explicit Permission Request via User Gesture (opens browser permission prompt)
+        // 5. Explicit Permission Request via User Gesture (prompts browser native dialog)
         async function requestCameraPermissionAndStart() {
             const overlay = document.getElementById('cameraStartOverlay');
             const camAlert = document.getElementById('cameraPermAlert');
@@ -814,7 +904,7 @@
                     return await navigator.mediaDevices.getUserMedia({ video: true });
                 });
 
-                // Permission is now ON! Stop probe stream and let html5QrCode bind cleanly
+                // Permission is granted! Stop probe stream and let html5QrCode bind cleanly
                 if (probeStream) {
                     probeStream.getTracks().forEach(t => t.stop());
                 }
@@ -831,12 +921,12 @@
                     camAlert.innerHTML = `
                         <i class="bi bi-camera-video-off fs-5 flex-shrink-0 text-danger"></i>
                         <div class="small">
-                            <strong>Camera Permission Denied:</strong> Camera was blocked. To enable it:
+                            <strong>Camera Permission Denied:</strong> To enable:
                             <div class="mt-1">Click the lock icon in your browser address bar &rarr; Permissions &rarr; <b>Turn Camera ON</b>, then tap Start Camera.</div>
                         </div>`;
                 }
                 if (scannerStatus) {
-                    scannerStatus.innerHTML = '<span class="text-danger fw-semibold"><i class="bi bi-camera-video-off me-1"></i> Permission denied. Turn on camera permission in browser settings.</span>';
+                    scannerStatus.innerHTML = '<span class="text-danger fw-semibold"><i class="bi bi-camera-video-off me-1"></i> Camera blocked. Turn on camera in browser settings.</span>';
                 }
             }
         }
@@ -844,7 +934,6 @@
         // 6. Monitor Camera Permission State in Browser Settings
         if (navigator.permissions && navigator.permissions.query) {
             navigator.permissions.query({ name: 'camera' }).then((permStatus) => {
-                // If user toggles Camera to "ON" in browser site settings, open camera immediately
                 permStatus.onchange = () => {
                     if (permStatus.state === 'granted') {
                         const overlay = document.getElementById('cameraStartOverlay');
@@ -855,7 +944,7 @@
             }).catch(e => {});
         }
 
-        // 7. Controls: Start, Request Perm, Flip, Manual
+        // 7. Controls: Start, Request Perm, Flip
         const btnRequestPerm = document.getElementById('btnRequestCameraPerm');
         if (btnRequestPerm) {
             btnRequestPerm.addEventListener('click', requestCameraPermissionAndStart);
@@ -866,26 +955,40 @@
             btnStartCam.addEventListener('click', requestCameraPermissionAndStart);
         }
 
-        document.getElementById('btnToggleCamera').addEventListener('click', () => {
-            currentCameraFacing = currentCameraFacing === "environment" ? "user" : "environment";
-            startCameraScanner(currentCameraFacing);
-        });
+        const btnToggleCam = document.getElementById('btnToggleCamera');
+        if (btnToggleCam) {
+            btnToggleCam.addEventListener('click', () => {
+                currentCameraFacing = currentCameraFacing === "environment" ? "user" : "environment";
+                startCameraScanner(currentCameraFacing);
+            });
+        }
 
         // 8. Manual Token Input Handler
-        document.getElementById('btnSubmitManualToken').addEventListener('click', () => {
-            const tokenInput = document.getElementById('manualTokenInput').value.trim();
-            const siteId = document.getElementById('siteSelect') ? document.getElementById('siteSelect').value : null;
-            if (!tokenInput) {
-                alert("Please enter a valid QR token.");
-                return;
-            }
-            submitQrPunch(tokenInput, siteId);
-        });
+        const btnSubmitManual = document.getElementById('btnSubmitManualToken');
+        if (btnSubmitManual) {
+            btnSubmitManual.addEventListener('click', () => {
+                const tokenInputEl = document.getElementById('manualTokenInput');
+                const tokenInput = tokenInputEl ? tokenInputEl.value.trim() : '';
+                const siteId = document.getElementById('siteSelect') ? document.getElementById('siteSelect').value : null;
+                if (!tokenInput) {
+                    alert("Please enter a valid QR token.");
+                    return;
+                }
+                submitQrPunch(tokenInput, siteId);
+            });
+        }
 
-        // Auto-start Scanner on page load
-        window.addEventListener('DOMContentLoaded', () => {
+        // 9. Application Bootstrap
+        function initScannerApp() {
+            acquireGpsLocation();
             startCameraScanner(currentCameraFacing);
-        });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initScannerApp);
+        } else {
+            initScannerApp();
+        }
     })();
 </script>
 {% endblock %}
