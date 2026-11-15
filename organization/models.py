@@ -113,7 +113,7 @@ class Site(models.Model):
     def is_gps_verified(self, user_lat, user_lon):
         """Returns tuple (is_verified: bool, distance_meters: float|None, message: str)"""
         if self.latitude is None or self.longitude is None:
-            return True, 0.0, "Office GPS coordinates not yet configured (Allowed by policy)"
+            return False, None, f"Office site '{self.name}' GPS coordinates are not configured. GPS verification failed."
         dist = self.calculate_gps_distance(user_lat, user_lon)
         if dist is None:
             return False, None, "GPS coordinates missing or unreadable from device"

@@ -388,12 +388,12 @@
                     <!-- GPS Coordinates -->
                     <div class="row g-2 mb-2">
                         <div class="col-6">
-                            <label class="form-label small fw-semibold">GPS Latitude:</label>
-                            <input type="text" class="form-control form-control-sm font-monospace" id="modalLat" placeholder="e.g. 12.971598">
+                            <label class="form-label small fw-semibold">GPS Latitude: <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-sm font-monospace" id="modalLat" placeholder="e.g. 12.971598" required>
                         </div>
                         <div class="col-6">
-                            <label class="form-label small fw-semibold">GPS Longitude:</label>
-                            <input type="text" class="form-control form-control-sm font-monospace" id="modalLng" placeholder="e.g. 77.594562">
+                            <label class="form-label small fw-semibold">GPS Longitude: <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-sm font-monospace" id="modalLng" placeholder="e.g. 77.594562" required>
                         </div>
                     </div>
 
@@ -699,9 +699,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const siteId = document.getElementById('modalSiteId').value;
             const url = locationConfigUrlTemplate.replace('/0/', `/${siteId}/`);
 
+            const latVal = (document.getElementById('modalLat').value || '').trim();
+            const lngVal = (document.getElementById('modalLng').value || '').trim();
+
+            if (!latVal || !lngVal) {
+                alert("GPS Coordinates (Latitude and Longitude) are mandatory for every office site.");
+                return;
+            }
+
             const payload = {
-                latitude: (document.getElementById('modalLat').value || '').trim() || null,
-                longitude: (document.getElementById('modalLng').value || '').trim() || null,
+                latitude: latVal,
+                longitude: lngVal,
                 geofence_radius_meters: parseInt(document.getElementById('modalRadius').value) || 200,
                 qr_rotation_seconds: parseInt(document.getElementById('modalRotation').value) || 4
             };

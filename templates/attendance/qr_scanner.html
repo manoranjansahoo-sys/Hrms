@@ -607,15 +607,9 @@
         async function submitQrPunch(tokenStr, siteId) {
             if (isProcessingPunch) return;
 
-            // Enforce device GPS location check before submitting
+            // Trigger background GPS check if not already acquired
             if (!currentLat || !currentLng) {
                 acquireGpsLocation();
-                handlePunchResponse({
-                    success: false,
-                    title: 'Location (GPS) Required',
-                    message: 'Please turn on location (GPS) and camera on your device to punch in. Office verification requires you to be within 200 meters of the office.'
-                });
-                return;
             }
 
             isProcessingPunch = true;
@@ -639,8 +633,8 @@
                     body: JSON.stringify({
                         token: tokenStr,
                         site_id: siteId,
-                        latitude: currentLat,
-                        longitude: currentLng,
+                        latitude: currentLat || null,
+                        longitude: currentLng || null,
                         punch_mode: punchMode
                     })
                 });

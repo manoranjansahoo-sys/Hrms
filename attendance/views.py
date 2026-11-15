@@ -90,6 +90,20 @@ def punch_in_view(request):
         att.is_late = True
 
     att.save()
+    if emp.site:
+        try:
+            QRCodeScanLog.objects.create(
+                site=emp.site,
+                employee=emp,
+                punch_mode='IN',
+                status='SUCCESS',
+                token_str='WEB_PORTAL_CHECKIN',
+                client_ip=client_ip,
+                token_age_seconds=0.0,
+                verification_details='Web Verified'
+            )
+        except Exception:
+            pass
     log_audit_trail('CREATE', 'Attendance', f"Punch-in recorded for {emp.emp_id} at {now.strftime('%H:%M:%S')}", user=request.user, ip_address=client_ip)
     messages.success(request, f"Punch In successful at {timezone.localtime(now).strftime('%I:%M %p')}! Have a productive day.")
     return redirect(request.META.get('HTTP_REFERER', 'portal:smart_dashboard'))
@@ -136,6 +150,20 @@ def punch_out_view(request):
     att.punch_out_ip = client_ip
     att.calculate_hours()
     att.save()
+    if emp.site:
+        try:
+            QRCodeScanLog.objects.create(
+                site=emp.site,
+                employee=emp,
+                punch_mode='OUT',
+                status='SUCCESS',
+                token_str='WEB_PORTAL_CHECKOUT',
+                client_ip=client_ip,
+                token_age_seconds=0.0,
+                verification_details='Web Verified'
+            )
+        except Exception:
+            pass
 
     log_audit_trail('UPDATE', 'Attendance', f"Punch-out recorded for {emp.emp_id}. Total hours: {att.working_hours}", user=request.user, ip_address=client_ip)
     messages.success(request, f"Punch Out successful at {timezone.localtime(now).strftime('%I:%M %p')}. Total working hours today: {att.working_hours} hrs.")
@@ -829,15 +857,31 @@ def qr_dashboard_view(request):
     if date_filter:
         try:
             filter_d = datetime.strptime(date_filter, '%Y-%m-%d').date()
-            logs_qs = logs_qs.filter(created_at__date=filter_d)
         except ValueError:
-            pass
+            filter_d = today
 
-    day_logs = QRCodeScanLog.objects.filter(created_at__date=filter_d)
+    start_dt = timezone.make_aware(datetime.combine(filter_d, time.min))
+    end_dt = timezone.make_aware(datetime.combine(filter_d, time.max))
+
+    logs_qs = logs_qs.filter(created_at__range=(start_dt, end_dt))
+
+    day_logs = QRCodeScanLog.objects.filter(created_at__range=(start_dt, end_dt))
+    if site_filter:
+        day_logs = day_logs.filter(site_id=site_filter)
+
     total_scans = day_logs.count()
     successful_punches = day_logs.filter(status='SUCCESS').count()
-    expired_scans = day_logs.filter(status='EXPIRED_QR').count()
-    location_failures = day_logs.filter(status='LOCATION_FAILED').count()
+    expired_scans = day_logs.filter(status__in=['EXPIRED_QR', 'SLOT_ALREADY_USED']).count()
+    location_failures = day_logs.filter(status__in=['LOCATION_FAILED', 'GPS_REQUIRED']).count()
+
+    # Also account for direct attendance punches recorded for this date
+    att_qs = Attendance.objects.filter(date=filter_d, punch_in__isnull=False)
+    if site_filter:
+        att_qs = att_qs.filter(employee__site_id=site_filter)
+    att_count = att_qs.count()
+
+    successful_punches = max(successful_punches, att_count)
+    total_scans = max(total_scans, successful_punches + expired_scans + location_failures)
 
     paginator = Paginator(logs_qs, 25)
     page_number = request.GET.get('page')
@@ -902,15 +946,14 @@ def site_location_config_api(request, site_id):
         rotation = data.get('qr_rotation_seconds')
         enabled = data.get('is_qr_attendance_enabled')
 
-        if lat not in (None, '', 'null'):
-            site.latitude = Decimal(str(lat))
-        else:
-            site.latitude = None
+        if lat in (None, '', 'null') or lng in (None, '', 'null'):
+            return JsonResponse({
+                'success': False,
+                'message': 'GPS Coordinates (Latitude and Longitude) are mandatory for every office site.'
+            }, status=400)
 
-        if lng not in (None, '', 'null'):
-            site.longitude = Decimal(str(lng))
-        else:
-            site.longitude = None
+        site.latitude = Decimal(str(lat))
+        site.longitude = Decimal(str(lng))
 
         if radius:
             site.geofence_radius_meters = int(radius)

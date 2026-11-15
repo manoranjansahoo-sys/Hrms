@@ -337,18 +337,16 @@ def location_create(request):
         lng = request.POST.get('longitude', '').strip()
         radius = request.POST.get('geofence_radius_meters', '').strip()
 
-        latitude = None
-        longitude = None
-        if lat:
-            try:
-                latitude = Decimal(lat)
-            except Exception:
-                latitude = None
-        if lng:
-            try:
-                longitude = Decimal(lng)
-            except Exception:
-                longitude = None
+        if not lat or not lng:
+            messages.error(request, "GPS Coordinates (Latitude and Longitude) are mandatory for every office site.")
+            return redirect('/master-data/?tab=locations')
+
+        try:
+            latitude = Decimal(lat)
+            longitude = Decimal(lng)
+        except Exception:
+            messages.error(request, "Invalid GPS coordinates entered. Please enter valid decimal latitude and longitude.")
+            return redirect('/master-data/?tab=locations')
 
         geofence_radius = 200
         if radius:
@@ -414,21 +412,16 @@ def location_edit(request, site_id):
         site.site_manager = manager
         site.is_active = is_active
 
-        if lat:
-            try:
-                site.latitude = Decimal(lat)
-            except Exception:
-                pass
-        else:
-            site.latitude = None
+        if not lat or not lng:
+            messages.error(request, "GPS Coordinates (Latitude and Longitude) are mandatory for every office site.")
+            return redirect('/master-data/?tab=locations')
 
-        if lng:
-            try:
-                site.longitude = Decimal(lng)
-            except Exception:
-                pass
-        else:
-            site.longitude = None
+        try:
+            site.latitude = Decimal(lat)
+            site.longitude = Decimal(lng)
+        except Exception:
+            messages.error(request, "Invalid GPS coordinates entered. Please enter valid decimal latitude and longitude.")
+            return redirect('/master-data/?tab=locations')
 
         if radius:
             try:

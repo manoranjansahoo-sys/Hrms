@@ -80,11 +80,12 @@ def generate_dynamic_qr_payload(site, request=None):
     }
 
 
-def validate_dynamic_qr_token(site, token_str, max_age_slots=0):
+def validate_dynamic_qr_token(site, token_str, max_age_slots=1):
     """
     Validates the dynamic QR token.
     Must belong to the site, have a valid cryptographic HMAC signature,
-    and have been generated in the current 4-second slot. Previous QR codes expire immediately.
+    and have been generated in the active rotation slot (with max 1-slot/2s network transit buffer).
+    Older QR codes expire immediately.
     
     Returns: (is_valid: bool, status_code: str, error_message: str|None, token_age_sec: float)
     """
@@ -113,7 +114,7 @@ def validate_dynamic_qr_token(site, token_str, max_age_slots=0):
     if not hmac.compare_digest(sig, expected_sig):
         return False, "INVALID_TOKEN", "QR Code security signature verification failed (Tampered or forged QR).", None
 
-    # Time slot verification (4-second dynamic rotation)
+    # Time slot verification (Dynamic rotation)
     rotation = site.qr_rotation_seconds or 4
     now_ts = time.time()
     current_slot = int(now_ts // rotation)
@@ -123,8 +124,9 @@ def validate_dynamic_qr_token(site, token_str, max_age_slots=0):
     if slot_diff < 0:
         return False, "INVALID_TOKEN", "Invalid time synchronization (Token is from the future).", token_age_sec
 
-    # Strictly expires after rotation window (4 seconds, with max 0.5s network transit buffer)
-    if slot_diff > max_age_slots or token_age_sec > (rotation + 0.5):
+    # Max allowed age is rotation + 2.0 seconds network transit window (e.g. 5-6s window)
+    max_transit_buffer = 2.0
+    if slot_diff > max_age_slots or token_age_sec > (rotation + max_transit_buffer):
         return False, "EXPIRED_QR", (
             f"QR Code Expired ({round(token_age_sec, 1)}s old, exceeds {rotation}s dynamic limit). "
             "Please scan the live QR code currently visible on the office kiosk screen."
@@ -229,6 +231,28 @@ def process_qr_attendance_punch(request, user, site, token_str, latitude=None, l
 
     # Step 2: Location Security Verification (Strictly GPS Geofenced 200m)
     radius = site.geofence_radius_meters or 200
+
+    # Every site must have GPS coordinates configured
+    if site.latitude is None or site.longitude is None:
+        QRCodeScanLog.objects.create(
+            site=site,
+            employee=emp,
+            punch_mode=punch_mode,
+            status='LOCATION_FAILED',
+            token_str=token_str,
+            slot_index=slot_num,
+            client_ip=client_ip,
+            latitude=latitude,
+            longitude=longitude,
+            token_age_seconds=token_age_sec,
+            error_message=f"Office site '{site.name}' does not have GPS coordinates configured."
+        )
+        return {
+            'success': False,
+            'status': 'LOCATION_FAILED',
+            'title': 'Office GPS Not Configured',
+            'message': f"Office site '{site.name}' GPS coordinates are not configured in system settings. Admin must configure site GPS location.",
+        }
 
     if latitude is None or longitude is None:
         QRCodeScanLog.objects.create(
