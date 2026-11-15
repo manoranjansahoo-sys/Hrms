@@ -158,18 +158,25 @@ class EmployeeOnboardingAndLoginTests(TestCase):
         login_success = self.client.login(username='rahul_verma', password='CustomSecret2026!')
         self.assertTrue(login_success)
 
-        # Access employee directory
+        # Workforce directory is restricted: regular employee gets redirected
         dir_res = self.client.get(reverse('employees:employee_list'))
-        self.assertEqual(dir_res.status_code, 200)
-        self.assertContains(dir_res, 'Rahul Verma')
-        self.assertContains(dir_res, profile.emp_id)
+        self.assertEqual(dir_res.status_code, 302)
+        self.assertEqual(dir_res.url, reverse('portal:smart_dashboard'))
 
-        # Access employee detail (profile)
+        # Access own employee detail (profile)
         profile_res = self.client.get(reverse('employees:employee_detail', kwargs={'emp_id': profile.emp_id}))
         self.assertEqual(profile_res.status_code, 200)
         self.assertContains(profile_res, 'Rahul Verma')
 
         # Logout
+        self.client.logout()
+
+        # HR can access directory and see the newly created employee
+        self.client.force_login(self.hr_user)
+        hr_dir_res = self.client.get(reverse('employees:employee_list'))
+        self.assertEqual(hr_dir_res.status_code, 200)
+        self.assertContains(hr_dir_res, 'Rahul Verma')
+        self.assertContains(hr_dir_res, profile.emp_id)
         self.client.logout()
 
         # 2. Login as the new employee using EMAIL and password via login post
@@ -404,4 +411,17 @@ class EmployeeDirectoryListAndPaginationTests(TestCase):
         self.assertEqual(res_sort.status_code, 200)
         first_emp = res_sort.context['page_obj'][0]
         self.assertEqual(first_emp.user.first_name, 'User01')
+
+    def test_directory_restricted_for_regular_employees(self):
+        """Verify Company Workforce Directory is strictly hidden/blocked for regular employees."""
+        emp_user = CustomUser.objects.create_user(
+            username='emp_regular_test',
+            email='empregular@test.com',
+            password='Password@123',
+            role=CustomUser.Role.EMPLOYEE
+        )
+        self.client.force_login(emp_user)
+        res = self.client.get(reverse('employees:employee_list'))
+        self.assertEqual(res.status_code, 302)
+        self.assertEqual(res.url, reverse('portal:smart_dashboard'))
 

@@ -22,5 +22,6 @@ urlpatterns = [
     path('qr-punch/api/', views.qr_punch_api, name='qr_punch_api'),
     path('qr-dashboard/', views.qr_dashboard_view, name='qr_dashboard'),
     path('sites/<int:site_id>/location-config/', views.site_location_config_api, name='site_location_config_api'),
+    path('sites/<int:site_id>/location-config', views.site_location_config_api),
 ]
 

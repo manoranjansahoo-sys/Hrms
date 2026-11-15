@@ -233,3 +233,77 @@ class LeaveManagementQueueTests(TestCase):
         self.assertContains(response, '<span>Half Day</span>')
         self.assertNotContains(response, '0.5 Days')
         self.assertNotContains(response, '0.5 Day')
+
+    def test_hr_leave_request_requires_admin_approval_and_blocks_self_approval(self):
+        """Verify that when HR applies for leave, only Admin (Head) can approve, and self-approval is forbidden."""
+        head_user = CustomUser.objects.create_user(
+            username='head_test', email='head@test.com', password='password123',
+            role=CustomUser.Role.HEAD, first_name='Head', last_name='Admin'
+        )
+        hr_emp = EmployeeProfile.objects.create(
+            user=self.hr_user,
+            emp_id='HR001',
+            site=self.site,
+            department=self.dept,
+            designation=self.desig,
+            joining_date=date(2025, 1, 1),
+            employment_type='FULL_TIME'
+        )
+        LeaveBalance.objects.update_or_create(
+            employee=hr_emp,
+            leave_type=self.leave_type_pl,
+            year=2026,
+            defaults={
+                'allocated_days': Decimal('18.0'),
+                'used_days': Decimal('0.0'),
+                'pending_days': Decimal('0.0')
+            }
+        )
+
+        # 1. HR applies for leave
+        self.client.force_login(self.hr_user)
+        res_apply = self.client.post(reverse('leave_management:apply_leave'), {
+            'leave_type': self.leave_type_pl.id,
+            'start_date': '2026-11-20',
+            'end_date': '2026-11-20',
+            'reason': 'Personal leave for HR'
+        })
+        self.assertRedirects(res_apply, reverse('leave_management:my_leaves'))
+        hr_leave = LeaveRequest.objects.filter(employee=hr_emp).first()
+        self.assertIsNotNone(hr_leave)
+        self.assertEqual(hr_leave.status, LeaveRequest.Status.PENDING_HR)
+        self.assertTrue(hr_leave.is_hr_applicant)
+
+        # 2. HR attempts to self-approve: MUST BE BLOCKED
+        res_self = self.client.post(
+            reverse('leave_management:process_leave', kwargs={'request_id': hr_leave.id}),
+            {'action': 'APPROVE', 'remarks': 'Self approve'}
+        )
+        self.assertRedirects(res_self, reverse('leave_management:admin_queue'))
+        hr_leave.refresh_from_db()
+        self.assertEqual(hr_leave.status, LeaveRequest.Status.PENDING_HR)
+
+        # 3. Another HR user attempts to approve: MUST BE BLOCKED
+        other_hr = CustomUser.objects.create_user(
+            username='other_hr', email='otherhr@test.com', password='password123',
+            role=CustomUser.Role.HR, first_name='Other', last_name='HR'
+        )
+        self.client.force_login(other_hr)
+        res_other_hr = self.client.post(
+            reverse('leave_management:process_leave', kwargs={'request_id': hr_leave.id}),
+            {'action': 'APPROVE', 'remarks': 'Other HR approve'}
+        )
+        self.assertRedirects(res_other_hr, reverse('leave_management:admin_queue'))
+        hr_leave.refresh_from_db()
+        self.assertEqual(hr_leave.status, LeaveRequest.Status.PENDING_HR)
+
+        # 4. Head / Super Admin approves: MUST SUCCEED
+        self.client.force_login(head_user)
+        res_admin = self.client.post(
+            reverse('leave_management:process_leave', kwargs={'request_id': hr_leave.id}),
+            {'action': 'APPROVE', 'remarks': 'Approved by Head Admin'}
+        )
+        self.assertRedirects(res_admin, reverse('leave_management:admin_queue'))
+        hr_leave.refresh_from_db()
+        self.assertEqual(hr_leave.status, LeaveRequest.Status.APPROVED)
+        self.assertEqual(hr_leave.hr_action_by, head_user)

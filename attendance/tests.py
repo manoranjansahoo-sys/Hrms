@@ -3,7 +3,7 @@ from unittest.mock import patch
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.utils import timezone
-from datetime import date, time, datetime
+from datetime import date, time, datetime, timedelta
 from accounts.models import CustomUser
 from employees.models import EmployeeProfile
 from organization.models import Department, Designation, Site
@@ -274,7 +274,13 @@ class AttendanceCorrectionQueueTests(TestCase):
         res3 = self.client.get(reverse('attendance:punch_in'), follow=True)
         self.assertContains(res3, "You are already punched in today")
 
-        # 4. Punch out succeeds
+        # 4. Immediate punch out is blocked by 10-minute cooldown
+        res_cooldown = self.client.get(reverse('attendance:punch_out'), follow=True)
+        self.assertContains(res_cooldown, "minimum 10-minute gap is required")
+
+        # Advance punch_in by 15 minutes -> Punch out succeeds
+        att.punch_in = timezone.now() - timedelta(minutes=15)
+        att.save()
         res4 = self.client.get(reverse('attendance:punch_out'), follow=True)
         self.assertContains(res4, "Punch Out successful")
         att.refresh_from_db()
@@ -311,6 +317,9 @@ class AttendanceCorrectionQueueTests(TestCase):
         self.assertContains(res_dash2, 'Present')
 
         # After punch out: Topbar shows Done and dashboard shows Punched Out
+        att = Attendance.objects.get(employee=self.emp_profile, date=today)
+        att.punch_in = timezone.now() - timedelta(minutes=15)
+        att.save()
         self.client.get(reverse('attendance:punch_out'))
         res_dash3 = self.client.get(reverse('portal:dashboard_employee'))
         self.assertEqual(res_dash3.status_code, 200)
@@ -606,9 +615,30 @@ class DynamicQRAttendanceTests(TestCase):
             self.assertFalse(response_dup.json()['success'])
             self.assertEqual(response_dup.json()['status'], 'ALREADY_PUNCHED_IN')
 
-            # 3. Execute Punch Out via API (advance slot to t0 + 8.2s)
+            # 3. Attempt Punch Out within 10 minutes (t0 + 8.2s) -> blocked by minimum 10-minute cooldown
             mock_time.return_value = 1700000008.2
             payload3 = generate_dynamic_qr_payload(self.site)
+
+            response_cooldown = self.client.post(
+                reverse('attendance:qr_punch_api'),
+                data=json.dumps({
+                    'site_id': self.site.id,
+                    'token': payload3['token'],
+                    'latitude': 12.971600,
+                    'longitude': 77.594560,
+                    'punch_mode': 'AUTO',
+                }),
+                content_type='application/json'
+            )
+            self.assertEqual(response_cooldown.status_code, 200)
+            res_cooldown = response_cooldown.json()
+            self.assertFalse(res_cooldown['success'])
+            self.assertEqual(res_cooldown['status'], 'MIN_GAP_VIOLATION')
+            self.assertIn('10-Minute Cooldown Active', res_cooldown['title'])
+
+            # 4. Advance punch_in time past 10 minutes -> Punch Out succeeds
+            att.punch_in = timezone.now() - timedelta(minutes=15)
+            att.save()
 
             response_out = self.client.post(
                 reverse('attendance:qr_punch_api'),
@@ -630,8 +660,9 @@ class DynamicQRAttendanceTests(TestCase):
             att.refresh_from_db()
             self.assertIsNotNone(att.punch_out)
             self.assertGreaterEqual(att.working_hours, 0)
+            self.assertIn(att.status, ['HALF_DAY', 'PRESENT'])
 
-            # 4. Day is complete - subsequent punch reports ALREADY_COMPLETED (advance to t0 + 12.3s)
+            # 5. Day is complete - subsequent punch reports ALREADY_COMPLETED (advance to t0 + 12.3s)
             mock_time.return_value = 1700000012.3
             payload4 = generate_dynamic_qr_payload(self.site)
 
@@ -668,6 +699,22 @@ class DynamicQRAttendanceTests(TestCase):
         self.assertTrue(data['success'])
         self.assertIn('qr_image_base64', data['payload'])
         self.assertEqual(data['payload']['rotation_seconds'], 4)
+
+        # Token API with matching physical GPS coordinates returns 200
+        res_gps_ok = self.client.get(
+            reverse('attendance:qr_kiosk_token_api', kwargs={'site_id': self.site.id}),
+            {'lat': 12.971600, 'lng': 77.594560}
+        )
+        self.assertEqual(res_gps_ok.status_code, 200)
+        self.assertTrue(res_gps_ok.json()['success'])
+
+        # Token API with out-of-bounds GPS coordinates returns 403 LOCATION_FAILED
+        res_gps_fail = self.client.get(
+            reverse('attendance:qr_kiosk_token_api', kwargs={'site_id': self.site.id}),
+            {'lat': 18.520400, 'lng': 73.856700}
+        )
+        self.assertEqual(res_gps_fail.status_code, 403)
+        self.assertEqual(res_gps_fail.json()['status'], 'LOCATION_FAILED')
 
     def test_qr_scanner_view(self):
         self.client.force_login(self.user)

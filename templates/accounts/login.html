@@ -117,8 +117,11 @@
 
         .login-panel .login-logo {
             width: 180px;
+            max-height: 44px;
+            object-fit: contain;
             background: var(--hrms-text);
-            border-radius: 4px;
+            border-radius: 6px;
+            padding: 4px 8px;
         }
 
         .login-panel h1 {
@@ -217,7 +220,13 @@
         {% endfor %}
     </div>
     <main class="login-panel hrms-card" aria-labelledby="login-heading">
-        <img class="login-logo img-fluid d-block" src="{% static 'img/bronzegate-login.png' %}" width="1080" height="200" alt="Bronzegate">
+        <div class="login-logo-wrapper mb-2">
+            <img class="login-logo img-fluid d-block" 
+                 src="{{ company_logo_b64 }}" 
+                 onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 220 48\'%3E%3Crect width=\'220\' height=\'48\' rx=\'8\' fill=\'%230f172a\'/%3E%3Cg transform=\'translate(14, 10)\'%3E%3Crect width=\'28\' height=\'28\' rx=\'6\' fill=\'%232563eb\'/%3E%3Cpath d=\'M8 7 h9 a4.5 4.5 0 0 1 0 9 h-9 z\' fill=\'%23ffffff\' fill-opacity=\'0.9\'/%3E%3Cpath d=\'M8 13 h10 a4.5 4.5 0 0 1 0 9 h-10 z\' fill=\'%23ffffff\'/%3E%3C/g%3E%3Ctext x=\'54\' y=\'30\' font-family=\'Inter, -apple-system, sans-serif\' font-size=\'17\' font-weight=\'800\' fill=\'%23ffffff\' letter-spacing=\'0.5\'%3EBRONZEGATE%3C/text%3E%3C/svg%3E';" 
+                 width="180" 
+                 alt="Bronzegate">
+        </div>
         <h1 id="login-heading" class="fw-bold">Sign in</h1>
 
         {% if messages %}

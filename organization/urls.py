@@ -28,6 +28,7 @@ urlpatterns = [
 
     # Leave Policies (Sick Leave & Paid Leave Quotas)
     path('leaves/<int:leave_type_id>/update/', views.leave_policy_update, name='leave_policy_update'),
+    path('leaves/<int:leave_type_id>/toggle-frequency/', views.leave_frequency_toggle, name='leave_frequency_toggle'),
     path('leaves/create/', views.leave_type_create, name='leave_type_create'),
 
     # Access Delegation (Admin Only)

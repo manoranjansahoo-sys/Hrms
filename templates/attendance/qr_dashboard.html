@@ -509,6 +509,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const configModalEl = document.getElementById('siteConfigModal');
     const shareModalEl = document.getElementById('shareKioskModal');
     const csrfToken = "{{ csrf_token }}";
+    const locationConfigUrlTemplate = "{% url 'attendance:site_location_config_api' site_id=0 %}";
 
     function getModalInstance(el) {
         if (!el || typeof bootstrap === 'undefined') return null;
@@ -697,7 +698,7 @@ document.addEventListener('DOMContentLoaded', function() {
         siteConfigForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             const siteId = document.getElementById('modalSiteId').value;
-            const url = `/attendance/sites/${siteId}/location-config/`;
+            const url = locationConfigUrlTemplate.replace('/0/', `/${siteId}/`);
 
             const payload = {
                 latitude: (document.getElementById('modalLat').value || '').trim() || null,

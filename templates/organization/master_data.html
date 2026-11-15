@@ -183,10 +183,56 @@
 
     /* SIMULATOR CARD */
     .simulator-card {
-        background: linear-gradient(145deg, #1E293B 0%, #0F172A 100%);
+        background: linear-gradient(145deg, #0F172A 0%, #1E293B 100%);
         color: #FFFFFF;
         border-radius: 16px;
         border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* SHADOW UTILITY */
+    .shadow-xs {
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+
+    /* LEAVE POLICY CARDS */
+    .leave-policy-card {
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 16px;
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        overflow: hidden;
+    }
+    .leave-policy-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 14px 28px -6px rgba(0, 0, 0, 0.09), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+        border-color: #CBD5E1;
+    }
+    .leave-policy-card.card-sl {
+        border-top: 5px solid #E11D48 !important;
+    }
+    .leave-policy-card.card-pl {
+        border-top: 5px solid #059669 !important;
+    }
+    .leave-policy-card.card-custom {
+        border-top: 5px solid #4F46E5 !important;
+    }
+
+    /* MODE SELECTOR RADIO CARDS IN MODAL */
+    .mode-select-card {
+        border: 2px solid #E2E8F0;
+        border-radius: 12px;
+        padding: 0.85rem 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: #FFFFFF;
+    }
+    .mode-select-card:hover {
+        border-color: #93C5FD;
+        background: #F8FAFC;
+    }
+    .mode-select-card.active {
+        border-color: #2563EB;
+        background: #EFF6FF;
     }
 </style>
 {% endblock %}
@@ -240,21 +286,21 @@
     <!-- INTERACTIVE KPI TILES (Clickable quick switchers to tabs) -->
     <div class="row g-3 mb-4">
         <!-- 1. Holidays KPI -->
-        <div class="col-xl-3 col-sm-6">
-            <div class="kpi-tile {% if active_tab == 'holidays' %}active-kpi{% endif %}" onclick="switchMasterTab('holidays')">
+        <div class="col-xl col-md-4 col-sm-6">
+            <div class="kpi-tile {% if active_tab == 'holidays' %}active-kpi{% endif %}" onclick="switchMasterTab('holidays')" style="border-top: 3px solid #EF4444;">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <div class="text-muted small fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">Annual Holidays</div>
+                        <div class="text-muted small fw-bold text-uppercase" style="font-size: 0.70rem; letter-spacing: 0.5px;">Annual Holidays</div>
                         <h3 class="fw-bold text-dark my-1">{{ holidays_count }} <span class="fs-6 fw-normal text-muted">Days</span></h3>
-                        <div class="small text-warning-emphasis fw-semibold">
+                        <div class="small text-warning-emphasis fw-semibold" style="font-size: 0.74rem;">
                             <i class="bi bi-sun-fill me-1 text-warning"></i> + 52 Sundays Off
                         </div>
                     </div>
-                    <div class="kpi-icon-wrap bg-danger-subtle text-danger">
+                    <div class="kpi-icon-wrap bg-danger-subtle text-danger shadow-xs">
                         <i class="bi bi-calendar-heart-fill"></i>
                     </div>
                 </div>
-                <div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-center small text-muted">
+                <div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-center small text-muted" style="font-size: 0.74rem;">
                     <span>Year {{ selected_year }}</span>
                     <span class="text-primary fw-semibold">Manage <i class="bi bi-chevron-right small"></i></span>
                 </div>
@@ -262,22 +308,22 @@
         </div>
 
         <!-- 2. Timings KPI -->
-        <div class="col-xl-3 col-sm-6">
-            <div class="kpi-tile {% if active_tab == 'timings' %}active-kpi{% endif %}" onclick="switchMasterTab('timings')">
+        <div class="col-xl col-md-4 col-sm-6">
+            <div class="kpi-tile {% if active_tab == 'timings' %}active-kpi{% endif %}" onclick="switchMasterTab('timings')" style="border-top: 3px solid #F59E0B;">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <div class="text-muted small fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">Operating Hours</div>
-                        <h3 class="fw-bold text-dark my-1">6 <span class="fs-6 fw-normal text-muted">Days/Week</span></h3>
-                        <div class="small text-muted fw-semibold">
+                        <div class="text-muted small fw-bold text-uppercase" style="font-size: 0.70rem; letter-spacing: 0.5px;">Operating Hours</div>
+                        <h3 class="fw-bold text-dark my-1">6 <span class="fs-6 fw-normal text-muted">Days/Wk</span></h3>
+                        <div class="small text-muted fw-semibold" style="font-size: 0.74rem;">
                             <i class="bi bi-clock-fill me-1 text-primary"></i> 09:30 AM - 06:30 PM
                         </div>
                     </div>
-                    <div class="kpi-icon-wrap bg-warning-subtle text-warning">
+                    <div class="kpi-icon-wrap bg-warning-subtle text-warning shadow-xs">
                         <i class="bi bi-clock-history"></i>
                     </div>
                 </div>
-                <div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-center small text-muted">
-                    <span>Mon–Sat Schedule</span>
+                <div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-center small text-muted" style="font-size: 0.74rem;">
+                    <span>Mon–Sat Shift</span>
                     <span class="text-primary fw-semibold">Configure <i class="bi bi-chevron-right small"></i></span>
                 </div>
             </div>
@@ -285,21 +331,21 @@
 
         <!-- 3. Locations KPI -->
         <div class="col-xl col-md-4 col-sm-6">
-            <div class="kpi-tile {% if active_tab == 'locations' %}active-kpi{% endif %}" onclick="switchMasterTab('locations')">
+            <div class="kpi-tile {% if active_tab == 'locations' %}active-kpi{% endif %}" onclick="switchMasterTab('locations')" style="border-top: 3px solid #06B6D4;">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <div class="text-muted small fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">Company Locations</div>
+                        <div class="text-muted small fw-bold text-uppercase" style="font-size: 0.70rem; letter-spacing: 0.5px;">Company Locations</div>
                         <h3 class="fw-bold text-dark my-1">{{ locations_data|length }} <span class="fs-6 fw-normal text-muted">Sites</span></h3>
-                        <div class="small text-success fw-semibold">
-                            <i class="bi bi-building-check me-1"></i> Active Across India
+                        <div class="small text-success fw-semibold" style="font-size: 0.74rem;">
+                            <i class="bi bi-geo-alt-fill me-1"></i> Active Across India
                         </div>
                     </div>
-                    <div class="kpi-icon-wrap bg-info-subtle text-info">
-                        <i class="bi bi-geo-alt-fill"></i>
+                    <div class="kpi-icon-wrap bg-info-subtle text-info shadow-xs">
+                        <i class="bi bi-building-check"></i>
                     </div>
                 </div>
-                <div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-center small text-muted">
-                    <span>Work Sites & Mappings</span>
+                <div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-center small text-muted" style="font-size: 0.74rem;">
+                    <span>Work Sites & GPS</span>
                     <span class="text-primary fw-semibold">View Sites <i class="bi bi-chevron-right small"></i></span>
                 </div>
             </div>
@@ -307,21 +353,21 @@
 
         <!-- 3B. Departments KPI -->
         <div class="col-xl col-md-4 col-sm-6">
-            <div class="kpi-tile {% if active_tab == 'departments' %}active-kpi{% endif %}" onclick="switchMasterTab('departments')">
+            <div class="kpi-tile {% if active_tab == 'departments' %}active-kpi{% endif %}" onclick="switchMasterTab('departments')" style="border-top: 3px solid #6366F1;">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <div class="text-muted small fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">Departments</div>
+                        <div class="text-muted small fw-bold text-uppercase" style="font-size: 0.70rem; letter-spacing: 0.5px;">Departments</div>
                         <h3 class="fw-bold text-dark my-1">{{ departments_count }} <span class="fs-6 fw-normal text-muted">Units</span></h3>
-                        <div class="small text-primary fw-semibold">
+                        <div class="small text-primary fw-semibold" style="font-size: 0.74rem;">
                             <i class="bi bi-diagram-3-fill me-1"></i> Active Teams
                         </div>
                     </div>
-                    <div class="kpi-icon-wrap bg-primary-subtle text-primary">
+                    <div class="kpi-icon-wrap bg-primary-subtle text-primary shadow-xs">
                         <i class="bi bi-diagram-3-fill"></i>
                     </div>
                 </div>
-                <div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-center small text-muted">
-                    <span>Organizational Units</span>
+                <div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-center small text-muted" style="font-size: 0.74rem;">
+                    <span>Org Structure</span>
                     <span class="text-primary fw-semibold">Manage <i class="bi bi-chevron-right small"></i></span>
                 </div>
             </div>
@@ -329,22 +375,22 @@
 
         <!-- 4. Leave Policies KPI -->
         <div class="col-xl col-md-4 col-sm-6">
-            <div class="kpi-tile {% if active_tab == 'leaves' %}active-kpi{% endif %}" onclick="switchMasterTab('leaves')">
+            <div class="kpi-tile {% if active_tab == 'leaves' %}active-kpi{% endif %}" onclick="switchMasterTab('leaves')" style="border-top: 3px solid #10B981;">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <div class="text-muted small fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">Leave Policies</div>
-                        <h3 class="fw-bold text-dark my-1">{{ leave_data|length }} <span class="fs-6 fw-normal text-muted">Types</span></h3>
-                        <div class="small text-muted fw-semibold">
-                            <i class="bi bi-card-checklist me-1 text-success"></i> Sick & Paid Leave
+                        <div class="text-muted small fw-bold text-uppercase" style="font-size: 0.70rem; letter-spacing: 0.5px;">Leave Policies</div>
+                        <h3 class="fw-bold text-dark my-1">{{ leave_data|length }} <span class="fs-6 fw-normal text-muted">Plans</span></h3>
+                        <div class="small text-success-emphasis fw-semibold" style="font-size: 0.74rem;">
+                            <i class="bi bi-sliders me-1"></i> SL & PL (Monthly/Annual)
                         </div>
                     </div>
-                    <div class="kpi-icon-wrap bg-success-subtle text-success">
-                        <i class="bi bi-clipboard-pulse"></i>
+                    <div class="kpi-icon-wrap bg-success-subtle text-success shadow-xs">
+                        <i class="bi bi-card-checklist"></i>
                     </div>
                 </div>
-                <div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-center small text-muted">
-                    <span>Annual & Monthly Quotas</span>
-                    <span class="text-primary fw-semibold">Update <i class="bi bi-chevron-right small"></i></span>
+                <div class="mt-2 pt-2 border-top d-flex justify-content-between align-items-center small text-muted" style="font-size: 0.74rem;">
+                    <span>Monthly & Annual Modes</span>
+                    <span class="text-primary fw-semibold">Configure <i class="bi bi-chevron-right small"></i></span>
                 </div>
             </div>
         </div>
@@ -1359,7 +1405,33 @@
         <!-- TAB 4: LEAVE POLICIES (SICK LEAVE & PAID LEAVE)                   -->
         <!-- ================================================================= -->
         <div class="tab-pane fade {% if active_tab == 'leaves' %}show active{% endif %}" id="pills-leaves" role="tabpanel">
-            
+
+            <!-- SECTION HEADER BANNER -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%); border: 1px solid #E2E8F0 !important;">
+                <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="badge bg-primary text-white px-2.5 py-1 rounded-pill small">
+                                <i class="bi bi-shield-check me-1"></i> Governance Standard
+                            </span>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1 rounded-pill small">
+                                <i class="bi bi-calendar2-range me-1"></i> Year {{ selected_year }}
+                            </span>
+                            <h4 class="fw-bold text-dark mb-0">Leave Entitlements & Allocation Architecture</h4>
+                        </div>
+                        <p class="text-muted small mb-0">
+                            Configure company-wide policies for <strong>Sick Leave (SL)</strong> and <strong>Paid Leave (PL)</strong>.
+                            Switch seamlessly between <strong>Annual Upfront Allocation</strong> (Jan 1) and <strong>Monthly Progressive Accrual</strong> with automatic balance synchronization.
+                        </p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-primary btn-sm shadow-sm px-3" data-bs-toggle="modal" data-bs-target="#addLeaveTypeModal">
+                            <i class="bi bi-plus-lg me-1"></i> Add Custom Leave Category
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div class="row g-4 mb-4">
                 <!-- LEAVE POLICY CARDS -->
                 <div class="col-lg-8">
@@ -1367,121 +1439,324 @@
                         {% for item in leave_data %}
                             {% with lt=item.leave_type %}
                                 <div class="col-md-6">
-                                    <div class="card border-0 shadow-sm h-100" style="border-radius: 14px; border-top: 4px solid {% if lt.code == 'SL' %}#EF4444{% elif lt.code == 'PL' %}#10B981{% else %}#3B82F6{% endif %} !important;">
-                                        <div class="p-3.5 bg-white border-bottom d-flex justify-content-between align-items-center">
-                                            <div class="d-flex align-items-center gap-2">
-                                                <span class="badge font-monospace px-2.5 py-1.5 fs-6 {% if lt.code == 'SL' %}bg-danger text-white{% elif lt.code == 'PL' %}bg-success text-white{% else %}bg-primary text-white{% endif %}">
-                                                    {{ lt.code }}
-                                                </span>
-                                                <div>
-                                                    <h5 class="fw-bold text-dark mb-0">{{ lt.name }}</h5>
-                                                    <small class="text-muted">{{ lt.description|default:"Standard leave entitlement" }}</small>
+                                    <div class="leave-policy-card card-{{ lt.code|lower|default:'custom' }} shadow-sm h-100 d-flex flex-column justify-content-between">
+                                        <div>
+                                            <!-- CARD HEADER -->
+                                            <div class="p-3.5 bg-white border-bottom d-flex justify-content-between align-items-center">
+                                                <div class="d-flex align-items-center gap-2.5">
+                                                    <div class="rounded-3 d-flex align-items-center justify-content-center text-white fw-bold shadow-xs" style="width: 44px; height: 44px; {% if lt.code == 'SL' %}background: linear-gradient(135deg, #EF4444, #B91C1C);{% elif lt.code == 'PL' %}background: linear-gradient(135deg, #10B981, #047857);{% else %}background: linear-gradient(135deg, #6366F1, #4338CA);{% endif %} font-size: 1.15rem;">
+                                                        {% if lt.code == 'SL' %}
+                                                            <i class="bi bi-heart-pulse-fill"></i>
+                                                        {% elif lt.code == 'PL' %}
+                                                            <i class="bi bi-calendar2-check-fill"></i>
+                                                        {% else %}
+                                                            <i class="bi bi-bookmark-star-fill"></i>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div>
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <h5 class="fw-bold text-dark mb-0">{{ lt.name }}</h5>
+                                                            <span class="badge font-monospace {% if lt.code == 'SL' %}bg-danger-subtle text-danger border border-danger-subtle{% elif lt.code == 'PL' %}bg-success-subtle text-success border border-success-subtle{% else %}bg-primary-subtle text-primary border border-primary-subtle{% endif %}">
+                                                                {{ lt.code }}
+                                                            </span>
+                                                        </div>
+                                                        <small class="text-muted d-block" style="font-size: 0.76rem;">
+                                                            {% if lt.code == 'SL' %}
+                                                                Medical & Health Welfare • Regulated
+                                                            {% elif lt.code == 'PL' %}
+                                                                Privilege & Annual Vacation • Earned
+                                                            {% else %}
+                                                                {{ lt.description|default:"Company Standard Policy"|truncatechars:35 }}
+                                                            {% endif %}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm shadow-xs" data-bs-toggle="modal" data-bs-target="#editLeaveModal{{ lt.id }}" title="Configure full policy parameters">
+                                                    <i class="bi bi-sliders me-1"></i> Configure
+                                                </button>
+                                            </div>
+
+                                            <div class="p-3.5 bg-white">
+                                                <!-- ACTIVE ACCRUAL CADENCE BANNER (CORE REQUIREMENT) -->
+                                                <div class="p-3 rounded-3 mb-3 border {% if lt.allocation_frequency == 'MONTHLY' %}bg-success-subtle border-success-subtle{% else %}bg-primary-subtle border-primary-subtle{% endif %}">
+                                                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <span class="badge {% if lt.allocation_frequency == 'MONTHLY' %}bg-success text-white{% else %}bg-primary text-white{% endif %} rounded-pill px-2.5 py-1 shadow-xs small">
+                                                                <i class="bi bi-circle-fill me-1" style="font-size: 0.45rem; vertical-align: middle;"></i>
+                                                                {% if lt.allocation_frequency == 'MONTHLY' %}Monthly Accrual Active{% else %}Annual Upfront Active{% endif %}
+                                                            </span>
+                                                        </div>
+
+                                                        <!-- 1-CLICK TOGGLE FORM -->
+                                                        <form method="POST" action="{% url 'organization:leave_frequency_toggle' lt.id %}" class="m-0">
+                                                            {% csrf_token %}
+                                                            {% if lt.allocation_frequency == 'MONTHLY' %}
+                                                                <input type="hidden" name="target_mode" value="ANNUALLY">
+                                                                <button type="submit" class="btn btn-xs btn-outline-primary bg-white shadow-xs fw-semibold px-2 py-1" style="font-size: 0.74rem;" title="Switch policy to full annual quota granted on Jan 1st">
+                                                                    <i class="bi bi-arrow-repeat text-primary me-1"></i> Switch to Annually
+                                                                </button>
+                                                            {% else %}
+                                                                <input type="hidden" name="target_mode" value="MONTHLY">
+                                                                <button type="submit" class="btn btn-xs btn-outline-success bg-white shadow-xs fw-semibold px-2 py-1" style="font-size: 0.74rem;" title="Switch policy to monthly progressive accrual credited every month">
+                                                                    <i class="bi bi-arrow-repeat text-success me-1"></i> Switch to Monthly
+                                                                </button>
+                                                            {% endif %}
+                                                        </form>
+                                                    </div>
+
+                                                    <div class="small {% if lt.allocation_frequency == 'MONTHLY' %}text-success-emphasis{% else %}text-primary-emphasis{% endif %}" style="font-size: 0.78rem;">
+                                                        {% if lt.allocation_frequency == 'MONTHLY' %}
+                                                            <i class="bi bi-info-circle-fill me-1"></i> <strong>Monthly Policy:</strong> Employees accrue <strong>{{ lt.effective_monthly_rate }} days</strong> on the 1st of each month (total <strong>{{ lt.days_per_year }} days/year</strong>).
+                                                        {% else %}
+                                                            <i class="bi bi-info-circle-fill me-1"></i> <strong>Annual Policy:</strong> Full quota of <strong>{{ lt.days_per_year }} days</strong> is credited upfront on Jan 1st (equiv. <strong>{{ lt.effective_monthly_rate }} days/month</strong>).
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+
+                                                <!-- DUAL METRIC BOXES -->
+                                                <div class="row g-2.5 mb-3 text-center">
+                                                    <!-- Monthly Rate -->
+                                                    <div class="col-6">
+                                                        <div class="p-3 rounded-3 {% if lt.allocation_frequency == 'MONTHLY' %}bg-success-subtle border border-success{% else %}bg-light border{% endif %} position-relative h-100 d-flex flex-column justify-content-center">
+                                                            {% if lt.allocation_frequency == 'MONTHLY' %}
+                                                                <span class="position-absolute top-0 start-50 translate-middle badge rounded-pill bg-success text-white shadow-xs" style="font-size: 0.62rem; letter-spacing: 0.5px;">
+                                                                    <i class="bi bi-check-lg"></i> ACTIVE PLAN
+                                                                </span>
+                                                            {% endif %}
+                                                            <div class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.67rem; letter-spacing: 0.5px;">Monthly Accrual</div>
+                                                            <div class="fs-3 fw-bold {% if lt.allocation_frequency == 'MONTHLY' %}text-success{% else %}text-dark{% endif %}">
+                                                                {{ lt.effective_monthly_rate }}
+                                                                <small class="fs-6 fw-normal text-muted">days/mo</small>
+                                                            </div>
+                                                            <div class="text-muted" style="font-size: 0.70rem;">
+                                                                {% if lt.allocation_frequency == 'MONTHLY' %}Governing rate{% else %}Monthly equivalent{% endif %}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Annual Total -->
+                                                    <div class="col-6">
+                                                        <div class="p-3 rounded-3 {% if lt.allocation_frequency == 'ANNUALLY' %}bg-primary-subtle border border-primary{% else %}bg-light border{% endif %} position-relative h-100 d-flex flex-column justify-content-center">
+                                                            {% if lt.allocation_frequency == 'ANNUALLY' %}
+                                                                <span class="position-absolute top-0 start-50 translate-middle badge rounded-pill bg-primary text-white shadow-xs" style="font-size: 0.62rem; letter-spacing: 0.5px;">
+                                                                    <i class="bi bi-check-lg"></i> ACTIVE PLAN
+                                                                </span>
+                                                            {% endif %}
+                                                            <div class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.67rem; letter-spacing: 0.5px;">Annual Total</div>
+                                                            <div class="fs-3 fw-bold {% if lt.allocation_frequency == 'ANNUALLY' %}text-primary{% else %}text-dark{% endif %}">
+                                                                {{ lt.days_per_year }}
+                                                                <small class="fs-6 fw-normal text-muted">days/yr</small>
+                                                            </div>
+                                                            <div class="text-muted" style="font-size: 0.70rem;">
+                                                                {% if lt.allocation_frequency == 'ANNUALLY' %}Governing quota{% else %}Annual total (12 mo){% endif %}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- 12-MONTH ACCRUAL VISUALIZATION MINI TIMELINE -->
+                                                <div class="p-2.5 rounded-3 bg-light border mb-3">
+                                                    <div class="d-flex justify-content-between align-items-center mb-1.5">
+                                                        <span class="text-muted fw-bold" style="font-size: 0.68rem; letter-spacing: 0.5px;">ANNUAL DISTRIBUTION TIMELINE</span>
+                                                        <span class="badge bg-white text-secondary border small" style="font-size: 0.66rem;">
+                                                            {% if lt.allocation_frequency == 'MONTHLY' %}
+                                                                +{{ lt.effective_monthly_rate }}d each month
+                                                            {% else %}
+                                                                100% Upfront (Jan 1)
+                                                            {% endif %}
+                                                        </span>
+                                                    </div>
+                                                    <div class="d-flex gap-1" style="height: 8px;">
+                                                        {% for m in "123456789012"|make_list %}
+                                                            <div class="flex-grow-1 rounded-pill {% if lt.allocation_frequency == 'MONTHLY' %}bg-success{% else %}bg-primary{% endif %}" title="Month {{ forloop.counter }}: {% if lt.allocation_frequency == 'MONTHLY' %}+{{ lt.effective_monthly_rate }} days{% else %}Active{% endif %}" style="opacity: {% if lt.allocation_frequency == 'MONTHLY' %}{{ forloop.counter|add:2 }}0%{% else %}1{% endif %};"></div>
+                                                        {% endfor %}
+                                                    </div>
+                                                    <div class="d-flex justify-content-between text-muted mt-1" style="font-size: 0.64rem;">
+                                                        <span>Jan</span>
+                                                        <span>Mar</span>
+                                                        <span>Jun</span>
+                                                        <span>Sep</span>
+                                                        <span>Dec</span>
+                                                    </div>
+                                                </div>
+
+                                                <!-- POLICY ATTRIBUTES -->
+                                                <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center pt-2 border-top small text-muted">
+                                                    <div class="d-flex flex-wrap gap-1.5">
+                                                        {% if lt.is_paid %}
+                                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                                                <i class="bi bi-cash-stack me-1"></i> 100% Paid
+                                                            </span>
+                                                        {% else %}
+                                                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1">
+                                                                Unpaid
+                                                            </span>
+                                                        {% endif %}
+                                                        {% if lt.requires_attachment %}
+                                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1" title="Medical Certificate required for claims">
+                                                                <i class="bi bi-file-earmark-medical me-1"></i> Proof Required
+                                                            </span>
+                                                        {% else %}
+                                                            <span class="badge bg-light text-secondary border px-2 py-1">
+                                                                No Proof Required
+                                                            </span>
+                                                        {% endif %}
+                                                    </div>
+                                                    <span class="fw-semibold text-dark" style="font-size: 0.76rem;">
+                                                        <i class="bi bi-people-fill text-primary me-1"></i><strong>{{ item.active_balances_count }}</strong> Enrolled
+                                                    </span>
                                                 </div>
                                             </div>
-                                            <button type="button" class="btn btn-outline-primary btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#editLeaveModal{{ lt.id }}">
-                                                <i class="bi bi-pencil-square me-1"></i> Edit Quota
-                                            </button>
                                         </div>
-                                        <div class="p-4 bg-white">
-                                            <div class="row g-3 text-center mb-3">
-                                                <div class="col-6">
-                                                    <div class="p-3 rounded-3 bg-light border">
-                                                        <div class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.70rem;">Annual Quota</div>
-                                                        <div class="fs-4 fw-bold text-primary">{{ lt.days_per_year }} <small class="text-muted fs-6">days/yr</small></div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-6">
-                                                    <div class="p-3 rounded-3 bg-light border">
-                                                        <div class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.70rem;">Monthly Accrual</div>
-                                                        <div class="fs-4 fw-bold text-success">{{ item.monthly_equiv }} <small class="text-muted fs-6">days/mo</small></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center small text-muted">
-                                                <div class="d-flex gap-2">
-                                                    {% if lt.is_paid %}
-                                                        <span class="badge bg-success-subtle text-success border border-success-subtle">Paid Leave</span>
-                                                    {% else %}
-                                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Unpaid</span>
-                                                    {% endif %}
-                                                    {% if lt.requires_attachment %}
-                                                        <span class="badge bg-warning-subtle text-dark border border-warning-subtle">Medical Certificate</span>
-                                                    {% endif %}
-                                                </div>
-                                                <span>Active Balances: <strong class="text-dark">{{ item.active_balances_count }}</strong></span>
-                                            </div>
+
+                                        <!-- CARD ACTION FOOTER -->
+                                        <div class="p-3 bg-light border-top d-flex justify-content-between align-items-center">
+                                            <span class="text-muted small" style="font-size: 0.72rem;">
+                                                Year {{ selected_year }} Active
+                                            </span>
+                                            <button type="button" class="btn btn-sm btn-primary px-3 shadow-xs" data-bs-toggle="modal" data-bs-target="#editLeaveModal{{ lt.id }}">
+                                                <i class="bi bi-pencil-square me-1"></i> Edit Quota & Policy
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- EDIT LEAVE QUOTA MODAL -->
                                 <div class="modal fade" id="editLeaveModal{{ lt.id }}" tabindex="-1" aria-hidden="true" style="text-align: left;">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content border-0 shadow">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title fw-bold">Edit Quota: {{ lt.name }} ({{ lt.code }})</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                                            <div class="modal-header text-white" style="background: linear-gradient(135deg, {% if lt.code == 'SL' %}#EF4444, #991B1B{% elif lt.code == 'PL' %}#10B981, #065F46{% else %}#3B82F6, #1E40AF{% endif %});">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="badge bg-white text-dark font-monospace px-2 py-1">{{ lt.code }}</span>
+                                                    <h5 class="modal-title fw-bold mb-0 text-white">Configure {{ lt.name }} Policy</h5>
+                                                </div>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                             </div>
                                             <form method="POST" action="{% url 'organization:leave_policy_update' lt.id %}">
                                                 {% csrf_token %}
-                                                <div class="modal-body">
-                                                    <div class="mb-3">
-                                                        <label class="form-label small fw-bold">Allocation Mode (Annual or Monthly)</label>
-                                                        <div class="d-flex gap-3">
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="allocation_mode" id="modeAnnual{{ lt.id }}" value="annual" checked onchange="toggleLeaveCalc({{ lt.id }}, 'annual')">
-                                                                <label class="form-check-label small" for="modeAnnual{{ lt.id }}">Annual Quota (days/year)</label>
+                                                <div class="modal-body p-4">
+
+                                                    <!-- ALLOCATION MODE SELECTOR: MONTHLY VS ANNUALLY -->
+                                                    <label class="form-label small fw-bold text-uppercase text-muted mb-2" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                                                        Allocation Mode (Admin Policy Choice) <span class="text-danger">*</span>
+                                                    </label>
+                                                    <div class="row g-2 mb-3">
+                                                        <!-- Option 1: Monthly Accrual -->
+                                                        <div class="col-6">
+                                                            <div class="mode-select-card h-100 {% if lt.allocation_frequency == 'MONTHLY' %}active{% endif %}" id="modeCardMonthly{{ lt.id }}" onclick="selectAllocationMode({{ lt.id }}, 'monthly')">
+                                                                <div class="form-check p-0 m-0">
+                                                                    <input class="form-check-input visually-hidden" type="radio" name="allocation_mode" id="modeMonthly{{ lt.id }}" value="monthly" {% if lt.allocation_frequency == 'MONTHLY' %}checked{% endif %}>
+                                                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                                                        <i class="bi bi-arrow-repeat text-success fs-5"></i>
+                                                                        <span class="fw-bold small text-dark">Monthly Accrual</span>
+                                                                    </div>
+                                                                    <p class="text-muted small mb-0" style="font-size: 0.72rem;">
+                                                                        Accrued each calendar month progressively.
+                                                                    </p>
+                                                                </div>
                                                             </div>
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="radio" name="allocation_mode" id="modeMonthly{{ lt.id }}" value="monthly" onchange="toggleLeaveCalc({{ lt.id }}, 'monthly')">
-                                                                <label class="form-check-label small" for="modeMonthly{{ lt.id }}">Monthly Accrual (days/month)</label>
+                                                        </div>
+
+                                                        <!-- Option 2: Annual Upfront -->
+                                                        <div class="col-6">
+                                                            <div class="mode-select-card h-100 {% if lt.allocation_frequency == 'ANNUALLY' %}active{% endif %}" id="modeCardAnnual{{ lt.id }}" onclick="selectAllocationMode({{ lt.id }}, 'annual')">
+                                                                <div class="form-check p-0 m-0">
+                                                                    <input class="form-check-input visually-hidden" type="radio" name="allocation_mode" id="modeAnnual{{ lt.id }}" value="annual" {% if lt.allocation_frequency == 'ANNUALLY' %}checked{% endif %}>
+                                                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                                                        <i class="bi bi-calendar-check text-primary fs-5"></i>
+                                                                        <span class="fw-bold small text-dark">Annual Upfront</span>
+                                                                    </div>
+                                                                    <p class="text-muted small mb-0" style="font-size: 0.72rem;">
+                                                                        Full quota granted upfront on January 1st.
+                                                                    </p>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
 
+                                                    <!-- SYNCHRONIZED INPUTS -->
                                                     <div class="row g-3 mb-3">
                                                         <div class="col-6">
-                                                            <label class="form-label small fw-bold">Annual Days (Total/Year)</label>
-                                                            <input type="number" step="0.5" name="days_per_year" id="annualInput{{ lt.id }}" class="form-control" value="{{ lt.days_per_year }}" oninput="syncFromAnnual({{ lt.id }})" required>
+                                                            <label class="form-label small fw-bold text-dark">
+                                                                Monthly Accrual Rate (Days/Mo)
+                                                            </label>
+                                                            <div class="input-group">
+                                                                <input type="number" step="0.05" min="0.1" max="10.0" name="monthly_rate" id="monthlyInput{{ lt.id }}" class="form-control fw-bold" value="{{ lt.effective_monthly_rate }}" oninput="syncFromMonthly({{ lt.id }})" required>
+                                                                <span class="input-group-text small bg-light">d/mo</span>
+                                                            </div>
+                                                            <div class="form-text small text-muted" style="font-size: 0.70rem;">
+                                                                Credited on 1st of each month.
+                                                            </div>
                                                         </div>
                                                         <div class="col-6">
-                                                            <label class="form-label small fw-bold">Monthly Rate (Days/Month)</label>
-                                                            <input type="number" step="0.01" name="monthly_rate" id="monthlyInput{{ lt.id }}" class="form-control" value="{{ item.monthly_equiv }}" oninput="syncFromMonthly({{ lt.id }})">
+                                                            <label class="form-label small fw-bold text-dark">
+                                                                Annual Quota (Total Days/Yr)
+                                                            </label>
+                                                            <div class="input-group">
+                                                                <input type="number" step="0.5" min="1.0" max="90.0" name="days_per_year" id="annualInput{{ lt.id }}" class="form-control fw-bold" value="{{ lt.days_per_year }}" oninput="syncFromAnnual({{ lt.id }})" required>
+                                                                <span class="input-group-text small bg-light">d/yr</span>
+                                                            </div>
+                                                            <div class="form-text small text-muted" style="font-size: 0.70rem;">
+                                                                Full 12-month total.
+                                                            </div>
                                                         </div>
                                                     </div>
 
+                                                    <!-- LIVE DYNAMIC POLICY EXPLAINER ALERT -->
+                                                    <div class="p-3 rounded-3 mb-3 border bg-light" id="policyExplainBox{{ lt.id }}">
+                                                        <div class="d-flex align-items-center gap-2 small text-dark fw-semibold mb-1">
+                                                            <i class="bi bi-lightbulb-fill text-warning"></i>
+                                                            <span id="policyExplainTitle{{ lt.id }}">
+                                                                {% if lt.allocation_frequency == 'MONTHLY' %}Monthly Accrual Policy Summary{% else %}Annual Upfront Policy Summary{% endif %}
+                                                            </span>
+                                                        </div>
+                                                        <div class="small text-muted" id="policyExplainText{{ lt.id }}" style="font-size: 0.74rem;">
+                                                            {% if lt.allocation_frequency == 'MONTHLY' %}
+                                                                Employees will automatically accrue <strong>{{ lt.effective_monthly_rate }} days</strong> on the 1st of each calendar month, totaling <strong>{{ lt.days_per_year }} days/year</strong>.
+                                                            {% else %}
+                                                                Employees receive the entire <strong>{{ lt.days_per_year }} days</strong> upfront on January 1st (equivalent to <strong>{{ lt.effective_monthly_rate }} days/month</strong>).
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- DESCRIPTION -->
                                                     <div class="mb-3">
-                                                        <label class="form-label small fw-bold">Policy Description</label>
-                                                        <textarea name="description" class="form-control" rows="2">{{ lt.description }}</textarea>
+                                                        <label class="form-label small fw-bold text-dark">Policy Guidelines & Description</label>
+                                                        <textarea name="description" class="form-control" rows="2" placeholder="e.g. Mandatory statutory sick leave with medical practitioner certificate">{{ lt.description }}</textarea>
                                                     </div>
 
-                                                    <div class="d-flex gap-4 mb-3 p-2.5 bg-light rounded-3">
-                                                        <div class="form-check">
+                                                    <!-- POLICY FLAGS -->
+                                                    <div class="p-3 bg-light rounded-3 mb-3 border d-flex flex-wrap gap-4">
+                                                        <div class="form-check form-switch m-0">
                                                             <input class="form-check-input" type="checkbox" name="is_paid" id="paid{{ lt.id }}" {% if lt.is_paid %}checked{% endif %}>
-                                                            <label class="form-check-label small fw-semibold" for="paid{{ lt.id }}">Is Paid Leave</label>
+                                                            <label class="form-check-label small fw-bold text-dark" for="paid{{ lt.id }}">100% Paid Leave</label>
                                                         </div>
-                                                        <div class="form-check">
+                                                        <div class="form-check form-switch m-0">
                                                             <input class="form-check-input" type="checkbox" name="requires_attachment" id="att{{ lt.id }}" {% if lt.requires_attachment %}checked{% endif %}>
-                                                            <label class="form-check-label small fw-semibold" for="att{{ lt.id }}">Requires Medical Proof</label>
+                                                            <label class="form-check-label small fw-bold text-dark" for="att{{ lt.id }}">Require Doctor Certificate</label>
                                                         </div>
                                                     </div>
 
+                                                    <!-- WORKFORCE BALANCE SYNCHRONIZATION -->
                                                     <div class="p-3 bg-primary-subtle border border-primary-subtle rounded-3">
                                                         <div class="form-check">
                                                             <input class="form-check-input" type="checkbox" name="sync_balances" id="syncBal{{ lt.id }}" checked>
                                                             <label class="form-check-label small fw-bold text-primary" for="syncBal{{ lt.id }}">
-                                                                Synchronize all active employee leave balances for {{ selected_year }}
+                                                                Synchronize all active employee balances for {{ selected_year }}
                                                             </label>
                                                             <div class="form-text small text-muted">
-                                                                Updates {{ item.active_balances_count }} active employee accounts to reflect this new annual allocation immediately.
+                                                                Immediately applies this quota across all {{ item.active_balances_count }} enrolled employees.
                                                             </div>
                                                         </div>
                                                         <input type="hidden" name="sync_year" value="{{ selected_year }}">
                                                     </div>
+
                                                 </div>
-                                                <div class="modal-footer">
+                                                <div class="modal-footer bg-light">
                                                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                                                    <button type="submit" class="btn btn-primary btn-sm">Update Leave Quota</button>
+                                                    <button type="submit" class="btn btn-primary btn-sm px-3 shadow-xs">
+                                                        <i class="bi bi-check2-circle me-1"></i> Save Policy Settings
+                                                    </button>
                                                 </div>
                                             </form>
                                         </div>
@@ -1497,38 +1772,87 @@
                     <div class="simulator-card p-4 h-100 d-flex flex-column justify-content-between shadow-sm">
                         <div>
                             <div class="d-flex align-items-center gap-2 mb-2">
-                                <i class="bi bi-calculator-fill text-warning fs-5"></i>
-                                <h6 class="fw-bold text-white mb-0">Leave Quota Calculator</h6>
+                                <div class="p-2 rounded-3 bg-warning text-dark fw-bold">
+                                    <i class="bi bi-calculator-fill fs-5"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold text-white mb-0">Leave Quota Calculator</h6>
+                                    <small class="text-white-50" style="font-size: 0.72rem;">Interactive Accrual Modeling Engine</small>
+                                </div>
                             </div>
-                            <p class="text-white-50 small mb-4">
-                                Test how monthly accrual rates translate into annual quotas for staff members.
+                            <p class="text-white-50 small mb-3" style="font-size: 0.78rem;">
+                                Adjust monthly accrual rates to project quarterly, annual, and working-hour totals for HR compensation planning.
                             </p>
 
                             <div class="mb-3">
-                                <label class="form-label small text-white-50">Accrual Slider (Days per Month):</label>
-                                <input type="range" class="form-range" id="simMonthlySlider" min="0.25" max="3.0" step="0.25" value="1.5" oninput="runLeaveSimFromSlider()">
-                                <div class="d-flex justify-content-between text-white-50" style="font-size: 0.70rem;">
-                                    <span>0.25 /mo</span>
-                                    <span>1.5 /mo</span>
-                                    <span>3.0 /mo</span>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label class="form-label small text-white-50 mb-0">Monthly Accrual Rate:</label>
+                                    <span class="badge bg-warning text-dark fw-bold" id="simMonthlyBadge">1.50 d/mo</span>
+                                </div>
+                                <input type="range" class="form-range" id="simMonthlySlider" min="0.25" max="3.5" step="0.25" value="1.5" oninput="runLeaveSimFromSlider()">
+                                <div class="d-flex justify-content-between text-white-50" style="font-size: 0.68rem;">
+                                    <span>0.25</span>
+                                    <span>1.0 (SL)</span>
+                                    <span>1.5 (PL)</span>
+                                    <span>2.0</span>
+                                    <span>3.5</span>
                                 </div>
                             </div>
 
-                            <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span class="text-white-50 small">Monthly Rate:</span>
-                                    <span class="fw-bold font-monospace text-warning fs-5" id="simMonthlyVal">1.50 <small class="text-white-50 fs-6">days/mo</small></span>
+                            <!-- REAL-TIME CONVERSION GRID -->
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <div class="p-2.5 rounded-3" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);">
+                                        <div class="text-white-50 small" style="font-size: 0.68rem;">Monthly Rate</div>
+                                        <div class="fw-bold font-monospace text-warning fs-5" id="simMonthlyVal">1.50 <small class="text-white-50 fs-6">d/mo</small></div>
+                                    </div>
                                 </div>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="text-white-50 small">Annual Total:</span>
-                                    <span class="fw-bold font-monospace text-success fs-4" id="simAnnualVal">18.0 <small class="text-white-50 fs-6">days/yr</small></span>
+                                <div class="col-6">
+                                    <div class="p-2.5 rounded-3" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);">
+                                        <div class="text-white-50 small" style="font-size: 0.68rem;">Quarterly Accrual</div>
+                                        <div class="fw-bold font-monospace text-info fs-5" id="simQuarterlyVal">4.50 <small class="text-white-50 fs-6">d/qtr</small></div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-2.5 rounded-3" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);">
+                                        <div class="text-white-50 small" style="font-size: 0.68rem;">Annual Total</div>
+                                        <div class="fw-bold font-monospace text-success fs-4" id="simAnnualVal">18.0 <small class="text-white-50 fs-6">d/yr</small></div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-2.5 rounded-3" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);">
+                                        <div class="text-white-50 small" style="font-size: 0.68rem;">Working Hours (8h/d)</div>
+                                        <div class="fw-bold font-monospace text-light fs-5" id="simHoursVal">144.0 <small class="text-white-50 fs-6">hrs</small></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- INDUSTRY BENCHMARK PRESETS -->
+                            <div class="mb-3">
+                                <label class="form-label small text-white-50 mb-1.5" style="font-size: 0.70rem;">Industry Standard Presets:</label>
+                                <div class="d-flex flex-wrap gap-1.5">
+                                    <button type="button" class="btn btn-xs btn-outline-light border-secondary" style="font-size: 0.70rem;" onclick="applySimPreset(0.83)">
+                                        10 d/yr (0.83/mo)
+                                    </button>
+                                    <button type="button" class="btn btn-xs btn-outline-danger" style="font-size: 0.70rem;" onclick="applySimPreset(1.0)">
+                                        Sick Leave (1.0/mo = 12d)
+                                    </button>
+                                    <button type="button" class="btn btn-xs btn-outline-success" style="font-size: 0.70rem;" onclick="applySimPreset(1.5)">
+                                        Paid Leave (1.5/mo = 18d)
+                                    </button>
+                                    <button type="button" class="btn btn-xs btn-outline-warning" style="font-size: 0.70rem;" onclick="applySimPreset(1.75)">
+                                        Privilege (1.75/mo = 21d)
+                                    </button>
+                                    <button type="button" class="btn btn-xs btn-outline-info" style="font-size: 0.70rem;" onclick="applySimPreset(2.0)">
+                                        Executive (2.0/mo = 24d)
+                                    </button>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="mt-4 pt-3 border-top border-secondary">
-                            <button type="button" class="btn btn-outline-light btn-sm w-100" data-bs-toggle="modal" data-bs-target="#addLeaveTypeModal">
-                                <i class="bi bi-plus-lg me-1"></i> Add Custom Leave Category
+                        <div class="mt-3 pt-3 border-top border-secondary">
+                            <button type="button" class="btn btn-outline-light btn-sm w-100 shadow-xs" data-bs-toggle="modal" data-bs-target="#addLeaveTypeModal">
+                                <i class="bi bi-plus-circle me-1"></i> Add Custom Leave Category
                             </button>
                         </div>
                     </div>
@@ -1553,18 +1877,58 @@
                     <form method="POST" action="{% url 'organization:permissions_update' %}">
                         {% csrf_token %}
                         
-                        <!-- OPTION 1: GRANT TO ALL HR -->
+                        <!-- SECTION 1: WORKFORCE DIRECTORY VISIBILITY -->
+                        <div class="p-3.5 mb-4 rounded-3 border {% if permission_settings.can_hr_view_workforce_directory %}bg-primary-subtle border-primary-subtle{% else %}bg-light border-secondary-subtle{% endif %}">
+                            <div class="form-check form-switch d-flex align-items-center gap-3">
+                                <input class="form-check-input ms-0" type="checkbox" name="can_hr_view_workforce_directory" id="allowHRDirectorySwitch" style="width: 2.5em; height: 1.35em;" {% if permission_settings.can_hr_view_workforce_directory %}checked{% endif %}>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <label class="form-check-label fw-bold text-dark fs-6" for="allowHRDirectorySwitch">
+                                            <i class="bi bi-people-fill text-primary me-1"></i> Company Workforce Directory Visibility
+                                        </label>
+                                        {% if permission_settings.can_hr_view_workforce_directory %}
+                                            <span class="badge bg-primary text-white rounded-pill px-2.5 py-1 small">Visible to Admin & HR</span>
+                                        {% else %}
+                                            <span class="badge bg-danger text-white rounded-pill px-2.5 py-1 small">Strictly Admin Only</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-muted small mt-1">
+                                        Admin controls who can view the Company Workforce Directory. When toggled on, HR Administrators can view and search employee profiles. When toggled off, only System Admin/Head can view the directory.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECTION 2: MASTER DATA ACCESS TO HR -->
                         <div class="p-3.5 mb-4 rounded-3 border {% if permission_settings.allow_all_hr %}bg-success-subtle border-success-subtle{% else %}bg-light{% endif %}">
                             <div class="form-check form-switch d-flex align-items-center gap-3">
                                 <input class="form-check-input ms-0" type="checkbox" name="allow_all_hr" id="allowAllHRSwitch" style="width: 2.5em; height: 1.35em;" {% if permission_settings.allow_all_hr %}checked{% endif %}>
-                                <div>
-                                    <label class="form-check-label fw-bold text-dark fs-6" for="allowAllHRSwitch">
-                                        Grant Master Data Access to All HR Administrators
-                                    </label>
-                                    <div class="text-muted small">
-                                        When toggled on, every staff member with the HR Administrator role ({{ hr_users.count }} users) can view Master Data in their sidebar and modify enabled sections.
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <label class="form-check-label fw-bold text-dark fs-6" for="allowAllHRSwitch">
+                                            <i class="bi bi-database-fill-gear text-success me-1"></i> Grant Master Data Control Center Access to All HR
+                                        </label>
+                                        {% if permission_settings.allow_all_hr %}
+                                            <span class="badge bg-success text-white rounded-pill px-2.5 py-1 small">HR Access Enabled</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary text-white rounded-pill px-2.5 py-1 small">Restricted to Admin</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-muted small mt-1">
+                                        By default, Master Data is restricted strictly to Admin. When toggled on, all staff with the HR role ({{ hr_users.count }} users) can view Master Data in their sidebar and modify enabled sections below.
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- GOVERNANCE BANNER: HR REQUEST ROUTING -->
+                        <div class="p-3 mb-4 rounded-3 border border-warning-subtle bg-warning-subtle d-flex align-items-center gap-3">
+                            <div class="rounded-circle bg-warning text-dark p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                <i class="bi bi-shield-lock-fill fs-5"></i>
+                            </div>
+                            <div class="small">
+                                <strong class="text-dark">Executive Governance Policy Enforced:</strong>
+                                <span class="text-dark">All requests submitted by HR staff (Leave Applications, Attendance Corrections, Profile Corrections, Official Documents) automatically bypass peer approval and are routed strictly to <strong>Admin / Head Authority</strong> for review and sign-off. Self-approval is strictly prohibited.</span>
                             </div>
                         </div>
 
@@ -1792,49 +2156,72 @@
 <!-- ADD LEAVE TYPE MODAL                                                      -->
 <!-- ========================================================================= -->
 <div class="modal fade" id="addLeaveTypeModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold">
-                    <i class="bi bi-plus-circle text-primary me-2"></i>Add Custom Leave Policy
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold mb-0 text-white">
+                    <i class="bi bi-plus-circle me-2"></i>Add Custom Leave Policy
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="{% url 'organization:leave_type_create' %}">
                 {% csrf_token %}
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Leave Name <span class="text-danger">*</span></label>
-                        <input type="text" name="name" class="form-control" placeholder="e.g. Casual Leave, Maternity Leave" required>
+                        <label class="form-label small fw-bold text-dark">Leave Name <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control" placeholder="e.g. Casual Leave, Maternity Leave, Bereavement" required>
                     </div>
+
                     <div class="row g-3 mb-3">
                         <div class="col-6">
-                            <label class="form-label small fw-bold">Short Code <span class="text-danger">*</span></label>
-                            <input type="text" name="code" class="form-control text-uppercase" placeholder="e.g. CL, ML" required>
+                            <label class="form-label small fw-bold text-dark">Short Code <span class="text-danger">*</span></label>
+                            <input type="text" name="code" class="form-control text-uppercase font-monospace" placeholder="e.g. CL, ML, BL" required>
                         </div>
                         <div class="col-6">
-                            <label class="form-label small fw-bold">Annual Quota (Days) <span class="text-danger">*</span></label>
-                            <input type="number" step="0.5" name="days_per_year" class="form-control" value="12.0" required>
+                            <label class="form-label small fw-bold text-dark">Allocation Mode <span class="text-danger">*</span></label>
+                            <select name="allocation_mode" id="newLeaveMode" class="form-select" onchange="toggleNewLeaveCalc(this.value)">
+                                <option value="annual" selected>Annual Upfront Plan</option>
+                                <option value="monthly">Monthly Accrual Plan</option>
+                            </select>
                         </div>
                     </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-dark">Annual Quota (Days/Yr)</label>
+                            <div class="input-group">
+                                <input type="number" step="0.5" name="days_per_year" id="newAnnualInput" class="form-control" value="12.0" oninput="syncNewFromAnnual()" required>
+                                <span class="input-group-text small bg-light">d/yr</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-dark">Monthly Rate (Days/Mo)</label>
+                            <div class="input-group">
+                                <input type="number" step="0.05" name="monthly_rate" id="newMonthlyInput" class="form-control" value="1.00" oninput="syncNewFromMonthly()">
+                                <span class="input-group-text small bg-light">d/mo</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Description</label>
-                        <textarea name="description" class="form-control" rows="2" placeholder="Policy details..."></textarea>
+                        <label class="form-label small fw-bold text-dark">Policy Guidelines & Description</label>
+                        <textarea name="description" class="form-control" rows="2" placeholder="Policy details, eligibility requirements..."></textarea>
                     </div>
-                    <div class="d-flex gap-4">
-                        <div class="form-check">
+
+                    <div class="p-3 bg-light rounded-3 mb-3 border d-flex flex-wrap gap-4">
+                        <div class="form-check form-switch m-0">
                             <input class="form-check-input" type="checkbox" name="is_paid" id="newIsPaid" checked>
-                            <label class="form-check-label small" for="newIsPaid">Is Paid Leave</label>
+                            <label class="form-check-label small fw-bold text-dark" for="newIsPaid">Is Paid Leave</label>
                         </div>
-                        <div class="form-check">
+                        <div class="form-check form-switch m-0">
                             <input class="form-check-input" type="checkbox" name="requires_attachment" id="newReqAtt">
-                            <label class="form-check-label small" for="newReqAtt">Requires Document Proof</label>
+                            <label class="form-check-label small fw-bold text-dark" for="newReqAtt">Requires Document Proof</label>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary btn-sm">Create Leave Policy</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-3 shadow-xs">Create Leave Policy</button>
                 </div>
             </form>
         </div>
@@ -2022,12 +2409,45 @@
     }
 
     // 8. Leave Quota Real-Time Calculator & Simulator
+    function selectAllocationMode(leaveId, mode) {
+        const cardMonthly = document.getElementById('modeCardMonthly' + leaveId);
+        const cardAnnual = document.getElementById('modeCardAnnual' + leaveId);
+        const radioMonthly = document.getElementById('modeMonthly' + leaveId);
+        const radioAnnual = document.getElementById('modeAnnual' + leaveId);
+        const titleEl = document.getElementById('policyExplainTitle' + leaveId);
+        const textEl = document.getElementById('policyExplainText' + leaveId);
+        const mInput = document.getElementById('monthlyInput' + leaveId);
+        const aInput = document.getElementById('annualInput' + leaveId);
+
+        if (mode === 'monthly') {
+            if (radioMonthly) radioMonthly.checked = true;
+            if (cardMonthly) cardMonthly.classList.add('active');
+            if (cardAnnual) cardAnnual.classList.remove('active');
+            if (titleEl) titleEl.innerText = "Monthly Accrual Policy Summary";
+            const mVal = mInput ? parseFloat(mInput.value || 1.0) : 1.0;
+            const aVal = (mVal * 12.0).toFixed(1);
+            if (textEl) textEl.innerHTML = `Employees will automatically accrue <strong>${mVal.toFixed(2)} days</strong> on the 1st of each calendar month, totaling <strong>${aVal} days/year</strong>.`;
+            mInput?.focus();
+        } else {
+            if (radioAnnual) radioAnnual.checked = true;
+            if (cardAnnual) cardAnnual.classList.add('active');
+            if (cardMonthly) cardMonthly.classList.remove('active');
+            if (titleEl) titleEl.innerText = "Annual Upfront Policy Summary";
+            const aVal = aInput ? parseFloat(aInput.value || 12.0) : 12.0;
+            const mVal = (aVal / 12.0).toFixed(2);
+            if (textEl) textEl.innerHTML = `Employees receive the entire <strong>${aVal} days</strong> upfront on January 1st (equivalent to <strong>${mVal} days/month</strong>).`;
+            aInput?.focus();
+        }
+    }
+
     function syncFromAnnual(leaveId) {
         const annualInput = document.getElementById('annualInput' + leaveId);
         const monthlyInput = document.getElementById('monthlyInput' + leaveId);
         if (annualInput && monthlyInput && annualInput.value) {
             const annual = parseFloat(annualInput.value);
-            monthlyInput.value = (annual / 12.0).toFixed(2);
+            const monthly = (annual / 12.0).toFixed(2);
+            monthlyInput.value = monthly;
+            updatePolicyExplainer(leaveId, annual, monthly);
         }
     }
 
@@ -2036,25 +2456,76 @@
         const monthlyInput = document.getElementById('monthlyInput' + leaveId);
         if (annualInput && monthlyInput && monthlyInput.value) {
             const monthly = parseFloat(monthlyInput.value);
-            annualInput.value = (monthly * 12.0).toFixed(1);
+            const annual = (monthly * 12.0).toFixed(1);
+            annualInput.value = annual;
+            updatePolicyExplainer(leaveId, annual, monthly);
         }
     }
 
-    function toggleLeaveCalc(leaveId, mode) {
-        const annualInput = document.getElementById('annualInput' + leaveId);
-        const monthlyInput = document.getElementById('monthlyInput' + leaveId);
-        if (mode === 'monthly') monthlyInput?.focus();
-        else annualInput?.focus();
+    function updatePolicyExplainer(leaveId, annual, monthly) {
+        const textEl = document.getElementById('policyExplainText' + leaveId);
+        const radioMonthly = document.getElementById('modeMonthly' + leaveId);
+        if (textEl) {
+            if (radioMonthly && radioMonthly.checked) {
+                textEl.innerHTML = `Employees will automatically accrue <strong>${parseFloat(monthly).toFixed(2)} days</strong> on the 1st of each calendar month, totaling <strong>${annual} days/year</strong>.`;
+            } else {
+                textEl.innerHTML = `Employees receive the entire <strong>${annual} days</strong> upfront on January 1st (equivalent to <strong>${parseFloat(monthly).toFixed(2)} days/month</strong>).`;
+            }
+        }
+    }
+
+    function toggleNewLeaveCalc(mode) {
+        const aInput = document.getElementById('newAnnualInput');
+        const mInput = document.getElementById('newMonthlyInput');
+        if (mode === 'monthly') mInput?.focus();
+        else aInput?.focus();
+    }
+
+    function syncNewFromAnnual() {
+        const aInput = document.getElementById('newAnnualInput');
+        const mInput = document.getElementById('newMonthlyInput');
+        if (aInput && mInput && aInput.value) {
+            const a = parseFloat(aInput.value);
+            mInput.value = (a / 12.0).toFixed(2);
+        }
+    }
+
+    function syncNewFromMonthly() {
+        const aInput = document.getElementById('newAnnualInput');
+        const mInput = document.getElementById('newMonthlyInput');
+        if (aInput && mInput && mInput.value) {
+            const m = parseFloat(mInput.value);
+            aInput.value = (m * 12.0).toFixed(1);
+        }
     }
 
     function runLeaveSimFromSlider() {
         const slider = document.getElementById('simMonthlySlider');
+        const badge = document.getElementById('simMonthlyBadge');
         const mVal = document.getElementById('simMonthlyVal');
+        const qVal = document.getElementById('simQuarterlyVal');
         const aVal = document.getElementById('simAnnualVal');
-        if (slider && mVal && aVal) {
+        const hVal = document.getElementById('simHoursVal');
+
+        if (slider) {
             const m = parseFloat(slider.value);
-            mVal.innerHTML = `${m.toFixed(2)} <small class="text-white-50 fs-6">days/mo</small>`;
-            aVal.innerHTML = `${(m * 12).toFixed(1)} <small class="text-white-50 fs-6">days/yr</small>`;
+            const q = m * 3.0;
+            const a = m * 12.0;
+            const h = a * 8.0;
+
+            if (badge) badge.innerText = `${m.toFixed(2)} d/mo`;
+            if (mVal) mVal.innerHTML = `${m.toFixed(2)} <small class="text-white-50 fs-6">d/mo</small>`;
+            if (qVal) qVal.innerHTML = `${q.toFixed(2)} <small class="text-white-50 fs-6">d/qtr</small>`;
+            if (aVal) aVal.innerHTML = `${a.toFixed(1)} <small class="text-white-50 fs-6">d/yr</small>`;
+            if (hVal) hVal.innerHTML = `${h.toFixed(1)} <small class="text-white-50 fs-6">hrs</small>`;
+        }
+    }
+
+    function applySimPreset(mRate) {
+        const slider = document.getElementById('simMonthlySlider');
+        if (slider) {
+            slider.value = mRate;
+            runLeaveSimFromSlider();
         }
     }
 

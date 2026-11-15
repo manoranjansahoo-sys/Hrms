@@ -1,3 +1,5 @@
+import mimetypes
+from django.http import FileResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -104,3 +106,24 @@ def audit_logs_view(request):
         'action_choices': AuditLog.ACTION_CHOICES,
         'selected_action': action_filter
     })
+
+
+def user_avatar_view(request, user_id):
+    """
+    Safely stream user avatar or redirect to avatar fallback without breaking subpath or missing files.
+    """
+    user = get_object_or_404(CustomUser, id=user_id)
+    if user.avatar:
+        try:
+            if user.avatar.storage.exists(user.avatar.name):
+                content_type, _ = mimetypes.guess_type(user.avatar.name)
+                response = FileResponse(user.avatar.open('rb'), content_type=content_type or 'image/jpeg')
+                response['Cache-Control'] = 'public, max-age=86400'
+                return response
+        except Exception:
+            pass
+
+    first = user.first_name or user.username or 'User'
+    last = user.last_name or ''
+    return redirect(f"https://ui-avatars.com/api/?name={first}+{last}&background=1B5E20&color=fff&size=128")
+

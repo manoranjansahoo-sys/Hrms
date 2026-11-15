@@ -815,8 +815,15 @@
 
                             <!-- Submission Date -->
                             <td>
-                                <div class="text-dark fw-medium small text-nowrap">{{ app.applied_at|date:"d M Y" }}</div>
-                                <div class="text-muted small text-nowrap" style="font-size: 0.74rem;">{{ app.applied_at|time:"h:i A" }}</div>
+                                {% if app.onboarding_completed_at %}
+                                    <div class="text-success fw-bold small text-nowrap">
+                                        <i class="bi bi-check2-circle me-1"></i>{{ app.onboarding_completed_at|date:"d M Y" }}
+                                    </div>
+                                    <div class="text-muted small text-nowrap" style="font-size: 0.74rem;">{{ app.onboarding_completed_at|time:"h:i A" }} <span class="badge bg-success-subtle text-success py-0 px-1">Submitted</span></div>
+                                {% else %}
+                                    <div class="text-dark fw-medium small text-nowrap">{{ app.applied_at|date:"d M Y" }}</div>
+                                    <div class="text-muted small text-nowrap" style="font-size: 0.74rem;">{{ app.applied_at|time:"h:i A" }} <span class="badge bg-light text-secondary border py-0 px-1">Applied</span></div>
+                                {% endif %}
                             </td>
 
                             <!-- Actions (Uniform Small & Equal Size, Single Line, No Clipping) -->
@@ -1047,9 +1054,13 @@
 
                                                                 <!-- Right: Action Buttons with Professional Spacing -->
                                                                 <div class="d-flex align-items-center gap-2 ms-auto flex-shrink-0 mt-2 mt-md-0">
-                                                                    <a href="{{ doc.file.url }}" target="_blank" class="btn btn-outline-secondary btn-doc-action" title="Open and inspect document in new tab">
+                                                                    <a href="{% url 'recruitment:candidate_document_view' doc_id=doc.id %}" target="_blank" class="btn btn-outline-secondary btn-doc-action" title="Open and inspect document in browser">
                                                                         <i class="bi bi-eye"></i>
                                                                         <span>View</span>
+                                                                    </a>
+                                                                    <a href="{% url 'recruitment:candidate_document_download' doc_id=doc.id %}" class="btn btn-outline-primary btn-doc-action" title="Download copy to device">
+                                                                        <i class="bi bi-download"></i>
+                                                                        <span>Download</span>
                                                                     </a>
                                                                     <!-- Verify Button -->
                                                                     <button type="button" 
@@ -1586,9 +1597,12 @@
                                                                         </div>
                                                                         <div class="fw-bold text-dark mb-1 text-truncate" title="{{ doc.title }}">{{ doc.title }}</div>
                                                                         <div class="small text-muted mb-2.5">Uploaded: {{ doc.uploaded_at|date:"d M Y, h:i A" }}</div>
-                                                                        <div class="mt-auto pt-2 border-top d-flex justify-content-end">
-                                                                            <a href="{{ doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary px-3">
-                                                                                <i class="bi bi-eye me-1"></i> View Document
+                                                                        <div class="mt-auto pt-2 border-top d-flex justify-content-end gap-1">
+                                                                            <a href="{% url 'recruitment:candidate_document_view' doc_id=doc.id %}" target="_blank" class="btn btn-sm btn-outline-primary px-2.5" title="View document">
+                                                                                <i class="bi bi-eye me-1"></i> View
+                                                                            </a>
+                                                                            <a href="{% url 'recruitment:candidate_document_download' doc_id=doc.id %}" class="btn btn-sm btn-outline-secondary px-2" title="Download document">
+                                                                                <i class="bi bi-download"></i>
                                                                             </a>
                                                                         </div>
                                                                     </div>

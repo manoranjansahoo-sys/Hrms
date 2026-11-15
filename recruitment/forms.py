@@ -502,8 +502,8 @@ class CandidateOnboardingForm(forms.Form):
     )
     emergency_contact_name = forms.CharField(
         max_length=150,
-        label="Emergency Contact Name",
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Relative / Spouse / Parent', 'required': True})
+        label="Emergency Contact Person Name",
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Full name of emergency contact person', 'required': True})
     )
     emergency_contact_relation = forms.CharField(
         max_length=50,
@@ -538,9 +538,17 @@ class CandidateOnboardingForm(forms.Form):
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Karnataka', 'required': True})
     )
     postal_code = forms.CharField(
-        max_length=20,
+        max_length=6,
         label="Postal / PIN Code",
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 560103', 'required': True})
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': '6-digit PIN code (e.g. 560103)',
+            'maxlength': '6',
+            'inputmode': 'numeric',
+            'pattern': '[0-9]{6}',
+            'oninput': "this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);",
+            'required': True
+        })
     )
     photo = forms.ImageField(
         required=False,
@@ -566,10 +574,18 @@ class CandidateOnboardingForm(forms.Form):
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Full Institution Name', 'required': True})
     )
     passing_year = forms.IntegerField(
-        min_value=1970,
-        max_value=2030,
+        min_value=1950,
+        max_value=2035,
         label="Graduation Year",
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 2023', 'required': True})
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'YYYY (e.g. 2024)',
+            'maxlength': '4',
+            'min': '1950',
+            'max': '2035',
+            'oninput': "if(this.value.length > 4) this.value = this.value.slice(0, 4);",
+            'required': True
+        })
     )
     percentage_cgpa = forms.CharField(
         max_length=20,
@@ -581,16 +597,34 @@ class CandidateOnboardingForm(forms.Form):
         label="10th Class (Board, School, Year & Score)",
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. CBSE, Delhi Public School, 2017 - 94%', 'required': True})
     )
+    certificate_10th = forms.FileField(
+        required=False,
+        label="10th Class Marksheet / Certificate Upload",
+        validators=[validate_document_file],
+        widget=forms.FileInput(attrs={'class': 'form-control', 'accept': '.pdf,.jpg,.jpeg,.png'})
+    )
     details_12th = forms.CharField(
         max_length=150,
         label="12th / Intermediate / Diploma Details",
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. State Board, 2019 - 89%', 'required': True})
     )
-    educational_certificate = forms.FileField(
+    certificate_12th = forms.FileField(
         required=False,
-        label="Degree Certificate / Final Marksheet Upload",
+        label="12th / Intermediate / Diploma Certificate Upload",
         validators=[validate_document_file],
         widget=forms.FileInput(attrs={'class': 'form-control', 'accept': '.pdf,.jpg,.jpeg,.png'})
+    )
+    educational_certificate = forms.FileField(
+        required=False,
+        label="Graduation / Degree Certificate Upload",
+        validators=[validate_document_file],
+        widget=forms.FileInput(attrs={'class': 'form-control', 'accept': '.pdf,.jpg,.jpeg,.png'})
+    )
+    resume = forms.FileField(
+        required=False,
+        label="Updated Resume / Curriculum Vitae Upload",
+        validators=[validate_document_file],
+        widget=forms.FileInput(attrs={'class': 'form-control', 'accept': '.pdf,.doc,.docx'})
     )
 
     # 3. Employment & Experience Verification (Optional for freshers)

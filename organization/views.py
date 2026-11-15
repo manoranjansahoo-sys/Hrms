@@ -65,12 +65,16 @@ def master_data_dashboard(request):
     leave_types = LeaveType.objects.all().order_by('name')
     leave_data = []
     for lt in leave_types:
-        monthly_equiv = round(float(lt.days_per_year) / 12.0, 2)
+        monthly_equiv = lt.effective_monthly_rate
         active_balances_count = LeaveBalance.objects.filter(leave_type=lt, year=selected_year).count()
         leave_data.append({
             'leave_type': lt,
             'monthly_equiv': monthly_equiv,
+            'effective_monthly_rate': lt.effective_monthly_rate,
             'active_balances_count': active_balances_count,
+            'is_monthly': lt.allocation_frequency == 'MONTHLY',
+            'is_annual': lt.allocation_frequency == 'ANNUALLY',
+            'frequency_display': 'Monthly Accrual' if lt.allocation_frequency == 'MONTHLY' else 'Annual Upfront',
         })
     active_employees_count = EmployeeProfile.objects.filter(status='ACTIVE').count()
 
@@ -603,7 +607,7 @@ def leave_policy_update(request, leave_type_id):
     """
     leave_type = get_object_or_404(LeaveType, id=leave_type_id)
     if request.method == 'POST':
-        allocation_mode = request.POST.get('allocation_mode', 'annual')
+        allocation_mode = request.POST.get('allocation_mode', 'annual').strip().lower()
         annual_days_str = request.POST.get('days_per_year', '').strip()
         monthly_rate_str = request.POST.get('monthly_rate', '').strip()
         is_paid = request.POST.get('is_paid') == 'on'
@@ -613,17 +617,22 @@ def leave_policy_update(request, leave_type_id):
         year_to_sync = int(request.POST.get('sync_year', timezone.localdate().year or 2026))
 
         try:
-            if allocation_mode == 'monthly':
+            if allocation_mode in ['monthly', 'month']:
                 monthly_val = Decimal(monthly_rate_str)
-                annual_val = monthly_val * Decimal('12.0')
+                annual_val = round(monthly_val * Decimal('12.0'), 1)
+                leave_type.allocation_frequency = 'MONTHLY'
+                leave_type.monthly_rate = monthly_val
+                leave_type.days_per_year = annual_val
             else:
                 annual_val = Decimal(annual_days_str)
-                monthly_val = round(annual_val / Decimal('12.0'), 2)
+                monthly_val = Decimal(str(round(float(annual_val) / 12.0, 2)))
+                leave_type.allocation_frequency = 'ANNUALLY'
+                leave_type.days_per_year = annual_val
+                leave_type.monthly_rate = monthly_val
         except Exception:
             messages.error(request, "Invalid quota number entered.")
             return redirect('/master-data/?tab=leaves')
 
-        leave_type.days_per_year = annual_val
         leave_type.is_paid = is_paid
         leave_type.requires_attachment = requires_attachment
         leave_type.description = description
@@ -644,13 +653,42 @@ def leave_policy_update(request, leave_type_id):
                 synced_count += 1
 
         sync_msg = f" Synchronized {synced_count} active employee balances for {year_to_sync}." if sync_balances else ""
+        freq_label = "Monthly Accrual Plan" if leave_type.allocation_frequency == 'MONTHLY' else "Annual Upfront Plan"
         messages.success(
             request,
-            f"Updated {leave_type.name} ({leave_type.code}) quota to {annual_val} days/year "
-            f"({round(float(annual_val)/12.0, 2)} days/month).{sync_msg}"
+            f"Updated {leave_type.name} ({leave_type.code}) to {freq_label}: {leave_type.days_per_year} days/yr "
+            f"({leave_type.effective_monthly_rate} days/mo).{sync_msg}"
         )
         return redirect('/master-data/?tab=leaves')
 
+    return redirect('/master-data/?tab=leaves')
+
+
+@login_required
+@master_data_access_required(section='leave_policy')
+def leave_frequency_toggle(request, leave_type_id):
+    """
+    1-click toggle between Annual Upfront and Monthly Accrual for Sick Leave / Paid Leave.
+    """
+    leave_type = get_object_or_404(LeaveType, id=leave_type_id)
+    if request.method == 'POST':
+        target_mode = request.POST.get('target_mode', '').strip().upper()
+        if target_mode in ['ANNUALLY', 'MONTHLY']:
+            leave_type.allocation_frequency = target_mode
+        else:
+            # Toggle between them
+            leave_type.allocation_frequency = 'MONTHLY' if leave_type.allocation_frequency == 'ANNUALLY' else 'ANNUALLY'
+
+        if not leave_type.monthly_rate or leave_type.monthly_rate == Decimal('0.00'):
+            leave_type.monthly_rate = Decimal(str(round(float(leave_type.days_per_year or 12.0) / 12.0, 2)))
+        leave_type.save()
+
+        freq_label = "Monthly Accrual Plan" if leave_type.allocation_frequency == 'MONTHLY' else "Annual Upfront Plan"
+        messages.success(
+            request,
+            f"Switched {leave_type.name} ({leave_type.code}) to {freq_label} "
+            f"({leave_type.effective_monthly_rate} days/mo, {leave_type.days_per_year} days/yr)."
+        )
     return redirect('/master-data/?tab=leaves')
 
 
@@ -661,7 +699,9 @@ def leave_type_create(request):
     if request.method == 'POST':
         name = request.POST.get('name', '').strip()
         code = request.POST.get('code', '').strip().upper()
+        allocation_mode = request.POST.get('allocation_mode', 'annual').strip().lower()
         days_per_year_str = request.POST.get('days_per_year', '12.0').strip()
+        monthly_rate_str = request.POST.get('monthly_rate', '1.0').strip()
         is_paid = request.POST.get('is_paid') == 'on'
         requires_attachment = request.POST.get('requires_attachment') == 'on'
         description = request.POST.get('description', '').strip()
@@ -674,20 +714,34 @@ def leave_type_create(request):
             messages.error(request, f"Leave code '{code}' already exists.")
             return redirect('/master-data/?tab=leaves')
 
-        try:
-            days_val = Decimal(days_per_year_str)
-        except Exception:
-            days_val = Decimal('12.0')
+        if allocation_mode in ['monthly', 'month']:
+            try:
+                monthly_val = Decimal(monthly_rate_str)
+                annual_val = round(monthly_val * Decimal('12.0'), 1)
+            except Exception:
+                monthly_val = Decimal('1.00')
+                annual_val = Decimal('12.0')
+            freq = 'MONTHLY'
+        else:
+            try:
+                annual_val = Decimal(days_per_year_str)
+                monthly_val = Decimal(str(round(float(annual_val) / 12.0, 2)))
+            except Exception:
+                annual_val = Decimal('12.0')
+                monthly_val = Decimal('1.00')
+            freq = 'ANNUALLY'
 
         LeaveType.objects.create(
             name=name,
             code=code,
-            days_per_year=days_val,
+            days_per_year=annual_val,
+            monthly_rate=monthly_val,
+            allocation_frequency=freq,
             is_paid=is_paid,
             requires_attachment=requires_attachment,
             description=description
         )
-        messages.success(request, f"New Leave Policy '{name}' ({code}) with {days_val} days/year created successfully!")
+        messages.success(request, f"New Leave Policy '{name}' ({code}) with {annual_val} days/yr ({monthly_val} days/mo) created successfully!")
         return redirect('/master-data/?tab=leaves')
 
     return redirect('/master-data/?tab=leaves')
@@ -708,6 +762,7 @@ def permissions_update(request):
         permission = MasterDataPermission.get_settings()
 
         allow_all_hr = request.POST.get('allow_all_hr') == 'on'
+        can_hr_view_workforce_directory = request.POST.get('can_hr_view_workforce_directory') == 'on'
         can_manage_holidays = request.POST.get('can_manage_holidays') == 'on'
         can_manage_timings = request.POST.get('can_manage_timings') == 'on'
         can_manage_locations = request.POST.get('can_manage_locations') == 'on'
@@ -716,6 +771,7 @@ def permissions_update(request):
         user_ids = request.POST.getlist('allowed_users')
 
         permission.allow_all_hr = allow_all_hr
+        permission.can_hr_view_workforce_directory = can_hr_view_workforce_directory
         permission.can_manage_holidays = can_manage_holidays
         permission.can_manage_timings = can_manage_timings
         permission.can_manage_locations = can_manage_locations
@@ -727,7 +783,8 @@ def permissions_update(request):
 
         messages.success(
             request,
-            f"Master Data permissions updated! HR Access: {'ENABLED for all HR' if allow_all_hr else 'Restricted'}. "
+            f"Permissions updated! Workforce Directory: {'HR & Admin Access' if can_hr_view_workforce_directory else 'Admin Only'}. "
+            f"Master Data HR Access: {'ENABLED for all HR' if allow_all_hr else 'Restricted to Admin'}. "
             f"{len(user_ids)} specific staff members delegated access."
         )
         return redirect('/master-data/?tab=access')

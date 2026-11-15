@@ -749,12 +749,59 @@
             <a href="{% url 'recruitment:links_list' %}" class="btn btn-outline-secondary btn-sm shadow-sm">
                 <i class="bi bi-briefcase me-1"></i> Positions & Links
             </a>
-            <a href="{% url 'recruitment:export_candidates_csv' %}?search={{ search_query }}&job={{ selected_job }}&status={{ selected_status }}&experience={{ selected_exp }}&sort={{ selected_sort }}" class="btn btn-outline-primary btn-sm shadow-sm" title="Export Candidates Pipeline to CSV Spreadsheet">
-                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV
-            </a>
-            <button type="button" onclick="window.print()" class="btn btn-outline-danger btn-sm shadow-sm" title="Print Pipeline Report or Save to PDF">
-                <i class="bi bi-printer-fill me-1"></i> Print / PDF
-            </button>
+            <div class="dropdown">
+                <button class="btn btn-primary btn-sm dropdown-toggle shadow-sm fw-semibold d-flex align-items-center gap-1.5" type="button" id="exportCandidatesDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-download"></i>
+                    <span>Export</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-2" aria-labelledby="exportCandidatesDropdown" style="border-radius: 10px; font-size: 0.88rem; min-width: 220px;">
+                    <li>
+                        <a class="dropdown-item py-2 d-flex align-items-center gap-2.5" href="{% url 'recruitment:export_candidates_pdf' %}?tab={{ active_tab }}&search={{ search_query }}&job={{ selected_job }}&status={{ selected_status }}&experience={{ selected_exp }}&sort={{ selected_sort }}">
+                            <div class="rounded-circle bg-danger bg-opacity-10 text-danger p-1.5 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
+                                <i class="bi bi-file-earmark-pdf-fill"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold text-dark">Export to PDF</div>
+                                <div class="text-muted small" style="font-size: 0.74rem;">Formatted printable document</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item py-2 d-flex align-items-center gap-2.5" href="{% url 'recruitment:export_candidates_excel' %}?tab={{ active_tab }}&search={{ search_query }}&job={{ selected_job }}&status={{ selected_status }}&experience={{ selected_exp }}&sort={{ selected_sort }}">
+                            <div class="rounded-circle bg-success bg-opacity-10 text-success p-1.5 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
+                                <i class="bi bi-file-earmark-excel-fill"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold text-dark">Export to Excel</div>
+                                <div class="text-muted small" style="font-size: 0.74rem;">Microsoft Excel sheet (.xlsx)</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item py-2 d-flex align-items-center gap-2.5" href="{% url 'recruitment:export_candidates_csv' %}?tab={{ active_tab }}&search={{ search_query }}&job={{ selected_job }}&status={{ selected_status }}&experience={{ selected_exp }}&sort={{ selected_sort }}">
+                            <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-1.5 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
+                                <i class="bi bi-file-earmark-spreadsheet-fill"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold text-dark">Export to CSV</div>
+                                <div class="text-muted small" style="font-size: 0.74rem;">Comma-separated values (.csv)</div>
+                            </div>
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider my-1"></li>
+                    <li>
+                        <button type="button" onclick="window.print()" class="dropdown-item py-2 d-flex align-items-center gap-2.5">
+                            <div class="rounded-circle bg-secondary bg-opacity-10 text-secondary p-1.5 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
+                                <i class="bi bi-printer-fill"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold text-dark">Print Pipeline</div>
+                                <div class="text-muted small" style="font-size: 0.74rem;">Send directly to printer</div>
+                            </div>
+                        </button>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 
@@ -941,7 +988,10 @@
                             <!-- 2. NAME -->
                             <td class="col-name py-2.5">
                                 <div class="d-flex align-items-center gap-2">
-                                    <img src="{{ app.candidate.get_photo_url }}" alt="{{ app.candidate.full_name }}" class="candidate-avatar">
+                                    <img src="{{ app.candidate.get_photo_url }}" 
+                                         alt="{{ app.candidate.full_name }}" 
+                                         class="candidate-avatar"
+                                         onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ app.candidate.full_name|urlencode }}&background=2E7D32&color=fff&size=128';">
                                     <div class="overflow-hidden">
                                         <div class="d-flex align-items-center gap-1.5 flex-wrap">
                                             <span class="table-cell-title fw-bold text-dark fs-6" title="{{ app.candidate.full_name }}">
@@ -1031,9 +1081,8 @@
 
                                     <!-- CV Icon -->
                                     {% if app.resume %}
-                                        <a href="{{ app.resume.url }}" 
+                                        <a href="{% url 'recruitment:candidate_resume_download' application_id=app.id %}" 
                                            target="_blank" 
-                                           download 
                                            class="action-icon-plain action-icon-cv stop-row-click" 
                                            title="Download Candidate CV / Resume (PDF)"
                                            onclick="event.stopPropagation();">
@@ -1330,7 +1379,11 @@
                                 <div class="p-3 rounded-3 border bg-white shadow-xs" id="scheduledCard_{{ sch.id }}" style="border-color: #E2E8F0 !important;">
                                     <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
                                         <div class="d-flex align-items-center gap-2">
-                                            <img src="{{ sch.candidate.get_photo_url }}" alt="{{ sch.candidate.full_name }}" class="rounded-circle" style="width: 36px; height: 36px; object-fit: cover;">
+                                            <img src="{{ sch.candidate.get_photo_url }}" 
+                                                 alt="{{ sch.candidate.full_name }}" 
+                                                 class="rounded-circle" 
+                                                 style="width: 36px; height: 36px; object-fit: cover;"
+                                                 onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ sch.candidate.full_name|urlencode }}&background=2E7D32&color=fff&size=128';">
                                             <div>
                                                 <a href="{% url 'recruitment:candidate_detail' application_id=sch.id %}" class="fw-bold text-dark text-decoration-none small d-block">
                                                     {{ sch.candidate.full_name }}
@@ -1906,7 +1959,11 @@
             <div class="candidate-sched-chip p-2.5 rounded-3 border bg-white shadow-xs" id="schedChip_${id}" style="border-color: #E2E8F0;">
                 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 w-100">
                     <div class="d-flex align-items-center gap-2 overflow-hidden">
-                        <img src="${avatar || '/static/images/default-avatar.png'}" alt="${name}" class="rounded-circle flex-shrink-0" style="width: 36px; height: 36px; object-fit: cover;">
+                        <img src="${avatar || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=2E7D32&color=fff&size=128')}" 
+                             alt="${name}" 
+                             class="rounded-circle flex-shrink-0" 
+                             style="width: 36px; height: 36px; object-fit: cover;"
+                             onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=' + encodeURIComponent(this.alt) + '&background=2E7D32&color=fff&size=128';">
                         <div>
                             <div class="d-flex align-items-center gap-2 flex-wrap">
                                 <span class="fw-bold text-dark small" style="font-size: 0.90rem;">${name}</span>

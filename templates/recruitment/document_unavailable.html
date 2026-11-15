@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Document Unavailable | Company HRMS{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 650px;">
+    <div class="card border-0 shadow-sm p-4 text-center rounded-4 bg-white">
+        <div class="rounded-circle bg-warning bg-opacity-10 text-warning mx-auto d-flex align-items-center justify-content-center mb-3" style="width: 70px; height: 70px; font-size: 2rem;">
+            <i class="bi bi-file-earmark-x"></i>
+        </div>
+        <h4 class="fw-bold text-dark mb-1">Document File Unavailable</h4>
+        <p class="text-muted small mb-3">
+            {{ reason|default:"The requested file is not currently found on local server storage." }}
+        </p>
+
+        {% if doc %}
+        <div class="p-3 bg-light rounded-3 text-start mb-4 border">
+            <div class="row g-2 small">
+                <div class="col-sm-4 text-muted fw-semibold">Document Title:</div>
+                <div class="col-sm-8 fw-bold text-dark">{{ doc.title }}</div>
+                <div class="col-sm-4 text-muted fw-semibold">Candidate:</div>
+                <div class="col-sm-8 fw-bold text-primary">{{ doc.candidate.full_name }}</div>
+                <div class="col-sm-4 text-muted fw-semibold">Uploaded At:</div>
+                <div class="col-sm-8 text-secondary">{{ doc.uploaded_at|date:"d M Y, h:i A" }}</div>
+                <div class="col-sm-4 text-muted fw-semibold">Verification:</div>
+                <div class="col-sm-8">
+                    {% if doc.is_verified %}
+                        <span class="badge bg-success text-white">Verified</span>
+                    {% elif doc.is_rejected %}
+                        <span class="badge bg-danger text-white">Rejected</span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark">Pending</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="d-flex justify-content-center gap-2">
+            <button type="button" onclick="window.history.back()" class="btn btn-outline-secondary px-4">
+                <i class="bi bi-arrow-left me-1"></i> Go Back
+            </button>
+            <a href="{% url 'recruitment:onboarding_candidates_list' %}" class="btn btn-primary px-4">
+                <i class="bi bi-person-check-fill me-1"></i> Onboarding List
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

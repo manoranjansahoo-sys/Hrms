@@ -43,27 +43,39 @@
                                 {% elif req.status == 'REJECTED' %}
                                     <span class="badge bg-danger">Rejected</span>
                                 {% else %}
-                                    <span class="badge bg-warning text-dark">Pending HR</span>
+                                    {% if req.employee.user.is_hr_role %}
+                                        <span class="badge bg-warning-subtle text-dark border border-warning-subtle"><i class="bi bi-shield-lock-fill me-1"></i>Pending Admin</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">Pending HR</span>
+                                    {% endif %}
                                 {% endif %}
                             </td>
                             <td class="small text-muted">{{ req.hr_remarks|default:"--" }}</td>
                             {% if is_hr %}
                                 <td class="text-end">
                                     {% if req.status == 'PENDING' %}
-                                        <form method="POST" action="{% url 'support:process_document' request_id=req.id %}" class="d-inline">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="action" value="ISSUE">
-                                            <button type="submit" class="btn btn-sm btn-success py-1 px-2" title="Mark as Issued">
-                                                <i class="bi bi-check-lg"></i> Issue
-                                            </button>
-                                        </form>
-                                        <form method="POST" action="{% url 'support:process_document' request_id=req.id %}" class="d-inline">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="action" value="REJECT">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Reject Request">
-                                                <i class="bi bi-x-lg"></i> Reject
-                                            </button>
-                                        </form>
+                                        {% if req.employee.user == request.user %}
+                                            <span class="badge bg-light text-muted border small">Self-Request</span>
+                                        {% elif req.employee.user.is_hr_role and not request.user.is_head_role and not request.user.is_superuser %}
+                                            <span class="badge bg-warning-subtle text-dark border border-warning-subtle small" title="Only Admin can review HR staff document requests">
+                                                <i class="bi bi-shield-lock-fill me-1"></i>Admin Only
+                                            </span>
+                                        {% else %}
+                                            <form method="POST" action="{% url 'support:process_document' request_id=req.id %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="ISSUE">
+                                                <button type="submit" class="btn btn-sm btn-success py-1 px-2" title="Mark as Issued">
+                                                    <i class="bi bi-check-lg"></i> Issue
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="{% url 'support:process_document' request_id=req.id %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="REJECT">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Reject Request">
+                                                    <i class="bi bi-x-lg"></i> Reject
+                                                </button>
+                                            </form>
+                                        {% endif %}
                                     {% else %}
                                         <small class="text-muted">Processed</small>
                                     {% endif %}

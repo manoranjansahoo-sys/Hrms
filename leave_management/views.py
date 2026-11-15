@@ -69,8 +69,48 @@ def apply_leave(request):
                     messages.error(request, f"Insufficient {leave_req.leave_type.name} balance. Available: {available} days, Requested: {total_days} days.")
                     return render(request, 'leave_management/apply_leave.html', {'form': form, 'balances': balances})
 
-            leave_req.status = LeaveRequest.Status.PENDING_MANAGER
-            leave_req.save()
+            is_hr_member = emp.user.is_hr_role or emp.user.role == CustomUser.Role.HR
+            if is_hr_member:
+                # When HR applies, request bypasses site manager and goes directly to Admin (Head Authority)
+                leave_req.status = LeaveRequest.Status.PENDING_HR
+                leave_req.save()
+
+                # Notify Head / Super Admin users
+                admin_users = CustomUser.objects.filter(
+                    Q(role=CustomUser.Role.HEAD) | Q(is_superuser=True),
+                    is_active=True
+                )
+                for admin_u in admin_users:
+                    create_notification(
+                        recipient=admin_u,
+                        title='HR Leave Request - Admin Approval Required',
+                        message=f"HR Administrator {emp.full_name} applied for {total_days} days {leave_req.leave_type.code} ({start} to {end}). Admin approval required.",
+                        notification_type='LEAVE',
+                        target_url='/leave/requests/'
+                    )
+            else:
+                leave_req.status = LeaveRequest.Status.PENDING_MANAGER
+                leave_req.save()
+
+                # Notify Site Manager or HR
+                mgr = emp.reporting_manager or (emp.site.site_manager if emp.site else None)
+                if mgr:
+                    create_notification(
+                        recipient=mgr,
+                        title='New Leave Application',
+                        message=f"{emp.full_name} applied for {total_days} days {leave_req.leave_type.code} ({start} to {end}).",
+                        notification_type='LEAVE',
+                        target_url='/leave/requests/'
+                    )
+                else:
+                    for hr_u in CustomUser.objects.filter(role=CustomUser.Role.HR, is_active=True):
+                        create_notification(
+                            recipient=hr_u,
+                            title='New Leave Application',
+                            message=f"{emp.full_name} applied for {total_days} days {leave_req.leave_type.code} ({start} to {end}).",
+                            notification_type='LEAVE',
+                            target_url='/leave/requests/'
+                        )
 
             # Update pending days in balance
             if leave_req.leave_type.is_paid:
@@ -79,19 +119,11 @@ def apply_leave(request):
                     bal.pending_days += total_days
                     bal.save()
 
-            # Notify Site Manager or HR
-            mgr = emp.reporting_manager or (emp.site.site_manager if emp.site else None)
-            if mgr:
-                create_notification(
-                    recipient=mgr,
-                    title='New Leave Application',
-                    message=f"{emp.full_name} applied for {total_days} days {leave_req.leave_type.code} ({start} to {end}).",
-                    notification_type='LEAVE',
-                    target_url='/leave/requests/'
-                )
-
             log_audit_trail('CREATE', 'Leave Management', f"Leave applied by {emp.emp_id} ({total_days} days {leave_req.leave_type.code})", user=request.user)
-            messages.success(request, f"Leave application for {total_days} days submitted successfully!")
+            if is_hr_member:
+                messages.success(request, f"Leave application for {total_days} days submitted directly to Admin / Leadership for approval.")
+            else:
+                messages.success(request, f"Leave application for {total_days} days submitted successfully!")
             return redirect('leave_management:my_leaves')
     else:
         form = LeaveApplicationForm()
@@ -256,6 +288,16 @@ def process_leave(request, request_id):
 
     emp = leave_req.employee
     old_status = leave_req.status
+
+    # 1. Prevent self-approval (Conflict of Interest check)
+    if leave_req.employee.user == user:
+        messages.error(request, "Self-approval is not permitted. Your leave application must be approved by an administrator.")
+        return redirect('leave_management:admin_queue')
+
+    # 2. Strict HR applicant routing: HR requests MUST ONLY be approved by Admin (Head or Superuser)
+    if leave_req.employee.user.is_hr_role and not (user.is_head_role or user.is_superuser):
+        messages.error(request, "Permission denied. Leave applications from HR staff can only be approved or rejected by the Head / Super Admin.")
+        return redirect('leave_management:admin_queue')
 
     if action == 'RECOMMEND' and (user.is_site_manager_role or user.is_hr_role or user.is_head_role or user.is_superuser):
         leave_req.manager_decision = 'RECOMMENDED'

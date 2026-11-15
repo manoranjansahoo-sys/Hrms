@@ -23,14 +23,20 @@ urlpatterns = [
     path('hr/candidates/bulk-status-update/', views.bulk_update_candidate_status, name='bulk_update_status'),
     path('hr/candidates/schedule-interview/', views.schedule_candidate_interview, name='schedule_candidate_interview'),
     path('hr/candidates/export-csv/', views.export_candidates_csv, name='export_candidates_csv'),
+    path('hr/candidates/export-excel/', views.export_candidates_excel, name='export_candidates_excel'),
+    path('hr/candidates/export-pdf/', views.export_candidates_pdf, name='export_candidates_pdf'),
     path('hr/candidates/<int:application_id>/', views.candidate_detail, name='candidate_detail'),
+    path('hr/candidates/<int:application_id>/resume/', views.candidate_resume_download, name='candidate_resume_download'),
     path('hr/candidates/<int:application_id>/convert-employee/', views.convert_to_employee, name='convert_to_employee'),
+    path('candidates/<int:candidate_id>/photo/', views.candidate_photo_view, name='candidate_photo'),
 
     # HR Onboarding Verification, Document Review & Appointment Pipeline
     path('hr/onboarding/', views.onboarding_candidates_list, name='onboarding_candidates_list'),
     path('hr/onboarding/appoint-employee/', views.appoint_employee, name='appoint_employee'),
     path('hr/onboarding/fetch-candidate/', views.fetch_onboarding_candidate_ajax, name='fetch_onboarding_candidate_ajax'),
     path('hr/onboarding/<str:application_id>/verify-documents/', views.verify_candidate_documents, name='verify_candidate_documents'),
+    path('hr/onboarding/documents/<int:doc_id>/view/', views.candidate_document_view, name='candidate_document_view'),
+    path('hr/onboarding/documents/<int:doc_id>/download/', views.candidate_document_download, name='candidate_document_download'),
     path('hr/onboarding/documents/<int:doc_id>/verify/', views.verify_single_candidate_document_ajax, name='verify_single_candidate_document'),
     path('hr/onboarding/documents/<int:doc_id>/reject/', views.reject_single_candidate_document_ajax, name='reject_single_candidate_document'),
 
@@ -38,6 +44,7 @@ urlpatterns = [
     path('candidate/api/google-auth/', views.candidate_google_auth, name='candidate_google_auth'),
     path('candidate/api/google-logout/', views.candidate_google_logout, name='candidate_google_logout'),
     path('candidate/api/lookup/', views.candidate_lookup_ajax, name='candidate_lookup_ajax'),
+    path('candidate/reupload-resume/<str:application_id>/', views.candidate_reupload_resume, name='candidate_reupload_resume'),
     path('candidate/apply/', views.candidate_register, name='candidate_apply'),
     path('candidate/fast-apply/', views.candidate_fast_apply, name='candidate_fast_apply'),
     path('candidate/fast-apply/<int:job_id>/', views.candidate_fast_apply, name='candidate_fast_apply_job'),

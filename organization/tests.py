@@ -302,12 +302,40 @@ class MasterDataTests(TestCase):
         self.assertIn(res_pl.status_code, [302, 200])
         self.pl_type.refresh_from_db()
         self.assertEqual(self.pl_type.days_per_year, Decimal('21.0'))
+        self.assertEqual(self.pl_type.allocation_frequency, 'MONTHLY')
+        self.assertEqual(self.pl_type.monthly_rate, Decimal('1.75'))
+
+    def test_leave_frequency_toggle(self):
+        """Admin can toggle between Annual Upfront and Monthly Accrual with 1 click."""
+        self.client.login(username='admin_head', password='Password@123')
+
+        # Currently ANNUALLY
+        self.sl_type.allocation_frequency = 'ANNUALLY'
+        self.sl_type.save()
+
+        # Toggle to MONTHLY
+        res = self.client.post(reverse('organization:leave_frequency_toggle', args=[self.sl_type.id]))
+        self.assertIn(res.status_code, [302, 200])
+        self.sl_type.refresh_from_db()
+        self.assertEqual(self.sl_type.allocation_frequency, 'MONTHLY')
+        self.assertTrue(self.sl_type.is_monthly)
+
+        # Explicit toggle back to ANNUALLY
+        res2 = self.client.post(
+            reverse('organization:leave_frequency_toggle', args=[self.sl_type.id]),
+            {'target_mode': 'ANNUALLY'}
+        )
+        self.assertIn(res2.status_code, [302, 200])
+        self.sl_type.refresh_from_db()
+        self.assertEqual(self.sl_type.allocation_frequency, 'ANNUALLY')
+        self.assertTrue(self.sl_type.is_annual)
 
     def test_admin_permissions_update(self):
-        """Admin can toggle HR access and delegate users."""
+        """Admin can toggle HR access, directory access, and delegate users."""
         self.client.login(username='admin_head', password='Password@123')
         perm_data = {
             'allow_all_hr': 'on',
+            'can_hr_view_workforce_directory': 'on',
             'can_manage_holidays': 'on',
             'can_manage_timings': 'on',
             'can_manage_locations': 'on',
@@ -318,4 +346,29 @@ class MasterDataTests(TestCase):
         self.assertIn(res.status_code, [302, 200])
         self.perm_setting.refresh_from_db()
         self.assertTrue(self.perm_setting.allow_all_hr)
+        self.assertTrue(self.perm_setting.can_hr_view_workforce_directory)
         self.assertTrue(self.perm_setting.allowed_users.filter(id=self.employee_user.id).exists())
+
+    def test_workforce_directory_access_controlled_by_admin_policy(self):
+        """Verify that Admin can toggle whether HR can view the Workforce Directory."""
+        # 1. When enabled, HR can view directory
+        self.perm_setting.can_hr_view_workforce_directory = True
+        self.perm_setting.save()
+
+        self.client.login(username='hr_admin', password='Password@123')
+        res_hr_allowed = self.client.get(reverse('employees:employee_list'))
+        self.assertEqual(res_hr_allowed.status_code, 200)
+
+        # 2. When disabled by Admin, HR is blocked and redirected
+        self.perm_setting.can_hr_view_workforce_directory = False
+        self.perm_setting.save()
+
+        res_hr_blocked = self.client.get(reverse('employees:employee_list'))
+        self.assertEqual(res_hr_blocked.status_code, 302)
+        self.assertEqual(res_hr_blocked.url, reverse('portal:smart_dashboard'))
+
+        # 3. Admin always has access even if disabled for HR
+        self.client.login(username='admin_head', password='Password@123')
+        res_admin = self.client.get(reverse('employees:employee_list'))
+        self.assertEqual(res_admin.status_code, 200)
+

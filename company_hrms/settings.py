@@ -194,7 +194,10 @@ USE_TZ = True
 
 FORCE_SCRIPT_NAME = os.getenv("FORCE_SCRIPT_NAME") or None
 
-_subpath = (FORCE_SCRIPT_NAME or "").rstrip("/")
+_subpath = (FORCE_SCRIPT_NAME or os.getenv("DJANGO_SUBPATH") or os.getenv("SUBPATH") or "").rstrip("/")
+if not _subpath and (os.getenv("PASSENGER_APP_ENV") or os.getenv("CPANEL") or os.getenv("DEPLOYED_SUBPATH")):
+    _subpath = os.getenv("DEPLOYED_SUBPATH", "/people").rstrip("/")
+
 STATIC_URL = os.getenv("STATIC_URL", f"{_subpath}/static/" if _subpath else "/static/")
 
 STATICFILES_DIRS = [

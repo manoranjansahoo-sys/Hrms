@@ -312,7 +312,13 @@
                         <tr class="clickable-employee-row" data-url="{% url 'employees:employee_detail' emp_id=emp.emp_id %}">
                             <td class="ps-4 py-2.5">
                                 <div class="d-flex align-items-center gap-2.5">
-                                    <img src="{{ emp.user.get_avatar_url }}" class="rounded-circle shadow-sm" width="38" height="38" style="object-fit: cover;">
+                                    <img src="{{ emp.user.get_avatar_url }}" 
+                                         alt="{{ emp.full_name }}" 
+                                         class="rounded-circle shadow-sm" 
+                                         width="38" 
+                                         height="38" 
+                                         style="object-fit: cover;"
+                                         onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ emp.full_name|urlencode }}&background=1B5E20&color=fff&size=128';">
                                     <div>
                                         <a href="{% url 'employees:employee_detail' emp_id=emp.emp_id %}" class="fw-bold text-dark text-decoration-none d-block stop-row-click" style="font-size: 0.88rem;">
                                             {{ emp.full_name }}

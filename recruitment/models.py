@@ -212,14 +212,18 @@ class Candidate(models.Model):
         return f"{self.full_name} ({self.email})"
 
     def get_photo_url(self):
-        if self.photo and hasattr(self.photo, 'url'):
-            return self.photo.url
-        if self.google_picture_url:
-            return self.google_picture_url
-        name_parts = self.full_name.split()
-        first = name_parts[0] if name_parts else 'User'
-        last = name_parts[-1] if len(name_parts) > 1 else ''
-        return f"https://ui-avatars.com/api/?name={first}+{last}&background=2E7D32&color=fff&size=128"
+        try:
+            from django.urls import reverse
+            return reverse('recruitment:candidate_photo', kwargs={'candidate_id': self.id})
+        except Exception:
+            if self.photo and hasattr(self.photo, 'url'):
+                return self.photo.url
+            if self.google_picture_url:
+                return self.google_picture_url
+            name_parts = self.full_name.split()
+            first = name_parts[0] if name_parts else 'User'
+            last = name_parts[-1] if len(name_parts) > 1 else ''
+            return f"https://ui-avatars.com/api/?name={first}+{last}&background=2E7D32&color=fff&size=128"
 
     @property
     def verified_documents_count(self):
@@ -337,7 +341,9 @@ class CandidateDocument(models.Model):
     DOC_TYPES = [
         ('RESUME', 'Resume / Curriculum Vitae'),
         ('PHOTO', 'Profile Photograph'),
-        ('CERTIFICATE', 'Educational Degree / Certificate'),
+        ('CERTIFICATE_10TH', '10th Class Marksheet / Certificate'),
+        ('CERTIFICATE_12TH', '12th / Diploma Marksheet / Certificate'),
+        ('CERTIFICATE', 'Educational Degree / Graduation Certificate'),
         ('EXPERIENCE_LETTER', 'Experience / Relieving Letter'),
         ('PAYSLIP', 'Recent Payslip / Form 16'),
         ('PAN_CARD', 'PAN Card Copy'),

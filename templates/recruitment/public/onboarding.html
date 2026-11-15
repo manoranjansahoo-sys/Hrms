@@ -403,7 +403,7 @@ textarea.form-control {
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label small fw-semibold" for="id_emergency_contact_name">Emergency Contact Person <span class="text-danger">*</span></label>
+                    <label class="form-label small fw-semibold" for="id_emergency_contact_name">Emergency Contact Person Name <span class="text-danger">*</span></label>
                     {{ form.emergency_contact_name }}
                     {% if form.emergency_contact_name.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.emergency_contact_name.errors.0 }}</div>{% endif %}
                 </div>
@@ -427,6 +427,17 @@ textarea.form-control {
                     {{ form.current_address }}
                     {% if form.current_address.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.current_address.errors.0 }}</div>{% endif %}
                 </div>
+
+                <!-- SAME AS CURRENT ADDRESS TOGGLE -->
+                <div class="col-12">
+                    <div class="form-check p-2.5 rounded-2 bg-light border d-inline-flex align-items-center gap-2">
+                        <input class="form-check-input ms-0" type="checkbox" id="sameAddressCheck" onchange="toggleSameAddress(this)">
+                        <label class="form-check-label small fw-bold text-dark mb-0 cursor-pointer" for="sameAddressCheck">
+                            <i class="bi bi-copy text-primary me-1"></i> Permanent address is same as current address
+                        </label>
+                    </div>
+                </div>
+
                 <div class="col-12">
                     <label class="form-label small fw-semibold" for="id_permanent_address">Permanent Home Address <span class="text-danger">*</span></label>
                     {{ form.permanent_address }}
@@ -486,9 +497,46 @@ textarea.form-control {
                     {% if form.details_10th.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.details_10th.errors.0 }}</div>{% endif %}
                 </div>
                 <div class="col-md-6">
+                    <label class="form-label small fw-semibold" for="id_certificate_10th">
+                        10th Class Marksheet / Certificate Upload
+                        {% if cert_10th_doc.is_rejected %}<span class="badge bg-danger text-white ms-1">Re-upload Required</span>{% endif %}
+                    </label>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="flex-grow-1">{{ form.certificate_10th }}</div>
+                        {% if cert_10th_doc %}
+                            <a href="{% url 'recruitment:candidate_document_view' doc_id=cert_10th_doc.id %}" target="_blank" class="btn btn-sm btn-outline-secondary px-2 text-nowrap" style="font-size: 0.78rem;">
+                                <i class="bi bi-eye"></i> View
+                            </a>
+                        {% endif %}
+                    </div>
+                    {% if cert_10th_doc.is_rejected %}
+                        <div class="text-danger small mt-1"><strong>Rejection Reason:</strong> {{ cert_10th_doc.rejection_notes }}</div>
+                    {% endif %}
+                    {% if form.certificate_10th.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.certificate_10th.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="col-md-6">
                     <label class="form-label small fw-semibold" for="id_details_12th">12th / Intermediate / Diploma Details <span class="text-danger">*</span></label>
                     {{ form.details_12th }}
                     {% if form.details_12th.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.details_12th.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold" for="id_certificate_12th">
+                        12th / Diploma Certificate Upload
+                        {% if cert_12th_doc.is_rejected %}<span class="badge bg-danger text-white ms-1">Re-upload Required</span>{% endif %}
+                    </label>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="flex-grow-1">{{ form.certificate_12th }}</div>
+                        {% if cert_12th_doc %}
+                            <a href="{% url 'recruitment:candidate_document_view' doc_id=cert_12th_doc.id %}" target="_blank" class="btn btn-sm btn-outline-secondary px-2 text-nowrap" style="font-size: 0.78rem;">
+                                <i class="bi bi-eye"></i> View
+                            </a>
+                        {% endif %}
+                    </div>
+                    {% if cert_12th_doc.is_rejected %}
+                        <div class="text-danger small mt-1"><strong>Rejection Reason:</strong> {{ cert_12th_doc.rejection_notes }}</div>
+                    {% endif %}
+                    {% if form.certificate_12th.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.certificate_12th.errors.0 }}</div>{% endif %}
                 </div>
 
                 <div class="col-12">
@@ -498,7 +546,7 @@ textarea.form-control {
                                 <i class="bi bi-file-earmark-pdf-fill text-danger fs-5"></i>
                                 <div>
                                     <label class="form-label small fw-bold mb-0" for="id_educational_certificate">
-                                        Upload Degree Certificate / Consolidated Marksheet
+                                        Upload Graduation / Degree Certificate (Consolidated Marksheet)
                                         {% if cert_doc.is_rejected %}
                                             <span class="badge bg-danger text-white ms-2">Re-upload Required</span>
                                         {% endif %}
@@ -515,7 +563,7 @@ textarea.form-control {
                                     {% else %}
                                         <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-file-earmark-check me-1"></i> Uploaded</span>
                                     {% endif %}
-                                    <a href="{{ cert_doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.78rem;">
+                                    <a href="{% url 'recruitment:candidate_document_view' doc_id=cert_doc.id %}" target="_blank" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.78rem;">
                                         <i class="bi bi-eye"></i> View File
                                     </a>
                                 </div>
@@ -585,7 +633,7 @@ textarea.form-control {
                                     {% else %}
                                         <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-file-earmark-check me-1"></i> Uploaded</span>
                                     {% endif %}
-                                    <a href="{{ exp_doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.78rem;">
+                                    <a href="{% url 'recruitment:candidate_document_view' doc_id=exp_doc.id %}" target="_blank" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.78rem;">
                                         <i class="bi bi-eye"></i> View
                                     </a>
                                 </div>
@@ -634,7 +682,7 @@ textarea.form-control {
                                     {% else %}
                                         <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-file-earmark-check me-1"></i> Uploaded</span>
                                     {% endif %}
-                                    <a href="{{ pay_doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.78rem;">
+                                    <a href="{% url 'recruitment:candidate_document_view' doc_id=pay_doc.id %}" target="_blank" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.78rem;">
                                         <i class="bi bi-eye"></i> View
                                     </a>
                                 </div>
@@ -733,7 +781,7 @@ textarea.form-control {
                                     {% else %}
                                         <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-file-earmark-check me-1"></i> Uploaded</span>
                                     {% endif %}
-                                    <a href="{{ bank_doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.78rem;">
+                                    <a href="{% url 'recruitment:candidate_document_view' doc_id=bank_doc.id %}" target="_blank" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.78rem;">
                                         <i class="bi bi-eye"></i> View
                                     </a>
                                 </div>
@@ -782,7 +830,7 @@ textarea.form-control {
                                     {% else %}
                                         <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-file-earmark-check me-1"></i> Uploaded</span>
                                     {% endif %}
-                                    <a href="{{ id_doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.78rem;">
+                                    <a href="{% url 'recruitment:candidate_document_view' doc_id=id_doc.id %}" target="_blank" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.78rem;">
                                         <i class="bi bi-eye"></i> View
                                     </a>
                                 </div>
@@ -1110,5 +1158,25 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+function toggleSameAddress(chk) {
+    const curr = document.getElementById('id_current_address');
+    const perm = document.getElementById('id_permanent_address');
+    if (!curr || !perm) return;
+    if (chk.checked) {
+        perm.value = curr.value;
+        curr.addEventListener('input', syncAddress);
+    } else {
+        curr.removeEventListener('input', syncAddress);
+    }
+}
+function syncAddress() {
+    const chk = document.getElementById('sameAddressCheck');
+    const curr = document.getElementById('id_current_address');
+    const perm = document.getElementById('id_permanent_address');
+    if (chk && chk.checked && curr && perm) {
+        perm.value = curr.value;
+    }
+}
 </script>
 {% endblock %}

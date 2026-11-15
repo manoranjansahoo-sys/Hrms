@@ -5,9 +5,26 @@ from employees.models import EmployeeProfile
 
 
 class LeaveType(models.Model):
+    FREQUENCY_CHOICES = [
+        ('ANNUALLY', 'Annual Upfront'),
+        ('MONTHLY', 'Monthly Accrual'),
+    ]
+
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=20, unique=True)
     days_per_year = models.DecimalField(max_digits=4, decimal_places=1, default=Decimal('12.0'))
+    allocation_frequency = models.CharField(
+        max_length=20,
+        choices=FREQUENCY_CHOICES,
+        default='ANNUALLY',
+        help_text="Whether quota is allocated upfront annually or accrued monthly"
+    )
+    monthly_rate = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        default=Decimal('1.00'),
+        help_text="Days credited per month in monthly accrual mode"
+    )
     is_paid = models.BooleanField(default=True)
     requires_attachment = models.BooleanField(default=False)
     description = models.TextField(blank=True)
@@ -17,6 +34,20 @@ class LeaveType(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.code})"
+
+    @property
+    def is_monthly(self):
+        return self.allocation_frequency == 'MONTHLY'
+
+    @property
+    def is_annual(self):
+        return self.allocation_frequency == 'ANNUALLY'
+
+    @property
+    def effective_monthly_rate(self):
+        if self.allocation_frequency == 'MONTHLY' and self.monthly_rate:
+            return self.monthly_rate
+        return Decimal(str(round(float(self.days_per_year or 0) / 12.0, 2)))
 
 
 class LeaveBalance(models.Model):
@@ -104,6 +135,16 @@ class LeaveRequest(models.Model):
 
     def __str__(self):
         return f"{self.employee.emp_id} - {self.leave_type.code} ({self.start_date} to {self.end_date}): {self.status}"
+
+    @property
+    def is_hr_applicant(self):
+        """Returns True if the applicant is an HR Administrator."""
+        return bool(self.employee and self.employee.user and self.employee.user.is_hr_role)
+
+    @property
+    def requires_admin_approval(self):
+        """HR staff requests must be approved by Head / Super Admin."""
+        return self.is_hr_applicant
 
     @property
     def sick_leave_available(self):

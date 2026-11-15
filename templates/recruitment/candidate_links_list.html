@@ -578,7 +578,13 @@
                                     </td>
                                     <td class="py-3">
                                         <div class="d-flex align-items-center gap-2">
-                                            <img src="{{ app.candidate.get_photo_url }}" alt="{{ app.candidate.full_name }}" class="rounded-circle border shadow-2xs" width="32" height="32" style="object-fit: cover;">
+                                            <img src="{{ app.candidate.get_photo_url }}" 
+                                                 alt="{{ app.candidate.full_name }}" 
+                                                 class="rounded-circle border shadow-2xs" 
+                                                 width="32" 
+                                                 height="32" 
+                                                 style="object-fit: cover;"
+                                                 onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ app.candidate.full_name|urlencode }}&background=2E7D32&color=fff&size=128';">
                                             <span class="fw-bold text-dark fs-6">{{ app.candidate.full_name }}</span>
                                         </div>
                                     </td>
@@ -686,7 +692,13 @@
                                     </td>
                                     <td class="py-3">
                                         <div class="d-flex align-items-center gap-2">
-                                            <img src="{{ app.candidate.get_photo_url }}" alt="{{ app.candidate.full_name }}" class="rounded-circle border shadow-2xs" width="32" height="32" style="object-fit: cover;">
+                                            <img src="{{ app.candidate.get_photo_url }}" 
+                                                 alt="{{ app.candidate.full_name }}" 
+                                                 class="rounded-circle border shadow-2xs" 
+                                                 width="32" 
+                                                 height="32" 
+                                                 style="object-fit: cover;"
+                                                 onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ app.candidate.full_name|urlencode }}&background=2E7D32&color=fff&size=128';">
                                             <span class="fw-bold text-dark fs-6">{{ app.candidate.full_name }}</span>
                                         </div>
                                     </td>

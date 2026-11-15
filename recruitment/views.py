@@ -5,7 +5,7 @@ import base64
 import json
 from decimal import Decimal
 from datetime import datetime
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, FileResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
@@ -29,7 +29,7 @@ from recruitment.forms import (
     PreInterviewApplicationForm, CandidateRegistrationStepForm,
     QuickSocialApplicationForm,
     CandidateOnboardingForm, ApplicationReviewForm,
-    ScheduleInterviewForm, AppointEmployeeForm
+    ScheduleInterviewForm, AppointEmployeeForm, validate_document_file
 )
 from notifications.models import create_notification
 
@@ -522,27 +522,10 @@ def candidates_list(request):
 
 
 @login_required
-@hr_required
-def export_candidates_csv(request):
-    """
-    Export candidate applications pipeline to a CSV spreadsheet report.
-    Respects current filters, search query parameters, and active tab.
-    """
+def _filter_candidate_applications(request):
+    """Helper to apply filter, search, and sorting to candidate applications."""
     tab = request.GET.get('tab', 'office').strip()
     is_office = (tab != 'online')
-
-    response = HttpResponse(content_type='text/csv')
-    filename_prefix = "Talent_Roster_Office" if is_office else "Job_Applications_Online"
-    response['Content-Disposition'] = f'attachment; filename="{filename_prefix}_{timezone.now().strftime("%Y%m%d_%H%M")}.csv"'
-
-    writer = csv.writer(response)
-    writer.writerow([
-        'Application ID', 'Candidate Name', 'Email', 'Phone',
-        'Job Role', 'Department', 'Location',
-        'Experience Type', 'Total Experience', 'Current Company',
-        'Highest Qualification', 'Institution', 'Status',
-        'Application Type', 'Applied Date'
-    ])
 
     applications = JobApplication.objects.select_related(
         'candidate', 'candidate__education', 'candidate__experience',
@@ -579,7 +562,29 @@ def export_candidates_csv(request):
         'role_asc': 'job__title',
     }
     order_field = sort_map.get(sort_by, '-applied_at')
-    applications = applications.order_by(order_field)
+    return applications.order_by(order_field), is_office
+
+
+@login_required
+@hr_required
+def export_candidates_csv(request):
+    """
+    Export candidate applications pipeline to a CSV spreadsheet report.
+    Respects current filters, search query parameters, and active tab.
+    """
+    applications, is_office = _filter_candidate_applications(request)
+
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    filename_prefix = "Talent_Roster_Office" if is_office else "Job_Applications_Online"
+    response['Content-Disposition'] = f'attachment; filename="{filename_prefix}_{timezone.now().strftime("%Y%m%d_%H%M")}.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow([
+        'Application ID', 'Candidate Name', 'Email', 'Phone',
+        'Job Role', 'Department', 'Location',
+        'Experience Type', 'Total Experience', 'Current Company',
+        'Highest Qualification', 'Institution', 'Status', 'Applied Date'
+    ])
 
     for app in applications:
         c = app.candidate
@@ -612,6 +617,245 @@ def export_candidates_csv(request):
             app.applied_at.strftime('%Y-%m-%d %H:%M') if app.applied_at else '',
         ])
 
+    return response
+
+
+@login_required
+@hr_required
+def export_candidates_excel(request):
+    """
+    Export candidate applications pipeline to a styled Excel (.xlsx) report.
+    """
+    import io
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+
+    applications, is_office = _filter_candidate_applications(request)
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Candidates Pipeline"
+
+    # Title Banner
+    ws.merge_cells('A1:L1')
+    title_cell = ws['A1']
+    title_cell.value = f"COMPANY HRMS - CANDIDATE APPLICATIONS ({'OFFICE ROSTER' if is_office else 'ONLINE APPLICATIONS'})"
+    title_cell.font = Font(name='Calibri', size=14, bold=True, color='FFFFFF')
+    title_cell.fill = PatternFill(start_color='1E3A8A', end_color='1E3A8A', fill_type='solid')
+    title_cell.alignment = Alignment(horizontal='center', vertical='center')
+    ws.row_dimensions[1].height = 36
+
+    # Generated Subheader
+    ws.merge_cells('A2:L2')
+    sub_cell = ws['A2']
+    sub_cell.value = f"Generated on: {timezone.now().strftime('%d %b %Y, %I:%M %p')} | Total Applications: {applications.count()}"
+    sub_cell.font = Font(name='Calibri', size=10, italic=True, color='4B5563')
+    sub_cell.alignment = Alignment(horizontal='center', vertical='center')
+    ws.row_dimensions[2].height = 20
+
+    headers = [
+        'Application ID', 'Candidate Name', 'Email', 'Phone',
+        'Job Role', 'Department', 'Location',
+        'Experience Type', 'Total Experience', 'Current Company',
+        'Highest Qualification', 'Status'
+    ]
+    ws.append([])  # Row 3
+
+    ws.append(headers)  # Row 4
+    header_fill = PatternFill(start_color='2563EB', end_color='2563EB', fill_type='solid')
+    header_font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
+    thin_border = Border(
+        left=Side(style='thin', color='E5E7EB'),
+        right=Side(style='thin', color='E5E7EB'),
+        top=Side(style='thin', color='E5E7EB'),
+        bottom=Side(style='thin', color='E5E7EB')
+    )
+
+    for col_idx in range(1, len(headers) + 1):
+        cell = ws.cell(row=4, column=col_idx)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+        cell.border = thin_border
+    ws.row_dimensions[4].height = 28
+
+    for app in applications:
+        c = app.candidate
+        edu = getattr(c, 'education', None)
+        exp = getattr(c, 'experience', None)
+
+        exp_type = exp.get_experience_type_display() if exp else 'Not specified'
+        exp_duration = '0y 0m'
+        curr_comp = ''
+        if exp and exp.experience_type != 'FRESHER':
+            exp_duration = f"{exp.total_experience_years or 0}y {exp.total_experience_months or 0}m"
+            curr_comp = exp.current_company or ''
+        elif exp and exp.experience_type == 'FRESHER':
+            exp_duration = 'Fresher'
+
+        row = [
+            app.application_id,
+            c.full_name,
+            c.email,
+            c.phone,
+            app.job.title if app.job else 'General',
+            app.job.department.name if app.job and app.job.department else 'General',
+            app.job.location if app.job else '',
+            exp_type,
+            exp_duration,
+            curr_comp,
+            edu.highest_qualification if edu else '',
+            app.get_status_display(),
+        ]
+        ws.append(row)
+        current_row = ws.max_row
+        ws.row_dimensions[current_row].height = 22
+        for col_idx in range(1, len(row) + 1):
+            cell = ws.cell(row=current_row, column=col_idx)
+            cell.font = Font(name='Calibri', size=10)
+            cell.border = thin_border
+            if col_idx in [1, 4, 8, 9, 12]:
+                cell.alignment = Alignment(horizontal='center', vertical='center')
+            else:
+                cell.alignment = Alignment(horizontal='left', vertical='center')
+
+    for col in ws.columns:
+        max_len = 0
+        col_letter = get_column_letter(col[0].column)
+        for cell in col:
+            if cell.row > 2 and cell.value:
+                max_len = max(max_len, len(str(cell.value)))
+        ws.column_dimensions[col_letter].width = max(max_len + 3, 12)
+
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+
+    filename_prefix = "Talent_Roster_Office" if is_office else "Job_Applications_Online"
+    filename = f"{filename_prefix}_{timezone.now().strftime('%Y%m%d_%H%M')}.xlsx"
+    response = HttpResponse(
+        buffer.getvalue(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+@login_required
+@hr_required
+def export_candidates_pdf(request):
+    """
+    Export candidate applications pipeline to a clean, professional PDF report.
+    """
+    import io
+    from reportlab.lib.pagesizes import letter, landscape
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib import colors
+
+    applications, is_office = _filter_candidate_applications(request)
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=landscape(letter),
+        leftMargin=25,
+        rightMargin=25,
+        topMargin=25,
+        bottomMargin=25
+    )
+
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'DocTitle',
+        parent=styles['Heading1'],
+        fontName='Helvetica-Bold',
+        fontSize=15,
+        leading=18,
+        textColor=colors.HexColor('#1E3A8A'),
+        alignment=1
+    )
+    sub_style = ParagraphStyle(
+        'DocSub',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=9,
+        leading=12,
+        textColor=colors.HexColor('#6B7280'),
+        alignment=1
+    )
+    cell_style = ParagraphStyle(
+        'CellText',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=8,
+        leading=10
+    )
+    head_cell_style = ParagraphStyle(
+        'HeadCell',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=8,
+        leading=10,
+        textColor=colors.white
+    )
+
+    elements = []
+    title_text = f"Company HRMS - Candidate Applications ({'Office Walk-In' if is_office else 'Online Fast Apply'})"
+    elements.append(Paragraph(title_text, title_style))
+    elements.append(Spacer(1, 4))
+    elements.append(Paragraph(f"Generated on: {timezone.now().strftime('%d %b %Y, %I:%M %p')} | Total Applications: {applications.count()}", sub_style))
+    elements.append(Spacer(1, 12))
+
+    table_data = [[
+        Paragraph('App ID', head_cell_style),
+        Paragraph('Candidate Name', head_cell_style),
+        Paragraph('Contact Details', head_cell_style),
+        Paragraph('Role / Position', head_cell_style),
+        Paragraph('Experience', head_cell_style),
+        Paragraph('Qualification', head_cell_style),
+        Paragraph('Status', head_cell_style),
+        Paragraph('Applied Date', head_cell_style),
+    ]]
+
+    for app in applications:
+        c = app.candidate
+        edu = getattr(c, 'education', None)
+        exp = getattr(c, 'experience', None)
+        exp_str = 'Fresher' if exp and exp.experience_type == 'FRESHER' else f"{exp.total_experience_years or 0}y" if exp else '--'
+        table_data.append([
+            Paragraph(app.application_id, cell_style),
+            Paragraph(c.full_name, cell_style),
+            Paragraph(f"{c.email}<br/>{c.phone}", cell_style),
+            Paragraph(f"{app.job.title if app.job else 'General'}<br/><font color='#6B7280'>{app.job.department.name if app.job and app.job.department else ''}</font>", cell_style),
+            Paragraph(exp_str, cell_style),
+            Paragraph(edu.highest_qualification or '--' if edu else '--', cell_style),
+            Paragraph(app.get_status_display(), cell_style),
+            Paragraph(app.applied_at.strftime('%d %b %Y') if app.applied_at else '--', cell_style),
+        ])
+
+    col_widths = [65, 115, 135, 125, 65, 95, 90, 75]
+    table = Table(table_data, colWidths=col_widths, repeatRows=1)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1E3A8A')),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E5E7EB')),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.HexColor('#FFFFFF'), colors.HexColor('#F9FAFB')]),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+    ]))
+    elements.append(table)
+
+    doc.build(elements)
+    buffer.seek(0)
+
+    filename_prefix = "Talent_Roster_Office" if is_office else "Job_Applications_Online"
+    filename = f"{filename_prefix}_{timezone.now().strftime('%Y%m%d_%H%M')}.pdf"
+    response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
 
 
@@ -1961,7 +2205,10 @@ def candidate_onboarding(request, application_id):
 
                     # 4. Save / Update Uploaded Verification Documents
                     doc_specs = [
-                        ('educational_certificate', 'CERTIFICATE', 'Degree Certificate / Final Marksheet'),
+                        ('certificate_10th', 'CERTIFICATE_10TH', '10th Class Marksheet / Certificate'),
+                        ('certificate_12th', 'CERTIFICATE_12TH', '12th / Intermediate / Diploma Certificate'),
+                        ('educational_certificate', 'CERTIFICATE', 'Graduation / Degree Certificate'),
+                        ('resume', 'RESUME', 'Resume / Curriculum Vitae'),
                         ('experience_letter', 'EXPERIENCE_LETTER', 'Experience / Relieving Letter'),
                         ('payslip', 'PAYSLIP', 'Recent Payslip / Form 16'),
                         ('bank_proof', 'BANK_PROOF', 'Cancelled Cheque / Bank Passbook Copy'),
@@ -1970,6 +2217,10 @@ def candidate_onboarding(request, application_id):
                     for field_name, doc_type, default_title in doc_specs:
                         uploaded_file = cd.get(field_name)
                         if uploaded_file:
+                            if field_name == 'resume':
+                                candidate.resume = uploaded_file
+                                candidate.save(update_fields=['resume'])
+
                             doc = CandidateDocument.objects.filter(candidate=candidate, doc_type=doc_type).first()
                             if doc:
                                 doc.file = uploaded_file
@@ -2058,7 +2309,10 @@ def candidate_onboarding(request, application_id):
 
     existing_docs = {d.doc_type: d for d in candidate.documents.all()}
     rejected_docs = candidate.documents.filter(is_rejected=True)
+    cert_10th_doc = existing_docs.get('CERTIFICATE_10TH')
+    cert_12th_doc = existing_docs.get('CERTIFICATE_12TH')
     cert_doc = existing_docs.get('CERTIFICATE')
+    resume_doc = existing_docs.get('RESUME')
     exp_doc = existing_docs.get('EXPERIENCE_LETTER')
     pay_doc = existing_docs.get('PAYSLIP')
     bank_doc = existing_docs.get('BANK_PROOF')
@@ -2071,7 +2325,10 @@ def candidate_onboarding(request, application_id):
         'job': app.job,
         'existing_docs': existing_docs,
         'rejected_docs': rejected_docs,
+        'cert_10th_doc': cert_10th_doc,
+        'cert_12th_doc': cert_12th_doc,
         'cert_doc': cert_doc,
+        'resume_doc': resume_doc,
         'exp_doc': exp_doc,
         'pay_doc': pay_doc,
         'bank_doc': bank_doc,
@@ -2098,11 +2355,70 @@ def candidate_track(request, application_id=None):
         if not app:
             search_error = f"No application found with ID '{target_id}'. Please check your ID and try again."
 
+    rejected_docs = []
+    has_rejected_docs = False
+    resume_doc = None
+    if app:
+        rejected_docs = app.candidate.documents.filter(is_rejected=True)
+        has_rejected_docs = rejected_docs.exists()
+        resume_doc = app.candidate.documents.filter(doc_type='RESUME').first()
+
     return render(request, 'recruitment/public/track.html', {
         'application': app,
         'search_id': target_id,
         'search_error': search_error,
+        'rejected_docs': rejected_docs,
+        'has_rejected_docs': has_rejected_docs,
+        'resume_doc': resume_doc,
     })
+
+
+def candidate_reupload_resume(request, application_id):
+    """
+    Allow candidate to re-upload their resume when rejected or requested by HR.
+    """
+    app = get_object_or_404(JobApplication, application_id=application_id)
+    if request.method == 'POST' and request.FILES.get('resume'):
+        uploaded_resume = request.FILES.get('resume')
+        try:
+            validate_document_file(uploaded_resume)
+        except Exception as e:
+            messages.error(request, f"Invalid resume file: {str(e)}")
+            return redirect('recruitment:candidate_track_id', application_id=application_id)
+
+        candidate = app.candidate
+        app.resume = uploaded_resume
+        app.save(update_fields=['resume'])
+
+        CandidateDocument.objects.update_or_create(
+            candidate=candidate,
+            doc_type='RESUME',
+            defaults={
+                'title': 'Resume / Curriculum Vitae',
+                'file': uploaded_resume,
+                'is_rejected': False,
+                'is_verified': False,
+                'rejection_notes': '',
+            }
+        )
+
+        old_status = app.status
+        if app.status == JobApplication.Status.REJECTED:
+            app.status = JobApplication.Status.UNDER_REVIEW
+            app.save(update_fields=['status'])
+
+        ApplicationStatusHistory.objects.create(
+            application=app,
+            old_status=old_status,
+            new_status=app.status,
+            notes="Candidate re-uploaded updated resume / CV for HR re-evaluation."
+        )
+
+        messages.success(request, "Your updated resume has been successfully uploaded and submitted to HR for review.")
+        return redirect('recruitment:candidate_track_id', application_id=application_id)
+
+    messages.error(request, "Please choose a valid resume file (PDF or DOCX) to upload.")
+    return redirect('recruitment:candidate_track_id', application_id=application_id)
 
 
 @login_required
@@ -2499,6 +2815,87 @@ def reject_single_candidate_document_ajax(request, doc_id):
 
 
 @login_required
+def candidate_document_view(request, doc_id):
+    """
+    Safely view candidate document (PDF, image, etc.) in browser.
+    Prevents subpath 404 / service worker 'no internet' errors.
+    """
+    doc = get_object_or_404(CandidateDocument, id=doc_id)
+    if not doc.file:
+        return render(request, 'recruitment/document_unavailable.html', {
+            'doc': doc,
+            'reason': 'No file is attached to this document record.'
+        })
+
+    try:
+        if not os.path.exists(doc.file.path):
+            return render(request, 'recruitment/document_unavailable.html', {
+                'doc': doc,
+                'reason': 'The file is not currently found on server storage.'
+            })
+
+        import mimetypes
+        content_type, _ = mimetypes.guess_type(doc.file.path)
+        if not content_type:
+            content_type = 'application/octet-stream'
+
+        response = FileResponse(open(doc.file.path, 'rb'), content_type=content_type)
+        response['Content-Disposition'] = f'inline; filename="{os.path.basename(doc.file.name)}"'
+        return response
+    except Exception as e:
+        return render(request, 'recruitment/document_unavailable.html', {
+            'doc': doc,
+            'reason': f'Unable to open file: {str(e)}'
+        })
+
+
+@login_required
+def candidate_document_download(request, doc_id):
+    """
+    Download candidate document with Content-Disposition: attachment.
+    """
+    doc = get_object_or_404(CandidateDocument, id=doc_id)
+    if not doc.file or not os.path.exists(doc.file.path):
+        messages.error(request, f"Document file for '{doc.title}' is not available on server storage.")
+        return redirect('recruitment:onboarding_candidates_list')
+
+    import mimetypes
+    content_type, _ = mimetypes.guess_type(doc.file.path) or ('application/octet-stream', None)
+    response = FileResponse(open(doc.file.path, 'rb'), content_type=content_type, as_attachment=True, filename=os.path.basename(doc.file.name))
+    return response
+
+
+@login_required
+def candidate_resume_download(request, application_id):
+    """
+    Safely view or download candidate resume.
+    """
+    app = get_object_or_404(JobApplication.objects.select_related('candidate'), id=application_id)
+    candidate = app.candidate
+    resume_file = candidate.resume
+    if not resume_file:
+        resume_doc = CandidateDocument.objects.filter(candidate=candidate, doc_type='RESUME').first()
+        if resume_doc and resume_doc.file:
+            return candidate_document_view(request, resume_doc.id)
+        messages.error(request, f"No resume file uploaded for {candidate.full_name}.")
+        return redirect('recruitment:candidate_detail', application_id=app.id)
+
+    try:
+        if not os.path.exists(resume_file.path):
+            messages.warning(request, f"Resume file for {candidate.full_name} is not present on server filesystem.")
+            return redirect('recruitment:candidate_detail', application_id=app.id)
+
+        import mimetypes
+        content_type, _ = mimetypes.guess_type(resume_file.path) or ('application/pdf', None)
+        response = FileResponse(open(resume_file.path, 'rb'), content_type=content_type)
+        response['Content-Disposition'] = f'inline; filename="{os.path.basename(resume_file.name)}"'
+        return response
+    except Exception as e:
+        messages.error(request, f"Error accessing resume: {str(e)}")
+        return redirect('recruitment:candidate_detail', application_id=app.id)
+
+
+@login_required
 @hr_required
 def fetch_onboarding_candidate_ajax(request):
     """
@@ -2771,7 +3168,8 @@ def appoint_employee(request):
                             marital_status=candidate.marital_status if candidate.marital_status in ['SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED'] else 'SINGLE',
                             blood_group=candidate.blood_group,
                             personal_email=candidate.email,
-                            address=candidate.permanent_address or candidate.current_address,
+                            address=candidate.current_address or candidate.permanent_address,
+                            permanent_address=candidate.permanent_address or candidate.current_address,
                             city=candidate.city,
                             state=candidate.state,
                             postal_code=candidate.postal_code,
@@ -2888,4 +3286,29 @@ def appoint_employee(request):
         'prefill_app': prefill_app,
         'today': timezone.localdate(),
     })
+
+
+def candidate_photo_view(request, candidate_id):
+    """
+    Safely stream candidate photo or redirect to avatar fallback without breaking subpath or missing files.
+    """
+    candidate = get_object_or_404(Candidate, id=candidate_id)
+    if candidate.photo:
+        try:
+            if candidate.photo.storage.exists(candidate.photo.name):
+                content_type, _ = mimetypes.guess_type(candidate.photo.name)
+                response = FileResponse(candidate.photo.open('rb'), content_type=content_type or 'image/jpeg')
+                response['Cache-Control'] = 'public, max-age=86400'
+                return response
+        except Exception:
+            pass
+
+    if candidate.google_picture_url:
+        return redirect(candidate.google_picture_url)
+
+    name_parts = candidate.full_name.split()
+    first = name_parts[0] if name_parts else 'User'
+    last = name_parts[-1] if len(name_parts) > 1 else ''
+    return redirect(f"https://ui-avatars.com/api/?name={first}+{last}&background=2E7D32&color=fff&size=128")
+
 

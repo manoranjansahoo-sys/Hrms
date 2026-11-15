@@ -56,27 +56,39 @@
                                         <div class="text-muted mt-1" style="font-size: 0.72rem;">{{ corr.review_notes }}</div>
                                     {% endif %}
                                 {% else %}
-                                    <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i> Pending Review</span>
+                                    {% if corr.employee.user.is_hr_role %}
+                                        <span class="badge bg-warning-subtle text-dark border border-warning-subtle"><i class="bi bi-shield-lock-fill me-1"></i> Pending Admin</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i> Pending Review</span>
+                                    {% endif %}
                                 {% endif %}
                             </td>
                             <td class="text-end">
                                 {% if corr.status == 'PENDING' %}
-                                    <div class="d-flex justify-content-end gap-1">
-                                        <form method="POST" action="{% url 'employees:review_profile_correction' request_id=corr.id %}" class="d-inline">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="action" value="APPROVE">
-                                            <button type="submit" class="btn btn-sm btn-success py-1 px-2.5 fw-semibold" title="Approve and apply change directly to employee profile">
-                                                <i class="bi bi-check-lg me-1"></i> Approve
-                                            </button>
-                                        </form>
-                                        <form method="POST" action="{% url 'employees:review_profile_correction' request_id=corr.id %}" class="d-inline">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="action" value="REJECT">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2.5 fw-semibold" title="Reject request">
-                                                <i class="bi bi-x-lg me-1"></i> Reject
-                                            </button>
-                                        </form>
-                                    </div>
+                                    {% if corr.employee.user == request.user %}
+                                        <span class="badge bg-light text-muted border small">Self-Request</span>
+                                    {% elif corr.employee.user.is_hr_role and not request.user.is_head_role and not request.user.is_superuser %}
+                                        <span class="badge bg-warning-subtle text-dark border border-warning-subtle small" title="Only Admin can review HR staff profile requests">
+                                            <i class="bi bi-shield-lock-fill me-1"></i>Admin Only
+                                        </span>
+                                    {% else %}
+                                        <div class="d-flex justify-content-end gap-1">
+                                            <form method="POST" action="{% url 'employees:review_profile_correction' request_id=corr.id %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="APPROVE">
+                                                <button type="submit" class="btn btn-sm btn-success py-1 px-2.5 fw-semibold" title="Approve and apply change directly to employee profile">
+                                                    <i class="bi bi-check-lg me-1"></i> Approve
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="{% url 'employees:review_profile_correction' request_id=corr.id %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="REJECT">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2.5 fw-semibold" title="Reject request">
+                                                    <i class="bi bi-x-lg me-1"></i> Reject
+                                                </button>
+                                            </form>
+                                        </div>
+                                    {% endif %}
                                 {% else %}
                                     <small class="text-muted">
                                         By {{ corr.reviewed_by.get_full_name|default:corr.reviewed_by.username|default:"HR Admin" }}

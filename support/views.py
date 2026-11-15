@@ -137,10 +137,20 @@ def document_requests_view(request):
 @login_required
 @hr_required
 def process_document_request(request, request_id):
-    """HR marks document request as issued or rejected."""
+    """HR marks document request as issued or rejected. HR staff requests require Head / Admin approval."""
     doc_req = get_object_or_404(OfficialDocumentRequest, id=request_id)
     action = request.POST.get('action')
     remarks = request.POST.get('remarks', '')
+
+    # 1. Prevent self-processing
+    if doc_req.employee.user == request.user:
+        messages.error(request, "Self-approval is not permitted. Your document request must be processed by an administrator.")
+        return redirect('support:documents_list')
+
+    # 2. HR applicant check
+    if doc_req.employee.user.is_hr_role and not (request.user.is_head_role or request.user.is_superuser):
+        messages.error(request, "Permission denied. Document requests for HR staff can only be approved by the Head / Super Admin.")
+        return redirect('support:documents_list')
 
     if action == 'ISSUE':
         doc_req.status = 'ISSUED'

@@ -84,12 +84,17 @@ class Attendance(models.Model):
             if hours >= shift_hours:
                 self.status = 'PRESENT'
                 self.overtime_hours = max(Decimal('0.00'), hours - shift_hours)
+                self.is_early_departure = False
             elif hours >= half_day_hours:
                 self.status = 'HALF_DAY'
                 self.overtime_hours = Decimal('0.00')
+                self.is_early_departure = True
             else:
-                self.status = 'ABSENT'
+                # Employee punched in and punched out, attending for less than half-day hours.
+                # Mark as HALF_DAY with early departure flag so they reflect accurately in the register.
+                self.status = 'HALF_DAY'
                 self.overtime_hours = Decimal('0.00')
+                self.is_early_departure = True
 
     @property
     def late_duration_text(self):

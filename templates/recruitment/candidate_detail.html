@@ -63,7 +63,13 @@
         <div class="p-4 p-md-5 bg-light border-bottom">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-4">
                 <div class="d-flex align-items-center gap-4">
-                    <img src="{{ candidate.get_photo_url }}" alt="{{ candidate.full_name }}" class="rounded-circle border border-4 border-white shadow" width="95" height="95" style="object-fit: cover;">
+                    <img src="{{ candidate.get_photo_url }}" 
+                         alt="{{ candidate.full_name }}" 
+                         class="rounded-circle border border-4 border-white shadow" 
+                         width="95" 
+                         height="95" 
+                         style="object-fit: cover;"
+                         onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ candidate.full_name|urlencode }}&background=2E7D32&color=fff&size=128';">
                     <div>
                         <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
                             <h3 class="fw-bold mb-0 text-dark">{{ candidate.full_name }}</h3>
@@ -110,7 +116,7 @@
 
                 <div class="d-flex gap-2">
                     {% if application.resume %}
-                        <a href="{{ application.resume.url }}" target="_blank" class="btn btn-outline-danger btn-sm shadow-sm">
+                        <a href="{% url 'recruitment:candidate_resume_download' application_id=application.id %}" target="_blank" class="btn btn-outline-danger btn-sm shadow-sm">
                             <i class="bi bi-file-earmark-pdf-fill me-1"></i> Download Resume
                         </a>
                     {% endif %}
@@ -276,7 +282,7 @@
                                     <b>Primary Resume / CV</b>
                                 </div>
                                 {% if application.resume %}
-                                    <a href="{{ application.resume.url }}" target="_blank" class="btn btn-sm btn-outline-danger py-0 px-2">Download</a>
+                                    <a href="{% url 'recruitment:candidate_resume_download' application_id=application.id %}" target="_blank" class="btn btn-sm btn-outline-danger py-0 px-2">Download</a>
                                 {% endif %}
                             </li>
                             {% for doc in documents %}
@@ -290,7 +296,10 @@
                                         {% endif %}
                                     </div>
                                     <div class="d-flex align-items-center gap-1">
-                                        <a href="{{ doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-secondary py-0 px-2">View</a>
+                                        <a href="{% url 'recruitment:candidate_document_view' doc_id=doc.id %}" target="_blank" class="btn btn-sm btn-outline-secondary py-0 px-2">View</a>
+                                        <a href="{% url 'recruitment:candidate_document_download' doc_id=doc.id %}" class="btn btn-sm btn-outline-primary py-0 px-2" title="Download">
+                                            <i class="bi bi-download"></i>
+                                        </a>
                                     </div>
                                 </li>
                             {% endfor %}

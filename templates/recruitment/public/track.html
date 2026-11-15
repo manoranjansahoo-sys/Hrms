@@ -61,12 +61,34 @@
                                 <p class="text-dark small mb-3">
                                     The technical & hiring committee has approved your candidacy for <b>{{ application.job.title }}</b>.
                                     {% if application.is_onboarding_completed %}
-                                        <br><span class="badge bg-success mt-1"><i class="bi bi-check2-all me-1"></i> Onboarding Details Submitted on {{ application.onboarding_completed_at|date:"d M Y" }}</span>
+                                        <br><span class="badge bg-success mt-1"><i class="bi bi-check2-all me-1"></i> Onboarding Details Submitted on {{ application.onboarding_completed_at|date:"d M Y, h:i A" }}</span>
                                         <span class="text-muted d-block mt-1">Our HR Operations team is currently verifying your submitted certificates and preparing your formal employment contract.</span>
                                     {% else %}
                                         Please complete your official <b>Employee Onboarding & Verification Dossier</b> (Permanent address, 10th & 12th marks, Degree certificates, Bank account, and Tax identification) to issue your appointment letter.
                                     {% endif %}
                                 </p>
+
+                                {% if has_rejected_docs or application.document_verification_status == 'REJECTED' %}
+                                    <div class="alert alert-danger border-danger d-flex align-items-start gap-3 my-3 shadow-sm rounded-3">
+                                        <i class="bi bi-exclamation-triangle-fill fs-4 text-danger flex-shrink-0 mt-1"></i>
+                                        <div class="flex-grow-1">
+                                            <h6 class="fw-bold text-danger mb-1">Document Verification Action Required</h6>
+                                            <p class="small mb-2 text-dark">One or more of your submitted documents were rejected by HR. Please review the feedback and re-upload the corrected documents below to complete your onboarding:</p>
+                                            <ul class="mb-3 ps-3 small text-dark">
+                                                {% for rdoc in rejected_docs %}
+                                                    <li>
+                                                        <strong>{{ rdoc.title }}:</strong>
+                                                        <span class="text-danger fw-semibold">{{ rdoc.rejection_notes|default:"Document rejected. Please upload a clear valid copy." }}</span>
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                            <a href="{% url 'recruitment:candidate_onboarding' application_id=application.application_id %}" class="btn btn-danger btn-sm">
+                                                <i class="bi bi-upload me-1"></i> Re-upload Rejected Documents Now &rarr;
+                                            </a>
+                                        </div>
+                                    </div>
+                                {% endif %}
+
                                 {% if not application.is_onboarding_completed %}
                                     <a href="{% url 'recruitment:candidate_onboarding' application_id=application.application_id %}" class="btn btn-success btn-lg px-4 shadow-sm">
                                         <i class="bi bi-pencil-square me-2"></i> Fill Full Onboarding & Verification Details &rarr;
@@ -78,6 +100,53 @@
                                 {% endif %}
                             </div>
                         </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- RESUME RE-UPLOAD SECTION (IF RESUME REJECTED OR REQUESTED BY HR) -->
+            {% if resume_doc.is_rejected or application.status == 'REJECTED' or application.status == 'UNDER_REVIEW' or not application.resume %}
+                <div class="card border-0 mb-4 shadow-sm" style="border-radius: 12px; border: 1.5px solid {% if resume_doc.is_rejected %}#FCA5A5{% else %}#E2E8F0{% endif %} !important; background: #FFFFFF;">
+                    <div class="p-4">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle {% if resume_doc.is_rejected %}bg-danger bg-opacity-10 text-danger{% else %}bg-primary bg-opacity-10 text-primary{% endif %} p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="bi bi-file-earmark-person-fill fs-5"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-0">Candidate Resume / Curriculum Vitae</h6>
+                                    <small class="text-muted">Upload an updated or corrected copy of your professional CV</small>
+                                </div>
+                            </div>
+                            {% if resume_doc.is_rejected %}
+                                <span class="badge bg-danger text-white px-2.5 py-1">Resume Rejected &bull; Re-upload Required</span>
+                            {% elif application.resume %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1">Current Resume on File</span>
+                            {% endif %}
+                        </div>
+
+                        {% if resume_doc.is_rejected %}
+                            <div class="alert alert-danger p-2.5 mb-3 small rounded-2 d-flex align-items-center gap-2">
+                                <i class="bi bi-exclamation-octagon-fill text-danger fs-5 flex-shrink-0"></i>
+                                <div>
+                                    <strong class="text-danger">HR Feedback on Resume:</strong>
+                                    <span>{{ resume_doc.rejection_notes|default:"Resume format invalid or unreadable. Please upload a clear PDF version." }}</span>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <form method="POST" action="{% url 'recruitment:candidate_reupload_resume' application_id=application.application_id %}" enctype="multipart/form-data" class="row g-2 align-items-center">
+                            {% csrf_token %}
+                            <div class="col-sm-8">
+                                <input type="file" name="resume" class="form-control" accept=".pdf,.doc,.docx" required>
+                                <div class="text-muted small mt-1" style="font-size: 0.74rem;">Accepted formats: PDF, DOC, DOCX (Max 5MB)</div>
+                            </div>
+                            <div class="col-sm-4 text-sm-end">
+                                <button type="submit" class="btn btn-primary w-100 fw-semibold">
+                                    <i class="bi bi-upload me-1"></i> Submit Updated Resume
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             {% endif %}

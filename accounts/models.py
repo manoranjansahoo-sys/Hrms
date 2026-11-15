@@ -64,9 +64,13 @@ class CustomUser(AbstractUser):
         return self.role == self.Role.HEAD or self.is_superuser
 
     def get_avatar_url(self):
-        if self.avatar and hasattr(self.avatar, 'url'):
-            return self.avatar.url
-        return f"https://ui-avatars.com/api/?name={self.first_name}+{self.last_name}&background=1B5E20&color=fff&size=128"
+        try:
+            from django.urls import reverse
+            return reverse('accounts:user_avatar', kwargs={'user_id': self.id})
+        except Exception:
+            if self.avatar and hasattr(self.avatar, 'url'):
+                return self.avatar.url
+            return f"https://ui-avatars.com/api/?name={self.first_name}+{self.last_name}&background=1B5E20&color=fff&size=128"
 
 
 class AuditLog(models.Model):

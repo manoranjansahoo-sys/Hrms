@@ -1479,6 +1479,83 @@ class RecruitmentTests(TestCase):
         self.assertEqual(app.document_verification_status, JobApplication.DocumentVerificationStatus.PENDING)
         self.assertEqual(app.document_rejection_reason, '')
 
+    def test_export_candidates_excel_and_pdf(self):
+        """Verify candidate export to Excel (.xlsx) and PDF."""
+        self.client.force_login(self.hr_user)
+
+        # Excel
+        res_excel = self.client.get(reverse('recruitment:export_candidates_excel'))
+        self.assertEqual(res_excel.status_code, 200)
+        self.assertEqual(res_excel['Content-Type'], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        self.assertTrue(len(res_excel.content) > 0)
+
+        # PDF
+        res_pdf = self.client.get(reverse('recruitment:export_candidates_pdf'))
+        self.assertEqual(res_pdf.status_code, 200)
+        self.assertEqual(res_pdf['Content-Type'], 'application/pdf')
+        self.assertTrue(len(res_pdf.content) > 0)
+
+    def test_candidate_document_view_and_download_graceful_missing(self):
+        """Verify document view/download views handle records gracefully."""
+        self.client.force_login(self.hr_user)
+        candidate = Candidate.objects.create(
+            full_name='Doc Test Candidate',
+            email='doctest@company.com',
+            phone='9876543299'
+        )
+        doc = CandidateDocument.objects.create(
+            candidate=candidate,
+            doc_type='CERTIFICATE',
+            title='Degree Certificate',
+            file='candidates/documents/non_existent.pdf'
+        )
+
+        # View route
+        res_view = self.client.get(reverse('recruitment:candidate_document_view', kwargs={'doc_id': doc.id}))
+        self.assertEqual(res_view.status_code, 200)
+        self.assertContains(res_view, 'Document File Unavailable')
+
+        # Download route redirects with warning
+        res_dl = self.client.get(reverse('recruitment:candidate_document_download', kwargs={'doc_id': doc.id}))
+        self.assertEqual(res_dl.status_code, 302)
+
+    def test_candidate_reupload_resume(self):
+        """Verify candidate can re-upload their resume when rejected or requested."""
+        candidate = Candidate.objects.create(
+            full_name='Resume Reupload Candidate',
+            email='resumereupload@company.com',
+            phone='9876543288'
+        )
+        app = JobApplication.objects.create(
+            application_id='APP-RESUME-001',
+            candidate=candidate,
+            job=self.job,
+            status=JobApplication.Status.REJECTED
+        )
+        CandidateDocument.objects.create(
+            candidate=candidate,
+            doc_type='RESUME',
+            title='Resume / Curriculum Vitae',
+            file=SimpleUploadedFile("old_resume.pdf", b"%PDF-old", content_type="application/pdf"),
+            is_rejected=True,
+            rejection_notes='Old format invalid'
+        )
+
+        new_resume = SimpleUploadedFile("updated_resume.pdf", b"%PDF-updated-resume", content_type="application/pdf")
+        res = self.client.post(
+            reverse('recruitment:candidate_reupload_resume', kwargs={'application_id': app.application_id}),
+            {'resume': new_resume}
+        )
+        self.assertRedirects(res, reverse('recruitment:candidate_track_id', kwargs={'application_id': app.application_id}))
+
+        app.refresh_from_db()
+        self.assertEqual(app.status, JobApplication.Status.UNDER_REVIEW)
+        res_doc = CandidateDocument.objects.filter(candidate=candidate, doc_type='RESUME').first()
+        self.assertIsNotNone(res_doc)
+        self.assertFalse(res_doc.is_rejected)
+        self.assertEqual(res_doc.rejection_notes, '')
+
+
 
 
 

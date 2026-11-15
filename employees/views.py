@@ -24,14 +24,16 @@ def employee_list(request):
     """
     Searchable, filterable list of employees with role-aware actions,
     dynamic page sizing (5, 10, 20, 50, 100), multi-criteria sorting, and auto-filters.
+    Restricted strictly to Company Leadership (Head Authority / Super Admin) and authorized HR/Staff
+    as configured in Master Data permissions by Admin.
     """
     user = request.user
-    base_profiles = EmployeeProfile.objects.select_related('user', 'department', 'designation', 'site').all()
+    from organization.models import MasterDataPermission
+    if not MasterDataPermission.can_user_access_workforce_directory(user):
+        messages.error(request, "Access restricted. The Company Workforce Directory is restricted by Administrator policy.")
+        return redirect('portal:smart_dashboard')
 
-    # If Site Manager, filter to their managed site by default unless viewing all
-    if user.is_site_manager_role and not (user.is_hr_role or user.is_head_role):
-        managed_sites = user.managed_sites.all()
-        base_profiles = base_profiles.filter(site__in=managed_sites)
+    base_profiles = EmployeeProfile.objects.select_related('user', 'department', 'designation', 'site').all()
 
     total_employees = base_profiles.count()
     active_employees = base_profiles.filter(status=EmployeeProfile.Status.ACTIVE).count()
@@ -424,7 +426,20 @@ def profile_correction_request(request):
             req.employee = emp
             req.save()
             log_audit_trail('CREATE', 'Profile Corrections', f"Correction requested by {emp.emp_id} for {req.field_name}", user=request.user)
-            messages.success(request, f"Your profile correction request for '{req.field_name}' has been submitted to HR for review.")
+
+            # Route notification: HR requests go directly to Admin (Head Authority)
+            if emp.user.is_hr_role:
+                for admin_u in CustomUser.objects.filter(Q(role=CustomUser.Role.HEAD) | Q(is_superuser=True), is_active=True):
+                    create_notification(
+                        recipient=admin_u,
+                        title="HR Profile Correction Request - Admin Approval Required",
+                        message=f"HR Administrator {emp.full_name} ({emp.emp_id}) requested a profile update for '{req.field_name}'. Admin approval required.",
+                        notification_type='SYSTEM',
+                        target_url=reverse('employees:profile_corrections_list')
+                    )
+                messages.success(request, f"Your profile correction request for '{req.field_name}' has been submitted to Admin / Leadership for approval.")
+            else:
+                messages.success(request, f"Your profile correction request for '{req.field_name}' has been submitted to HR for review.")
             return redirect('employees:employee_detail', emp_id=emp.emp_id)
     else:
         form = ProfileCorrectionForm()
@@ -450,10 +465,20 @@ def profile_corrections_list(request):
 @login_required
 @hr_required
 def review_profile_correction(request, request_id):
-    """HR Approves or Rejects a profile correction request and immediately applies the change."""
+    """HR / Admin Approves or Rejects a profile correction request and immediately applies the change."""
     req = get_object_or_404(ProfileCorrectionRequest, id=request_id)
     action = request.POST.get('action')
     notes = request.POST.get('notes', '')
+
+    # 1. Self-approval prevention
+    if req.employee.user == request.user:
+        messages.error(request, "Self-approval is not permitted. Your profile correction request must be approved by an administrator.")
+        return redirect('employees:profile_corrections_list')
+
+    # 2. HR applicant check: must be approved by Head / Super Admin
+    if req.employee.user.is_hr_role and not (request.user.is_head_role or request.user.is_superuser):
+        messages.error(request, "Permission denied. Profile correction requests from HR staff can only be approved by the Head / Super Admin.")
+        return redirect('employees:profile_corrections_list')
 
     if action == 'APPROVE':
         applied, detail_msg = apply_profile_correction_update(req)

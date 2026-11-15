@@ -38,7 +38,10 @@
     <aside class="sidebar">
         <div class="sidebar-header">
             <a href="{% url 'portal:smart_dashboard' %}" class="d-flex align-items-center text-decoration-none py-1">
-                <img src="{% static 'img/logo.png' %}" alt="Company Logo" style="height: 38px; max-width: 195px; object-fit: contain;">
+                <img src="{% if company_logo_b64 %}{{ company_logo_b64 }}{% else %}{% static 'img/logo.png' %}{% endif %}" 
+                     onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 220 48\'%3E%3Crect width=\'220\' height=\'48\' rx=\'8\' fill=\'%230f172a\'/%3E%3Cg transform=\'translate(14, 10)\'%3E%3Crect width=\'28\' height=\'28\' rx=\'6\' fill=\'%232563eb\'/%3E%3Cpath d=\'M8 7 h9 a4.5 4.5 0 0 1 0 9 h-9 z\' fill=\'%23ffffff\' fill-opacity=\'0.9\'/%3E%3Cpath d=\'M8 13 h10 a4.5 4.5 0 0 1 0 9 h-10 z\' fill=\'%23ffffff\'/%3E%3C/g%3E%3Ctext x=\'54\' y=\'30\' font-family=\'Inter, -apple-system, sans-serif\' font-size=\'17\' font-weight=\'800\' fill=\'%23ffffff\' letter-spacing=\'0.5\'%3EBRONZEGATE%3C/text%3E%3C/svg%3E';" 
+                     alt="Company Logo" 
+                     style="height: 38px; max-width: 195px; object-fit: contain;">
             </a>
         </div>
 
@@ -184,6 +187,14 @@
                         <span>Interview</span>
                     </a>
                 </li>
+                {% if can_view_workforce_directory %}
+                <li class="menu-item">
+                    <a href="{% url 'employees:employee_list' %}" class="menu-link {% if 'employee_list' in request.resolver_match.url_name %}active{% endif %}">
+                        <i class="bi bi-people-fill text-primary"></i>
+                        <span>Workforce Directory</span>
+                    </a>
+                </li>
+                {% endif %}
                 <li class="menu-item">
                     <a href="{% url 'employees:employee_create' %}" class="menu-link {% if 'employee_create' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-person-plus-fill"></i>
@@ -314,12 +325,6 @@
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="{% url 'employees:employee_list' %}" class="menu-link">
-                        <i class="bi bi-people-fill"></i>
-                        <span>My Site Team</span>
-                    </a>
-                </li>
-                <li class="menu-item">
                     <a href="#attendanceSubmenuSM" class="menu-link d-flex align-items-center justify-content-between {% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="collapse" role="button" aria-expanded="{% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}true{% else %}false{% endif %}" aria-controls="attendanceSubmenuSM">
                         <div class="d-flex align-items-center gap-2">
                             <i class="bi bi-clock"></i>
@@ -383,13 +388,7 @@
             {% endif %}
 
             <!-- GENERAL COMPANY PORTAL ITEMS -->
-            <li class="menu-category">Company Directory</li>
-            <li class="menu-item">
-                <a href="{% url 'employees:employee_list' %}" class="menu-link {% if 'employee_list' in request.resolver_match.url_name %}active{% endif %}">
-                    <i class="bi bi-people-fill text-primary"></i>
-                    <span>Employee Directory</span>
-                </a>
-            </li>
+            <li class="menu-category">Company Information</li>
             <li class="menu-item">
                 <a href="{% url 'portal:holidays_list' %}" class="menu-link">
                     <i class="bi bi-sun"></i>

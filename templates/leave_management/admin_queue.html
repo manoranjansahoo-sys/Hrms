@@ -818,7 +818,12 @@
                                     </div>
                                 {% endif %}
                                 <div>
-                                    <div class="lq-emp-name-text">{{ req.employee.full_name }}</div>
+                                    <div class="lq-emp-name-text">
+                                        {{ req.employee.full_name }}
+                                        {% if req.employee.user.is_hr_role %}
+                                            <span class="badge ms-1" style="background: #6366F1; color: white; font-size: 0.60rem; padding: 0.15rem 0.4rem;">HR Staff</span>
+                                        {% endif %}
+                                    </div>
                                     <div>
                                         <span class="lq-id-pill">{{ req.employee.emp_id }}</span>
                                     </div>
@@ -883,10 +888,17 @@
                                     <span>Pending Site Manager</span>
                                 </div>
                             {% elif req.status == 'PENDING_HR' %}
-                                <div class="lq-status-stamp pending-hr" title="Awaiting HR approval">
-                                    <span class="lq-dot blue"></span>
-                                    <span>Pending HR Ops</span>
-                                </div>
+                                {% if req.employee.user.is_hr_role %}
+                                    <div class="lq-status-stamp pending" style="background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D;" title="HR staff leave request awaiting Admin / Head approval">
+                                        <span class="lq-dot amber"></span>
+                                        <span>Pending Admin</span>
+                                    </div>
+                                {% else %}
+                                    <div class="lq-status-stamp pending-hr" title="Awaiting HR approval">
+                                        <span class="lq-dot blue"></span>
+                                        <span>Pending HR Ops</span>
+                                    </div>
+                                {% endif %}
                             {% elif req.status == 'APPROVED' %}
                                 <div class="lq-status-stamp approved" title="Approved on {{ req.hr_action_at|date:'d M Y, h:i A' }}">
                                     <i class="bi bi-shield-fill-check"></i>
@@ -1074,7 +1086,31 @@
                                     {% endif %}
                                 </div>
                                 <div class="lq-modal-footer flex-column align-items-stretch">
-                                    {% if request.user.is_hr_role or request.user.is_head_role or request.user.is_superuser %}
+                                    {% if req.employee.user == request.user %}
+                                        <!-- Self-Application Notice: Self-approval is strictly forbidden -->
+                                        <div class="alert alert-info py-2.5 px-3 small mb-2 w-100 d-flex align-items-center gap-2">
+                                            <i class="bi bi-info-circle-fill fs-5 text-primary"></i>
+                                            <div>
+                                                <strong>Self-Approval Restricted:</strong> This is your own leave application. In accordance with HR governance, your leave must be reviewed and approved by an Administrator.
+                                            </div>
+                                        </div>
+                                        <div class="d-flex justify-content-end w-100">
+                                            <button type="button" class="btn btn-sm btn-secondary px-3" data-bs-dismiss="modal">Close</button>
+                                        </div>
+
+                                    {% elif req.employee.user.is_hr_role and not request.user.is_head_role and not request.user.is_superuser %}
+                                        <!-- HR Staff Application: Must be approved by Admin / Head Authority only -->
+                                        <div class="alert alert-warning py-2.5 px-3 small mb-2 w-100 d-flex align-items-center gap-2">
+                                            <i class="bi bi-shield-lock-fill fs-5 text-warning"></i>
+                                            <div>
+                                                <strong>Admin Approval Required:</strong> This leave request was submitted by HR Administrator <strong>{{ req.employee.full_name }}</strong>. All HR requests are routed to the <strong>Head / Super Admin</strong> for approval.
+                                            </div>
+                                        </div>
+                                        <div class="d-flex justify-content-end w-100">
+                                            <button type="button" class="btn btn-sm btn-secondary px-3" data-bs-dismiss="modal">Close</button>
+                                        </div>
+
+                                    {% elif request.user.is_hr_role or request.user.is_head_role or request.user.is_superuser %}
                                         <!-- HR & Head Operations: APPROVE AND REJECT BUTTONS ALWAYS VISIBLE & MODIFIABLE -->
                                         <form method="POST" action="{% url 'leave_management:process_leave' request_id=req.id %}" class="w-100">
                                             {% csrf_token %}

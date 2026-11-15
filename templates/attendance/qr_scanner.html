@@ -589,6 +589,17 @@
                 tokenStr = tokenStr.replace('HRMS-QR:', '');
             }
 
+            if (tokenStr.includes(':')) {
+                const parts = tokenStr.split(':');
+                if (parts.length === 3 && !isNaN(parts[0])) {
+                    siteId = parts[0];
+                    const siteSelect = document.getElementById('siteSelect');
+                    if (siteSelect && siteSelect.value !== siteId) {
+                        siteSelect.value = siteId;
+                    }
+                }
+            }
+
             submitQrPunch(tokenStr, siteId);
         }
 

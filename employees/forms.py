@@ -66,7 +66,7 @@ class EmployeeCreateForm(forms.ModelForm):
             'department', 'designation', 'site', 'reporting_manager',
             'employment_type', 'joining_date', 'date_of_birth',
             'gender', 'marital_status', 'blood_group',
-            'city', 'address', 'postal_code',
+            'city', 'address', 'permanent_address', 'postal_code',
             'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relation',
             'bank_name', 'bank_account_number', 'ifsc_code', 'pan_number', 'uan_number',
             'education_details', 'experience_summary'
@@ -83,9 +83,17 @@ class EmployeeCreateForm(forms.ModelForm):
             'marital_status': forms.Select(attrs={'class': 'form-select'}),
             'blood_group': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Blood Group (e.g. O+)'}),
             'city': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'City'}),
-            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Residential address'}),
-            'postal_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'PIN Code'}),
-            'emergency_contact_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Emergency contact person'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Current residential address'}),
+            'permanent_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Permanent home address'}),
+            'postal_code': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '6-digit PIN Code',
+                'maxlength': '6',
+                'inputmode': 'numeric',
+                'pattern': '[0-9]{6}',
+                'oninput': "this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);"
+            }),
+            'emergency_contact_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Full name of emergency contact person'}),
             'emergency_contact_phone': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': '10-digit emergency number',

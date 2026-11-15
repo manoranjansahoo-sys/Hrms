@@ -373,6 +373,10 @@ class MasterDataPermission(models.Model):
     can_manage_timings = models.BooleanField(default=True, help_text="Delegated users can manage opening/closing hours.")
     can_manage_locations = models.BooleanField(default=True, help_text="Delegated users can add/update/delete company sites.")
     can_manage_leave_policy = models.BooleanField(default=True, help_text="Delegated users can update Sick & Paid leave quotas.")
+    can_hr_view_workforce_directory = models.BooleanField(
+        default=True,
+        help_text="When enabled, HR Administrators can view the Company Workforce Directory. Admin can toggle off to restrict strictly to Admin."
+    )
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -413,4 +417,20 @@ class MasterDataPermission(models.Model):
             return False
 
         return True
+
+    @classmethod
+    def can_user_access_workforce_directory(cls, user):
+        """
+        Determines if user can view Company Workforce Directory.
+        Head/Super Admin always has full access.
+        HR Administrators access is controlled by can_hr_view_workforce_directory setting.
+        Specific delegated users also have access.
+        """
+        if not user or not user.is_authenticated:
+            return False
+        if user.is_superuser or getattr(user, 'role', None) == 'head':
+            return True
+        if getattr(user, 'role', None) == 'hr':
+            return cls.get_settings().can_hr_view_workforce_directory
+        return cls.get_settings().allowed_users.filter(id=user.id).exists()
 

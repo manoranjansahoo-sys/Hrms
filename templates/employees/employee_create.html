@@ -216,7 +216,7 @@
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label small fw-semibold">Emergency Contact Person</label>
+                    <label class="form-label small fw-semibold">Emergency Contact Person Name</label>
                     {{ form.emergency_contact_name }}
                     {% if form.emergency_contact_name.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.emergency_contact_name.errors.0 }}</div>{% endif %}
                 </div>
@@ -243,8 +243,20 @@
                     {{ form.postal_code }}
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label small fw-semibold">Residential Address</label>
+                    <label class="form-label small fw-semibold">Current Residential Address</label>
                     {{ form.address }}
+                </div>
+                <div class="col-12">
+                    <div class="form-check p-2.5 rounded-2 bg-light border d-inline-flex align-items-center gap-2">
+                        <input class="form-check-input ms-0" type="checkbox" id="empSameAddressCheck" onchange="toggleEmpSameAddress(this)">
+                        <label class="form-check-label small fw-bold text-dark mb-0 cursor-pointer" for="empSameAddressCheck">
+                            <i class="bi bi-copy text-primary me-1"></i> Permanent address is same as current address
+                        </label>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label small fw-semibold">Permanent Home Address</label>
+                    {{ form.permanent_address }}
                 </div>
                 <div class="col-md-6">
                     <label class="form-label small fw-semibold">Educational Details</label>
@@ -518,5 +530,25 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+function toggleEmpSameAddress(chk) {
+    const curr = document.getElementById('id_address');
+    const perm = document.getElementById('id_permanent_address');
+    if (!curr || !perm) return;
+    if (chk.checked) {
+        perm.value = curr.value;
+        curr.addEventListener('input', syncEmpAddress);
+    } else {
+        curr.removeEventListener('input', syncEmpAddress);
+    }
+}
+function syncEmpAddress() {
+    const chk = document.getElementById('empSameAddressCheck');
+    const curr = document.getElementById('id_address');
+    const perm = document.getElementById('id_permanent_address');
+    if (chk && chk.checked && curr && perm) {
+        perm.value = curr.value;
+    }
+}
 </script>
 {% endblock %}

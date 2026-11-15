@@ -120,6 +120,18 @@ def punch_out_view(request):
         )
         return redirect(request.META.get('HTTP_REFERER', 'portal:smart_dashboard'))
 
+    # Enforce minimum 10-minute (600s) cooldown between Punch In and Punch Out
+    elapsed_seconds = (now - att.punch_in).total_seconds()
+    if elapsed_seconds < 600:
+        remaining_minutes = max(1, int((600 - elapsed_seconds + 59) // 60))
+        in_time_str = timezone.localtime(att.punch_in).strftime('%I:%M %p')
+        messages.warning(
+            request,
+            f"You punched in at {in_time_str}. A minimum 10-minute gap is required between Punch In and Punch Out. "
+            f"Please wait {remaining_minutes} more minute(s) before punching out."
+        )
+        return redirect(request.META.get('HTTP_REFERER', 'portal:smart_dashboard'))
+
     att.punch_out = now
     att.punch_out_ip = client_ip
     att.calculate_hours()
@@ -208,18 +220,29 @@ def request_attendance_correction(request):
                 status='PENDING'
             )
 
-            # Notify reporting manager or HR
-            mgr = emp.reporting_manager
-            if mgr:
-                create_notification(
-                    recipient=mgr,
-                    title='Attendance Correction Request',
-                    message=f"{emp.full_name} ({emp.emp_id}) requested attendance adjustment for {req_date}.",
-                    notification_type='ATTENDANCE',
-                    target_url='/attendance/corrections/'
-                )
-
-            messages.success(request, f"Attendance correction request for {req_date} has been submitted for approval.")
+            # Route notifications: HR requests go directly to Admin (Head Authority)
+            if emp.user.is_hr_role:
+                for admin_u in CustomUser.objects.filter(Q(role=CustomUser.Role.HEAD) | Q(is_superuser=True), is_active=True):
+                    create_notification(
+                        recipient=admin_u,
+                        title='HR Attendance Correction - Admin Approval Required',
+                        message=f"HR Administrator {emp.full_name} ({emp.emp_id}) requested attendance adjustment for {req_date}. Admin approval required.",
+                        notification_type='ATTENDANCE',
+                        target_url='/attendance/corrections/'
+                    )
+                messages.success(request, f"Attendance correction request for {req_date} submitted to Admin / Leadership for approval.")
+            else:
+                # Notify reporting manager or HR
+                mgr = emp.reporting_manager
+                if mgr:
+                    create_notification(
+                        recipient=mgr,
+                        title='Attendance Correction Request',
+                        message=f"{emp.full_name} ({emp.emp_id}) requested attendance adjustment for {req_date}.",
+                        notification_type='ATTENDANCE',
+                        target_url='/attendance/corrections/'
+                    )
+                messages.success(request, f"Attendance correction request for {req_date} has been submitted for approval.")
             return redirect('attendance:my_attendance')
         except Exception as e:
             messages.error(request, f"Error submitting request: {str(e)}")
@@ -270,10 +293,12 @@ def attendance_admin_register(request):
     for emp in employees:
         att = attendance_records.get(emp.id)
         if att:
-            if att.status == 'PRESENT':
+            if att.status in ('PRESENT', 'HALF_DAY'):
                 present_cnt += 1
             elif att.status == 'ON_LEAVE':
                 leave_cnt += 1
+            elif att.status == 'ABSENT':
+                absent_cnt += 1
             if att.is_late:
                 late_cnt += 1
         else:
@@ -402,10 +427,20 @@ def attendance_corrections_list(request):
 @login_required
 @role_required([CustomUser.Role.HR, CustomUser.Role.HEAD, CustomUser.Role.SITE_MANAGER])
 def approve_attendance_correction(request, request_id):
-    """Approve or reject attendance correction."""
+    """Approve or reject attendance correction. HR staff corrections require Head / Admin approval."""
     corr = get_object_or_404(AttendanceCorrectionRequest, id=request_id)
     action = request.POST.get('action')
     notes = request.POST.get('notes', '')
+
+    # 1. Prevent self-approval
+    if corr.employee.user == request.user:
+        messages.error(request, "Self-approval is not permitted. Your attendance correction request must be approved by an administrator.")
+        return redirect('attendance:corrections_list')
+
+    # 2. Strict HR applicant routing: HR corrections MUST ONLY be approved by Admin (Head or Superuser)
+    if corr.employee.user.is_hr_role and not (request.user.is_head_role or request.user.is_superuser):
+        messages.error(request, "Permission denied. Attendance corrections from HR staff can only be approved by the Head / Super Admin.")
+        return redirect('attendance:corrections_list')
 
     if action == 'APPROVE':
         corr.status = 'APPROVED'
@@ -565,6 +600,24 @@ def qr_kiosk_token_api(request, site_id):
     if not (is_terminal_authorized or is_admin_user):
         return JsonResponse({'success': False, 'message': 'Terminal unauthorized. Access denied.'}, status=403)
 
+    # Verify physical kiosk device GPS location if coordinates are provided
+    lat_param = request.GET.get('lat')
+    lng_param = request.GET.get('lng')
+    if site.latitude is not None and site.longitude is not None and lat_param not in (None, '', 'null') and lng_param not in (None, '', 'null'):
+        try:
+            kiosk_lat = float(lat_param)
+            kiosk_lng = float(lng_param)
+            dist = site.calculate_gps_distance(kiosk_lat, kiosk_lng)
+            radius = site.geofence_radius_meters or 200
+            if dist is not None and dist > radius:
+                return JsonResponse({
+                    'success': False,
+                    'status': 'LOCATION_FAILED',
+                    'message': f"Kiosk physical location mismatch: Terminal device is {dist}m away from {site.name} (Max radius: {radius}m)."
+                }, status=403)
+        except (ValueError, TypeError):
+            pass
+
     payload = generate_dynamic_qr_payload(site, request)
 
     # Fetch recent successful punches at this site within the last 60 seconds (max 5)
@@ -649,6 +702,14 @@ def qr_punch_api(request):
     lat = data.get('latitude')
     lng = data.get('longitude')
     punch_mode = data.get('punch_mode', 'AUTO')
+
+    # Automatically resolve site_id from token prefix (SITE_ID:SLOT:SIG) to guarantee site-distinct token verification
+    if token and ':' in token:
+        try:
+            token_site_id = int(token.strip().split(':')[0])
+            site_id = token_site_id
+        except (IndexError, ValueError):
+            pass
 
     if not token or not site_id:
         return JsonResponse({
@@ -819,13 +880,28 @@ def qr_dashboard_view(request):
 @head_required
 def site_location_config_api(request, site_id):
     """
-    Allows Admin to update office GPS geofence coordinates
+    Allows Admin to view or update office GPS geofence coordinates
     and radius.
     """
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST method allowed.")
-
     site = get_object_or_404(Site, id=site_id)
+
+    if request.method == 'GET':
+        return JsonResponse({
+            'success': True,
+            'site': {
+                'id': site.id,
+                'name': site.name,
+                'latitude': float(site.latitude) if site.latitude else None,
+                'longitude': float(site.longitude) if site.longitude else None,
+                'geofence_radius_meters': site.geofence_radius_meters,
+                'qr_rotation_seconds': site.qr_rotation_seconds,
+                'is_qr_attendance_enabled': site.is_qr_attendance_enabled,
+            }
+        })
+
+    if request.method != 'POST':
+        return HttpResponseBadRequest("Only POST and GET methods allowed.")
+
     data = {}
     if request.content_type == 'application/json':
         try:

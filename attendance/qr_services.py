@@ -310,6 +310,46 @@ def process_qr_attendance_punch(request, user, site, token_str, latitude=None, l
                 'title': 'Already Punched In',
                 'message': f"You are already punched in today at {timezone.localtime(att.punch_in).strftime('%I:%M %p')}. Choose Punch Out to check out.",
             }
+
+        # Enforce minimum 10-minute (600 seconds) gap between Punch In and Punch Out
+        elapsed_seconds = (now - att.punch_in).total_seconds()
+        min_gap_seconds = 600  # 10 minutes
+        if elapsed_seconds < min_gap_seconds:
+            remaining_seconds = int(min_gap_seconds - elapsed_seconds)
+            remaining_minutes = max(1, (remaining_seconds + 59) // 60)
+            in_time_display = timezone.localtime(att.punch_in).strftime('%I:%M %p')
+            cooldown_msg = (
+                f"You punched in at {in_time_display}. A minimum 10-minute gap is required "
+                f"between Punch In and Punch Out to prevent accidental checkout. "
+                f"Please wait {remaining_minutes} more minute(s) before punching out."
+            )
+            QRCodeScanLog.objects.create(
+                site=site,
+                employee=emp,
+                attendance=att,
+                punch_mode=punch_mode,
+                actual_punch_type='OUT',
+                status='MIN_GAP_VIOLATION',
+                token_str=token_str,
+                slot_index=slot_num,
+                client_ip=client_ip,
+                latitude=latitude,
+                longitude=longitude,
+                distance_meters=distance_meters,
+                verification_details=verification_summary,
+                token_age_seconds=token_age_sec,
+                error_message=cooldown_msg,
+            )
+            return {
+                'success': False,
+                'status': 'MIN_GAP_VIOLATION',
+                'title': '10-Minute Cooldown Active',
+                'message': cooldown_msg,
+                'remaining_seconds': remaining_seconds,
+                'remaining_minutes': remaining_minutes,
+                'punch_in_time': in_time_display,
+            }
+
         action = 'PUNCH_OUT'
     else:
         # Already has both Punch In and Punch Out
