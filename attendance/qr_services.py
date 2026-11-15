@@ -181,6 +181,49 @@ def process_qr_attendance_punch(request, user, site, token_str, latitude=None, l
     else:
         client_ip = request.META.get('REMOTE_ADDR') or '127.0.0.1'
 
+    # Step 0: Profile Site Location Verification (Employee can ONLY punch at their assigned office location)
+    if not emp.site:
+        QRCodeScanLog.objects.create(
+            site=site,
+            employee=emp,
+            punch_mode=punch_mode,
+            status='LOCATION_FAILED',
+            token_str=token_str or '',
+            client_ip=client_ip,
+            latitude=latitude,
+            longitude=longitude,
+            error_message="Employee profile does not have an assigned office location."
+        )
+        return {
+            'success': False,
+            'status': 'NO_ASSIGNED_SITE',
+            'title': 'Office Location Not Assigned',
+            'message': 'Your employee profile does not have an assigned office location. Please contact HR or Administrator to assign your work site.',
+        }
+
+    if emp.site_id != site.id:
+        mismatch_msg = (
+            f"Office Site Mismatch: Your profile is assigned to '{emp.site.name}' ({emp.site.city}), "
+            f"but you scanned the kiosk for '{site.name}' ({site.city}). Attendance punch is only permitted at your assigned office site."
+        )
+        QRCodeScanLog.objects.create(
+            site=site,
+            employee=emp,
+            punch_mode=punch_mode,
+            status='LOCATION_FAILED',
+            token_str=token_str or '',
+            client_ip=client_ip,
+            latitude=latitude,
+            longitude=longitude,
+            error_message=mismatch_msg
+        )
+        return {
+            'success': False,
+            'status': 'SITE_MISMATCH',
+            'title': 'Office Site Mismatch',
+            'message': mismatch_msg,
+        }
+
     # Step 1: Validate 4-second dynamic QR token
     is_token_valid, token_status, token_err, token_age_sec = validate_dynamic_qr_token(site, token_str)
     

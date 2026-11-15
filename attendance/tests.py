@@ -484,6 +484,7 @@ class DynamicQRAttendanceTests(TestCase):
         If a screenshot is forwarded to a second employee, the second scan fails.
         """
         import json
+        from decimal import Decimal
         from attendance.qr_services import generate_dynamic_qr_payload
 
         today = timezone.localdate()
@@ -536,6 +537,7 @@ class DynamicQRAttendanceTests(TestCase):
         When employee device location / GPS is turned off (latitude=None), punch must be rejected.
         """
         import json
+        from decimal import Decimal
         from attendance.qr_services import generate_dynamic_qr_payload
 
         self.client.force_login(self.user)
@@ -939,6 +941,96 @@ class DynamicQRAttendanceTests(TestCase):
         self.assertContains(kiosk_res, "QR Code Locked")
         self.assertContains(kiosk_res, "Office GPS Coordinates Required")
         self.assertNotContains(kiosk_res, "id=\"qrImage\"")
+
+    def test_employee_site_mismatch_blocks_punch(self):
+        """
+        If employee's profile site is Bangalore (Site 1), but they scan
+        the kiosk of Pune (Site 2), punch in and punch out must be blocked.
+        """
+        import json
+        from decimal import Decimal
+        from attendance.qr_services import generate_dynamic_qr_payload
+
+        # Site 1 is self.site (Bengaluru) where self.emp is assigned
+        pune_site = Site.objects.create(
+            name='Pune Development Center',
+            code='PUNE01',
+            city='Pune',
+            latitude=Decimal('18.520430'),
+            longitude=Decimal('73.856744'),
+            geofence_radius_meters=200
+        )
+
+        self.client.force_login(self.user)
+        self.assertEqual(self.emp.site, self.site)
+
+        # Generate dynamic QR token for Pune's kiosk
+        pune_payload = generate_dynamic_qr_payload(pune_site)
+        pune_token = pune_payload['token']
+
+        # Attempt to punch in using Pune kiosk QR
+        res = self.client.post(
+            reverse('attendance:qr_punch_api'),
+            data=json.dumps({
+                'token': pune_token,
+                'site_id': pune_site.id,
+                'latitude': 18.520430,
+                'longitude': 73.856744,
+                'punch_mode': 'AUTO',
+            }),
+            content_type='application/json'
+        )
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertFalse(data['success'])
+        self.assertEqual(data['status'], 'SITE_MISMATCH')
+        self.assertEqual(data['title'], 'Office Site Mismatch')
+        self.assertIn("Office Site Mismatch", data['message'])
+        self.assertIn(self.site.name, data['message'])
+        self.assertIn(pune_site.name, data['message'])
+
+        # Verify no Attendance record was created
+        today = timezone.localdate()
+        self.assertFalse(Attendance.objects.filter(employee=self.emp, date=today).exists())
+
+        # Verify QRCodeScanLog has LOCATION_FAILED
+        log = QRCodeScanLog.objects.filter(employee=self.emp, site=pune_site).latest('id')
+        self.assertEqual(log.status, 'LOCATION_FAILED')
+        self.assertIn('Office Site Mismatch', log.error_message)
+
+    def test_employee_without_assigned_site_blocks_punch(self):
+        """If employee has no assigned site in their profile, punch is blocked."""
+        import json
+        from attendance.qr_services import generate_dynamic_qr_payload
+
+        # Temporarily remove site assignment
+        self.emp.site = None
+        self.emp.save()
+
+        self.client.force_login(self.user)
+        payload = generate_dynamic_qr_payload(self.site)
+
+        res = self.client.post(
+            reverse('attendance:qr_punch_api'),
+            data=json.dumps({
+                'token': payload['token'],
+                'site_id': self.site.id,
+                'latitude': 12.971598,
+                'longitude': 77.594562,
+                'punch_mode': 'AUTO',
+            }),
+            content_type='application/json'
+        )
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertFalse(data['success'])
+        self.assertEqual(data['status'], 'NO_ASSIGNED_SITE')
+
+        # Restore site
+        self.emp.site = self.site
+        self.emp.save()
+
+
 
 
 

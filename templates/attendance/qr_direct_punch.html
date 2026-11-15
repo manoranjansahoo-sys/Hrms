@@ -33,6 +33,16 @@
                 </div>
             </div>
 
+            {% if employee and employee.site and site and employee.site.id != site.id %}
+            <div class="alert alert-danger d-flex align-items-start gap-2.5 p-3 mb-3">
+                <i class="bi bi-geo-alt-slash-fill fs-4 flex-shrink-0 text-danger"></i>
+                <div class="small">
+                    <strong class="d-block mb-1">Office Site Mismatch Detected</strong>
+                    Your employee profile is assigned to <strong>{{ employee.site.name }} ({{ employee.site.city }})</strong>, but this QR code is for <strong>{{ site.name }} ({{ site.city }})</strong>. Attendance check-in and check-out are strictly restricted to your assigned office location.
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Punch Form -->
             <form method="post" id="directPunchForm">
                 {% csrf_token %}
@@ -71,9 +81,15 @@
                 </div>
 
                 <!-- Submit Button -->
+                {% if employee and employee.site and site and employee.site.id != site.id %}
+                <button type="button" class="btn btn-secondary w-100 py-3 rounded-pill fw-bold fs-6 shadow-sm" disabled>
+                    <i class="bi bi-lock-fill me-1.5 fs-5"></i> Punch Blocked (Site Mismatch)
+                </button>
+                {% else %}
                 <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold fs-6 shadow-sm" id="btnConfirmPunch">
                     <i class="bi bi-check2-circle me-1.5 fs-5"></i> Confirm Attendance Punch
                 </button>
+                {% endif %}
             </form>
 
             <div class="text-center mt-3">

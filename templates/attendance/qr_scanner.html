@@ -302,16 +302,27 @@
 
                 <hr class="my-2.5">
 
-                <!-- OFFICE SITE SELECTION (Auto-detected from employee profile) -->
+                <!-- ASSIGNED OFFICE SITE (Profile Enforced) -->
                 <div class="mb-2">
-                    <label class="form-label small text-muted mb-1 fw-semibold">Target Office Site:</label>
-                    <select class="form-select form-select-sm" id="siteSelect">
-                        {% for s in sites %}
-                            <option value="{{ s.id }}" {% if user_site and user_site.id == s.id %}selected{% endif %}>
-                                {{ s.name }} ({{ s.city }}){% if not s.latitude or not s.longitude %} - [GPS Missing: QR Locked]{% else %} - Geofence: {{ s.geofence_radius_meters|default:200 }}m{% endif %}
-                            </option>
-                        {% endfor %}
-                    </select>
+                    <label class="form-label small text-muted mb-1 fw-semibold">Your Assigned Office Site:</label>
+                    {% if employee.site %}
+                    <div class="d-flex align-items-center justify-content-between p-2.5 rounded-3 bg-light border">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-building text-primary fs-5"></i>
+                            <div>
+                                <strong class="small d-block text-dark">{{ employee.site.name }}</strong>
+                                <span class="text-muted" style="font-size: 0.72rem;">{{ employee.site.city }} &bull; Geofence: {{ employee.site.geofence_radius_meters|default:200 }}m</span>
+                            </div>
+                        </div>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle">Assigned</span>
+                    </div>
+                    <input type="hidden" id="siteSelect" value="{{ employee.site.id }}">
+                    {% else %}
+                    <div class="alert alert-warning py-2 px-2.5 small mb-0">
+                        <i class="bi bi-exclamation-triangle-fill text-danger me-1"></i> No office location assigned to your profile. Please contact HR.
+                    </div>
+                    <input type="hidden" id="siteSelect" value="">
+                    {% endif %}
                 </div>
 
                 <div class="small text-secondary" style="font-size: 0.78rem;">

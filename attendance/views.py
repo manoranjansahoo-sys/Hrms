@@ -39,6 +39,10 @@ def punch_in_view(request):
         messages.error(request, "Employee profile required for attendance check-in.")
         return redirect('portal:smart_dashboard')
 
+    if not emp.site:
+        messages.error(request, "Your employee profile does not have an assigned office location. Please contact HR.")
+        return redirect('portal:smart_dashboard')
+
     today = timezone.localdate()
     now = timezone.now()
     client_ip = get_client_ip(request)
@@ -115,6 +119,10 @@ def punch_out_view(request):
     emp = getattr(request.user, 'employee_profile', None)
     if not emp:
         messages.error(request, "Employee profile required.")
+        return redirect('portal:smart_dashboard')
+
+    if not emp.site:
+        messages.error(request, "Your employee profile does not have an assigned office location. Please contact HR.")
         return redirect('portal:smart_dashboard')
 
     today = timezone.localdate()
