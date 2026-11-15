@@ -906,5 +906,40 @@ class DynamicQRAttendanceTests(TestCase):
         self.assertContains(res_reg, 'Present')
         self.assertContains(res_reg, 'Live Kiosk Sync')
 
+    def test_dynamic_qr_locked_without_gps_configuration(self):
+        """Dynamic QR cannot be opened, generated, or fetched when office site GPS is not configured."""
+        from attendance.qr_services import generate_dynamic_qr_payload
+
+        unconfigured_site = Site.objects.create(
+            name='Unconfigured Branch',
+            code='UNCONF',
+            city='Mumbai',
+            latitude=None,
+            longitude=None,
+            geofence_radius_meters=200
+        )
+
+        # 1. Payload generator returns locked state without QR image
+        payload = generate_dynamic_qr_payload(unconfigured_site)
+        self.assertFalse(payload['gps_configured'])
+        self.assertIsNone(payload['qr_image_base64'])
+        self.assertIsNone(payload['token'])
+        self.assertIn('Dynamic QR attendance is locked', payload['error'])
+
+        # 2. Kiosk token API blocks generation with HTTP 400
+        self.client.force_login(self.hr_user)
+        api_res = self.client.get(reverse('attendance:qr_kiosk_token_api', kwargs={'site_id': unconfigured_site.id}))
+        self.assertEqual(api_res.status_code, 400)
+        self.assertFalse(api_res.json()['success'])
+        self.assertFalse(api_res.json()['gps_configured'])
+
+        # 3. Kiosk view displays locked screen
+        kiosk_res = self.client.get(reverse('attendance:qr_kiosk_site', kwargs={'site_id': unconfigured_site.id}))
+        self.assertEqual(kiosk_res.status_code, 200)
+        self.assertContains(kiosk_res, "QR Code Locked")
+        self.assertContains(kiosk_res, "Office GPS Coordinates Required")
+        self.assertNotContains(kiosk_res, "id=\"qrImage\"")
+
+
 
 

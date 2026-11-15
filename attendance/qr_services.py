@@ -16,15 +16,33 @@ from accounts.models import CustomUser
 
 def generate_dynamic_qr_payload(site, request=None):
     """
-    Generates a secure 4-second rotating cryptographic token and QR image for an office site kiosk.
+    Generates a secure dynamic rotating cryptographic token and QR image for an office site kiosk.
+    Requires site GPS coordinates to be configured; if missing, returns a locked payload.
     
     Payload components:
     - Site ID
-    - 4-second Slot Index
+    - Dynamic Slot Index
     - HMAC-SHA256 signature
     - Base64 QR code image
-    - Countdown timer (seconds remaining in current 4s rotation window)
+    - Countdown timer (seconds remaining in current rotation window)
     """
+    if site.latitude is None or site.longitude is None:
+        return {
+            'error': f"GPS coordinates are not configured for office site '{site.name}'. Dynamic QR attendance is locked.",
+            'gps_configured': False,
+            'site_id': site.id,
+            'site_name': site.name,
+            'site_code': site.code,
+            'city': site.city,
+            'token': None,
+            'slot': 0,
+            'rotation_seconds': site.qr_rotation_seconds or 4,
+            'countdown_seconds': 0,
+            'qr_data_url': None,
+            'qr_image_base64': None,
+            'has_gps': False,
+        }
+
     rotation = site.qr_rotation_seconds or 4
     now_ts = time.time()
     slot = int(now_ts // rotation)
@@ -76,7 +94,8 @@ def generate_dynamic_qr_payload(site, request=None):
         'qr_image_base64': qr_b64,
         'timestamp': timezone.now().isoformat(),
         'geofence_radius': site.geofence_radius_meters or 200,
-        'has_gps': bool(site.latitude and site.longitude),
+        'has_gps': True,
+        'gps_configured': True,
     }
 
 

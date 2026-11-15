@@ -283,16 +283,22 @@
             </div>
 
             <!-- Terminal Status Pill -->
+            {% if gps_configured %}
             <div class="terminal-badge" id="terminalStatusContainer">
                 <span class="pulse-dot"></span>
                 <span>Live Kiosk Active</span>
             </div>
 
-            <!-- Terminal Status Pill -->
             <div class="terminal-badge d-none d-sm-inline-flex" id="terminalGpsStatusContainer" style="background: rgba(16, 185, 129, 0.12); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">
                 <i class="bi bi-shield-check text-success" id="gpsStatusIcon"></i>
                 <span id="gpsStatusText">Geofence Active &bull; {{ geofence_radius }}m Radius</span>
             </div>
+            {% else %}
+            <div class="terminal-badge" id="terminalStatusContainer" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border-color: rgba(239, 68, 68, 0.4);">
+                <i class="bi bi-lock-fill text-danger"></i>
+                <span>QR Locked &bull; Site GPS Missing</span>
+            </div>
+            {% endif %}
 
             <!-- LIVE PUNCH TOAST POP-UP (Right next to Live Kiosk Active) -->
             <div id="liveKioskPunchPopup" class="live-punch-popup d-none align-items-center gap-2 px-3 py-1.5 rounded-pill shadow-lg" role="alert" aria-live="assertive">
@@ -434,6 +440,7 @@
                     <div class="col-12 col-lg-6 text-center">
                         <div class="p-3 rounded-4" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-dark);">
                             
+                            {% if gps_configured and payload.qr_image_base64 %}
                             <!-- 4-Second Rotation Counter Badge -->
                             <div class="d-flex align-items-center justify-content-center gap-2 mb-3">
                                 <span class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle px-3 py-1.5 fw-bold" style="font-size: 0.8rem;">
@@ -466,6 +473,30 @@
                             <div class="text-white-50 mt-1 mono" style="font-size: 0.72rem;" id="tokenDisplay">
                                 Token Slot: <span class="text-info">{{ payload.slot }}</span> &bull; Site #{{ site.id }}
                             </div>
+                            {% else %}
+                            <!-- QR LOCKED: SITE GPS NOT CONFIGURED -->
+                            <div class="py-5 px-3 text-center" id="qrGpsLockedState">
+                                <div class="mb-3">
+                                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-danger-subtle text-danger p-4 border border-danger-subtle shadow" style="width: 88px; height: 88px;">
+                                        <i class="bi bi-geo-alt-slash-fill" style="font-size: 2.8rem;"></i>
+                                    </div>
+                                </div>
+                                <h4 class="text-danger fw-bold mb-1">QR Code Locked</h4>
+                                <h6 class="text-white fw-semibold mb-2">Office GPS Coordinates Required</h6>
+                                <p class="text-white-50 small mb-4 mx-auto" style="max-width: 360px;">
+                                    Without site GPS configuration, attendance QR cannot be opened. Company location coordinates (latitude & longitude) must be configured to enable geofenced check-in.
+                                </p>
+                                {% if not is_terminal_device %}
+                                <a href="{% url 'attendance:qr_dashboard' %}" class="btn btn-primary btn-sm px-4 py-2 rounded-pill fw-semibold shadow">
+                                    <i class="bi bi-gear-fill me-1.5"></i> Configure Site GPS Now
+                                </a>
+                                {% else %}
+                                <div class="alert alert-danger d-inline-block small py-2 px-3 mb-0 border border-danger-subtle">
+                                    <i class="bi bi-shield-lock me-1"></i> Please contact HR or IT administrator to configure this site's GPS location.
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
 
@@ -484,6 +515,7 @@
             const rotationWindow = {{ rotation_seconds|default:4 }};
             const tokenUrl = "{% url 'attendance:qr_kiosk_token_api' site_id=site.id %}{% if terminal_key %}?terminal_key={{ terminal_key }}{% endif %}";
             const geofenceRadius = {{ geofence_radius|default:200 }};
+            const isGpsConfigured = {{ gps_configured|yesno:"true,false" }};
 
             const qrImageEl = document.getElementById('qrImage');
             const countdownSecEl = document.getElementById('countdownSeconds');
@@ -513,6 +545,11 @@
             }
             setInterval(updateClock, 500);
             updateClock();
+
+            // If GPS is not configured for this office site, do NOT initialize QR polling or rotation loop
+            if (!isGpsConfigured || !qrImageEl) {
+                return;
+            }
 
             // 1.5 Live Punch Toast Popup Notifications
             const seenPunchIds = new Set();

@@ -308,7 +308,7 @@
                     <select class="form-select form-select-sm" id="siteSelect">
                         {% for s in sites %}
                             <option value="{{ s.id }}" {% if user_site and user_site.id == s.id %}selected{% endif %}>
-                                {{ s.name }} ({{ s.city }}) - Geofence: {{ s.geofence_radius_meters }}m
+                                {{ s.name }} ({{ s.city }}){% if not s.latitude or not s.longitude %} - [GPS Missing: QR Locked]{% else %} - Geofence: {{ s.geofence_radius_meters|default:200 }}m{% endif %}
                             </option>
                         {% endfor %}
                     </select>

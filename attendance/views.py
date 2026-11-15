@@ -586,6 +586,7 @@ def qr_kiosk_view(request, site_id=None):
     if request.GET.get('mode') == 'terminal' or 'terminal_key' in request.GET:
         is_terminal_device = True
 
+    gps_configured = bool(site.latitude is not None and site.longitude is not None)
     payload = generate_dynamic_qr_payload(site, request)
 
     return render(request, 'attendance/qr_kiosk.html', {
@@ -598,6 +599,7 @@ def qr_kiosk_view(request, site_id=None):
         'site_lat': float(site.latitude) if site.latitude is not None else None,
         'site_lng': float(site.longitude) if site.longitude is not None else None,
         'geofence_radius': site.geofence_radius_meters or 200,
+        'gps_configured': gps_configured,
     })
 
 
@@ -627,6 +629,14 @@ def qr_kiosk_token_api(request, site_id):
 
     if not (is_terminal_authorized or is_admin_user):
         return JsonResponse({'success': False, 'message': 'Terminal unauthorized. Access denied.'}, status=403)
+
+    if site.latitude is None or site.longitude is None:
+        return JsonResponse({
+            'success': False,
+            'gps_configured': False,
+            'error': f"GPS coordinates are not configured for office site '{site.name}'. Dynamic QR code cannot be generated or opened until GPS is configured by admin.",
+            'message': f"Site GPS not configured for '{site.name}'.",
+        }, status=400)
 
     payload = generate_dynamic_qr_payload(site, request)
 

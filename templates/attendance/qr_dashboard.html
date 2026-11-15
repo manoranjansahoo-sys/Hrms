@@ -148,10 +148,17 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <div class="d-flex align-items-center gap-1.5 text-success">
-                                        <i class="bi bi-shield-check"></i>
-                                        <span class="small fw-semibold">Strict Device GPS</span>
-                                    </div>
+                                    {% if s.latitude and s.longitude %}
+                                        <div class="d-flex align-items-center gap-1.5 text-success">
+                                            <i class="bi bi-shield-check"></i>
+                                            <span class="small fw-semibold">GPS Active ({{ s.geofence_radius_meters|default:200 }}m)</span>
+                                        </div>
+                                    {% else %}
+                                        <div class="d-flex align-items-center gap-1.5 text-danger">
+                                            <i class="bi bi-geo-alt-slash-fill"></i>
+                                            <span class="small fw-bold">GPS Missing (QR Locked)</span>
+                                        </div>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
@@ -179,9 +186,25 @@
                                             title="Share Dedicated Kiosk Link to Entrance Tablet">
                                             <i class="bi bi-share"></i> Share Link
                                         </button>
+                                        {% if s.latitude and s.longitude %}
                                         <a href="{% url 'attendance:qr_kiosk_site' site_id=s.id %}" class="btn btn-xs btn-outline-primary" target="_blank" title="Open Kiosk Terminal">
                                             <i class="bi bi-display"></i> Kiosk
                                         </a>
+                                        {% else %}
+                                        <button type="button" class="btn btn-xs btn-outline-danger btn-edit-site" 
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#siteConfigModal"
+                                            data-site-id="{{ s.id }}"
+                                            data-site-name="{{ s.name }}"
+                                            data-lat="{{ s.latitude|default:'' }}"
+                                            data-lng="{{ s.longitude|default:'' }}"
+                                            data-radius="{{ s.geofence_radius_meters }}"
+                                            data-rotation="{{ s.qr_rotation_seconds }}"
+                                            data-enabled="{{ s.is_qr_attendance_enabled }}"
+                                            title="QR Locked: Configure site GPS to open kiosk">
+                                            <i class="bi bi-lock-fill"></i> QR Locked
+                                        </button>
+                                        {% endif %}
                                         <button type="button" class="btn btn-xs btn-outline-secondary btn-edit-site" 
                                             data-bs-toggle="modal"
                                             data-bs-target="#siteConfigModal"
