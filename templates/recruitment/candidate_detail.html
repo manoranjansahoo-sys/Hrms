@@ -63,13 +63,36 @@
         <div class="p-4 p-md-5 bg-light border-bottom">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-4">
                 <div class="d-flex align-items-center gap-4">
-                    <img src="{{ candidate.get_photo_url }}" 
-                         alt="{{ candidate.full_name }}" 
-                         class="rounded-circle border border-4 border-white shadow" 
-                         width="95" 
-                         height="95" 
-                         style="object-fit: cover;"
-                         onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ candidate.full_name|urlencode }}&background=2E7D32&color=fff&size=128';">
+                    {% if candidate.photo %}
+                        <img src="{{ candidate.photo.url }}" 
+                             alt="{{ candidate.full_name }}" 
+                             class="rounded-circle border border-4 border-white shadow flex-shrink-0" 
+                             width="95" 
+                             height="95" 
+                             style="object-fit: cover;"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="rounded-circle border border-4 border-white shadow flex-shrink-0 d-flex align-items-center justify-content-center text-white fw-bold fs-2" 
+                             style="width: 95px; height: 95px; background: linear-gradient(135deg, #10B981 0%, #059669 100%); display: none !important;">
+                            {{ candidate.full_name|slice:":1"|upper }}
+                        </div>
+                    {% elif candidate.google_picture_url %}
+                        <img src="{{ candidate.google_picture_url }}" 
+                             alt="{{ candidate.full_name }}" 
+                             class="rounded-circle border border-4 border-white shadow flex-shrink-0" 
+                             width="95" 
+                             height="95" 
+                             style="object-fit: cover;"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="rounded-circle border border-4 border-white shadow flex-shrink-0 d-flex align-items-center justify-content-center text-white fw-bold fs-2" 
+                             style="width: 95px; height: 95px; background: linear-gradient(135deg, #10B981 0%, #059669 100%); display: none !important;">
+                            {{ candidate.full_name|slice:":1"|upper }}
+                        </div>
+                    {% else %}
+                        <div class="rounded-circle border border-4 border-white shadow flex-shrink-0 d-flex align-items-center justify-content-center text-white fw-bold fs-2" 
+                             style="width: 95px; height: 95px; background: linear-gradient(135deg, #10B981 0%, #059669 100%);">
+                            {{ candidate.full_name|slice:":1"|upper }}
+                        </div>
+                    {% endif %}
                     <div>
                         <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
                             <h3 class="fw-bold mb-0 text-dark">{{ candidate.full_name }}</h3>

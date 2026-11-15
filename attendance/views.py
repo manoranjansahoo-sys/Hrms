@@ -600,24 +600,6 @@ def qr_kiosk_token_api(request, site_id):
     if not (is_terminal_authorized or is_admin_user):
         return JsonResponse({'success': False, 'message': 'Terminal unauthorized. Access denied.'}, status=403)
 
-    # Verify physical kiosk device GPS location if coordinates are provided
-    lat_param = request.GET.get('lat')
-    lng_param = request.GET.get('lng')
-    if site.latitude is not None and site.longitude is not None and lat_param not in (None, '', 'null') and lng_param not in (None, '', 'null'):
-        try:
-            kiosk_lat = float(lat_param)
-            kiosk_lng = float(lng_param)
-            dist = site.calculate_gps_distance(kiosk_lat, kiosk_lng)
-            radius = site.geofence_radius_meters or 200
-            if dist is not None and dist > radius:
-                return JsonResponse({
-                    'success': False,
-                    'status': 'LOCATION_FAILED',
-                    'message': f"Kiosk physical location mismatch: Terminal device is {dist}m away from {site.name} (Max radius: {radius}m)."
-                }, status=403)
-        except (ValueError, TypeError):
-            pass
-
     payload = generate_dynamic_qr_payload(site, request)
 
     # Fetch recent successful punches at this site within the last 60 seconds (max 5)

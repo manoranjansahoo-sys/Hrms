@@ -276,7 +276,7 @@
         <div class="d-flex align-items-center gap-3">
             <div class="d-flex align-items-center gap-2.5">
                 <img src="{% if company_logo_b64 %}{{ company_logo_b64 }}{% else %}{% static 'img/logo.png' %}{% endif %}" 
-                     onerror="if ('{{ company_logo_b64 }}') this.src='{{ company_logo_b64 }}';" 
+                     onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMjAgNDgiIHdpZHRoPSIyMjAiIGhlaWdodD0iNDgiPjxyZWN0IHdpZHRoPSIyMjAiIGhlaWdodD0iNDgiIHJ4PSI4IiBmaWxsPSIjMGYxNzJhIi8+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTQsIDEwKSI+PHJlY3Qgd2lkdGg9IjI4IiBoZWlnaHQ9IjI4IiByeD0iNiIgZmlsbD0iIzI1NjNlYiIvPjxwYXRoIGQ9Ik04IDcgaDkgYTQuNSA0LjUgMCAwIDEgMCA5IGgtOSB6IiBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuOSIvPjxwYXRoIGQ9Ik04IDEzIGgxMCBhNC41IDQuNSAwIDAgMSAwIDkgaC0xMCB6IiBmaWxsPSIjZmZmZmZmIi8+PC9nPjx0ZXh0IHg9IjU0IiB5PSIzMCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE3IiBmb250LXdlaWdodD0iODAwIiBmaWxsPSIjZmZmZmZmIiBsZXR0ZXItc3BhY2luZz0iMC41Ij5CUk9OWkVHQVRFPC90ZXh0Pjwvc3ZnPg==';" 
                      alt="Company Logo" 
                      style="height: 36px; max-width: 195px; object-fit: contain;">
                 <span class="text-white-50 ms-1 d-none d-sm-inline" style="font-size: 0.8rem; border-left: 1px solid rgba(255,255,255,0.18); padding-left: 0.75rem;">Dynamic Attendance Terminal</span>
@@ -288,10 +288,10 @@
                 <span>Live Kiosk Active</span>
             </div>
 
-            <!-- Terminal GPS Status Pill -->
+            <!-- Terminal Status Pill -->
             <div class="terminal-badge d-none d-sm-inline-flex" id="terminalGpsStatusContainer" style="background: rgba(16, 185, 129, 0.12); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">
-                <i class="bi bi-geo-alt-fill text-success" id="gpsStatusIcon"></i>
-                <span id="gpsStatusText">Verifying Device Location...</span>
+                <i class="bi bi-shield-check text-success" id="gpsStatusIcon"></i>
+                <span id="gpsStatusText">Geofence Active &bull; {{ geofence_radius }}m Radius</span>
             </div>
 
             <!-- LIVE PUNCH TOAST POP-UP (Right next to Live Kiosk Active) -->
@@ -408,10 +408,10 @@
                             <div class="d-flex align-items-start gap-2.5">
                                 <i class="bi bi-shield-check text-success fs-5 mt-0.5"></i>
                                 <div style="font-size: 0.82rem;">
-                                    <strong class="text-white d-block mb-0.5">Strict GPS Geofence Security (200m)</strong>
+                                    <strong class="text-white d-block mb-0.5">Company Geofence Security ({{ site.geofence_radius_meters|default:200 }}m)</strong>
                                     <div class="text-secondary">
-                                        GPS Radius: <span class="text-info fw-semibold">{{ site.geofence_radius_meters|default:200 }}m radius</span> &bull; 
-                                        Device GPS: <span class="text-warning fw-semibold">Location Must Be Turned On</span>
+                                        Company Radius: <span class="text-info fw-semibold">{{ site.geofence_radius_meters|default:200 }}m radius</span> &bull; 
+                                        Employee Device: <span class="text-warning fw-semibold">GPS Verified on Scan</span>
                                     </div>
                                 </div>
                             </div>
@@ -419,9 +419,9 @@
 
                         <!-- QUICK LINKS FOR EMPLOYEES (Hidden on entrance terminal tablet) -->
                         {% if not is_terminal_device %}
-                        <div class="mt-4 pt-2 d-flex flex-wrap gap-2 justify-content-center justify-content-lg-start">
-                            <a href="{% url 'attendance:qr_scanner' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1.5" target="_blank">
-                                <i class="bi bi-camera me-1"></i> Open Web Scanner
+                        <div class="mt-4 pt-2 d-flex flex-wrap gap-2 justify-content-center justify-content-lg-start align-items-center">
+                            <a href="{% url 'attendance:qr_scanner' %}" class="btn btn-sm btn-outline-primary rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 36px; height: 36px;" title="Open Scanner" aria-label="Open Scanner" target="_blank">
+                                <i class="bi bi-camera fs-6"></i>
                             </a>
                             <a href="{% url 'attendance:my_attendance' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1.5" target="_blank">
                                 <i class="bi bi-clock-history me-1"></i> My Attendance
@@ -446,25 +446,11 @@
 
                             <!-- QR CODE IMAGE WRAPPER -->
                             <div class="qr-outer-wrapper mx-auto position-relative" id="qrWrapper" style="min-width: 310px; min-height: 310px; display: flex; align-items: center; justify-content: center;">
-                                <!-- Location Verification & Geofence Lock Card -->
-                                <div id="kioskLocationLock" class="text-center p-3 w-100 h-100" style="{% if not site_lat or not site_lng %}display: none;{% else %}display: flex; flex-direction: column; align-items: center; justify-content: center;{% endif %} min-height: 280px; background: rgba(15, 23, 42, 0.7); border-radius: 0.85rem; border: 1px dashed rgba(255,255,255,0.2);">
-                                    <div class="spinner-border text-primary mb-3" id="locLockSpinner" role="status" style="width: 2.5rem; height: 2.5rem;"></div>
-                                    <i class="bi bi-geo-alt-fill text-danger fs-1 mb-2 d-none" id="locLockErrorIcon"></i>
-                                    <h6 class="fw-bold text-white mb-1.5" id="locLockTitle" style="font-size: 1rem;">Verifying Kiosk Physical Location...</h6>
-                                    <p class="text-white-50 small mb-3" id="locLockMessage" style="font-size: 0.8rem; line-height: 1.4; max-width: 260px;">
-                                        Kiosk must be stationed within {{ geofence_radius }}m of {{ site.name }} to display attendance QR.
-                                    </p>
-                                    <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 py-1.5 shadow" id="btnRetryKioskGps" onclick="fetchDeviceLocation()" style="font-size: 0.78rem;">
-                                        <i class="bi bi-geo-alt me-1"></i> Detect Location
-                                    </button>
-                                </div>
-
-                                <!-- Dynamic Rotating QR Image (Only visible when physical location matches) -->
-                                <img src="{% if not site_lat or not site_lng %}{{ payload.qr_image_base64 }}{% endif %}" 
+                                <!-- Dynamic Rotating QR Image (Always visible on kiosk) -->
+                                <img src="{{ payload.qr_image_base64 }}" 
                                      alt="Dynamic Attendance QR Code" 
                                      class="qr-image" 
-                                     id="qrImage" 
-                                     style="{% if site_lat and site_lng %}display: none;{% endif %}">
+                                     id="qrImage">
                             </div>
 
                             <!-- 4-Second Animated Progress Bar -->
@@ -497,156 +483,16 @@
             const siteId = {{ site.id }};
             const rotationWindow = {{ rotation_seconds|default:4 }};
             const tokenUrl = "{% url 'attendance:qr_kiosk_token_api' site_id=site.id %}{% if terminal_key %}?terminal_key={{ terminal_key }}{% endif %}";
-            const targetLat = {{ site_lat|default:"null" }};
-            const targetLng = {{ site_lng|default:"null" }};
             const geofenceRadius = {{ geofence_radius|default:200 }};
 
-            // Device GPS Location Verification
-            function calculateDistance(lat1, lon1, lat2, lon2) {
-                const R = 6371e3;
-                const phi1 = lat1 * Math.PI / 180;
-                const phi2 = lat2 * Math.PI / 180;
-                const deltaPhi = (lat2 - lat1) * Math.PI / 180;
-                const deltaLambda = (lon2 - lon1) * Math.PI / 180;
-                const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
-                          Math.cos(phi1) * Math.cos(phi2) *
-                          Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
-                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-                return Math.round(R * c);
-            }
-
-            const gpsContainer = document.getElementById('terminalGpsStatusContainer');
-            const gpsText = document.getElementById('gpsStatusText');
-            const gpsIcon = document.getElementById('gpsStatusIcon');
-
-            let kioskLocationVerified = (targetLat === null || targetLng === null);
-            let currentKioskLat = null;
-            let currentKioskLng = null;
-
             const qrImageEl = document.getElementById('qrImage');
-            const locLockEl = document.getElementById('kioskLocationLock');
-            const locLockSpinner = document.getElementById('locLockSpinner');
-            const locLockErrorIcon = document.getElementById('locLockErrorIcon');
-            const locLockTitle = document.getElementById('locLockTitle');
-            const locLockMessage = document.getElementById('locLockMessage');
             const countdownSecEl = document.getElementById('countdownSeconds');
             const timerBarEl = document.getElementById('rotationTimerBar');
             const tokenDisplayEl = document.getElementById('tokenDisplay');
-
-            function showLocationError(title, htmlMsg) {
-                if (locLockEl) {
-                    locLockEl.style.display = 'flex';
-                }
-                if (locLockSpinner) locLockSpinner.classList.add('d-none');
-                if (locLockErrorIcon) locLockErrorIcon.classList.remove('d-none');
-                if (locLockTitle) {
-                    locLockTitle.textContent = title;
-                    locLockTitle.className = "fw-bold text-danger mb-1.5";
-                }
-                if (locLockMessage) {
-                    locLockMessage.innerHTML = htmlMsg;
-                }
-            }
-
-            function fetchDeviceLocation() {
-                if (targetLat === null || targetLng === null) {
-                    kioskLocationVerified = true;
-                    if (locLockEl) locLockEl.style.display = 'none';
-                    if (qrImageEl) qrImageEl.style.display = 'block';
-                    refreshDynamicQR();
-                    return;
-                }
-
-                if (!navigator.geolocation) {
-                    kioskLocationVerified = false;
-                    if (gpsText) gpsText.textContent = "GPS Not Available";
-                    showLocationError("GPS Geolocation Unsupported", "This device/browser does not support geolocation. Physical location verification is required to display attendance QR.");
-                    return;
-                }
-
-                if (locLockSpinner) locLockSpinner.classList.remove('d-none');
-                if (locLockErrorIcon) locLockErrorIcon.classList.add('d-none');
-                if (locLockTitle) {
-                    locLockTitle.textContent = "Verifying Kiosk Physical Location...";
-                    locLockTitle.className = "fw-bold text-white mb-1.5";
-                }
-                if (locLockMessage) {
-                    locLockMessage.textContent = `Detecting device location within ${geofenceRadius}m radius of {{ site.name }}...`;
-                }
-
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        const devLat = pos.coords.latitude;
-                        const devLng = pos.coords.longitude;
-                        currentKioskLat = devLat;
-                        currentKioskLng = devLng;
-
-                        const dist = calculateDistance(devLat, devLng, targetLat, targetLng);
-                        if (dist <= geofenceRadius) {
-                            kioskLocationVerified = true;
-                            if (gpsContainer) {
-                                gpsContainer.style.background = 'rgba(16, 185, 129, 0.16)';
-                                gpsContainer.style.borderColor = 'rgba(16, 185, 129, 0.4)';
-                                gpsContainer.style.color = '#34d399';
-                            }
-                            if (gpsIcon) gpsIcon.className = 'bi bi-geo-alt-fill text-success';
-                            if (gpsText) gpsText.innerHTML = `GPS Verified &bull; ${dist}m from site`;
-
-                            if (locLockEl) locLockEl.style.display = 'none';
-                            if (qrImageEl) qrImageEl.style.display = 'block';
-                            refreshDynamicQR();
-                        } else {
-                            kioskLocationVerified = false;
-                            if (qrImageEl) {
-                                qrImageEl.style.display = 'none';
-                                qrImageEl.src = '';
-                            }
-                            if (gpsContainer) {
-                                gpsContainer.style.background = 'rgba(239, 68, 68, 0.16)';
-                                gpsContainer.style.borderColor = 'rgba(239, 68, 68, 0.4)';
-                                gpsContainer.style.color = '#f87171';
-                            }
-                            if (gpsIcon) gpsIcon.className = 'bi bi-exclamation-diamond-fill text-danger';
-                            if (gpsText) gpsText.innerHTML = `Location Mismatch &bull; ${dist}m away (${geofenceRadius}m limit)`;
-
-                            showLocationError(
-                                "Location Mismatch: Kiosk Locked",
-                                `Device is <strong>${dist}m</strong> away from {{ site.name }}.<br>Dynamic QR attendance is locked because this terminal is outside the authorized <strong>${geofenceRadius}m</strong> radius.`
-                            );
-                        }
-                    },
-                    (err) => {
-                        console.warn("Entrance terminal GPS check:", err.message);
-                        kioskLocationVerified = false;
-                        if (qrImageEl) {
-                            qrImageEl.style.display = 'none';
-                            qrImageEl.src = '';
-                        }
-                        if (gpsContainer) {
-                            gpsContainer.style.background = 'rgba(245, 158, 11, 0.15)';
-                            gpsContainer.style.borderColor = 'rgba(245, 158, 11, 0.35)';
-                            gpsContainer.style.color = '#fbbf24';
-                        }
-                        if (gpsIcon) gpsIcon.className = 'bi bi-geo-fill text-warning';
-                        if (gpsText) gpsText.textContent = "GPS Permission Needed";
-
-                        showLocationError(
-                            "Location Permission Required",
-                            "Please allow browser location (GPS) permissions. The dynamic attendance QR code is locked and will only display when device location is verified within the office."
-                        );
-                    },
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-                );
-            }
-            window.fetchDeviceLocation = fetchDeviceLocation;
-            fetchDeviceLocation();
 
             let countdownVal = parseFloat("{{ payload.countdown_seconds|default:4.0 }}") || rotationWindow;
             let lastTick = performance.now();
             let isFetching = false;
-            const countdownSecEl = document.getElementById('countdownSeconds');
-            const timerBarEl = document.getElementById('rotationTimerBar');
-            const tokenDisplayEl = document.getElementById('tokenDisplay');
 
             // 1. Live Digital Clock
             function updateClock() {
@@ -771,17 +617,11 @@
 
             // 2. Fetch new Dynamic QR token from Server
             async function refreshDynamicQR() {
-                if (!kioskLocationVerified) return;
                 if (isFetching) return;
                 isFetching = true;
 
-                let fetchUrl = tokenUrl;
-                if (currentKioskLat !== null && currentKioskLng !== null) {
-                    fetchUrl += (fetchUrl.includes('?') ? '&' : '?') + `lat=${currentKioskLat}&lng=${currentKioskLng}`;
-                }
-
                 try {
-                    const response = await fetch(fetchUrl, {
+                    const response = await fetch(tokenUrl, {
                         headers: { 'X-Requested-With': 'XMLHttpRequest' },
                         cache: 'no-store'
                     });
@@ -789,7 +629,6 @@
                     if (response.ok) {
                         const data = await response.json();
                         if (data.success && data.payload) {
-                            if (locLockEl) locLockEl.style.display = 'none';
                             qrImageEl.style.display = 'block';
 
                             // Update image with smooth fade effect
@@ -810,16 +649,6 @@
                         if (data.recent_punches) {
                             handleRecentPunches(data.recent_punches);
                         }
-                    } else if (response.status === 403) {
-                        const errData = await response.json().catch(() => ({}));
-                        if (errData.status === 'LOCATION_FAILED') {
-                            kioskLocationVerified = false;
-                            if (qrImageEl) {
-                                qrImageEl.style.display = 'none';
-                                qrImageEl.src = '';
-                            }
-                            showLocationError("Terminal Location Check Failed", errData.message || "Device coordinates are outside the authorized geofence radius.");
-                        }
                     }
                 } catch (err) {
                     console.error("Error refreshing dynamic QR:", err);
@@ -830,13 +659,6 @@
 
             // 3. High-precision animation loop for dynamic rotation countdown and progress bar
             function animationLoop(currentTime) {
-                if (!kioskLocationVerified) {
-                    if (timerBarEl) timerBarEl.style.width = '0%';
-                    if (countdownSecEl) countdownSecEl.textContent = '--';
-                    requestAnimationFrame(animationLoop);
-                    return;
-                }
-
                 const delta = (currentTime - lastTick) / 1000;
                 lastTick = currentTime;
 

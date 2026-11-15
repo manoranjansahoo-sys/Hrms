@@ -301,10 +301,10 @@ class AttendanceCorrectionQueueTests(TestCase):
         Attendance.objects.filter(employee=self.emp_profile, date=today).delete()
         self.client.force_login(self.emp_user)
 
-        # Before punch in: Direct punch buttons removed; shifted to Dynamic QR Scanner button
+        # Before punch in: Direct punch buttons removed; shifted to Dynamic QR Scanner button (Scan icon)
         res_dash = self.client.get(reverse('portal:dashboard_employee'))
         self.assertEqual(res_dash.status_code, 200)
-        self.assertContains(res_dash, 'Scan Dynamic QR')
+        self.assertContains(res_dash, 'bi-qr-code-scan')
         self.assertContains(res_dash, 'Scan QR to Punch')
         self.assertContains(res_dash, 'Not Punched In')
         self.assertNotContains(res_dash, 'Punch In required before you can Punch Out')
@@ -313,7 +313,7 @@ class AttendanceCorrectionQueueTests(TestCase):
         self.client.get(reverse('attendance:punch_in'))
         res_dash2 = self.client.get(reverse('portal:dashboard_employee'))
         self.assertEqual(res_dash2.status_code, 200)
-        self.assertContains(res_dash2, 'Scan Dynamic QR')
+        self.assertContains(res_dash2, 'bi-qr-code-scan')
         self.assertContains(res_dash2, 'Present')
 
         # After punch out: Topbar shows Done and dashboard shows Punched Out
@@ -700,21 +700,13 @@ class DynamicQRAttendanceTests(TestCase):
         self.assertIn('qr_image_base64', data['payload'])
         self.assertEqual(data['payload']['rotation_seconds'], 4)
 
-        # Token API with matching physical GPS coordinates returns 200
-        res_gps_ok = self.client.get(
-            reverse('attendance:qr_kiosk_token_api', kwargs={'site_id': self.site.id}),
-            {'lat': 12.971600, 'lng': 77.594560}
-        )
-        self.assertEqual(res_gps_ok.status_code, 200)
-        self.assertTrue(res_gps_ok.json()['success'])
-
-        # Token API with out-of-bounds GPS coordinates returns 403 LOCATION_FAILED
-        res_gps_fail = self.client.get(
+        # Token API works freely for kiosk terminal without requiring kiosk device GPS
+        res_gps_any = self.client.get(
             reverse('attendance:qr_kiosk_token_api', kwargs={'site_id': self.site.id}),
             {'lat': 18.520400, 'lng': 73.856700}
         )
-        self.assertEqual(res_gps_fail.status_code, 403)
-        self.assertEqual(res_gps_fail.json()['status'], 'LOCATION_FAILED')
+        self.assertEqual(res_gps_any.status_code, 200)
+        self.assertTrue(res_gps_any.json()['success'])
 
     def test_qr_scanner_view(self):
         self.client.force_login(self.user)

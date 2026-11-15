@@ -578,13 +578,33 @@
                                     </td>
                                     <td class="py-3">
                                         <div class="d-flex align-items-center gap-2">
-                                            <img src="{{ app.candidate.get_photo_url }}" 
-                                                 alt="{{ app.candidate.full_name }}" 
-                                                 class="rounded-circle border shadow-2xs" 
-                                                 width="32" 
-                                                 height="32" 
-                                                 style="object-fit: cover;"
-                                                 onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ app.candidate.full_name|urlencode }}&background=2E7D32&color=fff&size=128';">
+                                            {% if app.candidate.photo %}
+                                                <img src="{{ app.candidate.photo.url }}" 
+                                                     alt="{{ app.candidate.full_name }}" 
+                                                     class="rounded-circle border shadow-2xs" 
+                                                     width="32" 
+                                                     height="32" 
+                                                     style="object-fit: cover;"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+                                                <div class="rounded-circle d-inline-flex align-items-center justify-content-center text-white fw-bold shadow-2xs" style="width: 32px; height: 32px; font-size: 0.8rem; background: #10B981; display: none !important;">
+                                                    {{ app.candidate.full_name|slice:":1"|upper }}
+                                                </div>
+                                            {% elif app.candidate.google_picture_url %}
+                                                <img src="{{ app.candidate.google_picture_url }}" 
+                                                     alt="{{ app.candidate.full_name }}" 
+                                                     class="rounded-circle border shadow-2xs" 
+                                                     width="32" 
+                                                     height="32" 
+                                                     style="object-fit: cover;"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+                                                <div class="rounded-circle d-inline-flex align-items-center justify-content-center text-white fw-bold shadow-2xs" style="width: 32px; height: 32px; font-size: 0.8rem; background: #10B981; display: none !important;">
+                                                    {{ app.candidate.full_name|slice:":1"|upper }}
+                                                </div>
+                                            {% else %}
+                                                <div class="rounded-circle d-inline-flex align-items-center justify-content-center text-white fw-bold shadow-2xs" style="width: 32px; height: 32px; font-size: 0.8rem; background: #10B981;">
+                                                    {{ app.candidate.full_name|slice:":1"|upper }}
+                                                </div>
+                                            {% endif %}
                                             <span class="fw-bold text-dark fs-6">{{ app.candidate.full_name }}</span>
                                         </div>
                                     </td>
@@ -692,13 +712,33 @@
                                     </td>
                                     <td class="py-3">
                                         <div class="d-flex align-items-center gap-2">
-                                            <img src="{{ app.candidate.get_photo_url }}" 
-                                                 alt="{{ app.candidate.full_name }}" 
-                                                 class="rounded-circle border shadow-2xs" 
-                                                 width="32" 
-                                                 height="32" 
-                                                 style="object-fit: cover;"
-                                                 onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ app.candidate.full_name|urlencode }}&background=2E7D32&color=fff&size=128';">
+                                            {% if app.candidate.photo %}
+                                                <img src="{{ app.candidate.photo.url }}" 
+                                                     alt="{{ app.candidate.full_name }}" 
+                                                     class="rounded-circle border shadow-2xs" 
+                                                     width="32" 
+                                                     height="32" 
+                                                     style="object-fit: cover;"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+                                                <div class="rounded-circle d-inline-flex align-items-center justify-content-center text-white fw-bold shadow-2xs" style="width: 32px; height: 32px; font-size: 0.8rem; background: #10B981; display: none !important;">
+                                                    {{ app.candidate.full_name|slice:":1"|upper }}
+                                                </div>
+                                            {% elif app.candidate.google_picture_url %}
+                                                <img src="{{ app.candidate.google_picture_url }}" 
+                                                     alt="{{ app.candidate.full_name }}" 
+                                                     class="rounded-circle border shadow-2xs" 
+                                                     width="32" 
+                                                     height="32" 
+                                                     style="object-fit: cover;"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+                                                <div class="rounded-circle d-inline-flex align-items-center justify-content-center text-white fw-bold shadow-2xs" style="width: 32px; height: 32px; font-size: 0.8rem; background: #10B981; display: none !important;">
+                                                    {{ app.candidate.full_name|slice:":1"|upper }}
+                                                </div>
+                                            {% else %}
+                                                <div class="rounded-circle d-inline-flex align-items-center justify-content-center text-white fw-bold shadow-2xs" style="width: 32px; height: 32px; font-size: 0.8rem; background: #10B981;">
+                                                    {{ app.candidate.full_name|slice:":1"|upper }}
+                                                </div>
+                                            {% endif %}
                                             <span class="fw-bold text-dark fs-6">{{ app.candidate.full_name }}</span>
                                         </div>
                                     </td>

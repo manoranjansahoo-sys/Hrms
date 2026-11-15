@@ -39,7 +39,7 @@
         <div class="sidebar-header">
             <a href="{% url 'portal:smart_dashboard' %}" class="d-flex align-items-center text-decoration-none py-1">
                 <img src="{% if company_logo_b64 %}{{ company_logo_b64 }}{% else %}{% static 'img/logo.png' %}{% endif %}" 
-                     onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 220 48\'%3E%3Crect width=\'220\' height=\'48\' rx=\'8\' fill=\'%230f172a\'/%3E%3Cg transform=\'translate(14, 10)\'%3E%3Crect width=\'28\' height=\'28\' rx=\'6\' fill=\'%232563eb\'/%3E%3Cpath d=\'M8 7 h9 a4.5 4.5 0 0 1 0 9 h-9 z\' fill=\'%23ffffff\' fill-opacity=\'0.9\'/%3E%3Cpath d=\'M8 13 h10 a4.5 4.5 0 0 1 0 9 h-10 z\' fill=\'%23ffffff\'/%3E%3C/g%3E%3Ctext x=\'54\' y=\'30\' font-family=\'Inter, -apple-system, sans-serif\' font-size=\'17\' font-weight=\'800\' fill=\'%23ffffff\' letter-spacing=\'0.5\'%3EBRONZEGATE%3C/text%3E%3C/svg%3E';" 
+                     onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMjAgNDgiIHdpZHRoPSIyMjAiIGhlaWdodD0iNDgiPjxyZWN0IHdpZHRoPSIyMjAiIGhlaWdodD0iNDgiIHJ4PSI4IiBmaWxsPSIjMGYxNzJhIi8+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTQsIDEwKSI+PHJlY3Qgd2lkdGg9IjI4IiBoZWlnaHQ9IjI4IiByeD0iNiIgZmlsbD0iIzI1NjNlYiIvPjxwYXRoIGQ9Ik04IDcgaDkgYTQuNSA0LjUgMCAwIDEgMCA5IGgtOSB6IiBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuOSIvPjxwYXRoIGQ9Ik04IDEzIGgxMCBhNC41IDQuNSAwIDAgMSAwIDkgaC0xMCB6IiBmaWxsPSIjZmZmZmZmIi8+PC9nPjx0ZXh0IHg9IjU0IiB5PSIzMCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE3IiBmb250LXdlaWdodD0iODAwIiBmaWxsPSIjZmZmZmZmIiBsZXR0ZXItc3BhY2luZz0iMC41Ij5CUk9OWkVHQVRFPC90ZXh0Pjwvc3ZnPg==';" 
                      alt="Company Logo" 
                      style="height: 38px; max-width: 195px; object-fit: contain;">
             </a>
@@ -481,9 +481,8 @@
                 {% if request.user.employee_profile %}
                     {% with today_att=user_today_attendance %}
                     <div class="d-none d-md-flex align-items-center gap-2">
-                        <a href="{% url 'attendance:qr_scanner' %}" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1.5 shadow-sm fw-semibold" title="Dynamic QR Attendance Scanner (Punch In / Out)">
-                            <i class="bi bi-qr-code-scan"></i>
-                            <span>Scan QR to Punch</span>
+                        <a href="{% url 'attendance:qr_scanner' %}" class="btn btn-sm btn-primary d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 36px; height: 36px; border-radius: 8px;" title="Scan QR to Punch" aria-label="Scan QR to Punch">
+                            <i class="bi bi-qr-code-scan fs-6"></i>
                         </a>
                         {% if today_att and today_att.punch_in %}
                             {% if today_att.punch_out %}

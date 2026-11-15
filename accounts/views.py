@@ -123,7 +123,15 @@ def user_avatar_view(request, user_id):
         except Exception:
             pass
 
-    first = user.first_name or user.username or 'User'
-    last = user.last_name or ''
-    return redirect(f"https://ui-avatars.com/api/?name={first}+{last}&background=1B5E20&color=fff&size=128")
+    from django.http import HttpResponse
+    char = (user.first_name[:1] if user.first_name else (user.username[:1] if user.username else 'U')).upper()
+    svg = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">'
+        f'<rect width="128" height="128" rx="64" fill="#1B5E20"/>'
+        f'<text x="64" y="82" font-family="Inter, -apple-system, sans-serif" font-size="56" font-weight="700" fill="#ffffff" text-anchor="middle">{char}</text>'
+        f'</svg>'
+    )
+    response = HttpResponse(svg, content_type="image/svg+xml")
+    response['Cache-Control'] = 'public, max-age=86400'
+    return response
 

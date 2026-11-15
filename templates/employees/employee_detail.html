@@ -17,13 +17,24 @@
         <div class="p-4 p-md-5 bg-light border-bottom">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-4">
                 <div class="d-flex align-items-center gap-4">
-                    <img src="{{ employee.user.get_avatar_url }}" 
-                         alt="{{ employee.full_name }}" 
-                         class="rounded-circle border border-4 border-white shadow" 
-                         width="100" 
-                         height="100" 
-                         style="object-fit: cover;"
-                         onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ employee.full_name|urlencode }}&background=1B5E20&color=fff&size=128';">
+                    {% if employee.user.avatar %}
+                        <img src="{{ employee.user.avatar.url }}" 
+                             alt="{{ employee.full_name }}" 
+                             class="rounded-circle border border-4 border-white shadow flex-shrink-0" 
+                             width="100" 
+                             height="100" 
+                             style="object-fit: cover;"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="rounded-circle border border-4 border-white shadow flex-shrink-0 d-flex align-items-center justify-content-center text-white fw-bold fs-2" 
+                             style="width: 100px; height: 100px; background: linear-gradient(135deg, #10B981 0%, #059669 100%); display: none !important;">
+                            {{ employee.full_name|slice:":1"|upper }}
+                        </div>
+                    {% else %}
+                        <div class="rounded-circle border border-4 border-white shadow flex-shrink-0 d-flex align-items-center justify-content-center text-white fw-bold fs-2" 
+                             style="width: 100px; height: 100px; background: linear-gradient(135deg, #10B981 0%, #059669 100%);">
+                            {{ employee.full_name|slice:":1"|upper }}
+                        </div>
+                    {% endif %}
                     <div>
                         <div class="d-flex align-items-center gap-2 mb-1">
                             <h3 class="fw-bold mb-0 text-dark">{{ employee.full_name }}</h3>

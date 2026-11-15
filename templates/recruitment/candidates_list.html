@@ -196,6 +196,19 @@
         border: 2px solid #FFFFFF;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
     }
+    .candidate-avatar-initials {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.85rem;
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        color: #ffffff;
+        text-transform: uppercase;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+        border: 2px solid #FFFFFF;
+        flex-shrink: 0;
+    }
 
     /* Status Badges */
     .badge-status {
@@ -988,10 +1001,27 @@
                             <!-- 2. NAME -->
                             <td class="col-name py-2.5">
                                 <div class="d-flex align-items-center gap-2">
-                                    <img src="{{ app.candidate.get_photo_url }}" 
-                                         alt="{{ app.candidate.full_name }}" 
-                                         class="candidate-avatar"
-                                         onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ app.candidate.full_name|urlencode }}&background=2E7D32&color=fff&size=128';">
+                                    {% if app.candidate.photo %}
+                                        <img src="{{ app.candidate.photo.url }}" 
+                                             alt="{{ app.candidate.full_name }}" 
+                                             class="candidate-avatar"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+                                        <div class="candidate-avatar candidate-avatar-initials" style="display:none;">
+                                            {{ app.candidate.full_name|slice:":1"|upper }}
+                                        </div>
+                                    {% elif app.candidate.google_picture_url %}
+                                        <img src="{{ app.candidate.google_picture_url }}" 
+                                             alt="{{ app.candidate.full_name }}" 
+                                             class="candidate-avatar"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+                                        <div class="candidate-avatar candidate-avatar-initials" style="display:none;">
+                                            {{ app.candidate.full_name|slice:":1"|upper }}
+                                        </div>
+                                    {% else %}
+                                        <div class="candidate-avatar candidate-avatar-initials">
+                                            {{ app.candidate.full_name|slice:":1"|upper }}
+                                        </div>
+                                    {% endif %}
                                     <div class="overflow-hidden">
                                         <div class="d-flex align-items-center gap-1.5 flex-wrap">
                                             <span class="table-cell-title fw-bold text-dark fs-6" title="{{ app.candidate.full_name }}">
@@ -1379,11 +1409,29 @@
                                 <div class="p-3 rounded-3 border bg-white shadow-xs" id="scheduledCard_{{ sch.id }}" style="border-color: #E2E8F0 !important;">
                                     <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
                                         <div class="d-flex align-items-center gap-2">
-                                            <img src="{{ sch.candidate.get_photo_url }}" 
-                                                 alt="{{ sch.candidate.full_name }}" 
-                                                 class="rounded-circle" 
-                                                 style="width: 36px; height: 36px; object-fit: cover;"
-                                                 onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ sch.candidate.full_name|urlencode }}&background=2E7D32&color=fff&size=128';">
+                                            {% if sch.candidate.photo %}
+                                                <img src="{{ sch.candidate.photo.url }}" 
+                                                     alt="{{ sch.candidate.full_name }}" 
+                                                     class="rounded-circle" 
+                                                     style="width: 36px; height: 36px; object-fit: cover;"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+                                                <div class="candidate-avatar candidate-avatar-initials" style="width: 36px; height: 36px; display:none;">
+                                                    {{ sch.candidate.full_name|slice:":1"|upper }}
+                                                </div>
+                                            {% elif sch.candidate.google_picture_url %}
+                                                <img src="{{ sch.candidate.google_picture_url }}" 
+                                                     alt="{{ sch.candidate.full_name }}" 
+                                                     class="rounded-circle" 
+                                                     style="width: 36px; height: 36px; object-fit: cover;"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+                                                <div class="candidate-avatar candidate-avatar-initials" style="width: 36px; height: 36px; display:none;">
+                                                    {{ sch.candidate.full_name|slice:":1"|upper }}
+                                                </div>
+                                            {% else %}
+                                                <div class="candidate-avatar candidate-avatar-initials" style="width: 36px; height: 36px;">
+                                                    {{ sch.candidate.full_name|slice:":1"|upper }}
+                                                </div>
+                                            {% endif %}
                                             <div>
                                                 <a href="{% url 'recruitment:candidate_detail' application_id=sch.id %}" class="fw-bold text-dark text-decoration-none small d-block">
                                                     {{ sch.candidate.full_name }}
@@ -1959,11 +2007,11 @@
             <div class="candidate-sched-chip p-2.5 rounded-3 border bg-white shadow-xs" id="schedChip_${id}" style="border-color: #E2E8F0;">
                 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 w-100">
                     <div class="d-flex align-items-center gap-2 overflow-hidden">
-                        <img src="${avatar || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=2E7D32&color=fff&size=128')}" 
+                        <img src="${avatar || ('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'36\' height=\'36\' viewBox=\'0 0 36 36\'><circle cx=\'18\' cy=\'18\' r=\'18\' fill=\'%2310B981\'/><text x=\'18\' y=\'23\' font-size=\'15\' font-family=\'sans-serif\' font-weight=\'bold\' fill=\'white\' text-anchor=\'middle\'>' + encodeURIComponent((name || 'U').charAt(0).toUpperCase()) + '</text></svg>')}" 
                              alt="${name}" 
                              class="rounded-circle flex-shrink-0" 
                              style="width: 36px; height: 36px; object-fit: cover;"
-                             onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=' + encodeURIComponent(this.alt) + '&background=2E7D32&color=fff&size=128';">
+                             onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'36\' height=\'36\' viewBox=\'0 0 36 36\'><circle cx=\'18\' cy=\'18\' r=\'18\' fill=\'%2310B981\'/><text x=\'18\' y=\'23\' font-size=\'15\' font-family=\'sans-serif\' font-weight=\'bold\' fill=\'white\' text-anchor=\'middle\'>' + encodeURIComponent((this.alt || 'U').charAt(0).toUpperCase()) + '</text></svg>';">
                         <div>
                             <div class="d-flex align-items-center gap-2 flex-wrap">
                                 <span class="fw-bold text-dark small" style="font-size: 0.90rem;">${name}</span>

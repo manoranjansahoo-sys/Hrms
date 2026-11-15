@@ -312,13 +312,22 @@
                         <tr class="clickable-employee-row" data-url="{% url 'employees:employee_detail' emp_id=emp.emp_id %}">
                             <td class="ps-4 py-2.5">
                                 <div class="d-flex align-items-center gap-2.5">
-                                    <img src="{{ emp.user.get_avatar_url }}" 
-                                         alt="{{ emp.full_name }}" 
-                                         class="rounded-circle shadow-sm" 
-                                         width="38" 
-                                         height="38" 
-                                         style="object-fit: cover;"
-                                         onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ emp.full_name|urlencode }}&background=1B5E20&color=fff&size=128';">
+                                    {% if emp.user.avatar %}
+                                        <img src="{{ emp.user.avatar.url }}" 
+                                             alt="{{ emp.full_name }}" 
+                                             class="rounded-circle shadow-sm flex-shrink-0" 
+                                             width="38" 
+                                             height="38" 
+                                             style="object-fit: cover;"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+                                        <div class="rounded-circle shadow-sm flex-shrink-0 d-inline-flex align-items-center justify-content-center text-white fw-bold" style="width: 38px; height: 38px; font-size: 0.9rem; background: linear-gradient(135deg, #10B981 0%, #059669 100%); display: none !important;">
+                                            {{ emp.full_name|slice:":1"|upper }}
+                                        </div>
+                                    {% else %}
+                                        <div class="rounded-circle shadow-sm flex-shrink-0 d-inline-flex align-items-center justify-content-center text-white fw-bold" style="width: 38px; height: 38px; font-size: 0.9rem; background: linear-gradient(135deg, #10B981 0%, #059669 100%);">
+                                            {{ emp.full_name|slice:":1"|upper }}
+                                        </div>
+                                    {% endif %}
                                     <div>
                                         <a href="{% url 'employees:employee_detail' emp_id=emp.emp_id %}" class="fw-bold text-dark text-decoration-none d-block stop-row-click" style="font-size: 0.88rem;">
                                             {{ emp.full_name }}

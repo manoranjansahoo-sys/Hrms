@@ -212,18 +212,22 @@ class Candidate(models.Model):
         return f"{self.full_name} ({self.email})"
 
     def get_photo_url(self):
-        try:
-            from django.urls import reverse
-            return reverse('recruitment:candidate_photo', kwargs={'candidate_id': self.id})
-        except Exception:
-            if self.photo and hasattr(self.photo, 'url'):
-                return self.photo.url
-            if self.google_picture_url:
-                return self.google_picture_url
-            name_parts = self.full_name.split()
-            first = name_parts[0] if name_parts else 'User'
-            last = name_parts[-1] if len(name_parts) > 1 else ''
-            return f"https://ui-avatars.com/api/?name={first}+{last}&background=2E7D32&color=fff&size=128"
+        if self.photo and hasattr(self.photo, 'url'):
+            try:
+                if self.photo.storage.exists(self.photo.name):
+                    return self.photo.url
+            except Exception:
+                pass
+        if self.google_picture_url:
+            return self.google_picture_url
+        char = (self.full_name[:1] if self.full_name else 'U').upper()
+        return (
+            f"data:image/svg+xml;utf8,"
+            f"<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128' viewBox='0 0 128 128'>"
+            f"<circle cx='64' cy='64' r='64' fill='%2310B981'/>"
+            f"<text x='64' y='82' font-size='56' font-family='sans-serif' font-weight='bold' fill='white' text-anchor='middle'>{char}</text>"
+            f"</svg>"
+        )
 
     @property
     def verified_documents_count(self):

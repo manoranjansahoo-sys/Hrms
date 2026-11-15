@@ -10,8 +10,8 @@
             <p class="text-muted small mb-0">Overview of your attendance, leave balances, compensation, and performance goals.</p>
         </div>
         <div class="d-flex flex-wrap align-items-center gap-2">
-            <a href="{% url 'attendance:qr_scanner' %}" class="btn btn-hrms btn-sm shadow-sm d-inline-flex align-items-center gap-1.5 fw-semibold" title="Open Dynamic QR Attendance Scanner (Punch In / Out)">
-                <i class="bi bi-qr-code-scan"></i> Scan Dynamic QR
+            <a href="{% url 'attendance:qr_scanner' %}" class="btn btn-hrms btn-sm shadow-sm d-inline-flex align-items-center justify-content-center" style="width: 36px; height: 36px; border-radius: 8px;" title="Scan QR to Punch" aria-label="Scan QR to Punch">
+                <i class="bi bi-qr-code-scan fs-6"></i>
             </a>
             <a href="{% url 'leave_management:apply_leave' %}" class="btn btn-warning btn-sm text-dark fw-bold shadow-sm">
                 <i class="bi bi-calendar-plus"></i> Apply Leave

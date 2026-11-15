@@ -1,5 +1,7 @@
 import base64
+from pathlib import Path
 from django.conf import settings
+from django.contrib.staticfiles.finders import find as find_static
 from notifications.models import Notification
 from leave_management.models import LeaveRequest
 from attendance.models import AttendanceCorrectionRequest
@@ -8,43 +10,54 @@ from employees.models import ProfileCorrectionRequest
 _CACHED_LOGO_B64 = None
 
 _DEFAULT_LOGO_SVG = (
-    "data:image/svg+xml;utf8,"
-    "%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 48'%3E"
-    "%3Crect width='220' height='48' rx='8' fill='%230f172a'/%3E"
-    "%3Cg transform='translate(14, 10)'%3E"
-    "%3Crect width='28' height='28' rx='6' fill='%232563eb'/%3E"
-    "%3Cpath d='M8 7 h9 a4.5 4.5 0 0 1 0 9 h-9 z' fill='%23ffffff' fill-opacity='0.9'/%3E"
-    "%3Cpath d='M8 13 h10 a4.5 4.5 0 0 1 0 9 h-10 z' fill='%23ffffff'/%3E"
-    "%3C/g%3E"
-    "%3Ctext x='54' y='30' font-family='Inter, -apple-system, sans-serif' font-size='17' font-weight='800' fill='%23ffffff' letter-spacing='0.5'%3EBRONZEGATE%3C/text%3E"
-    "%3C/svg%3E"
+    "data:image/svg+xml;base64,"
+    "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMjAgNDgiIHdpZHRoPSIyMjAiIGhlaWdodD0iNDgiPgogIDxyZWN0IHdpZHRoPSIyMjAiIGhlaWdodD0iNDgiIHJ4PSI4IiBmaWxsPSIjMGYxNzJhIi8+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTQsIDEwKSI+CiAgICA8cmVjdCB3aWR0aD0iMjgiIGhlaWdodD0iMjgiIHJ4PSI2IiBmaWxsPSIjMjU2M2ViIi8+CiAgICA8cGF0aCBkPSJNOCA3IGg5IGE0LjUgNC41IDAgMCAxIDAgOSBoLTkgeiIgZmlsbD0iI2ZmZmZmZiIgZmlsbC1vcGFjaXR5PSIwLjkiLz4KICAgIDxwYXRoIGQ9Ik04IDEzIGgxMCBhNC41IDQuNSAwIDAgMSAwIDkgaC0xMCB6IiBmaWxsPSIjZmZmZmZmIi8+CiAgPC9nPgogIDx0ZXh0IHg9IjU0IiB5PSIzMCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE3IiBmb250LXdlaWdodD0iODAwIiBmaWxsPSIjZmZmZmZmIiBsZXR0ZXItc3BhY2luZz0iMC41Ij5CUk9OWkVHQVRFPC90ZXh0Pgo8L3N2Zz4="
 )
 
 def _get_company_logo_b64():
     global _CACHED_LOGO_B64
     if _CACHED_LOGO_B64 is None:
         try:
-            search_paths = [
-                settings.BASE_DIR / "static" / "img" / "logo.png",
-                settings.BASE_DIR / "static" / "img" / "bronzegate-logo.png",
-                settings.BASE_DIR / "static" / "img" / "bronzegate-login.png",
-                settings.BASE_DIR / "staticfiles" / "img" / "logo.png",
-                settings.BASE_DIR / "staticfiles" / "img" / "bronzegate-logo.png",
-                settings.BASE_DIR / "staticfiles" / "img" / "bronzegate-login.png",
+            candidates = [
+                "img/logo.png",
+                "img/bronzegate-logo.png",
+                "img/bronzegate-login.png",
             ]
-            if hasattr(settings, 'STATIC_ROOT') and settings.STATIC_ROOT:
-                search_paths.extend([
-                    settings.STATIC_ROOT / "img" / "logo.png",
-                    settings.STATIC_ROOT / "img" / "bronzegate-logo.png",
-                    settings.STATIC_ROOT / "img" / "bronzegate-login.png",
-                ])
-            for path in search_paths:
-                if path and path.exists() and path.is_file():
-                    with open(path, "rb") as f:
-                        file_bytes = f.read()
-                        if file_bytes:
-                            _CACHED_LOGO_B64 = "data:image/png;base64," + base64.b64encode(file_bytes).decode("utf-8")
-                            break
+            file_found = None
+            # 1. Try Django static finder
+            for candidate in candidates:
+                try:
+                    found = find_static(candidate)
+                    if found and Path(found).is_file():
+                        file_found = Path(found)
+                        break
+                except Exception:
+                    pass
+
+            # 2. Try explicit directories
+            if not file_found:
+                search_dirs = [
+                    settings.BASE_DIR / "static",
+                    settings.BASE_DIR / "staticfiles",
+                ]
+                if hasattr(settings, 'STATIC_ROOT') and settings.STATIC_ROOT:
+                    search_dirs.append(Path(settings.STATIC_ROOT))
+
+                for sdir in search_dirs:
+                    if sdir and sdir.exists():
+                        for candidate in candidates:
+                            cand_path = sdir / candidate
+                            if cand_path.is_file():
+                                file_found = cand_path
+                                break
+                    if file_found:
+                        break
+
+            if file_found and file_found.is_file():
+                with open(file_found, "rb") as f:
+                    file_bytes = f.read()
+                    if file_bytes:
+                        _CACHED_LOGO_B64 = "data:image/png;base64," + base64.b64encode(file_bytes).decode("utf-8")
         except Exception:
             pass
 
