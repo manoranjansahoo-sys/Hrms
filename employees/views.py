@@ -444,13 +444,22 @@ def profile_correction_request(request):
     else:
         form = ProfileCorrectionForm()
 
-    my_requests = emp.correction_requests.select_related('reviewed_by').all()[:10]
+    all_my_requests = emp.correction_requests.select_related('reviewed_by').all().order_by('-created_at')
+    my_requests = all_my_requests[:20]
+    total_count = all_my_requests.count()
+    pending_count = all_my_requests.filter(status='PENDING').count()
+    approved_count = all_my_requests.filter(status='APPROVED').count()
+    rejected_count = all_my_requests.filter(status='REJECTED').count()
 
     return render(request, 'employees/profile_correction_form.html', {
         'form': form,
         'employee': emp,
         'current_data_json': json.dumps(current_data),
         'my_requests': my_requests,
+        'total_count': total_count,
+        'pending_count': pending_count,
+        'approved_count': approved_count,
+        'rejected_count': rejected_count,
     })
 
 
@@ -458,8 +467,19 @@ def profile_correction_request(request):
 @hr_required
 def profile_corrections_list(request):
     """HR views and processes pending profile correction requests."""
-    corrections = ProfileCorrectionRequest.objects.select_related('employee__user').all()
-    return render(request, 'employees/profile_corrections_list.html', {'corrections': corrections})
+    corrections = ProfileCorrectionRequest.objects.select_related('employee__user', 'reviewed_by').all().order_by('-created_at')
+    total_count = corrections.count()
+    pending_count = corrections.filter(status='PENDING').count()
+    approved_count = corrections.filter(status='APPROVED').count()
+    rejected_count = corrections.filter(status='REJECTED').count()
+
+    return render(request, 'employees/profile_corrections_list.html', {
+        'corrections': corrections,
+        'total_count': total_count,
+        'pending_count': pending_count,
+        'approved_count': approved_count,
+        'rejected_count': rejected_count,
+    })
 
 
 @login_required

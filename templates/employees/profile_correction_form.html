@@ -1,173 +1,740 @@
 {% extends 'base.html' %}
-{% block title %}Request Profile Correction | Company HRMS{% endblock %}
+{% load static %}
+
+{% block title %}Profile Amendment Studio | Company HRMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ==========================================================================
+       PROFILE CORRECTION STUDIO - ULTRA-SMOOTH ENTERPRISE UI
+       ========================================================================== */
+    .studio-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* Top Breadcrumb & Header */
+    .studio-header {
+        background: linear-gradient(135deg, rgba(91, 77, 223, 0.08) 0%, rgba(143, 130, 240, 0.04) 100%);
+        border: 1px solid var(--hrms-border, #E4E3F2);
+        border-radius: var(--hrms-radius, 14px);
+        padding: 1rem 1.25rem;
+    }
+
+    .emp-profile-pill {
+        background: var(--hrms-card-bg, #ffffff);
+        border: 1px solid var(--hrms-border, #E4E3F2);
+        border-radius: 9999px;
+        padding: 0.35rem 0.85rem;
+        box-shadow: 0 1px 3px rgba(25, 22, 53, 0.04);
+    }
+
+    .emp-avatar-badge {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--hrms-primary, #5B4DDF), var(--hrms-secondary, #7968EC));
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 0.82rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    /* Tab Switcher Navigation */
+    .studio-nav-tabs {
+        border-bottom: 0;
+        gap: 0.5rem;
+    }
+
+    .studio-nav-tabs .nav-link {
+        border: 1px solid transparent;
+        border-radius: 9999px;
+        padding: 0.5rem 1.15rem;
+        font-size: 0.86rem;
+        font-weight: 600;
+        color: var(--hrms-text-muted, #6B6888);
+        background: transparent;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .studio-nav-tabs .nav-link:hover {
+        background: rgba(91, 77, 223, 0.06);
+        color: var(--hrms-primary, #5B4DDF);
+    }
+
+    .studio-nav-tabs .nav-link.active {
+        background: var(--hrms-primary, #5B4DDF);
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(91, 77, 223, 0.28);
+    }
+
+    .studio-nav-tabs .nav-link.active .badge {
+        background: rgba(255, 255, 255, 0.25) !important;
+        color: #ffffff !important;
+    }
+
+    /* Main Studio Cards */
+    .studio-card {
+        background: var(--hrms-card-bg, #ffffff);
+        border: 1px solid var(--hrms-border, #E4E3F2);
+        border-radius: var(--hrms-radius, 14px);
+        box-shadow: 0 2px 10px rgba(25, 22, 53, 0.03);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    /* Quick Preset Chips */
+    .preset-chips-scroll {
+        display: flex;
+        gap: 0.45rem;
+        overflow-x: auto;
+        padding-bottom: 0.35rem;
+        scrollbar-width: thin;
+    }
+
+    .preset-chips-scroll::-webkit-scrollbar {
+        height: 4px;
+    }
+    .preset-chips-scroll::-webkit-scrollbar-thumb {
+        background: var(--hrms-border, #E4E3F2);
+        border-radius: 4px;
+    }
+
+    .chip-btn {
+        background: var(--hrms-card-subsurface, #FAF9FE);
+        border: 1px solid var(--hrms-border, #E4E3F2);
+        color: var(--hrms-text, #191635);
+        font-size: 0.76rem;
+        font-weight: 600;
+        border-radius: 9999px;
+        padding: 0.3rem 0.75rem;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: all 0.18s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .chip-btn:hover {
+        background: var(--hrms-primary-light, #EEECFC);
+        color: var(--hrms-primary, #5B4DDF);
+        border-color: var(--hrms-accent, #8F82F0);
+        transform: translateY(-1px);
+    }
+
+    .chip-btn.active {
+        background: var(--hrms-primary, #5B4DDF);
+        color: #ffffff;
+        border-color: var(--hrms-primary, #5B4DDF);
+        box-shadow: 0 2px 6px rgba(91, 77, 223, 0.25);
+    }
+
+    /* Live Diff Comparison Widget */
+    .diff-widget {
+        background: linear-gradient(135deg, rgba(250, 249, 254, 0.9) 0%, rgba(245, 245, 252, 0.6) 100%);
+        border: 1px dashed var(--hrms-border, #E4E3F2);
+        border-radius: 12px;
+        padding: 0.85rem;
+    }
+
+    .diff-box {
+        background: #ffffff;
+        border: 1px solid var(--hrms-border, #E4E3F2);
+        border-radius: 10px;
+        padding: 0.75rem 0.9rem;
+        height: 100%;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .diff-box.proposed {
+        border-color: rgba(91, 77, 223, 0.4);
+        background: linear-gradient(180deg, #ffffff 0%, rgba(91, 77, 223, 0.02) 100%);
+        box-shadow: 0 2px 8px rgba(91, 77, 223, 0.06);
+    }
+
+    .diff-title {
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 0.35rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .diff-value {
+        font-size: 0.9rem;
+        font-weight: 600;
+        word-break: break-word;
+        min-height: 24px;
+        display: flex;
+        align-items: center;
+    }
+
+    /* Clickable Verified Record Rows */
+    .record-row {
+        padding: 0.55rem 0.65rem;
+        border-radius: 8px;
+        transition: all 0.15s ease;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid rgba(228, 227, 242, 0.5);
+    }
+
+    .record-row:last-child {
+        border-bottom: none;
+    }
+
+    .record-row:hover {
+        background: var(--hrms-primary-light, #EEECFC);
+        transform: translateX(2px);
+    }
+
+    .record-row:hover .record-edit-hint {
+        opacity: 1 !important;
+        transform: scale(1);
+    }
+
+    .record-edit-hint {
+        opacity: 0;
+        transform: scale(0.9);
+        transition: all 0.18s ease;
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 0.15rem 0.45rem;
+        border-radius: 4px;
+        background: var(--hrms-primary, #5B4DDF);
+        color: #ffffff;
+    }
+
+    /* Form Inputs Custom Styling */
+    .studio-form .form-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--hrms-text, #191635);
+        margin-bottom: 0.35rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .studio-form .form-control,
+    .studio-form .form-select {
+        border: 1px solid var(--hrms-border, #E4E3F2);
+        border-radius: 8px;
+        font-size: 0.88rem;
+        padding: 0.55rem 0.8rem;
+        transition: all 0.2s ease;
+        background-color: #ffffff;
+    }
+
+    .studio-form .form-control:focus,
+    .studio-form .form-select:focus {
+        border-color: var(--hrms-primary, #5B4DDF);
+        box-shadow: 0 0 0 3px rgba(91, 77, 223, 0.12);
+    }
+
+    /* Flash highlight animation for auto-selected inputs */
+    @keyframes studioPulse {
+        0% { background-color: rgba(91, 77, 223, 0.25); }
+        100% { background-color: transparent; }
+    }
+    .flash-highlight {
+        animation: studioPulse 1.2s ease-out;
+    }
+
+    /* Reason Preset Buttons */
+    .reason-preset {
+        font-size: 0.72rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 999px;
+        border: 1px solid var(--hrms-border, #E4E3F2);
+        background: var(--hrms-card-subsurface, #FAF9FE);
+        color: var(--hrms-text-muted, #6B6888);
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+    .reason-preset:hover {
+        background: var(--hrms-primary-light, #EEECFC);
+        color: var(--hrms-primary, #5B4DDF);
+        border-color: var(--hrms-accent, #8F82F0);
+    }
+
+    /* History Table & Cards */
+    .history-card {
+        border: 1px solid var(--hrms-border, #E4E3F2);
+        border-radius: 10px;
+        padding: 0.85rem 1rem;
+        background: #ffffff;
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .history-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(25, 22, 53, 0.06);
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid p-0">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="container-fluid p-0 studio-container">
+
+    <!-- TOP HEADER BAR WITH PROFILE INFO & TABS -->
+    <div class="studio-header d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
         <div>
-            <h3 class="fw-bold mb-1">Request Profile Correction</h3>
-            <p class="text-muted small mb-0">Submit verified amendment requests to HR for banking details, contact numbers, statutory IDs, or personal records.</p>
-        </div>
-        <a href="{% url 'employees:employee_detail' emp_id=employee.emp_id %}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i> Back to My Profile
-        </a>
-    </div>
-
-    <div class="row g-4">
-        <!-- LEFT: CORRECTION REQUEST FORM -->
-        <div class="col-lg-7">
-            <div class="hrms-card p-4">
-                <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
-                    <i class="bi bi-pencil-square text-success me-2"></i>New Amendment Request
-                </h5>
-
-                <form method="POST" id="profileCorrectionForm">
-                    {% csrf_token %}
-                    
-                    <!-- FIELD SELECTOR -->
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Select Profile Field to Correct <span class="text-danger">*</span></label>
-                        {{ form.field_select }}
-                        <input type="hidden" name="field_name" id="id_field_name" value="{{ form.field_name.value|default:'' }}">
-                    </div>
-
-                    <!-- CUSTOM FIELD INPUT (CONDITIONAL IF "OTHER") -->
-                    <div class="mb-3" id="customFieldWrap" style="display: none;">
-                        <label class="form-label small fw-semibold">Custom Field Name <span class="text-danger">*</span></label>
-                        {{ form.custom_field }}
-                    </div>
-
-                    <!-- CURRENT VALUE (AUTO-POPULATED) -->
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Current Value on Record</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-file-earmark-lock"></i></span>
-                            {{ form.current_value }}
-                        </div>
-                        <div class="form-text text-muted" style="font-size: 0.74rem;">Automatically detected from your current employment profile.</div>
-                    </div>
-
-                    <!-- PROPOSED NEW VALUE -->
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Proposed New Value <span class="text-danger">*</span></label>
-                        {{ form.proposed_value }}
-                        {% if form.proposed_value.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.proposed_value.errors.0 }}</div>{% endif %}
-                    </div>
-
-                    <!-- REASON -->
-                    <div class="mb-4">
-                        <label class="form-label small fw-semibold">Reason for Correction / Supporting Context <span class="text-danger">*</span></label>
-                        {{ form.reason }}
-                        {% if form.reason.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.reason.errors.0 }}</div>{% endif %}
-                    </div>
-
-                    <div class="d-flex justify-content-end gap-2 pt-2 border-top">
-                        <a href="{% url 'employees:employee_detail' emp_id=employee.emp_id %}" class="btn btn-outline-secondary px-3">Cancel</a>
-                        <button type="submit" class="btn btn-hrms px-4">
-                            <i class="bi bi-send-check me-1"></i> Submit to HR
-                        </button>
-                    </div>
-                </form>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1">
+                    <i class="bi bi-shield-check me-1"></i> Profile Amendment Studio
+                </span>
+                <span class="text-muted small d-none d-md-inline">&bull; Official Employee Self-Service</span>
             </div>
+            <h4 class="fw-bold mb-0 text-dark">Request Profile Correction</h4>
         </div>
 
-        <!-- RIGHT: CURRENT PROFILE PARTICULARS PREVIEW -->
-        <div class="col-lg-5">
-            <div class="hrms-card p-4">
-                <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">
-                    <i class="bi bi-person-badge text-primary me-2"></i>My Verified Profile Records
-                </h6>
-                <div class="small">
-                    <div class="d-flex justify-content-between py-2 border-bottom">
-                        <span class="text-muted">Full Name</span>
-                        <span class="fw-semibold text-dark">{{ employee.full_name }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between py-2 border-bottom">
-                        <span class="text-muted">Employee ID</span>
-                        <span class="fw-semibold font-monospace text-success">{{ employee.emp_id }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between py-2 border-bottom">
-                        <span class="text-muted">Mobile Phone</span>
-                        <span class="fw-semibold text-dark">{{ employee.phone|default:"Not on file" }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between py-2 border-bottom">
-                        <span class="text-muted">Work / Account Email</span>
-                        <span class="fw-semibold text-dark">{{ employee.email }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between py-2 border-bottom">
-                        <span class="text-muted">Salary Bank Name</span>
-                        <span class="fw-semibold text-dark">{{ employee.bank_name|default:"--" }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between py-2 border-bottom">
-                        <span class="text-muted">Bank Account Number</span>
-                        <span class="fw-semibold font-monospace text-dark">{{ employee.bank_account_number|default:"--" }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between py-2 border-bottom">
-                        <span class="text-muted">IFSC Code</span>
-                        <span class="fw-semibold font-monospace text-dark">{{ employee.ifsc_code|default:"--" }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between py-2 border-bottom">
-                        <span class="text-muted">PAN Card Number</span>
-                        <span class="fw-semibold font-monospace text-dark">{{ employee.pan_number|default:"--" }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between py-2">
-                        <span class="text-muted">PF UAN Number</span>
-                        <span class="fw-semibold font-monospace text-dark">{{ employee.uan_number|default:"Not enrolled" }}</span>
-                    </div>
+        <div class="d-flex align-items-center gap-2">
+            <!-- Employee Chip -->
+            <div class="emp-profile-pill d-flex align-items-center gap-2">
+                <div class="emp-avatar-badge">
+                    {{ employee.first_name|default:request.user.username|slice:":1"|upper }}
+                </div>
+                <div class="small lh-1 text-start">
+                    <strong class="text-dark d-block mb-0.5">{{ employee.full_name }}</strong>
+                    <span class="text-muted font-monospace" style="font-size: 0.72rem;">{{ employee.emp_id }} &bull; {{ employee.department.name|default:"General" }}</span>
                 </div>
             </div>
+
+            <a href="{% url 'employees:employee_detail' emp_id=employee.emp_id %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1.5" title="Return to Profile">
+                <i class="bi bi-arrow-left me-1"></i> <span class="d-none d-sm-inline">Back to Profile</span>
+            </a>
         </div>
     </div>
 
-    <!-- MY CORRECTION REQUESTS HISTORY -->
-    {% if my_requests %}
-        <div class="hrms-card mt-4 p-4">
-            <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
-                <i class="bi bi-clock-history text-secondary me-2"></i>My Correction Requests History
-            </h5>
-            <div class="table-responsive">
-                <table class="table hrms-table">
-                    <thead>
-                        <tr>
-                            <th>Field Name</th>
-                            <th>Previous Value</th>
-                            <th>Requested New Value</th>
-                            <th>Submitted Date</th>
-                            <th>Status</th>
-                            <th>HR Review Notes</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for req in my_requests %}
-                            <tr>
-                                <td><span class="fw-bold text-dark">{{ req.field_name }}</span></td>
-                                <td class="text-muted small">{{ req.current_value|default:"--" }}</td>
-                                <td class="fw-bold text-primary small">{{ req.proposed_value }}</td>
-                                <td class="small text-muted">{{ req.created_at|date:"d M Y, h:i A" }}</td>
-                                <td>
-                                    {% if req.status == 'APPROVED' %}
-                                        <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i> Approved & Applied</span>
-                                    {% elif req.status == 'REJECTED' %}
-                                        <span class="badge bg-danger"><i class="bi bi-x-circle-fill me-1"></i> Rejected</span>
-                                    {% else %}
-                                        <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i> Pending HR Review</span>
+    <!-- NAVIGATION TAB PILLS (Keeps view compact and within a single page) -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+        <ul class="nav nav-tabs studio-nav-tabs" id="studioTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tab-request-btn" data-bs-toggle="tab" data-bs-target="#tab-request-pane" type="button" role="tab" aria-controls="tab-request-pane" aria-selected="true">
+                    <i class="bi bi-pencil-square"></i>
+                    <span>Submit Amendment</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-history-btn" data-bs-toggle="tab" data-bs-target="#tab-history-pane" type="button" role="tab" aria-controls="tab-history-pane" aria-selected="false">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Request History</span>
+                    <span class="badge rounded-pill bg-secondary ms-1">{{ total_count|default:"0" }}</span>
+                    {% if pending_count %}
+                        <span class="badge rounded-pill bg-warning text-dark ms-0.5" title="{{ pending_count }} pending HR review">{{ pending_count }} Pending</span>
+                    {% endif %}
+                </button>
+            </li>
+        </ul>
+
+        <div class="small text-muted d-none d-md-flex align-items-center gap-1.5">
+            <i class="bi bi-info-circle text-primary"></i>
+            <span>All submissions are securely logged and reviewed by HR & Leadership.</span>
+        </div>
+    </div>
+
+    <!-- TAB CONTENTS -->
+    <div class="tab-content" id="studioTabContent">
+        
+        <!-- ================================================================= -->
+        <!-- TAB 1: NEW AMENDMENT REQUEST STUDIO -->
+        <!-- ================================================================= -->
+        <div class="tab-pane fade show active" id="tab-request-pane" role="tabpanel" aria-labelledby="tab-request-btn" tabindex="0">
+            <div class="row g-3">
+                
+                <!-- LEFT COLUMN: INTERACTIVE FORM & LIVE DIFF -->
+                <div class="col-12 col-lg-7">
+                    <div class="studio-card p-3 p-md-4">
+                        
+                        <!-- Step Header & Quick Preset Chips -->
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <label class="studio-form mb-0 form-label">
+                                    <i class="bi bi-stars text-primary"></i> Quick-Select Frequent Fields:
+                                </label>
+                                <small class="text-muted" style="font-size: 0.72rem;">Click to auto-populate</small>
+                            </div>
+                            <div class="preset-chips-scroll" id="chipsScroll">
+                                <button type="button" class="chip-btn" data-field="Mobile Phone Number">
+                                    <i class="bi bi-telephone text-primary"></i> Phone
+                                </button>
+                                <button type="button" class="chip-btn" data-field="Personal Email">
+                                    <i class="bi bi-envelope text-info"></i> Email
+                                </button>
+                                <button type="button" class="chip-btn" data-field="Salary Bank Name">
+                                    <i class="bi bi-bank text-success"></i> Bank Name
+                                </button>
+                                <button type="button" class="chip-btn" data-field="Bank Account Number">
+                                    <i class="bi bi-credit-card text-success"></i> Bank A/C No
+                                </button>
+                                <button type="button" class="chip-btn" data-field="Bank IFSC Code">
+                                    <i class="bi bi-hash text-success"></i> IFSC Code
+                                </button>
+                                <button type="button" class="chip-btn" data-field="PAN Card Number">
+                                    <i class="bi bi-card-heading text-warning"></i> PAN Card
+                                </button>
+                                <button type="button" class="chip-btn" data-field="PF UAN Number">
+                                    <i class="bi bi-file-earmark-person text-danger"></i> PF UAN
+                                </button>
+                                <button type="button" class="chip-btn" data-field="Residential Address">
+                                    <i class="bi bi-house text-secondary"></i> Address
+                                </button>
+                                <button type="button" class="chip-btn" data-field="Emergency Contact Phone">
+                                    <i class="bi bi-shield-exclamation text-danger"></i> Emergency
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- FORM -->
+                        <form method="POST" id="profileCorrectionForm" class="studio-form">
+                            {% csrf_token %}
+                            
+                            <!-- Field Selection Dropdown -->
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <span>Target Field to Correct</span>
+                                    <span class="text-danger">*</span>
+                                </label>
+                                {{ form.field_select }}
+                                <input type="hidden" name="field_name" id="id_field_name" value="{{ form.field_name.value|default:'' }}">
+                            </div>
+
+                            <!-- Custom Field Input (Conditioned on 'Other') -->
+                            <div class="mb-3" id="customFieldWrap" style="display: none;">
+                                <label class="form-label">
+                                    <span>Custom Field Name</span>
+                                    <span class="text-danger">*</span>
+                                </label>
+                                {{ form.custom_field }}
+                            </div>
+
+                            <!-- LIVE DIFF BEFORE & AFTER WIDGET -->
+                            <div class="diff-widget mb-3" id="diffWidget">
+                                <div class="row g-2 align-items-center">
+                                    <!-- Left: Current on Record -->
+                                    <div class="col-12 col-sm-5">
+                                        <div class="diff-box">
+                                            <div class="diff-title text-secondary">
+                                                <i class="bi bi-file-earmark-lock text-muted"></i>
+                                                <span>Current Record</span>
+                                            </div>
+                                            <div class="diff-value text-dark" id="liveCurrentDisplay">
+                                                <span class="text-muted fst-italic">Select a field above</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Middle Arrow Icon -->
+                                    <div class="col-12 col-sm-2 text-center py-1">
+                                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary-subtle text-primary p-2" style="width: 34px; height: 34px;">
+                                            <i class="bi bi-arrow-right d-none d-sm-inline"></i>
+                                            <i class="bi bi-arrow-down d-inline d-sm-none"></i>
+                                        </div>
+                                    </div>
+
+                                    <!-- Right: Proposed Update Live Preview -->
+                                    <div class="col-12 col-sm-5">
+                                        <div class="diff-box proposed">
+                                            <div class="diff-title text-primary">
+                                                <i class="bi bi-sparkles text-success"></i>
+                                                <span>Proposed Update</span>
+                                            </div>
+                                            <div class="diff-value text-primary" id="liveProposedDisplay">
+                                                <span class="text-muted fst-italic">Type proposed value</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Hidden / Form Inputs for Current & Proposed -->
+                            <div class="row g-2 mb-3">
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label">
+                                        <span>Current Value on Record</span>
+                                    </label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-light text-muted"><i class="bi bi-lock"></i></span>
+                                        {{ form.current_value }}
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label">
+                                        <span>Proposed New Value</span>
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-primary-subtle text-primary"><i class="bi bi-pencil-fill"></i></span>
+                                        {{ form.proposed_value }}
+                                    </div>
+                                    {% if form.proposed_value.errors %}
+                                        <div class="text-danger small mt-1 fw-bold">{{ form.proposed_value.errors.0 }}</div>
                                     {% endif %}
-                                </td>
-                                <td class="small text-muted">
-                                    {{ req.review_notes|default:"Awaiting HR review" }}
-                                    {% if req.reviewed_by %}
-                                        <span class="d-block text-secondary" style="font-size: 0.72rem;">Reviewed by {{ req.reviewed_by.get_full_name|default:req.reviewed_by.username }}</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                                </div>
+                            </div>
+
+                            <!-- Reason for Correction & Quick Reason Presets -->
+                            <div class="mb-3">
+                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                    <label class="form-label mb-0">
+                                        <span>Reason for Amendment / Context</span>
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="d-flex align-items-center gap-1" id="reasonPresets">
+                                        <span class="reason-preset" data-text="Updated salary account with bank passbook">Bank Change</span>
+                                        <span class="reason-preset" data-text="Correction of clerical/spelling error">Typo Fix</span>
+                                        <span class="reason-preset" data-text="Moved to new residential address">Relocation</span>
+                                    </div>
+                                </div>
+                                {{ form.reason }}
+                                {% if form.reason.errors %}
+                                    <div class="text-danger small mt-1 fw-bold">{{ form.reason.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Submit Action Bar -->
+                            <div class="d-flex align-items-center justify-content-between pt-2 border-top">
+                                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btnResetForm">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+                                </button>
+                                
+                                <button type="submit" class="btn btn-sm btn-primary rounded-pill px-4 py-2 fw-semibold shadow-sm" id="btnSubmitCorrection">
+                                    <i class="bi bi-send-check me-1.5"></i> Submit Amendment to HR
+                                </button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+
+                <!-- RIGHT COLUMN: VERIFIED PROFILE PARTICULARS (CLICK-TO-EDIT INTERACTIVE) -->
+                <div class="col-12 col-lg-5">
+                    <div class="studio-card p-3 p-md-3">
+                        <div class="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
+                            <h6 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+                                <i class="bi bi-person-lines-fill text-primary"></i>
+                                <span>Verified Records on File</span>
+                            </h6>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.68rem;">Click row to edit</span>
+                        </div>
+
+                        <!-- CATEGORY 1: CONTACT & IDENTIFIERS -->
+                        <div class="mb-2">
+                            <div class="text-uppercase text-secondary fw-bold mb-1" style="font-size: 0.68rem; letter-spacing: 0.05em;">
+                                Personal & Contact
+                            </div>
+                            <div class="record-row" data-field="Mobile Phone Number" data-val="{{ employee.phone|default:'' }}">
+                                <div>
+                                    <div class="text-muted" style="font-size: 0.72rem;">Mobile Phone</div>
+                                    <div class="fw-semibold text-dark small">{{ employee.phone|default:"Not on file" }}</div>
+                                </div>
+                                <span class="record-edit-hint">Edit</span>
+                            </div>
+
+                            <div class="record-row" data-field="Personal Email" data-val="{{ employee.personal_email|default:employee.email|default:'' }}">
+                                <div>
+                                    <div class="text-muted" style="font-size: 0.72rem;">Email Address</div>
+                                    <div class="fw-semibold text-dark small text-truncate" style="max-width: 220px;">{{ employee.personal_email|default:employee.email }}</div>
+                                </div>
+                                <span class="record-edit-hint">Edit</span>
+                            </div>
+
+                            <div class="record-row" data-field="Residential Address" data-val="{{ employee.address|default:'' }}">
+                                <div>
+                                    <div class="text-muted" style="font-size: 0.72rem;">Residential Address</div>
+                                    <div class="fw-semibold text-dark small text-truncate" style="max-width: 220px;">{{ employee.address|default:"Not specified" }}</div>
+                                </div>
+                                <span class="record-edit-hint">Edit</span>
+                            </div>
+                        </div>
+
+                        <!-- CATEGORY 2: BANKING & PAYROLL -->
+                        <div class="mb-2">
+                            <div class="text-uppercase text-secondary fw-bold mb-1" style="font-size: 0.68rem; letter-spacing: 0.05em;">
+                                Banking & Salary Disbursement
+                            </div>
+                            <div class="record-row" data-field="Salary Bank Name" data-val="{{ employee.bank_name|default:'' }}">
+                                <div>
+                                    <div class="text-muted" style="font-size: 0.72rem;">Bank Name</div>
+                                    <div class="fw-semibold text-dark small">{{ employee.bank_name|default:"--" }}</div>
+                                </div>
+                                <span class="record-edit-hint">Edit</span>
+                            </div>
+
+                            <div class="record-row" data-field="Bank Account Number" data-val="{{ employee.bank_account_number|default:'' }}">
+                                <div>
+                                    <div class="text-muted" style="font-size: 0.72rem;">Bank Account No.</div>
+                                    <div class="fw-semibold font-monospace text-dark small">{{ employee.bank_account_number|default:"--" }}</div>
+                                </div>
+                                <span class="record-edit-hint">Edit</span>
+                            </div>
+
+                            <div class="record-row" data-field="Bank IFSC Code" data-val="{{ employee.ifsc_code|default:'' }}">
+                                <div>
+                                    <div class="text-muted" style="font-size: 0.72rem;">IFSC Code</div>
+                                    <div class="fw-semibold font-monospace text-dark small">{{ employee.ifsc_code|default:"--" }}</div>
+                                </div>
+                                <span class="record-edit-hint">Edit</span>
+                            </div>
+                        </div>
+
+                        <!-- CATEGORY 3: STATUTORY IDS -->
+                        <div>
+                            <div class="text-uppercase text-secondary fw-bold mb-1" style="font-size: 0.68rem; letter-spacing: 0.05em;">
+                                Statutory Documents
+                            </div>
+                            <div class="record-row" data-field="PAN Card Number" data-val="{{ employee.pan_number|default:'' }}">
+                                <div>
+                                    <div class="text-muted" style="font-size: 0.72rem;">PAN Card Number</div>
+                                    <div class="fw-semibold font-monospace text-dark small">{{ employee.pan_number|default:"--" }}</div>
+                                </div>
+                                <span class="record-edit-hint">Edit</span>
+                            </div>
+
+                            <div class="record-row" data-field="PF UAN Number" data-val="{{ employee.uan_number|default:'' }}">
+                                <div>
+                                    <div class="text-muted" style="font-size: 0.72rem;">PF UAN Number</div>
+                                    <div class="fw-semibold font-monospace text-dark small">{{ employee.uan_number|default:"Not enrolled" }}</div>
+                                </div>
+                                <span class="record-edit-hint">Edit</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
             </div>
         </div>
-    {% endif %}
+
+        <!-- ================================================================= -->
+        <!-- TAB 2: MY CORRECTION REQUESTS HISTORY & TRACKING -->
+        <!-- ================================================================= -->
+        <div class="tab-pane fade" id="tab-history-pane" role="tabpanel" aria-labelledby="tab-history-btn" tabindex="0">
+            <div class="studio-card p-3 p-md-4">
+                
+                <!-- History Status Filters & Summary KPI Row -->
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 pb-3 mb-3 border-bottom">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-light text-dark border px-3 py-2 fw-semibold">
+                            Total: <strong>{{ total_count|default:"0" }}</strong>
+                        </span>
+                        <span class="badge bg-warning-subtle text-dark border border-warning-subtle px-3 py-2 fw-semibold">
+                            <i class="bi bi-hourglass-split me-1 text-warning"></i> Pending: <strong>{{ pending_count|default:"0" }}</strong>
+                        </span>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 fw-semibold">
+                            <i class="bi bi-check-circle-fill me-1"></i> Approved: <strong>{{ approved_count|default:"0" }}</strong>
+                        </span>
+                        {% if rejected_count %}
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 fw-semibold">
+                            <i class="bi bi-x-circle-fill me-1"></i> Rejected: <strong>{{ rejected_count }}</strong>
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Client-side filter buttons -->
+                    <div class="btn-group btn-group-sm" role="group" id="historyFilterGroup">
+                        <button type="button" class="btn btn-outline-secondary active" data-filter="ALL">All</button>
+                        <button type="button" class="btn btn-outline-secondary" data-filter="PENDING">Pending</button>
+                        <button type="button" class="btn btn-outline-secondary" data-filter="APPROVED">Approved</button>
+                        <button type="button" class="btn btn-outline-secondary" data-filter="REJECTED">Rejected</button>
+                    </div>
+                </div>
+
+                <!-- History Records List -->
+                {% if my_requests %}
+                    <div class="row g-2.5" id="historyListContainer">
+                        {% for req in my_requests %}
+                            <div class="col-12 history-item" data-status="{{ req.status }}">
+                                <div class="history-card">
+                                    <div class="row align-items-center g-2">
+                                        <!-- Field & Transformation -->
+                                        <div class="col-12 col-md-4">
+                                            <div class="d-flex align-items-center gap-2 mb-1">
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-bold">
+                                                    {{ req.field_name }}
+                                                </span>
+                                                <small class="text-muted" style="font-size: 0.72rem;">{{ req.created_at|date:"d M Y, h:i A" }}</small>
+                                            </div>
+                                            <div class="small d-flex align-items-center gap-1.5 flex-wrap">
+                                                <span class="text-muted text-decoration-line-through">{{ req.current_value|default:"Empty" }}</span>
+                                                <i class="bi bi-arrow-right text-primary"></i>
+                                                <strong class="text-dark font-monospace">{{ req.proposed_value }}</strong>
+                                            </div>
+                                        </div>
+
+                                        <!-- Reason -->
+                                        <div class="col-12 col-md-4">
+                                            <div class="text-muted small text-truncate" title="{{ req.reason }}" style="max-width: 320px;">
+                                                <i class="bi bi-chat-quote me-1 text-secondary"></i> {{ req.reason }}
+                                            </div>
+                                        </div>
+
+                                        <!-- Status & Review Notes -->
+                                        <div class="col-12 col-md-4 text-md-end">
+                                            {% if req.status == 'APPROVED' %}
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1.5 fw-bold">
+                                                    <i class="bi bi-check-circle-fill me-1"></i> Approved & Applied
+                                                </span>
+                                            {% elif req.status == 'REJECTED' %}
+                                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2.5 py-1.5 fw-bold">
+                                                    <i class="bi bi-x-circle-fill me-1"></i> Rejected
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-warning-subtle text-dark border border-warning-subtle px-2.5 py-1.5 fw-bold">
+                                                    <i class="bi bi-hourglass-split me-1 text-warning"></i> Pending Review
+                                                </span>
+                                            {% endif %}
+
+                                            {% if req.reviewed_by %}
+                                                <div class="text-muted mt-1" style="font-size: 0.72rem;">
+                                                    Reviewed by {{ req.reviewed_by.get_full_name|default:req.reviewed_by.username }} &bull; {{ req.reviewed_at|date:"d M, h:i A" }}
+                                                </div>
+                                            {% endif %}
+                                            {% if req.review_notes %}
+                                                <div class="text-secondary fst-italic mt-0.5" style="font-size: 0.72rem;">
+                                                    "{{ req.review_notes }}"
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-light p-4 text-muted mb-3">
+                            <i class="bi bi-inbox fs-1"></i>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-1">No Past Amendment Requests</h6>
+                        <p class="text-muted small mb-3">You haven't submitted any profile correction requests yet.</p>
+                        <button type="button" class="btn btn-sm btn-primary rounded-pill px-3" onclick="document.getElementById('tab-request-btn').click();">
+                            <i class="bi bi-plus-lg me-1"></i> Submit First Request
+                        </button>
+                    </div>
+                {% endif %}
+
+            </div>
+        </div>
+
+    </div>
+
 </div>
 
+<!-- SCRIPT LOGIC FOR REAL-TIME DIFF, PRESET CHIPS, AND CLICK-TO-EDIT -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const currentData = {{ current_data_json|safe }};
@@ -176,39 +743,175 @@ document.addEventListener('DOMContentLoaded', function() {
     const customWrap = document.getElementById('customFieldWrap');
     const customInput = document.getElementById('id_custom_field');
     const currentValInput = document.getElementById('id_current_value');
+    const proposedValInput = document.getElementById('id_proposed_value');
+    const reasonInput = document.getElementById('id_reason');
+    const liveCurrentDisplay = document.getElementById('liveCurrentDisplay');
+    const liveProposedDisplay = document.getElementById('liveProposedDisplay');
+    const chipButtons = document.querySelectorAll('.chip-btn');
+    const recordRows = document.querySelectorAll('.record-row');
+    const form = document.getElementById('profileCorrectionForm');
 
+    // 1. Sync Field Selection & Update Diff Display
     function syncField() {
+        if (!select) return;
         const selected = select.value;
-        if (selected === 'Other') {
-            customWrap.style.display = 'block';
-            fieldNameInput.value = customInput.value.trim() || 'Other';
-            currentValInput.value = '';
-        } else {
-            customWrap.style.display = 'none';
-            fieldNameInput.value = selected;
-            if (currentData.hasOwnProperty(selected)) {
-                currentValInput.value = currentData[selected] || 'Not specified';
+
+        // Update active chip styling
+        chipButtons.forEach(btn => {
+            if (btn.dataset.field === selected) {
+                btn.classList.add('active');
             } else {
-                currentValInput.value = '';
+                btn.classList.remove('active');
             }
+        });
+
+        if (selected === 'Other') {
+            if (customWrap) customWrap.style.display = 'block';
+            if (fieldNameInput) fieldNameInput.value = customInput ? customInput.value.trim() || 'Other' : 'Other';
+            if (currentValInput) currentValInput.value = '';
+            if (liveCurrentDisplay) liveCurrentDisplay.innerHTML = '<span class="text-muted fst-italic">Custom Field</span>';
+        } else {
+            if (customWrap) customWrap.style.display = 'none';
+            if (fieldNameInput) fieldNameInput.value = selected;
+            
+            const currentVal = currentData.hasOwnProperty(selected) ? (currentData[selected] || '') : '';
+            if (currentValInput) currentValInput.value = currentVal;
+
+            if (liveCurrentDisplay) {
+                if (currentVal) {
+                    liveCurrentDisplay.innerHTML = `<span class="badge bg-secondary-subtle text-dark border px-2 py-1 font-monospace">${escapeHtml(currentVal)}</span>`;
+                } else if (selected) {
+                    liveCurrentDisplay.innerHTML = '<span class="badge bg-warning-subtle text-dark border px-2 py-1">Not on file / Empty</span>';
+                } else {
+                    liveCurrentDisplay.innerHTML = '<span class="text-muted fst-italic">Select a field</span>';
+                }
+            }
+        }
+
+        updateLiveProposed();
+    }
+
+    // 2. Real-time Live Proposed Value Sync
+    function updateLiveProposed() {
+        if (!liveProposedDisplay) return;
+        const val = proposedValInput ? proposedValInput.value.trim() : '';
+        if (val) {
+            liveProposedDisplay.innerHTML = `<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 font-monospace">${escapeHtml(val)}</span>`;
+        } else {
+            liveProposedDisplay.innerHTML = '<span class="text-muted fst-italic">Type proposed value</span>';
         }
     }
 
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Event listeners for Field Select & Proposed Value
     if (select) {
         select.addEventListener('change', syncField);
     }
+
+    if (proposedValInput) {
+        proposedValInput.addEventListener('input', updateLiveProposed);
+    }
+
     if (customInput) {
         customInput.addEventListener('input', function() {
-            if (select.value === 'Other') {
-                fieldNameInput.value = this.value.trim();
+            if (select && select.value === 'Other') {
+                if (fieldNameInput) fieldNameInput.value = this.value.trim() || 'Other';
             }
         });
     }
 
-    // Initialize on load if existing choice
-    if (select && select.value) {
-        syncField();
+    // 3. Quick-Select Preset Chips Click Handler
+    chipButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const field = this.dataset.field;
+            if (select) {
+                select.value = field;
+                syncField();
+                if (proposedValInput) {
+                    proposedValInput.focus();
+                    proposedValInput.classList.add('flash-highlight');
+                    setTimeout(() => proposedValInput.classList.remove('flash-highlight'), 1200);
+                }
+            }
+        });
+    });
+
+    // 4. Click-to-Edit Verified Records on the Right Card (WOW Factor)
+    recordRows.forEach(row => {
+        row.addEventListener('click', function() {
+            const field = this.dataset.field;
+            if (select && field) {
+                select.value = field;
+                syncField();
+                if (proposedValInput) {
+                    proposedValInput.focus();
+                    proposedValInput.classList.add('flash-highlight');
+                    setTimeout(() => proposedValInput.classList.remove('flash-highlight'), 1200);
+                }
+            }
+        });
+    });
+
+    // 5. Quick Reason Preset Chips
+    document.querySelectorAll('.reason-preset').forEach(preset => {
+        preset.addEventListener('click', function() {
+            if (reasonInput) {
+                reasonInput.value = this.dataset.text;
+                reasonInput.focus();
+                reasonInput.classList.add('flash-highlight');
+                setTimeout(() => reasonInput.classList.remove('flash-highlight'), 1200);
+            }
+        });
+    });
+
+    // 6. Reset Button
+    const btnReset = document.getElementById('btnResetForm');
+    if (btnReset && form) {
+        btnReset.addEventListener('click', function() {
+            form.reset();
+            if (select) select.selectedIndex = 0;
+            syncField();
+        });
     }
+
+    // 7. Form Submission Spinner
+    if (form) {
+        form.addEventListener('submit', function() {
+            const submitBtn = document.getElementById('btnSubmitCorrection');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Submitting...';
+            }
+        });
+    }
+
+    // 8. History Filter Buttons
+    const filterButtons = document.querySelectorAll('#historyFilterGroup button');
+    const historyItems = document.querySelectorAll('.history-item');
+
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            filterButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            const filter = this.dataset.filter;
+
+            historyItems.forEach(item => {
+                if (filter === 'ALL' || item.dataset.status === filter) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
+
+    // Initialize state on page load
+    syncField();
 });
 </script>
 {% endblock %}
