@@ -46,13 +46,13 @@ def company_home_portal(request):
         today_attendance = Attendance.objects.filter(employee=emp_profile, date=today).first()
 
     # 2. Upcoming Holidays
-    upcoming_holidays = Holiday.objects.filter(date__gte=today)[:5]
+    upcoming_holidays = Holiday.objects.filter(date__gte=today)[:6]
 
     # 3. Official Events
     upcoming_events = CompanyEvent.objects.filter(is_active=True, start_datetime__gte=timezone.now())[:4]
 
     # 4. Announcements
-    announcements = Announcement.objects.all()[:6]
+    announcements = Announcement.objects.select_related('created_by', 'target_site', 'target_department')[:10]
 
     # 5. Birthdays & Anniversaries (with Privacy check!)
     # Today's birthdays
@@ -123,17 +123,6 @@ def company_home_portal(request):
             'years': years,
         })
 
-    # 9. Departments and Sites overview
-    departments = Department.objects.annotate(
-        active_count=Count('employees', filter=Q(employees__status='ACTIVE'))
-    ).order_by('-active_count')[:6]
-
-    office_sites = Site.objects.filter(is_active=True).annotate(
-        active_count=Count('employees', filter=Q(employees__status='ACTIVE'))
-    ).order_by('-active_count')[:4]
-
-    company_policies = CompanyPolicy.objects.all().order_by('-effective_date')[:4]
-
     return render(request, 'portal/home.html', {
         'emp_profile': emp_profile,
         'today_attendance': today_attendance,
@@ -153,9 +142,6 @@ def company_home_portal(request):
         'total_sites_count': total_sites_count,
         'next_holiday': next_holiday,
         'days_to_next_holiday': days_to_next_holiday,
-        'departments': departments,
-        'office_sites': office_sites,
-        'company_policies': company_policies,
         'today': today,
     })
 
