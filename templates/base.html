@@ -145,6 +145,24 @@
                     </div>
                 </li>
                 <li class="menu-item">
+                    <a href="{% url 'employees:profile_corrections_list' %}" class="menu-link {% if 'profile_corrections' in request.resolver_match.url_name %}active{% endif %}">
+                        <i class="bi bi-person-badge"></i>
+                        <span>Profile Corrections</span>
+                        {% if pending_profile_requests_count > 0 %}
+                            <span class="badge bg-warning text-dark menu-badge">{{ pending_profile_requests_count }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="{% url 'support:documents_list' %}" class="menu-link {% if 'documents' in request.resolver_match.url_name %}active{% endif %}">
+                        <i class="bi bi-file-earmark-check"></i>
+                        <span>Document Requests</span>
+                        {% if pending_document_requests_count > 0 %}
+                            <span class="badge bg-warning text-dark menu-badge">{{ pending_document_requests_count }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                <li class="menu-item">
                     <a href="{% url 'payroll:dashboard' %}" class="menu-link {% if 'payroll' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-cash-stack"></i>
                         <span>Payroll Sign-Off</span>
@@ -280,11 +298,11 @@
                 </li> -->
                 
                 <li class="menu-item">
-                    <a href="{% url 'employees:profile_corrections_list' %}" class="menu-link">
+                    <a href="{% url 'employees:profile_corrections_list' %}" class="menu-link {% if 'profile_corrections' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-person-badge"></i>
                         <span>Profile Corrections</span>
                         {% if pending_profile_requests_count > 0 %}
-                            <span class="badge bg-danger menu-badge">{{ pending_profile_requests_count }}</span>
+                            <span class="badge bg-warning text-dark menu-badge">{{ pending_profile_requests_count }}</span>
                         {% endif %}
                     </a>
                 </li>
@@ -293,15 +311,18 @@
 
                 
                 <li class="menu-item">
-                    <a href="{% url 'performance:reviews_list' %}" class="menu-link">
+                    <a href="{% url 'performance:reviews_list' %}" class="menu-link {% if 'reviews_list' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-star-fill"></i>
                         <span>Reviews & Awards</span>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="{% url 'support:documents_list' %}" class="menu-link">
+                    <a href="{% url 'support:documents_list' %}" class="menu-link {% if 'documents' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-file-earmark-check"></i>
                         <span>Document Requests</span>
+                        {% if pending_document_requests_count > 0 %}
+                            <span class="badge bg-warning text-dark menu-badge">{{ pending_document_requests_count }}</span>
+                        {% endif %}
                     </a>
                 </li>
                 <li class="menu-item">
@@ -379,6 +400,47 @@
                     </a>
                 </li>
 
+            {% endif %}
+
+            {% if not request.user.is_head_role and not request.user.is_hr_role and not request.user.is_site_manager_role %}
+                <!-- EMPLOYEE SELF-SERVICE NAVIGATION -->
+                <li class="menu-category">Employee Self-Service</li>
+                <li class="menu-item">
+                    <a href="{% url 'attendance:my_attendance' %}" class="menu-link {% if 'my_attendance' in request.resolver_match.url_name %}active{% endif %}">
+                        <i class="bi bi-calendar-check text-success"></i>
+                        <span>My Attendance</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="{% url 'leave_management:my_leaves' %}" class="menu-link {% if 'leaves' in request.resolver_match.url_name %}active{% endif %}">
+                        <i class="bi bi-calendar-plus text-warning"></i>
+                        <span>My Leaves</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="{% url 'payroll:my_payslips' %}" class="menu-link {% if 'payslips' in request.resolver_match.url_name %}active{% endif %}">
+                        <i class="bi bi-receipt text-primary"></i>
+                        <span>My Payslips</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="{% url 'employees:profile_correction_request' %}" class="menu-link {% if 'profile_correction_request' in request.resolver_match.url_name %}active{% endif %}">
+                        <i class="bi bi-pencil-square text-info"></i>
+                        <span>Profile Correction</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="{% url 'support:documents_list' %}" class="menu-link {% if 'documents' in request.resolver_match.url_name %}active{% endif %}">
+                        <i class="bi bi-file-earmark-check text-success"></i>
+                        <span>Document Requests</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="{% url 'support:tickets_list' %}" class="menu-link {% if 'tickets' in request.resolver_match.url_name %}active{% endif %}">
+                        <i class="bi bi-headset text-secondary"></i>
+                        <span>Helpdesk</span>
+                    </a>
+                </li>
             {% endif %}
 
             {% if not request.user.is_head_role and not request.user.is_hr_role and can_manage_master_data %}
@@ -591,6 +653,8 @@
                         <li><a class="dropdown-item py-1.5" href="{% url 'attendance:my_attendance' %}"><i class="bi bi-stopwatch text-success me-2"></i>My Attendance</a></li>
                         <li><a class="dropdown-item py-1.5" href="{% url 'leave_management:my_leaves' %}"><i class="bi bi-calendar-plus text-warning me-2"></i>My Leaves</a></li>
                         <li><a class="dropdown-item py-1.5" href="{% url 'payroll:my_payslips' %}"><i class="bi bi-wallet2 text-info me-2"></i>My Salary & Payslips</a></li>
+                        <li><a class="dropdown-item py-1.5" href="{% url 'employees:profile_correction_request' %}"><i class="bi bi-pencil-square text-info me-2"></i>Profile Correction Request</a></li>
+                        <li><a class="dropdown-item py-1.5" href="{% url 'support:documents_list' %}"><i class="bi bi-file-earmark-check text-success me-2"></i>Official Document Requests</a></li>
                         <li><a class="dropdown-item py-1.5" href="{% url 'support:tickets_list' %}"><i class="bi bi-chat-left-dots text-secondary me-2"></i>Service Tickets</a></li>
                         {% endif %}
                         <li><hr class="dropdown-divider my-1"></li>

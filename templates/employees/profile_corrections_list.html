@@ -304,11 +304,11 @@
                                 {% else %}
                                     {% if corr.employee.user.is_hr_role %}
                                         <span class="badge bg-warning-subtle text-dark border border-warning-subtle px-2 py-1 fw-bold" title="HR applicant: requires admin approval">
-                                            <i class="bi bi-shield-lock-fill me-1 text-warning"></i> Admin Review
+                                            <i class="bi bi-shield-lock-fill me-1 text-warning"></i> HR Request (Admin Only)
                                         </span>
                                     {% else %}
-                                        <span class="badge bg-warning-subtle text-dark border border-warning-subtle px-2 py-1 fw-bold">
-                                            <i class="bi bi-hourglass-split me-1 text-warning"></i> Pending HR
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 fw-bold">
+                                            <i class="bi bi-hourglass-split me-1"></i> Pending Review
                                         </span>
                                     {% endif %}
                                 {% endif %}
@@ -320,11 +320,16 @@
                                     {% if corr.employee.user == request.user %}
                                         <span class="badge bg-light text-muted border small">Self-Request</span>
                                     {% elif corr.employee.user.is_hr_role and not request.user.is_head_role and not request.user.is_superuser %}
-                                        <span class="badge bg-warning-subtle text-dark border border-warning-subtle small" title="Only Admin can review HR staff profile requests">
+                                        <span class="badge bg-warning-subtle text-dark border border-warning-subtle small px-2 py-1" title="Only Head / Super Admin can review HR staff profile requests">
                                             <i class="bi bi-shield-lock-fill me-1"></i>Admin Only
                                         </span>
                                     {% else %}
                                         <div class="d-flex justify-content-end gap-1.5">
+                                            <!-- Review & Custom Edit Modal Trigger -->
+                                            <button type="button" class="btn btn-xs btn-outline-primary fw-semibold px-2 py-1" data-bs-toggle="modal" data-bs-target="#reviewModal-{{ corr.id }}" title="Review details or adjust before approving">
+                                                <i class="bi bi-pencil me-1"></i> Review
+                                            </button>
+
                                             <!-- Direct Approve -->
                                             <form method="POST" action="{% url 'employees:review_profile_correction' request_id=corr.id %}" class="d-inline">
                                                 {% csrf_token %}
@@ -338,10 +343,83 @@
                                             <form method="POST" action="{% url 'employees:review_profile_correction' request_id=corr.id %}" class="d-inline">
                                                 {% csrf_token %}
                                                 <input type="hidden" name="action" value="REJECT">
-                                                <button type="submit" class="btn btn-xs btn-outline-danger fw-semibold px-2.5 py-1" title="Reject amendment request" onclick="return confirm('Are you sure you want to reject this correction request?');">
-                                                    <i class="bi bi-x-lg me-1"></i> Reject
+                                                <button type="submit" class="btn btn-xs btn-outline-danger fw-semibold px-2 py-1" title="Reject amendment request" onclick="return confirm('Are you sure you want to reject this correction request?');">
+                                                    <i class="bi bi-x-lg"></i>
                                                 </button>
                                             </form>
+                                        </div>
+
+                                        <!-- MODAL: REVIEW & ADJUST BEFORE APPROVING -->
+                                        <div class="modal fade text-start" id="reviewModal-{{ corr.id }}" tabindex="-1" aria-labelledby="reviewModalLabel-{{ corr.id }}" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content border-0 shadow">
+                                                    <div class="modal-header border-bottom">
+                                                        <h5 class="modal-title fw-bold text-dark" id="reviewModalLabel-{{ corr.id }}">
+                                                            <i class="bi bi-pencil-square text-primary me-2"></i>Review Profile Correction
+                                                        </h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <form method="POST" action="{% url 'employees:review_profile_correction' request_id=corr.id %}">
+                                                        {% csrf_token %}
+                                                        <div class="modal-body p-4">
+                                                            <div class="p-3 mb-3 bg-light rounded-3 border">
+                                                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                                                    <h6 class="fw-bold text-dark mb-0">{{ corr.employee.full_name }}</h6>
+                                                                    <span class="font-monospace text-success small">{{ corr.employee.emp_id }}</span>
+                                                                </div>
+                                                                <div class="text-muted small">
+                                                                    {{ corr.employee.designation.title|default:"Staff" }} &bull; {{ corr.employee.department.name|default:"General" }}
+                                                                </div>
+                                                                {% if corr.employee.user.is_hr_role %}
+                                                                    <div class="badge bg-warning text-dark mt-2">
+                                                                        <i class="bi bi-shield-lock-fill me-1"></i>HR Staff Member - Admin Action Required
+                                                                    </div>
+                                                                {% endif %}
+                                                            </div>
+
+                                                            <div class="mb-3">
+                                                                <label class="form-label small fw-bold text-secondary text-uppercase">Target Field</label>
+                                                                <input type="text" class="form-control bg-light fw-bold text-dark" value="{{ corr.field_name }}" readonly>
+                                                            </div>
+
+                                                            <div class="row g-2 mb-3">
+                                                                <div class="col-6">
+                                                                    <label class="form-label small fw-bold text-secondary text-uppercase">Current Record</label>
+                                                                    <input type="text" class="form-control bg-light text-decoration-line-through text-muted small" value="{{ corr.current_value|default:'--' }}" readonly>
+                                                                </div>
+                                                                <div class="col-6">
+                                                                    <label class="form-label small fw-bold text-success text-uppercase">Proposed Value</label>
+                                                                    <input type="text" name="modified_value" class="form-control fw-bold border-success" value="{{ corr.proposed_value }}" placeholder="Adjust value if needed">
+                                                                    <div class="form-text small" style="font-size: 0.72rem;">You may adjust the value before approving.</div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="mb-3">
+                                                                <label class="form-label small fw-bold text-secondary text-uppercase">Reason Provided by Employee</label>
+                                                                <div class="p-2.5 bg-light rounded-2 border small text-secondary">
+                                                                    {{ corr.reason }}
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="mb-2">
+                                                                <label class="form-label small fw-bold text-secondary text-uppercase">Reviewer Notes (Optional)</label>
+                                                                <textarea name="notes" rows="2" class="form-control" placeholder="Enter reason or note for this decision..."></textarea>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer border-top d-flex justify-content-between">
+                                                            <button type="submit" name="action" value="REJECT" class="btn btn-outline-danger btn-sm px-3" onclick="return confirm('Reject this request?');">
+                                                                <i class="bi bi-x-circle me-1"></i> Reject Request
+                                                            </button>
+                                                            <div class="d-flex gap-2">
+                                                                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                                <button type="submit" name="action" value="APPROVE" class="btn btn-success btn-sm px-3 fw-bold">
+                                                                    <i class="bi bi-check2-circle me-1"></i> Approve & Apply Change
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
                                         </div>
                                     {% endif %}
                                 {% else %}

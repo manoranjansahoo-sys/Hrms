@@ -320,3 +320,158 @@ class ProfileCorrectionForm(forms.ModelForm):
         elif f_select and not f_name:
             cleaned_data['field_name'] = f_select
         return cleaned_data
+
+
+class EmployeeUpdateForm(forms.ModelForm):
+    first_name = forms.CharField(
+        max_length=50,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'required': True})
+    )
+    last_name = forms.CharField(
+        max_length=50,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'required': True})
+    )
+    phone = forms.CharField(
+        max_length=20,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'maxlength': '10',
+            'inputmode': 'numeric',
+            'pattern': '[6-9][0-9]{9}',
+            'oninput': "this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);"
+        })
+    )
+    role = forms.ChoiceField(
+        choices=CustomUser.Role.choices,
+        widget=forms.Select(attrs={'class': 'form-select', 'required': True})
+    )
+    is_active = forms.BooleanField(
+        required=False,
+        initial=True,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
+
+    class Meta:
+        model = EmployeeProfile
+        fields = [
+            'department', 'designation', 'site', 'reporting_manager',
+            'employment_type', 'status', 'joining_date', 'date_of_birth',
+            'gender', 'marital_status', 'blood_group', 'personal_email',
+            'city', 'state', 'address', 'permanent_address', 'postal_code',
+            'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relation',
+            'bank_name', 'bank_account_number', 'ifsc_code', 'pan_number', 'uan_number',
+            'education_details', 'experience_summary'
+        ]
+        widgets = {
+            'department': forms.Select(attrs={'class': 'form-select'}),
+            'designation': forms.Select(attrs={'class': 'form-select'}),
+            'site': forms.Select(attrs={'class': 'form-select'}),
+            'reporting_manager': forms.Select(attrs={'class': 'form-select'}),
+            'employment_type': forms.Select(attrs={'class': 'form-select', 'required': True}),
+            'status': forms.Select(attrs={'class': 'form-select', 'required': True}),
+            'joining_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date', 'required': True}),
+            'date_of_birth': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'gender': forms.Select(attrs={'class': 'form-select'}),
+            'marital_status': forms.Select(attrs={'class': 'form-select'}),
+            'blood_group': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. O+, A+'}),
+            'personal_email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Personal email address'}),
+            'city': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'City'}),
+            'state': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'State / Province'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Current residential address'}),
+            'permanent_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Permanent address'}),
+            'postal_code': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '6-digit PIN code',
+                'maxlength': '6',
+                'inputmode': 'numeric',
+                'pattern': '[0-9]{6}',
+                'oninput': "this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);"
+            }),
+            'emergency_contact_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Contact Name'}),
+            'emergency_contact_phone': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '10-digit Phone',
+                'maxlength': '10',
+                'inputmode': 'numeric',
+                'oninput': "this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);"
+            }),
+            'emergency_contact_relation': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Relation (e.g. Spouse / Parent)'}),
+            'bank_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Bank Name'}),
+            'bank_account_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Bank Account Number'}),
+            'ifsc_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'IFSC Code'}),
+            'pan_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'PAN Number'}),
+            'uan_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'PF UAN Number'}),
+            'education_details': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Degrees, qualifications, universities'}),
+            'experience_summary': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Prior work history and experience summary'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for f in ['gender', 'marital_status', 'joining_date']:
+            if f in self.fields:
+                self.fields[f].required = False
+        if self.instance and self.instance.pk and self.instance.user:
+            self.fields['first_name'].initial = self.instance.user.first_name
+            self.fields['last_name'].initial = self.instance.user.last_name
+            self.fields['email'].initial = self.instance.user.email
+            self.fields['phone'].initial = self.instance.user.phone
+            self.fields['role'].initial = self.instance.user.role
+            self.fields['is_active'].initial = self.instance.user.is_active
+
+    def clean_joining_date(self):
+        j_date = self.cleaned_data.get('joining_date')
+        if not j_date and self.instance and self.instance.joining_date:
+            return self.instance.joining_date
+        return j_date
+
+    def clean_gender(self):
+        g = self.cleaned_data.get('gender')
+        if not g and self.instance and self.instance.gender:
+            return self.instance.gender
+        return g or 'MALE'
+
+    def clean_phone(self):
+        phone = self.cleaned_data.get('phone', '').strip()
+        if not phone:
+            return ''
+        digits = re.sub(r'\D', '', phone)
+        if digits.startswith('91') and len(digits) == 12:
+            digits = digits[2:]
+        elif digits.startswith('0') and len(digits) == 11:
+            digits = digits[1:]
+        if not re.match(r'^[6-9]\d{9}$', digits):
+            raise forms.ValidationError("Phone number must be exactly 10 digits starting with 6, 7, 8, or 9.")
+        return digits
+
+    def save(self, commit=True):
+        profile = super().save(commit=False)
+        user = profile.user
+        if user:
+            user.first_name = self.cleaned_data.get('first_name')
+            user.last_name = self.cleaned_data.get('last_name')
+            user.email = self.cleaned_data.get('email')
+            user.phone = self.cleaned_data.get('phone')
+            user.role = self.cleaned_data.get('role')
+            user.is_active = self.cleaned_data.get('is_active')
+            if commit:
+                user.save()
+        if commit:
+            profile.save()
+            self.save_m2m()
+        return profile
+
+
+class EmployeeDocumentUploadForm(forms.ModelForm):
+    class Meta:
+        model = EmployeeDocument
+        fields = ['doc_type', 'title', 'file']
+        widgets = {
+            'doc_type': forms.Select(attrs={'class': 'form-select', 'required': True}),
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Aadhaar Card / Degree Certificate / Offer Letter', 'required': True}),
+            'file': forms.FileInput(attrs={'class': 'form-control', 'required': True}),
+        }

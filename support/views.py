@@ -108,36 +108,58 @@ def document_requests_view(request):
             status='PENDING'
         )
 
-        # Notify HR
-        hr_users = CustomUser.objects.filter(role=CustomUser.Role.HR)
-        for h in hr_users:
-            create_notification(
-                recipient=h,
-                title='Official Document Request',
-                message=f"{emp_profile.full_name} requested a {doc_req.get_document_type_display()}.",
-                notification_type='SUPPORT',
-                target_url='/support/documents/'
-            )
+        # Route notifications: HR requests go to Head / Admin, regular requests go to HR & Admin
+        if emp_profile and emp_profile.user.is_hr_role:
+            admin_users = CustomUser.objects.filter(Q(role=CustomUser.Role.HEAD) | Q(is_superuser=True), is_active=True)
+            for a in admin_users:
+                create_notification(
+                    recipient=a,
+                    title='HR Official Document Request - Admin Action Required',
+                    message=f"HR Administrator {emp_profile.full_name} requested a {doc_req.get_document_type_display()}. Admin approval required.",
+                    notification_type='SUPPORT',
+                    target_url='/support/documents/'
+                )
+            messages.success(request, f"Your request for {doc_req.get_document_type_display()} has been submitted to Admin / Head for approval.")
+        else:
+            hr_and_admin = CustomUser.objects.filter(Q(role__in=[CustomUser.Role.HR, CustomUser.Role.HEAD]) | Q(is_superuser=True), is_active=True)
+            for u in hr_and_admin:
+                create_notification(
+                    recipient=u,
+                    title='Official Document Request',
+                    message=f"{emp_profile.full_name} requested a {doc_req.get_document_type_display()}.",
+                    notification_type='SUPPORT',
+                    target_url='/support/documents/'
+                )
+            messages.success(request, f"Request for {doc_req.get_document_type_display()} submitted to HR and Admin.")
 
-        messages.success(request, f"Request for {doc_req.get_document_type_display()} submitted to HR.")
         return redirect('support:documents_list')
 
-    if user.is_hr_role or user.is_head_role:
+    if user.is_hr_role or user.is_head_role or user.is_superuser:
         requests_list = OfficialDocumentRequest.objects.select_related('employee__user').all()
     else:
         requests_list = OfficialDocumentRequest.objects.filter(employee=emp_profile).select_related('employee__user')
 
+    total_count = requests_list.count()
+    pending_count = requests_list.filter(status='PENDING').count()
+    issued_count = requests_list.filter(status='ISSUED').count()
+    rejected_count = requests_list.filter(status='REJECTED').count()
+
     return render(request, 'support/documents_list.html', {
         'requests_list': requests_list,
         'doc_choices': OfficialDocumentRequest.DOC_CHOICES,
-        'is_hr': user.is_hr_role or user.is_head_role,
+        'is_hr': user.is_hr_role or user.is_head_role or user.is_superuser,
+        'is_admin': user.is_head_role or user.is_superuser,
+        'total_count': total_count,
+        'pending_count': pending_count,
+        'issued_count': issued_count,
+        'rejected_count': rejected_count,
     })
 
 
 @login_required
 @hr_required
 def process_document_request(request, request_id):
-    """HR marks document request as issued or rejected. HR staff requests require Head / Admin approval."""
+    """HR / Admin marks document request as issued or rejected. HR staff requests require Head / Admin approval."""
     doc_req = get_object_or_404(OfficialDocumentRequest, id=request_id)
     action = request.POST.get('action')
     remarks = request.POST.get('remarks', '')
@@ -147,7 +169,7 @@ def process_document_request(request, request_id):
         messages.error(request, "Self-approval is not permitted. Your document request must be processed by an administrator.")
         return redirect('support:documents_list')
 
-    # 2. HR applicant check
+    # 2. HR applicant check: must be approved by Head / Super Admin
     if doc_req.employee.user.is_hr_role and not (request.user.is_head_role or request.user.is_superuser):
         messages.error(request, "Permission denied. Document requests for HR staff can only be approved by the Head / Super Admin.")
         return redirect('support:documents_list')
@@ -156,6 +178,8 @@ def process_document_request(request, request_id):
         doc_req.status = 'ISSUED'
         doc_req.reviewed_by = request.user
         doc_req.hr_remarks = remarks
+        if request.FILES.get('issued_document'):
+            doc_req.issued_document = request.FILES['issued_document']
         doc_req.resolved_at = timezone.now()
         doc_req.save()
 

@@ -10,6 +10,9 @@ urlpatterns = [
     path('profile-corrections/', views.profile_corrections_list, name='profile_corrections_list'),
     path('profile-corrections/request/', views.profile_correction_request, name='profile_correction_request'),
     path('profile-corrections/<int:request_id>/review/', views.review_profile_correction, name='review_profile_correction'),
+    path('<str:emp_id>/edit/', views.employee_edit, name='employee_edit'),
+    path('<str:emp_id>/documents/upload/', views.employee_document_upload, name='employee_document_upload'),
+    path('documents/<int:doc_id>/delete/', views.employee_document_delete, name='employee_document_delete'),
     path('<str:emp_id>/', views.employee_detail, name='employee_detail'),
 ]
 

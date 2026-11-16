@@ -79,6 +79,7 @@ def hrms_global_context(request):
         'pending_leaves_count': 0,
         'pending_corrections_count': 0,
         'pending_profile_requests_count': 0,
+        'pending_document_requests_count': 0,
         'user_today_attendance': None,
         'today_attendance': None,
         'can_manage_master_data': False,
@@ -117,6 +118,13 @@ def hrms_global_context(request):
                 status='PENDING'
             ).count()
             try:
+                from support.models import OfficialDocumentRequest
+                context['pending_document_requests_count'] = OfficialDocumentRequest.objects.filter(
+                    status='PENDING'
+                ).count()
+            except Exception:
+                context['pending_document_requests_count'] = 0
+            try:
                 from recruitment.models import JobApplication
                 context['pending_onboarding_count'] = JobApplication.objects.filter(
                     status=JobApplication.Status.ONBOARDING_COMPLETED,
@@ -136,6 +144,13 @@ def hrms_global_context(request):
             context['pending_profile_requests_count'] = ProfileCorrectionRequest.objects.filter(
                 status='PENDING'
             ).exclude(employee__user__role=CustomUser.Role.HR).exclude(employee__user=user).count()
+            try:
+                from support.models import OfficialDocumentRequest
+                context['pending_document_requests_count'] = OfficialDocumentRequest.objects.filter(
+                    status='PENDING'
+                ).exclude(employee__user__role=CustomUser.Role.HR).exclude(employee__user=user).count()
+            except Exception:
+                context['pending_document_requests_count'] = 0
             try:
                 from recruitment.models import JobApplication
                 context['pending_onboarding_count'] = JobApplication.objects.filter(

@@ -2,7 +2,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from accounts.models import CustomUser
 from organization.models import Department, Designation, Site
-from employees.models import EmployeeProfile
+from employees.models import EmployeeProfile, EmployeeDocument, ProfileCorrectionRequest
 from employees.forms import EmployeeCreateForm
 from datetime import date
 
@@ -424,4 +424,175 @@ class EmployeeDirectoryListAndPaginationTests(TestCase):
         res = self.client.get(reverse('employees:employee_list'))
         self.assertEqual(res.status_code, 302)
         self.assertEqual(res.url, reverse('portal:smart_dashboard'))
+
+    def test_hr_profile_correction_requires_admin_approval(self):
+        """HR profile correction requests MUST be solved by Admin / Head; regular HR is forbidden."""
+        # Create Head Admin
+        admin_user = CustomUser.objects.create_user(
+            username='head_admin_corp',
+            email='head_admin@example.com',
+            role=CustomUser.Role.HEAD,
+            password='AdminPassword123'
+        )
+
+        # Create 2nd HR user
+        hr_peer = CustomUser.objects.create_user(
+            username='hr_peer_user',
+            email='hr_peer@example.com',
+            role=CustomUser.Role.HR,
+            password='AdminPassword123'
+        )
+        hr_profile = EmployeeProfile.objects.create(
+            user=self.hr,
+            emp_id='EMP9901',
+            department=self.dept,
+            site=self.site,
+            joining_date=date(2025, 1, 1),
+            bank_name='HDFC Bank',
+            bank_account_number='111122223333'
+        )
+
+        # HR submits a profile correction request
+        self.client.force_login(self.hr)
+        res = self.client.post(reverse('employees:profile_correction_request'), {
+            'field_select': 'Salary Bank Name',
+            'field_name': 'Salary Bank Name',
+            'current_value': 'HDFC Bank',
+            'proposed_value': 'ICICI Bank',
+            'reason': 'Salary account transfer'
+        }, follow=True)
+        self.assertEqual(res.status_code, 200)
+
+        corr = ProfileCorrectionRequest.objects.filter(employee=hr_profile, field_name='Salary Bank Name').first()
+        self.assertIsNotNone(corr)
+        self.assertEqual(corr.status, 'PENDING')
+
+        # Peer HR tries to approve -> FORBIDDEN!
+        self.client.force_login(hr_peer)
+        peer_res = self.client.post(reverse('employees:review_profile_correction', kwargs={'request_id': corr.id}), {
+            'action': 'APPROVE',
+            'notes': 'Attempting peer approval'
+        }, follow=True)
+        self.assertEqual(peer_res.status_code, 200)
+        corr.refresh_from_db()
+        self.assertEqual(corr.status, 'PENDING')  # Blocked! Still PENDING!
+        hr_profile.refresh_from_db()
+        self.assertEqual(hr_profile.bank_name, 'HDFC Bank')  # Unchanged!
+
+        # Head / Super Admin approves -> ALLOWED!
+        self.client.force_login(admin_user)
+        admin_res = self.client.post(reverse('employees:review_profile_correction', kwargs={'request_id': corr.id}), {
+            'action': 'APPROVE',
+            'notes': 'Approved by Head of Company'
+        }, follow=True)
+        self.assertEqual(admin_res.status_code, 200)
+        corr.refresh_from_db()
+        self.assertEqual(corr.status, 'APPROVED')
+        self.assertEqual(corr.reviewed_by, admin_user)
+        hr_profile.refresh_from_db()
+        self.assertEqual(hr_profile.bank_name, 'ICICI Bank')  # Applied!
+
+    def test_regular_employee_correction_approvable_by_both_hr_and_admin(self):
+        """Regular employee profile correction requests can be solved by BOTH HR and Admin."""
+        admin_user = CustomUser.objects.create_user(
+            username='head_admin_corp2',
+            email='head_admin2@example.com',
+            role=CustomUser.Role.HEAD,
+            password='AdminPassword123'
+        )
+
+        emp_user = CustomUser.objects.get(username='worker_1')
+        emp_profile = emp_user.employee_profile
+
+        # Employee submits request
+        self.client.force_login(emp_user)
+        res = self.client.post(reverse('employees:profile_correction_request'), {
+            'field_select': 'City',
+            'field_name': 'City',
+            'current_value': 'Old City',
+            'proposed_value': 'Bengaluru',
+            'reason': 'Relocated to HQ'
+        }, follow=True)
+        self.assertEqual(res.status_code, 200)
+
+        corr = ProfileCorrectionRequest.objects.filter(employee=emp_profile, field_name='City').first()
+        self.assertIsNotNone(corr)
+
+        # HR can approve!
+        self.client.force_login(self.hr)
+        hr_res = self.client.post(reverse('employees:review_profile_correction', kwargs={'request_id': corr.id}), {
+            'action': 'APPROVE',
+            'notes': 'Verified address proof'
+        }, follow=True)
+        self.assertEqual(hr_res.status_code, 200)
+        corr.refresh_from_db()
+        self.assertEqual(corr.status, 'APPROVED')
+        emp_profile.refresh_from_db()
+        self.assertEqual(emp_profile.city, 'Bengaluru')
+
+    def test_admin_and_hr_direct_employee_edit(self):
+        """Admin & HR can directly edit employee details via employee_edit view."""
+        emp_user = CustomUser.objects.get(username='worker_2')
+        emp_profile = emp_user.employee_profile
+
+        self.client.force_login(self.hr)
+        edit_url = reverse('employees:employee_edit', kwargs={'emp_id': emp_profile.emp_id})
+
+        # GET form
+        res_get = self.client.get(edit_url)
+        self.assertEqual(res_get.status_code, 200)
+
+        # POST update
+        res_post = self.client.post(edit_url, {
+            'first_name': 'UpdatedFirst',
+            'last_name': 'UpdatedLast',
+            'email': 'updated.email@example.com',
+            'phone': '9876543299',
+            'role': CustomUser.Role.EMPLOYEE,
+            'is_active': True,
+            'employment_type': 'FULL_TIME',
+            'status': 'ACTIVE',
+            'joining_date': '2026-01-01',
+            'city': 'Mumbai',
+            'bank_name': 'State Bank of India',
+            'bank_account_number': '555566667777',
+        }, follow=True)
+        self.assertEqual(res_post.status_code, 200)
+
+        emp_profile.refresh_from_db()
+        emp_user.refresh_from_db()
+        self.assertEqual(emp_user.first_name, 'UpdatedFirst')
+        self.assertEqual(emp_user.last_name, 'UpdatedLast')
+        self.assertEqual(emp_user.email, 'updated.email@example.com')
+        self.assertEqual(emp_profile.city, 'Mumbai')
+        self.assertEqual(emp_profile.bank_name, 'State Bank of India')
+        self.assertEqual(emp_profile.bank_account_number, '555566667777')
+
+    def test_admin_and_hr_document_vault_upload_and_delete(self):
+        """Admin & HR can upload documents directly to employee's vault and delete them."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        emp_user = CustomUser.objects.get(username='worker_3')
+        emp_profile = emp_user.employee_profile
+
+        self.client.force_login(self.hr)
+
+        # Upload document
+        fake_file = SimpleUploadedFile("aadhaar_card.pdf", b"%PDF-1.4 test data", content_type="application/pdf")
+        upload_url = reverse('employees:employee_document_upload', kwargs={'emp_id': emp_profile.emp_id})
+        res_upload = self.client.post(upload_url, {
+            'doc_type': 'ID_PROOF',
+            'title': 'Aadhaar Card Front and Back',
+            'file': fake_file
+        }, follow=True)
+        self.assertEqual(res_upload.status_code, 200)
+
+        doc = EmployeeDocument.objects.filter(employee=emp_profile, title='Aadhaar Card Front and Back').first()
+        self.assertIsNotNone(doc)
+        self.assertEqual(doc.doc_type, 'ID_PROOF')
+
+        # Delete document
+        delete_url = reverse('employees:employee_document_delete', kwargs={'doc_id': doc.id})
+        res_del = self.client.post(delete_url, follow=True)
+        self.assertEqual(res_del.status_code, 200)
+        self.assertFalse(EmployeeDocument.objects.filter(id=doc.id).exists())
 

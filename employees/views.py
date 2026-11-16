@@ -12,7 +12,10 @@ from django.utils import timezone
 from accounts.models import CustomUser, AuditLog
 from accounts.decorators import role_required, hr_required, log_audit_trail
 from employees.models import EmployeeProfile, EmployeeDocument, ProfileCorrectionRequest
-from employees.forms import EmployeeCreateForm, ProfileCorrectionForm
+from employees.forms import (
+    EmployeeCreateForm, ProfileCorrectionForm,
+    EmployeeUpdateForm, EmployeeDocumentUploadForm
+)
 from organization.models import Department, Site
 from leave_management.models import LeaveBalance, ensure_employee_leave_balances
 from payroll.models import SalaryStructure
@@ -500,6 +503,11 @@ def review_profile_correction(request, request_id):
         messages.error(request, "Permission denied. Profile correction requests from HR staff can only be approved by the Head / Super Admin.")
         return redirect('employees:profile_corrections_list')
 
+    # Optional: Reviewer can adjust / refine the proposed value before applying
+    modified_val = request.POST.get('modified_value', '').strip()
+    if modified_val:
+        req.proposed_value = modified_val
+
     if action == 'APPROVE':
         applied, detail_msg = apply_profile_correction_update(req)
         req.status = 'APPROVED'
@@ -568,3 +576,68 @@ def export_employees_csv(request):
         ])
 
     return response
+
+
+@login_required
+@hr_required
+def employee_edit(request, emp_id):
+    """
+    Direct Admin & HR Workforce Management:
+    Allows Head Admin or HR to directly review and update an employee's profile particulars,
+    statutory data, banking info, and organization assignment.
+    """
+    emp = get_object_or_404(
+        EmployeeProfile.objects.select_related('user', 'department', 'designation', 'site', 'reporting_manager'),
+        emp_id=emp_id
+    )
+
+    if request.method == 'POST':
+        form = EmployeeUpdateForm(request.POST, instance=emp)
+        if form.is_valid():
+            form.save()
+            log_audit_trail('UPDATE', 'Workforce Management', f"Admin/HR {request.user.username} directly updated employee profile #{emp.emp_id} ({emp.full_name}).", user=request.user)
+            messages.success(request, f"Employee profile for {emp.full_name} (#{emp.emp_id}) was updated successfully!")
+            return redirect('employees:employee_detail', emp_id=emp.emp_id)
+        else:
+            messages.error(request, "Please correct the highlighted errors in the form below.")
+    else:
+        form = EmployeeUpdateForm(instance=emp)
+
+    return render(request, 'employees/employee_edit.html', {
+        'form': form,
+        'employee': emp,
+        'is_head': request.user.is_head_role or request.user.is_superuser,
+    })
+
+
+@login_required
+@hr_required
+def employee_document_upload(request, emp_id):
+    """Admin / HR uploads an official document directly to employee's document vault."""
+    emp = get_object_or_404(EmployeeProfile, emp_id=emp_id)
+    if request.method == 'POST':
+        form = EmployeeDocumentUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            doc = form.save(commit=False)
+            doc.employee = emp
+            doc.save()
+            log_audit_trail('CREATE', 'Employee Document', f"Admin/HR {request.user.username} uploaded document '{doc.title}' ({doc.get_doc_type_display()}) for {emp.emp_id}.", user=request.user)
+            messages.success(request, f"Document '{doc.title}' has been uploaded to {emp.full_name}'s vault.")
+        else:
+            messages.error(request, "Failed to upload document. Please choose a valid file and fill all fields.")
+    return redirect('employees:employee_detail', emp_id=emp.emp_id)
+
+
+@login_required
+@hr_required
+def employee_document_delete(request, doc_id):
+    """Admin / HR deletes a document from employee's vault."""
+    doc = get_object_or_404(EmployeeDocument, id=doc_id)
+    emp_id = doc.employee.emp_id
+    emp_name = doc.employee.full_name
+    doc_title = doc.title
+    doc.delete()
+    log_audit_trail('DELETE', 'Employee Document', f"Admin/HR {request.user.username} deleted document '{doc_title}' for {emp_id}.", user=request.user)
+    messages.success(request, f"Document '{doc_title}' removed from {emp_name}'s vault.")
+    return redirect('employees:employee_detail', emp_id=emp_id)
+

@@ -1,89 +1,267 @@
 {% extends 'base.html' %}
-{% block title %}Official Document Requests{% endblock %}
+{% block title %}Official Document Requests | Company HRMS{% endblock %}
 
 {% block content %}
 <div class="container-fluid p-0">
+    <!-- PAGE HEADER -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
-            <h3 class="fw-bold mb-1">Official Document Requests</h3>
-            <p class="text-muted small mb-0">Experience letters, employment verification certificates, visa salary letters, and ID card reissues.</p>
+            <h3 class="fw-bold mb-1 text-dark d-flex align-items-center gap-2">
+                <i class="bi bi-file-earmark-check text-primary"></i>
+                Official Document Requests
+            </h3>
+            <p class="text-muted small mb-0">
+                Experience letters, employment certificates, visa salary letters, bonafide certificates, and digital ID card reissues.
+            </p>
         </div>
-        <button class="btn btn-hrms btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#requestDocModal">
-            <i class="bi bi-file-earmark-plus me-1"></i> Request Official Document
+        <button class="btn btn-hrms btn-sm shadow-sm d-inline-flex align-items-center gap-1.5" data-bs-toggle="modal" data-bs-target="#requestDocModal">
+            <i class="bi bi-file-earmark-plus"></i>
+            <span>Request Official Document</span>
         </button>
     </div>
 
+    <!-- 4 KPI SUMMARY CARDS -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="hrms-card p-3 d-flex align-items-center gap-3">
+                <div class="rounded-3 p-2.5 bg-primary-subtle text-primary fs-4 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                    <i class="bi bi-collection"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.7rem;">Total Requests</div>
+                    <h4 class="fw-bold mb-0 text-dark">{{ total_count|default:"0" }}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="hrms-card p-3 d-flex align-items-center gap-3">
+                <div class="rounded-3 p-2.5 bg-warning-subtle text-warning fs-4 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.7rem;">Pending Review</div>
+                    <h4 class="fw-bold mb-0 text-dark">{{ pending_count|default:"0" }}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="hrms-card p-3 d-flex align-items-center gap-3">
+                <div class="rounded-3 p-2.5 bg-success-subtle text-success fs-4 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.7rem;">Issued & Ready</div>
+                    <h4 class="fw-bold mb-0 text-dark">{{ issued_count|default:"0" }}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="hrms-card p-3 d-flex align-items-center gap-3">
+                <div class="rounded-3 p-2.5 bg-danger-subtle text-danger fs-4 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                    <i class="bi bi-x-circle"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.7rem;">Rejected</div>
+                    <h4 class="fw-bold mb-0 text-dark">{{ rejected_count|default:"0" }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CARD TABLE -->
     <div class="hrms-card">
+        <div class="card-header bg-white py-3 border-bottom">
+            <div class="row align-items-center g-3">
+                <div class="col-12 col-md-5">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control bg-light border-start-0" id="docSearchInput" placeholder="Search employee, ID, or document type...">
+                    </div>
+                </div>
+                <div class="col-12 col-md-7 d-flex justify-content-md-end">
+                    <div class="btn-group btn-group-sm" role="group" id="docStatusFilter">
+                        <button type="button" class="btn btn-outline-secondary active" data-filter="ALL">All ({{ total_count|default:"0" }})</button>
+                        <button type="button" class="btn btn-outline-warning" data-filter="PENDING">Pending ({{ pending_count|default:"0" }})</button>
+                        <button type="button" class="btn btn-outline-success" data-filter="ISSUED">Issued ({{ issued_count|default:"0" }})</button>
+                        <button type="button" class="btn btn-outline-danger" data-filter="REJECTED">Rejected ({{ rejected_count|default:"0" }})</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="table-responsive">
-            <table class="table hrms-table">
+            <table class="table hrms-table align-middle mb-0" id="docsTable">
                 <thead>
                     <tr>
-                        <th>Employee</th>
-                        <th>Document Requested</th>
-                        <th>Purpose / Destination</th>
-                        <th>Date Requested</th>
+                        <th>Employee Particulars</th>
+                        <th>Document Type</th>
+                        <th>Purpose & Destination</th>
+                        <th>Requested Date</th>
                         <th>Status</th>
-                        <th>HR Remarks</th>
-                        {% if is_hr %}<th class="text-end">HR Processing</th>{% endif %}
+                        <th>HR Remarks / Download</th>
+                        {% if is_hr %}<th class="text-end">Administrative Action</th>{% endif %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for req in requests_list %}
-                        <tr>
+                        <tr class="doc-row" data-status="{{ req.status }}" data-search="{{ req.employee.full_name|lower }} {{ req.employee.emp_id|lower }} {{ req.get_document_type_display|lower }} {{ req.purpose|lower }}">
+                            <!-- Employee -->
                             <td>
-                                <div class="fw-bold text-dark">{{ req.employee.full_name }}</div>
-                                <small class="text-muted">{{ req.employee.emp_id }}</small>
+                                <div class="d-flex align-items-center gap-2.5">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm" style="width: 34px; height: 34px; font-size: 0.85rem; background: linear-gradient(135deg, #10B981, #059669); flex-shrink: 0;">
+                                        {{ req.employee.full_name|slice:":1"|upper }}
+                                    </div>
+                                    <div>
+                                        <a href="{% url 'employees:employee_detail' emp_id=req.employee.emp_id %}" class="fw-bold text-dark text-decoration-none d-block">
+                                            {{ req.employee.full_name }}
+                                        </a>
+                                        <span class="font-monospace text-success fw-semibold" style="font-size: 0.74rem;">{{ req.employee.emp_id }}</span>
+                                        {% if req.employee.user.is_hr_role %}
+                                            <span class="badge bg-indigo text-white ms-1" style="font-size: 0.65rem; background: #6366F1;">HR Staff</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
                             </td>
-                            <td><span class="badge bg-light text-dark border">{{ req.get_document_type_display }}</span></td>
-                            <td class="small text-truncate" style="max-width: 200px;">{{ req.purpose }}</td>
-                            <td><small class="text-muted">{{ req.requested_at|date:"d M Y" }}</small></td>
+
+                            <!-- Document Requested -->
+                            <td>
+                                <span class="badge bg-light text-dark border fw-semibold">
+                                    {{ req.get_document_type_display }}
+                                </span>
+                            </td>
+
+                            <!-- Purpose -->
+                            <td>
+                                <div class="small text-secondary text-truncate" style="max-width: 220px;" title="{{ req.purpose }}">
+                                    {{ req.purpose }}
+                                </div>
+                            </td>
+
+                            <!-- Date Requested -->
+                            <td>
+                                <div class="small text-muted">{{ req.requested_at|date:"d M Y" }}</div>
+                                <div class="text-secondary" style="font-size: 0.72rem;">{{ req.requested_at|date:"h:i A" }}</div>
+                            </td>
+
+                            <!-- Status -->
                             <td>
                                 {% if req.status == 'ISSUED' %}
-                                    <span class="badge bg-success">Issued & Verified</span>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fw-bold">
+                                        <i class="bi bi-check-circle-fill me-1"></i> Issued & Ready
+                                    </span>
                                 {% elif req.status == 'REJECTED' %}
-                                    <span class="badge bg-danger">Rejected</span>
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 fw-bold">
+                                        <i class="bi bi-x-circle-fill me-1"></i> Rejected
+                                    </span>
                                 {% else %}
                                     {% if req.employee.user.is_hr_role %}
-                                        <span class="badge bg-warning-subtle text-dark border border-warning-subtle"><i class="bi bi-shield-lock-fill me-1"></i>Pending Admin</span>
+                                        <span class="badge bg-warning-subtle text-dark border border-warning-subtle px-2 py-1 fw-bold" title="HR staff request: Requires Admin decision">
+                                            <i class="bi bi-shield-lock-fill me-1 text-warning"></i> HR Request (Admin Only)
+                                        </span>
                                     {% else %}
-                                        <span class="badge bg-warning text-dark">Pending HR</span>
+                                        <span class="badge bg-warning-subtle text-dark border border-warning-subtle px-2 py-1 fw-bold">
+                                            <i class="bi bi-hourglass-split me-1 text-warning"></i> Pending Review
+                                        </span>
                                     {% endif %}
                                 {% endif %}
                             </td>
-                            <td class="small text-muted">{{ req.hr_remarks|default:"--" }}</td>
+
+                            <!-- Remarks / Issued Document Download -->
+                            <td>
+                                {% if req.issued_document %}
+                                    <a href="{{ req.issued_document.url }}" target="_blank" class="btn btn-xs btn-outline-success py-1 px-2 d-inline-flex align-items-center gap-1 shadow-sm">
+                                        <i class="bi bi-file-earmark-arrow-down-fill"></i>
+                                        <span>Download File</span>
+                                    </a>
+                                {% elif req.hr_remarks %}
+                                    <span class="small text-muted">{{ req.hr_remarks }}</span>
+                                {% else %}
+                                    <span class="text-muted small">--</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- HR & Admin Actions -->
                             {% if is_hr %}
                                 <td class="text-end">
                                     {% if req.status == 'PENDING' %}
                                         {% if req.employee.user == request.user %}
                                             <span class="badge bg-light text-muted border small">Self-Request</span>
-                                        {% elif req.employee.user.is_hr_role and not request.user.is_head_role and not request.user.is_superuser %}
-                                            <span class="badge bg-warning-subtle text-dark border border-warning-subtle small" title="Only Admin can review HR staff document requests">
+                                        {% elif req.employee.user.is_hr_role and not is_admin %}
+                                            <span class="badge bg-warning-subtle text-dark border border-warning-subtle small px-2 py-1" title="Only Admin can process HR staff requests">
                                                 <i class="bi bi-shield-lock-fill me-1"></i>Admin Only
                                             </span>
                                         {% else %}
-                                            <form method="POST" action="{% url 'support:process_document' request_id=req.id %}" class="d-inline">
-                                                {% csrf_token %}
-                                                <input type="hidden" name="action" value="ISSUE">
-                                                <button type="submit" class="btn btn-sm btn-success py-1 px-2" title="Mark as Issued">
-                                                    <i class="bi bi-check-lg"></i> Issue
+                                            <div class="d-flex justify-content-end gap-1.5">
+                                                <!-- Issue Modal Trigger -->
+                                                <button type="button" class="btn btn-xs btn-success fw-semibold shadow-sm px-2.5 py-1" data-bs-toggle="modal" data-bs-target="#issueModal-{{ req.id }}" title="Issue document and optionally attach file">
+                                                    <i class="bi bi-check-lg me-1"></i> Issue
                                                 </button>
-                                            </form>
-                                            <form method="POST" action="{% url 'support:process_document' request_id=req.id %}" class="d-inline">
-                                                {% csrf_token %}
-                                                <input type="hidden" name="action" value="REJECT">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Reject Request">
-                                                    <i class="bi bi-x-lg"></i> Reject
-                                                </button>
-                                            </form>
+
+                                                <!-- Direct Reject -->
+                                                <form method="POST" action="{% url 'support:process_document' request_id=req.id %}" class="d-inline" onsubmit="return confirm('Are you sure you want to reject this document request?');">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="action" value="REJECT">
+                                                    <button type="submit" class="btn btn-xs btn-outline-danger fw-semibold px-2 py-1" title="Reject Request">
+                                                        <i class="bi bi-x-lg"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+
+                                            <!-- ISSUE MODAL -->
+                                            <div class="modal fade text-start" id="issueModal-{{ req.id }}" tabindex="-1" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content border-0 shadow">
+                                                        <div class="modal-header border-bottom">
+                                                            <h5 class="modal-title fw-bold text-dark">
+                                                                <i class="bi bi-check2-circle text-success me-2"></i>Issue Document: {{ req.get_document_type_display }}
+                                                            </h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <form method="POST" action="{% url 'support:process_document' request_id=req.id %}" enctype="multipart/form-data">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="action" value="ISSUE">
+                                                            <div class="modal-body p-4">
+                                                                <div class="p-3 mb-3 bg-light rounded-3 border">
+                                                                    <div class="fw-bold text-dark">{{ req.employee.full_name }} ({{ req.employee.emp_id }})</div>
+                                                                    <div class="text-muted small">Purpose: {{ req.purpose }}</div>
+                                                                </div>
+
+                                                                <div class="mb-3">
+                                                                    <label class="form-label small fw-semibold text-dark">Attach Issued Certificate / PDF (Optional)</label>
+                                                                    <input type="file" name="issued_document" class="form-control" accept=".pdf,.doc,.docx,.jpg,.png">
+                                                                    <div class="form-text small text-muted">Upload generated letter or signed copy for the employee to download.</div>
+                                                                </div>
+
+                                                                <div class="mb-3">
+                                                                    <label class="form-label small fw-semibold text-dark">Remarks / Dispatch Notes</label>
+                                                                    <textarea name="remarks" rows="2" class="form-control" placeholder="e.g. Dispatched via official email, or certificate available at HR desk."></textarea>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer border-top">
+                                                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                <button type="submit" class="btn btn-success px-4 fw-bold">Confirm & Mark Issued</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         {% endif %}
                                     {% else %}
-                                        <small class="text-muted">Processed</small>
+                                        <div class="small text-muted">
+                                            <div>{{ req.reviewed_by.get_full_name|default:req.reviewed_by.username|default:"HR Administrator" }}</div>
+                                            <div style="font-size: 0.70rem;">{{ req.resolved_at|date:"d M Y" }}</div>
+                                        </div>
                                     {% endif %}
                                 </td>
                             {% endif %}
                         </tr>
                     {% empty %}
-                        <tr><td colspan="7" class="text-center py-5 text-muted">No document requests found.</td></tr>
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                No document requests found.
+                            </td>
+                        </tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -91,19 +269,21 @@
     </div>
 </div>
 
-<!-- REQUEST DOC MODAL -->
+<!-- REQUEST DOC MODAL (ALL EMPLOYEES) -->
 <div class="modal fade" id="requestDocModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold">Request Official HR Document</h5>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold text-dark">
+                    <i class="bi bi-file-earmark-plus text-primary me-2"></i>Request Official HR Document
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="{% url 'support:documents_list' %}">
                 {% csrf_token %}
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Select Document Type *</label>
+                        <label class="form-label small fw-semibold text-dark">Select Document Type <span class="text-danger">*</span></label>
                         <select name="document_type" class="form-select" required>
                             {% for code, name in doc_choices %}
                                 <option value="{{ code }}">{{ name }}</option>
@@ -111,17 +291,61 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold">Purpose & Recipient Institution *</label>
-                        <textarea name="purpose" rows="3" class="form-control" placeholder="e.g. Visa application to Embassy / Housing Loan approval to HDFC Bank..." required></textarea>
+                        <label class="form-label small fw-semibold text-dark">Purpose & Destination Entity <span class="text-danger">*</span></label>
+                        <textarea name="purpose" rows="3" class="form-control" placeholder="e.g. Visa application to German Embassy / Home Loan approval to SBI..." required></textarea>
+                        <div class="form-text small text-muted">Please specify the exact name of the bank, embassy, or institution requiring the document.</div>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer border-top">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-hrms">Submit Request</button>
+                    <button type="submit" class="btn btn-hrms px-4">Submit Request</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-{% endblock %}
 
+<!-- CLIENT-SIDE SEARCH & STATUS FILTER -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('docSearchInput');
+    const filterButtons = document.querySelectorAll('#docStatusFilter button');
+    const rows = document.querySelectorAll('.doc-row');
+
+    let currentFilter = 'ALL';
+    let currentSearch = '';
+
+    function applyDocFilters() {
+        rows.forEach(row => {
+            const status = row.dataset.status;
+            const searchText = row.dataset.search || '';
+
+            const matchesStatus = (currentFilter === 'ALL' || status === currentFilter);
+            const matchesSearch = (!currentSearch || searchText.includes(currentSearch));
+
+            if (matchesStatus && matchesSearch) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            currentSearch = this.value.trim().toLowerCase();
+            applyDocFilters();
+        });
+    }
+
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            filterButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentFilter = this.dataset.filter;
+            applyDocFilters();
+        });
+    });
+});
+</script>
+{% endblock %}
