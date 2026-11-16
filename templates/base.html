@@ -51,13 +51,13 @@
         <ul class="sidebar-menu">
             <!-- PORTAL / HOME -->
             <li class="menu-item">
-                <a href="{% url 'portal:home' %}" class="menu-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                <a href="{% url 'portal:home' %}" class="menu-link {% if request.resolver_match.app_name == 'portal' and request.resolver_match.url_name == 'home' %}active{% endif %}">
                     <i class="bi bi-house-door-fill text-success"></i>
                     <span>Organisation</span>
                 </a>
             </li>
             <li class="menu-item">
-                <a href="{% url 'portal:smart_dashboard' %}" class="menu-link {% if 'dashboard' in request.resolver_match.url_name %}active{% endif %}">
+                <a href="{% url 'portal:smart_dashboard' %}" class="menu-link {% if request.resolver_match.app_name == 'portal' and request.resolver_match.url_name in 'smart_dashboard dashboard_hr dashboard_employee' %}active{% endif %}">
                     <i class="bi bi-speedometer2 text-info"></i>
                     <span>Dashboard</span>
                 </a>
@@ -68,25 +68,25 @@
                 <!-- HEAD / SUPER ADMIN NAVIGATION -->
                 <li class="menu-category">Head Authority & Strategy</li>
                 <li class="menu-item">
-                    <a href="{% url 'portal:dashboard_head' %}" class="menu-link {% if request.resolver_match.url_name == 'dashboard_head' %}active{% endif %}">
+                    <a href="{% url 'portal:dashboard_head' %}" class="menu-link {% if request.resolver_match.app_name == 'portal' and request.resolver_match.url_name == 'dashboard_head' %}active{% endif %}">
                         <i class="bi bi-graph-up-arrow"></i>
                         <span>Executive Analytics</span>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="{% url 'employees:employee_list' %}" class="menu-link {% if 'employee' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'employees:employee_list' %}" class="menu-link {% if request.resolver_match.app_name == 'employees' and request.resolver_match.url_name in 'employee_list employee_detail employee_edit employee_document_upload' %}active{% endif %}">
                         <i class="bi bi-people-fill"></i>
                         <span>All Employee</span>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="{% url 'recruitment:candidates_list' %}" class="menu-link {% if 'candidates' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'recruitment:candidates_list' %}" class="menu-link {% if request.resolver_match.app_name == 'recruitment' and 'candidates' in request.resolver_match.url_name and 'onboarding' not in request.resolver_match.url_name or request.resolver_match.url_name == 'candidate_detail' %}active{% endif %}">
                         <i class="bi bi-person-lines-fill"></i>
                         <span>Interview candidates</span>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="{% url 'recruitment:onboarding_candidates_list' %}" class="menu-link {% if 'onboarding' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'recruitment:onboarding_candidates_list' %}" class="menu-link {% if request.resolver_match.app_name == 'recruitment' and 'onboarding' in request.resolver_match.url_name or request.resolver_match.url_name in 'verify_candidate_documents appoint_employee' %}active{% endif %}">
                         <i class="bi bi-person-check-fill text-success"></i>
                         <span>Onboarding</span>
                         {% if pending_onboarding_count > 0 %}
@@ -95,7 +95,7 @@
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="{% url 'leave_management:admin_queue' %}" class="menu-link {% if 'leave' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'leave_management:admin_queue' %}" class="menu-link {% if request.resolver_match.app_name == 'leave_management' and request.resolver_match.url_name in 'admin_queue process_leave leave_calendar' %}active{% endif %}">
                         <i class="bi bi-check2-circle"></i>
                         <span>Leave Approvals</span>
                         {% if pending_leaves_count > 0 %}
@@ -104,7 +104,7 @@
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="#attendanceSubmenuHead" class="menu-link d-flex align-items-center justify-content-between {% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name or 'qr_dashboard' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="collapse" role="button" aria-expanded="{% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name or 'qr_dashboard' in request.resolver_match.url_name %}true{% else %}false{% endif %}" aria-controls="attendanceSubmenuHead">
+                    <a href="#attendanceSubmenuHead" class="menu-link d-flex align-items-center justify-content-between {% if request.resolver_match.app_name == 'attendance' and request.resolver_match.url_name in 'admin_register corrections_list approve_correction employee_attendance_detail qr_dashboard qr_kiosk qr_scanner' %}active{% endif %}" data-bs-toggle="collapse" role="button" aria-expanded="{% if request.resolver_match.app_name == 'attendance' and request.resolver_match.url_name in 'admin_register corrections_list approve_correction employee_attendance_detail qr_dashboard qr_kiosk qr_scanner' %}true{% else %}false{% endif %}" aria-controls="attendanceSubmenuHead">
                         <div class="d-flex align-items-center gap-2">
                             <i class="bi bi-calendar-check"></i>
                             <span>Attendance</span>
@@ -116,22 +116,22 @@
                             <i class="bi bi-chevron-down small" style="font-size: 0.72rem;"></i>
                         </div>
                     </a>
-                    <div class="collapse {% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name or 'qr_dashboard' in request.resolver_match.url_name %}show{% endif %}" id="attendanceSubmenuHead">
+                    <div class="collapse {% if request.resolver_match.app_name == 'attendance' and request.resolver_match.url_name in 'admin_register corrections_list approve_correction employee_attendance_detail qr_dashboard qr_kiosk qr_scanner' %}show{% endif %}" id="attendanceSubmenuHead">
                         <ul class="list-unstyled ps-3 pt-1 pb-1 mb-0" style="background: rgba(0,0,0,0.18); border-radius: 8px; margin-top: 3px;">
                             <li>
-                                <a href="{% url 'attendance:admin_register' %}" class="menu-link py-1.5 px-3 {% if 'admin_register' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
+                                <a href="{% url 'attendance:admin_register' %}" class="menu-link py-1.5 px-3 {% if request.resolver_match.app_name == 'attendance' and request.resolver_match.url_name in 'admin_register employee_attendance_detail' %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
                                     <i class="bi bi-calendar-check-fill me-2" style="font-size: 0.85rem;"></i>
                                     <span>Daily Attendance</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="{% url 'attendance:qr_dashboard' %}" class="menu-link py-1.5 px-3 {% if 'qr_dashboard' in request.resolver_match.url_name %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
+                                <a href="{% url 'attendance:qr_dashboard' %}" class="menu-link py-1.5 px-3 {% if request.resolver_match.app_name == 'attendance' and request.resolver_match.url_name in 'qr_dashboard qr_kiosk qr_scanner' %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
                                     <i class="bi bi-shield-check me-2 text-info" style="font-size: 0.85rem;"></i>
                                     <span>QR & Geofence Hub</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="{% url 'attendance:corrections_list' %}" class="menu-link py-1.5 px-3 d-flex align-items-center justify-content-between {% if 'corrections' in request.resolver_match.url_name %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
+                                <a href="{% url 'attendance:corrections_list' %}" class="menu-link py-1.5 px-3 d-flex align-items-center justify-content-between {% if request.resolver_match.app_name == 'attendance' and request.resolver_match.url_name in 'corrections_list approve_correction' %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
                                     <div class="d-flex align-items-center">
                                         <i class="bi bi-clock-history me-2" style="font-size: 0.85rem;"></i>
                                         <span>Att. Correction</span>
@@ -145,7 +145,7 @@
                     </div>
                 </li>
                 <li class="menu-item">
-                    <a href="{% url 'employees:profile_corrections_list' %}" class="menu-link {% if 'profile_corrections' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'employees:profile_corrections_list' %}" class="menu-link {% if request.resolver_match.app_name == 'employees' and 'profile_correction' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-person-badge"></i>
                         <span>Profile Edit</span>
                         {% if pending_profile_requests_count > 0 %}
@@ -154,7 +154,7 @@
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="{% url 'support:documents_list' %}" class="menu-link {% if 'documents' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'support:documents_list' %}" class="menu-link {% if request.resolver_match.app_name == 'support' and 'document' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-file-earmark-check"></i>
                         <span>Doc Requests</span>
                         {% if pending_document_requests_count > 0 %}
@@ -163,19 +163,19 @@
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="{% url 'payroll:dashboard' %}" class="menu-link {% if 'payroll' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'payroll:dashboard' %}" class="menu-link {% if request.resolver_match.app_name == 'payroll' and request.resolver_match.url_name != 'my_payslips' %}active{% endif %}">
                         <i class="bi bi-cash-stack"></i>
                         <span>Payroll Sign-Off</span>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="{% url 'organization:master_data' %}" class="menu-link {% if 'master_data' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'organization:master_data' %}" class="menu-link {% if request.resolver_match.app_name == 'organization' %}active{% endif %}">
                         <i class="bi bi-database-fill-gear text-warning"></i>
                         <span>Master Data</span>
                     </a>
                 </li> 
                 <li class="menu-item">
-                    <a href="{% url 'accounts:audit_logs' %}" class="menu-link {% if 'audit' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'accounts:audit_logs' %}" class="menu-link {% if request.resolver_match.app_name == 'accounts' and 'audit' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-shield-check"></i>
                         <span>Security & Audit Log</span>
                     </a>
@@ -197,13 +197,13 @@
                 <!-- HR ADMINISTRATOR NAVIGATION -->
                 <li class="menu-category">Talent & Recruitment</li>
                 <li class="menu-item">
-                    <a href="{% url 'recruitment:links_list' %}" class="menu-link {% if 'links' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'recruitment:links_list' %}" class="menu-link {% if request.resolver_match.app_name == 'recruitment' and 'link' in request.resolver_match.url_name or request.resolver_match.url_name in 'jobs_list create_job edit_job' %}active{% endif %}">
                         <i class="bi bi-link-45deg text-warning"></i>
                         <span>Links Generation</span>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="{% url 'recruitment:candidates_list' %}" class="menu-link {% if 'candidates' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'recruitment:candidates_list' %}" class="menu-link {% if request.resolver_match.app_name == 'recruitment' and 'candidates' in request.resolver_match.url_name and 'onboarding' not in request.resolver_match.url_name or request.resolver_match.url_name == 'candidate_detail' %}active{% endif %}">
                         <i class="bi bi-person-lines-fill text-info"></i>
                         <span>Interview</span>
                     </a>
@@ -211,7 +211,7 @@
                 
                 
                 <li class="menu-item">
-                    <a href="{% url 'recruitment:onboarding_candidates_list' %}" class="menu-link {% if 'onboarding' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'recruitment:onboarding_candidates_list' %}" class="menu-link {% if request.resolver_match.app_name == 'recruitment' and 'onboarding' in request.resolver_match.url_name or request.resolver_match.url_name in 'verify_candidate_documents appoint_employee' %}active{% endif %}">
                         <i class="bi bi-person-check-fill text-success"></i>
                         <span>Onboarding</span>
                         {% if pending_onboarding_count > 0 %}
@@ -220,7 +220,7 @@
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="{% url 'employees:employee_create' %}" class="menu-link {% if 'employee_create' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'employees:employee_create' %}" class="menu-link {% if request.resolver_match.app_name == 'employees' and request.resolver_match.url_name == 'employee_create' %}active{% endif %}">
                         <i class="bi bi-person-plus-fill"></i>
                         <span>Add Employee</span>
                     </a>
@@ -228,14 +228,14 @@
                 <li class="menu-category">HR Administration</li>
                 {% if can_view_workforce_directory %}
                 <li class="menu-item">
-                    <a href="{% url 'employees:employee_list' %}" class="menu-link {% if 'employee_list' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'employees:employee_list' %}" class="menu-link {% if request.resolver_match.app_name == 'employees' and request.resolver_match.url_name in 'employee_list employee_detail employee_edit employee_document_upload' %}active{% endif %}">
                         <i class="bi bi-people-fill text-primary"></i>
                         <span>All Employee</span>
                     </a>
                 </li>
                 {% endif %}
                 <li class="menu-item">
-                    <a href="#attendanceSubmenuHR" class="menu-link d-flex align-items-center justify-content-between {% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="collapse" role="button" aria-expanded="{% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}true{% else %}false{% endif %}" aria-controls="attendanceSubmenuHR">
+                    <a href="#attendanceSubmenuHR" class="menu-link d-flex align-items-center justify-content-between {% if request.resolver_match.app_name == 'attendance' and request.resolver_match.url_name in 'admin_register corrections_list approve_correction employee_attendance_detail' %}active{% endif %}" data-bs-toggle="collapse" role="button" aria-expanded="{% if request.resolver_match.app_name == 'attendance' and request.resolver_match.url_name in 'admin_register corrections_list approve_correction employee_attendance_detail' %}true{% else %}false{% endif %}" aria-controls="attendanceSubmenuHR">
                         <div class="d-flex align-items-center gap-2">
                             <i class="bi bi-calendar-check"></i>
                             <span>Attendance</span>
@@ -247,16 +247,16 @@
                             <i class="bi bi-chevron-down small" style="font-size: 0.72rem;"></i>
                         </div>
                     </a>
-                    <div class="collapse {% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}show{% endif %}" id="attendanceSubmenuHR">
+                    <div class="collapse {% if request.resolver_match.app_name == 'attendance' and request.resolver_match.url_name in 'admin_register corrections_list approve_correction employee_attendance_detail' %}show{% endif %}" id="attendanceSubmenuHR">
                         <ul class="list-unstyled ps-3 pt-1 pb-1 mb-0" style="background: rgba(0,0,0,0.18); border-radius: 8px; margin-top: 3px;">
                             <li>
-                                <a href="{% url 'attendance:admin_register' %}" class="menu-link py-1.5 px-3 {% if 'admin_register' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
+                                <a href="{% url 'attendance:admin_register' %}" class="menu-link py-1.5 px-3 {% if request.resolver_match.app_name == 'attendance' and request.resolver_match.url_name in 'admin_register employee_attendance_detail' %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
                                     <i class="bi bi-calendar-check-fill me-2" style="font-size: 0.85rem;"></i>
                                     <span>Daily Register</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="{% url 'attendance:corrections_list' %}" class="menu-link py-1.5 px-3 d-flex align-items-center justify-content-between {% if 'corrections' in request.resolver_match.url_name %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
+                                <a href="{% url 'attendance:corrections_list' %}" class="menu-link py-1.5 px-3 d-flex align-items-center justify-content-between {% if request.resolver_match.app_name == 'attendance' and request.resolver_match.url_name in 'corrections_list approve_correction' %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
                                     <div class="d-flex align-items-center">
                                         <i class="bi bi-clock-history me-2" style="font-size: 0.85rem;"></i>
                                         <span>Att. Correction</span>
@@ -270,7 +270,7 @@
                     </div>
                 </li>
                  <li class="menu-item">
-                    <a href="{% url 'leave_management:admin_queue' %}" class="menu-link">
+                    <a href="{% url 'leave_management:admin_queue' %}" class="menu-link {% if request.resolver_match.app_name == 'leave_management' and request.resolver_match.url_name in 'admin_queue process_leave leave_calendar' %}active{% endif %}">
                         <i class="bi bi-calendar2-week"></i>
                         <span>Leave Mgmt</span>
                         {% if pending_leaves_count > 0 %}
@@ -279,7 +279,7 @@
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="{% url 'payroll:dashboard' %}" class="menu-link">
+                    <a href="{% url 'payroll:dashboard' %}" class="menu-link {% if request.resolver_match.app_name == 'payroll' and request.resolver_match.url_name != 'my_payslips' %}active{% endif %}">
                         <i class="bi bi-receipt"></i>
                         <span>Salary Operations</span>
                     </a>
@@ -298,7 +298,7 @@
                 </li> -->
                 
                 <li class="menu-item">
-                    <a href="{% url 'employees:profile_corrections_list' %}" class="menu-link {% if 'profile_corrections' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'employees:profile_corrections_list' %}" class="menu-link {% if request.resolver_match.app_name == 'employees' and 'profile_correction' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-person-badge"></i>
                         <span>Profile edit</span>
                         {% if pending_profile_requests_count > 0 %}
@@ -311,13 +311,13 @@
 
                 
                 <li class="menu-item">
-                    <a href="{% url 'performance:reviews_list' %}" class="menu-link {% if 'reviews_list' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'performance:reviews_list' %}" class="menu-link {% if request.resolver_match.app_name == 'performance' and 'review' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-star-fill"></i>
                         <span>Reviews & Awards</span>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="{% url 'support:documents_list' %}" class="menu-link {% if 'documents' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'support:documents_list' %}" class="menu-link {% if request.resolver_match.app_name == 'support' and 'document' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-file-earmark-check"></i>
                         <span>Doc Requests</span>
                         {% if pending_document_requests_count > 0 %}
@@ -326,14 +326,14 @@
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="{% url 'support:tickets_list' %}" class="menu-link">
+                    <a href="{% url 'support:tickets_list' %}" class="menu-link {% if request.resolver_match.app_name == 'support' and 'ticket' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-headset"></i>
                         <span>Helpdesk</span>
                     </a>
                 </li>
                 {% if can_manage_master_data %}
                 <li class="menu-item">
-                    <a href="{% url 'organization:master_data' %}" class="menu-link {% if 'master_data' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'organization:master_data' %}" class="menu-link {% if request.resolver_match.app_name == 'organization' %}active{% endif %}">
                         <i class="bi bi-database-fill-gear text-warning"></i>
                         <span>Master Data</span>
                     </a>
@@ -344,13 +344,13 @@
                 <!-- SITE MANAGER NAVIGATION -->
                 <li class="menu-category">Site & Team Management</li>
                 <li class="menu-item">
-                    <a href="{% url 'portal:dashboard_site_manager' %}" class="menu-link {% if request.resolver_match.url_name == 'dashboard_site_manager' %}active{% endif %}">
+                    <a href="{% url 'portal:dashboard_site_manager' %}" class="menu-link {% if request.resolver_match.app_name == 'portal' and request.resolver_match.url_name == 'dashboard_site_manager' %}active{% endif %}">
                         <i class="bi bi-building"></i>
                         <span>Site Overview</span>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="#attendanceSubmenuSM" class="menu-link d-flex align-items-center justify-content-between {% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="collapse" role="button" aria-expanded="{% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}true{% else %}false{% endif %}" aria-controls="attendanceSubmenuSM">
+                    <a href="#attendanceSubmenuSM" class="menu-link d-flex align-items-center justify-content-between {% if request.resolver_match.app_name == 'attendance' and request.resolver_match.url_name in 'admin_register corrections_list approve_correction employee_attendance_detail' %}active{% endif %}" data-bs-toggle="collapse" role="button" aria-expanded="{% if request.resolver_match.app_name == 'attendance' and request.resolver_match.url_name in 'admin_register corrections_list approve_correction employee_attendance_detail' %}true{% else %}false{% endif %}" aria-controls="attendanceSubmenuSM">
                         <div class="d-flex align-items-center gap-2">
                             <i class="bi bi-clock"></i>
                             <span>Team Attendance</span>
@@ -362,16 +362,16 @@
                             <i class="bi bi-chevron-down small" style="font-size: 0.72rem;"></i>
                         </div>
                     </a>
-                    <div class="collapse {% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}show{% endif %}" id="attendanceSubmenuSM">
+                    <div class="collapse {% if request.resolver_match.app_name == 'attendance' and request.resolver_match.url_name in 'admin_register corrections_list approve_correction employee_attendance_detail' %}show{% endif %}" id="attendanceSubmenuSM">
                         <ul class="list-unstyled ps-3 pt-1 pb-1 mb-0" style="background: rgba(0,0,0,0.18); border-radius: 8px; margin-top: 3px;">
                             <li>
-                                <a href="{% url 'attendance:admin_register' %}" class="menu-link py-1.5 px-3 {% if 'admin_register' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
+                                <a href="{% url 'attendance:admin_register' %}" class="menu-link py-1.5 px-3 {% if request.resolver_match.app_name == 'attendance' and request.resolver_match.url_name in 'admin_register employee_attendance_detail' %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
                                     <i class="bi bi-calendar-check-fill me-2" style="font-size: 0.85rem;"></i>
                                     <span>Daily Register</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="{% url 'attendance:corrections_list' %}" class="menu-link py-1.5 px-3 d-flex align-items-center justify-content-between {% if 'corrections' in request.resolver_match.url_name %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
+                                <a href="{% url 'attendance:corrections_list' %}" class="menu-link py-1.5 px-3 d-flex align-items-center justify-content-between {% if request.resolver_match.app_name == 'attendance' and request.resolver_match.url_name in 'corrections_list approve_correction' %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
                                     <div class="d-flex align-items-center">
                                         <i class="bi bi-hourglass-split me-2" style="font-size: 0.85rem;"></i>
                                         <span>Punch Corrections</span>
@@ -385,7 +385,7 @@
                     </div>
                 </li>
                 <li class="menu-item">
-                    <a href="{% url 'leave_management:admin_queue' %}" class="menu-link">
+                    <a href="{% url 'leave_management:admin_queue' %}" class="menu-link {% if request.resolver_match.app_name == 'leave_management' and request.resolver_match.url_name in 'admin_queue process_leave leave_calendar' %}active{% endif %}">
                         <i class="bi bi-calendar-event"></i>
                         <span>Team Leave Approvals</span>
                         {% if pending_leaves_count > 0 %}
@@ -394,7 +394,7 @@
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="{% url 'performance:goals_list' %}" class="menu-link">
+                    <a href="{% url 'performance:goals_list' %}" class="menu-link {% if request.resolver_match.app_name == 'performance' and 'goal' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-bullseye"></i>
                         <span>Team Goals & Reviews</span>
                     </a>
@@ -406,37 +406,37 @@
                 <!-- EMPLOYEE SELF-SERVICE NAVIGATION -->
                 <li class="menu-category">Employee Self-Service</li>
                 <li class="menu-item">
-                    <a href="{% url 'attendance:my_attendance' %}" class="menu-link {% if 'my_attendance' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'attendance:my_attendance' %}" class="menu-link {% if request.resolver_match.app_name == 'attendance' and request.resolver_match.url_name in 'my_attendance request_correction' %}active{% endif %}">
                         <i class="bi bi-calendar-check text-success"></i>
                         <span>My Attendance</span>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="{% url 'leave_management:my_leaves' %}" class="menu-link {% if 'leaves' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'leave_management:my_leaves' %}" class="menu-link {% if request.resolver_match.app_name == 'leave_management' and request.resolver_match.url_name in 'my_leaves apply_leave cancel_leave' %}active{% endif %}">
                         <i class="bi bi-calendar-plus text-warning"></i>
                         <span>My Leaves</span>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="{% url 'payroll:my_payslips' %}" class="menu-link {% if 'payslips' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'payroll:my_payslips' %}" class="menu-link {% if request.resolver_match.app_name == 'payroll' and request.resolver_match.url_name in 'my_payslips payslip_detail download_pdf' %}active{% endif %}">
                         <i class="bi bi-receipt text-primary"></i>
                         <span>My Payslips</span>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="{% url 'employees:profile_correction_request' %}" class="menu-link {% if 'profile_correction_request' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'employees:profile_correction_request' %}" class="menu-link {% if request.resolver_match.app_name == 'employees' and 'profile_correction' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-pencil-square text-info"></i>
                         <span>Profile Correction</span>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="{% url 'support:documents_list' %}" class="menu-link {% if 'documents' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'support:documents_list' %}" class="menu-link {% if request.resolver_match.app_name == 'support' and 'document' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-file-earmark-check text-success"></i>
                         <span>Document Requests</span>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="{% url 'support:tickets_list' %}" class="menu-link {% if 'tickets' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'support:tickets_list' %}" class="menu-link {% if request.resolver_match.app_name == 'support' and 'ticket' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-headset text-secondary"></i>
                         <span>Helpdesk</span>
                     </a>
@@ -446,7 +446,7 @@
             {% if not request.user.is_head_role and not request.user.is_hr_role and can_manage_master_data %}
                 <li class="menu-category">Master Data Control</li>
                 <li class="menu-item">
-                    <a href="{% url 'organization:master_data' %}" class="menu-link {% if 'master_data' in request.resolver_match.url_name %}active{% endif %}">
+                    <a href="{% url 'organization:master_data' %}" class="menu-link {% if request.resolver_match.app_name == 'organization' %}active{% endif %}">
                         <i class="bi bi-database-fill-gear text-warning"></i>
                         <span>Master Data</span>
                     </a>
@@ -468,7 +468,7 @@
                 </a>
             </li> -->
             <li class="menu-item">
-                <a href="{% url 'portal:policies_list' %}" class="menu-link">
+                <a href="{% url 'portal:policies_list' %}" class="menu-link {% if request.resolver_match.app_name == 'portal' and 'polic' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="bi bi-journal-text"></i>
                     <span>Company Policies</span>
                 </a>
