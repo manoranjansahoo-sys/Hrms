@@ -123,6 +123,17 @@ def company_home_portal(request):
             'years': years,
         })
 
+    # 9. Departments and Sites overview
+    departments = Department.objects.annotate(
+        active_count=Count('employees', filter=Q(employees__status='ACTIVE'))
+    ).order_by('-active_count')[:6]
+
+    office_sites = Site.objects.filter(is_active=True).annotate(
+        active_count=Count('employees', filter=Q(employees__status='ACTIVE'))
+    ).order_by('-active_count')[:4]
+
+    company_policies = CompanyPolicy.objects.all().order_by('-effective_date')[:4]
+
     return render(request, 'portal/home.html', {
         'emp_profile': emp_profile,
         'today_attendance': today_attendance,
@@ -142,6 +153,9 @@ def company_home_portal(request):
         'total_sites_count': total_sites_count,
         'next_holiday': next_holiday,
         'days_to_next_holiday': days_to_next_holiday,
+        'departments': departments,
+        'office_sites': office_sites,
+        'company_policies': company_policies,
         'today': today,
     })
 
