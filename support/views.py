@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.db.models import Q
 from django.utils import timezone
 from accounts.models import CustomUser
 from accounts.decorators import role_required, hr_required, log_audit_trail
@@ -98,6 +99,10 @@ def document_requests_view(request):
     emp_profile = getattr(user, 'employee_profile', None)
 
     if request.method == 'POST':
+        if not emp_profile:
+            messages.error(request, "An employee profile is required to submit document requests.")
+            return redirect('support:documents_list')
+
         doc_type = request.POST.get('document_type')
         purpose = request.POST.get('purpose')
 
