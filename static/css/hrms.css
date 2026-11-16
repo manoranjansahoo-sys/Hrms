@@ -732,26 +732,511 @@ html, body {
 }
 
 /* ==========================================================================
-   MOBILE RESPONSIVENESS
+   ENTERPRISE MULTI-DEVICE RESPONSIVE SUITE
+   Fully optimized for:
+     1. Extra Small / Smartphones (< 576px)
+     2. Small Tablets & Foldables (576px - 767.98px)
+     3. Medium Tablets & Portrait iPads (768px - 991.98px)
+     4. Standard Laptops & Desktops (992px - 1439.98px)
+     5. Wide Workstations & Monitors (1440px - 1919.98px)
+     6. Ultra-Wide Displays, Wall Displays & Smart TVs (>= 1920px & 4K)
    ========================================================================== */
+
+/* Universal Touch, Fluid Media & Prevent Viewport Overflow */
+html {
+  -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
+}
+
+body {
+  overflow-x: hidden;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img, svg, video, canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Fluid Page Container across viewports */
+.page-container {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  transition: padding 0.2s ease;
+}
+
+/* Universal Smooth Table Touch Scrolling */
+.table-responsive,
+.table-scroll-wrapper,
+.table-responsive-clean {
+  width: 100%;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--hrms-border) transparent;
+  position: relative;
+}
+
+.table-responsive::-webkit-scrollbar,
+.table-scroll-wrapper::-webkit-scrollbar,
+.table-responsive-clean::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track,
+.table-scroll-wrapper::-webkit-scrollbar-track,
+.table-responsive-clean::-webkit-scrollbar-track {
+  background: var(--hrms-card-subsurface);
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb,
+.table-scroll-wrapper::-webkit-scrollbar-thumb,
+.table-responsive-clean::-webkit-scrollbar-thumb {
+  background: var(--hrms-border);
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover,
+.table-scroll-wrapper::-webkit-scrollbar-thumb:hover,
+.table-responsive-clean::-webkit-scrollbar-thumb:hover {
+  background: var(--hrms-accent);
+}
+
+/* Standardized Topbar Buttons */
+.topbar-btn {
+  height: 36px;
+  min-width: 36px;
+  padding: 0 0.55rem;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --------------------------------------------------------------------------
+   1. EXTRA SMALL SCREENS & MOBILE PHONES (< 576px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 575.98px) {
+  :root {
+    --hrms-header-height: 56px;
+  }
+
+  /* Topbar Mobile Ergonomics */
+  .topbar {
+    height: 56px !important;
+    padding: 0 0.65rem !important;
+  }
+
+  .topbar-btn {
+    height: 33px !important;
+    min-width: 33px !important;
+    padding: 0 0.35rem !important;
+    font-size: 0.82rem !important;
+  }
+
+  #themeToggleBtn {
+    width: 33px !important;
+    height: 33px !important;
+  }
+
+  /* Page Container: Maximize Screen Real Estate */
+  .page-container {
+    padding: 0.75rem 0.65rem !important;
+  }
+
+  /* Card Ergonomics */
+  .hrms-card,
+  .card,
+  .recruitment-table-card,
+  .workforce-table-card,
+  .onboarding-table-card,
+  .org-content-card {
+    border-radius: 12px !important;
+    margin-bottom: 0.85rem !important;
+  }
+
+  .hrms-card-header,
+  .org-card-header {
+    padding: 0.75rem 0.85rem !important;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .hrms-card-body {
+    padding: 0.85rem !important;
+  }
+
+  /* Stat & KPI Cards */
+  .stat-card,
+  .stat-card-mini,
+  .org-kpi-card {
+    padding: 0.75rem !important;
+    border-radius: 10px !important;
+  }
+
+  .stat-icon {
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 1.15rem !important;
+    margin-right: 0.65rem !important;
+    border-radius: 8px !important;
+  }
+
+  .stat-value {
+    font-size: 1.25rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .stat-label {
+    font-size: 0.68rem !important;
+    margin-bottom: 0.15rem !important;
+  }
+
+  /* Hero Banners */
+  .org-hero-banner,
+  .dashboard-hero {
+    padding: 1.15rem 0.85rem !important;
+    border-radius: 12px !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .org-avatar-badge,
+  .org-avatar-initials {
+    width: 50px !important;
+    height: 50px !important;
+    font-size: 1.2rem !important;
+  }
+
+  .org-hero-banner h2 {
+    font-size: 1.30rem !important;
+  }
+
+  .org-quick-chip {
+    padding: 0.32rem 0.65rem !important;
+    font-size: 0.74rem !important;
+  }
+
+  .org-live-widget {
+    padding: 0.9rem !important;
+    margin-top: 0.5rem;
+  }
+
+  /* Forms & Filters */
+  .form-control,
+  .form-select {
+    font-size: 0.84rem !important;
+    padding: 0.48rem 0.65rem !important;
+    min-height: 38px;
+  }
+
+  /* Full-width filter inputs on mobile */
+  .filter-bar,
+  .search-filter-wrap {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  /* Modals: fit inside small mobile viewports */
+  .modal-dialog {
+    margin: 0.5rem auto !important;
+    max-width: calc(100% - 1rem) !important;
+  }
+
+  .modal-content {
+    border-radius: 12px !important;
+  }
+
+  .modal-header,
+  .modal-footer {
+    padding: 0.75rem 1rem !important;
+  }
+
+  .modal-body {
+    padding: 0.85rem 1rem !important;
+    max-height: 78vh !important;
+    overflow-y: auto !important;
+  }
+
+  /* Tables */
+  .hrms-table th,
+  .candidate-table thead th,
+  .workforce-table thead th,
+  .table thead th {
+    padding: 0.55rem 0.45rem !important;
+    font-size: 0.70rem !important;
+  }
+
+  .hrms-table td,
+  .candidate-table tbody td,
+  .workforce-table tbody td,
+  .table tbody td {
+    padding: 0.55rem 0.45rem !important;
+    font-size: 0.78rem !important;
+  }
+
+  /* Badges & Pills */
+  .badge {
+    font-size: 0.70rem !important;
+  }
+
+  .app-id-pill,
+  .emp-id-pill {
+    font-size: 0.72rem !important;
+  }
+
+  /* Page Headers */
+  .page-header-actions {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .page-header-actions .btn {
+    flex: 1 1 auto;
+    font-size: 0.78rem;
+    padding: 0.4rem 0.75rem;
+  }
+
+  /* Toasts */
+  .toast-container {
+    padding: 0.65rem !important;
+    left: 0.5rem !important;
+    right: 0.5rem !important;
+    max-width: calc(100% - 1rem) !important;
+  }
+
+  /* Footer */
+  footer {
+    padding: 1rem 0.75rem !important;
+    font-size: 0.75rem !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. SMALL TABLETS & FOLDABLES (576px <= width < 768px)
+   -------------------------------------------------------------------------- */
+@media (min-width: 576px) and (max-width: 767.98px) {
+  :root {
+    --hrms-header-height: 60px;
+  }
+
+  .topbar {
+    height: 60px !important;
+    padding: 0 1rem !important;
+  }
+
+  .page-container {
+    padding: 1rem 0.9rem !important;
+  }
+
+  .stat-card,
+  .stat-card-mini {
+    padding: 0.9rem !important;
+  }
+
+  .stat-value {
+    font-size: 1.4rem !important;
+  }
+
+  .hrms-card-body {
+    padding: 1.15rem !important;
+  }
+
+  .modal-dialog {
+    margin: 1.25rem auto !important;
+    max-width: 540px !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   3. MEDIUM TABLETS & PORTRAIT IPADS (768px <= width < 992px)
+   -------------------------------------------------------------------------- */
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .topbar {
+    padding: 0 1.35rem !important;
+  }
+
+  .page-container {
+    padding: 1.25rem 1.25rem !important;
+  }
+
+  .hrms-card-body {
+    padding: 1.25rem !important;
+  }
+
+  .modal-dialog {
+    max-width: 680px !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   4. ALL MOBILE & TABLET SCREENS (< 992px) - SIDEBAR OVERLAY
+   -------------------------------------------------------------------------- */
 @media (max-width: 991.98px) {
   .sidebar {
+    width: 280px;
+    max-width: 84vw;
     transform: translateX(-100%);
+    box-shadow: 6px 0 30px rgba(0, 0, 0, 0.45);
+    will-change: transform;
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1055;
   }
+
   .sidebar.show {
     transform: translateX(0);
   }
+
   .main-content {
-    margin-left: 0;
+    margin-left: 0 !important;
+    width: 100% !important;
   }
+
   .sidebar-backdrop {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(15, 12, 41, 0.7);
-    backdrop-filter: blur(4px);
-    z-index: 1035;
+    background: rgba(10, 8, 34, 0.65);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 1050;
+    animation: fadeInBackdrop 0.22s ease forwards;
+  }
+
+  @keyframes fadeInBackdrop {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}
+
+/* --------------------------------------------------------------------------
+   5. STANDARD DESKTOPS & LAPTOPS (992px <= width < 1440px)
+   -------------------------------------------------------------------------- */
+@media (min-width: 992px) {
+  .sidebar {
+    transform: translateX(0) !important;
+  }
+
+  .main-content {
+    margin-left: var(--hrms-sidebar-width);
+  }
+
+  .sidebar-backdrop {
+    display: none !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   6. WIDE SCREENS & WORKSTATIONS (1440px <= width < 1920px)
+   -------------------------------------------------------------------------- */
+@media (min-width: 1440px) {
+  .page-container {
+    padding: 1.75rem 2.25rem;
+    max-width: 1800px;
+    margin: 0 auto;
+  }
+
+  .stat-value {
+    font-size: 1.85rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   7. ULTRA-LARGE MONITORS, CONFERENCE ROOMS & SMART TVS (>= 1920px & 4K)
+   -------------------------------------------------------------------------- */
+@media (min-width: 1920px) {
+  :root {
+    --hrms-sidebar-width: 290px;
+    --hrms-header-height: 76px;
+  }
+
+  .topbar {
+    height: 76px !important;
+    padding: 0 2.5rem !important;
+  }
+
+  .page-container {
+    padding: 2.25rem 3.5rem;
+    max-width: 2400px;
+    margin: 0 auto;
+  }
+
+  /* High-DPI TV Readability */
+  body {
+    font-size: 1.05rem;
+  }
+
+  .stat-card,
+  .stat-card-mini,
+  .org-kpi-card {
+    padding: 1.5rem !important;
+    border-radius: 16px !important;
+  }
+
+  .stat-icon {
+    width: 58px !important;
+    height: 58px !important;
+    font-size: 1.75rem !important;
+    border-radius: 14px !important;
+  }
+
+  .stat-value {
+    font-size: 2.25rem !important;
+  }
+
+  .stat-label {
+    font-size: 0.85rem !important;
+  }
+
+  .hrms-card-header,
+  .org-card-header {
+    padding: 1.35rem 1.85rem !important;
+  }
+
+  .hrms-card-body {
+    padding: 1.85rem !important;
+  }
+
+  .hrms-table th,
+  .candidate-table thead th,
+  .workforce-table thead th,
+  .table thead th {
+    padding: 1rem 1.25rem !important;
+    font-size: 0.84rem !important;
+  }
+
+  .hrms-table td,
+  .candidate-table tbody td,
+  .workforce-table tbody td,
+  .table tbody td {
+    padding: 1rem 1.25rem !important;
+    font-size: 0.95rem !important;
+  }
+
+  /* TV Digital Clock & Kiosk display */
+  .live-clock-display {
+    font-size: 1.05rem !important;
+  }
+
+  .org-hero-banner {
+    padding: 3rem 3.5rem !important;
+  }
+
+  .org-avatar-badge,
+  .org-avatar-initials {
+    width: 84px !important;
+    height: 84px !important;
+    font-size: 1.85rem !important;
+  }
+
+  .org-hero-banner h2 {
+    font-size: 2.35rem !important;
   }
 }

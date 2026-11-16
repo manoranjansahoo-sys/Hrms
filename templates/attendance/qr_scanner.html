@@ -140,6 +140,19 @@
         color: #dc2626;
         border: 1px solid rgba(239, 68, 68, 0.25);
     }
+
+    /* Mobile & Tablet Camera Adaptations */
+    @media (max-width: 480px) {
+        .viewfinder-wrapper {
+            min-height: 270px;
+        }
+        #qrReader, #qrReader video {
+            min-height: 270px !important;
+        }
+        .scanner-card {
+            border-radius: 1rem;
+        }
+    }
 </style>
 {% endblock %}
 

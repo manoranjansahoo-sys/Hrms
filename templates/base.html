@@ -36,13 +36,16 @@
 <div class="app-wrapper">
     <!-- SIDEBAR NAVIGATION -->
     <aside class="sidebar">
-        <div class="sidebar-header">
+        <div class="sidebar-header d-flex align-items-center justify-content-between">
             <a href="{% url 'portal:smart_dashboard' %}" class="d-flex align-items-center text-decoration-none py-1">
                 <img src="{% if company_logo_b64 %}{{ company_logo_b64 }}{% else %}{% static 'img/logo.png' %}{% endif %}" 
                      onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMjAgNDgiIHdpZHRoPSIyMjAiIGhlaWdodD0iNDgiPjxyZWN0IHdpZHRoPSIyMjAiIGhlaWdodD0iNDgiIHJ4PSI4IiBmaWxsPSIjMGYxNzJhIi8+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTQsIDEwKSI+PHJlY3Qgd2lkdGg9IjI4IiBoZWlnaHQ9IjI4IiByeD0iNiIgZmlsbD0iIzI1NjNlYiIvPjxwYXRoIGQ9Ik04IDcgaDkgYTQuNSA0LjUgMCAwIDEgMCA5IGgtOSB6IiBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuOSIvPjxwYXRoIGQ9Ik04IDEzIGgxMCBhNC41IDQuNSAwIDAgMSAwIDkgaC0xMCB6IiBmaWxsPSIjZmZmZmZmIi8+PC9nPjx0ZXh0IHg9IjU0IiB5PSIzMCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE3IiBmb250LXdlaWdodD0iODAwIiBmaWxsPSIjZmZmZmZmIiBsZXR0ZXItc3BhY2luZz0iMC41Ij5CUk9OWkVHQVRFPC90ZXh0Pjwvc3ZnPg==';" 
                      alt="Company Logo" 
                      style="height: 38px; max-width: 195px; object-fit: contain;">
             </a>
+            <button type="button" class="btn btn-sm btn-outline-light border-0 d-lg-none p-1 text-white-50" id="sidebarCloseBtn" aria-label="Close Navigation Menu">
+                <i class="bi bi-x-lg fs-5"></i>
+            </button>
         </div>
 
         <ul class="sidebar-menu">
@@ -73,7 +76,7 @@
                 <li class="menu-item">
                     <a href="{% url 'employees:employee_list' %}" class="menu-link {% if 'employee' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-people-fill"></i>
-                        <span>Workforce Directory</span>
+                        <span>All Employee</span>
                     </a>
                 </li>
                 <li class="menu-item">
@@ -85,7 +88,7 @@
                 <li class="menu-item">
                     <a href="{% url 'recruitment:onboarding_candidates_list' %}" class="menu-link {% if 'onboarding' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-person-check-fill text-success"></i>
-                        <span>Onboarding Employees</span>
+                        <span>Onboarding</span>
                         {% if pending_onboarding_count > 0 %}
                             <span class="badge bg-warning text-dark menu-badge">{{ pending_onboarding_count }}</span>
                         {% endif %}
@@ -131,7 +134,7 @@
                                 <a href="{% url 'attendance:corrections_list' %}" class="menu-link py-1.5 px-3 d-flex align-items-center justify-content-between {% if 'corrections' in request.resolver_match.url_name %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
                                     <div class="d-flex align-items-center">
                                         <i class="bi bi-clock-history me-2" style="font-size: 0.85rem;"></i>
-                                        <span>Attendance Corrections</span>
+                                        <span>Att. Correction</span>
                                     </div>
                                     {% if pending_corrections_count > 0 %}
                                         <span class="badge bg-warning text-dark menu-badge">{{ pending_corrections_count }}</span>
@@ -152,7 +155,7 @@
                         <i class="bi bi-database-fill-gear text-warning"></i>
                         <span>Master Data</span>
                     </a>
-                </li>
+                </li> 
                 <!-- <li class="menu-item">
                     <a href="{% url 'accounts:audit_logs' %}" class="menu-link {% if 'audit' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-shield-check"></i>
@@ -187,31 +190,32 @@
                         <span>Interview</span>
                     </a>
                 </li>
-                {% if can_view_workforce_directory %}
+                
+                
                 <li class="menu-item">
-                    <a href="{% url 'employees:employee_list' %}" class="menu-link {% if 'employee_list' in request.resolver_match.url_name %}active{% endif %}">
-                        <i class="bi bi-people-fill text-primary"></i>
-                        <span>Workforce Directory</span>
+                    <a href="{% url 'recruitment:onboarding_candidates_list' %}" class="menu-link {% if 'onboarding' in request.resolver_match.url_name %}active{% endif %}">
+                        <i class="bi bi-person-check-fill text-success"></i>
+                        <span>Onboarding</span>
+                        {% if pending_onboarding_count > 0 %}
+                            <span class="badge bg-warning text-dark menu-badge">{{ pending_onboarding_count }}</span>
+                        {% endif %}
                     </a>
                 </li>
-                {% endif %}
                 <li class="menu-item">
                     <a href="{% url 'employees:employee_create' %}" class="menu-link {% if 'employee_create' in request.resolver_match.url_name %}active{% endif %}">
                         <i class="bi bi-person-plus-fill"></i>
                         <span>Add Employee</span>
                     </a>
                 </li>
+                <li class="menu-category">HR Administration</li>
+                {% if can_view_workforce_directory %}
                 <li class="menu-item">
-                    <a href="{% url 'recruitment:onboarding_candidates_list' %}" class="menu-link {% if 'onboarding' in request.resolver_match.url_name %}active{% endif %}">
-                        <i class="bi bi-person-check-fill text-success"></i>
-                        <span>Onboarding Employees</span>
-                        {% if pending_onboarding_count > 0 %}
-                            <span class="badge bg-warning text-dark menu-badge">{{ pending_onboarding_count }}</span>
-                        {% endif %}
+                    <a href="{% url 'employees:employee_list' %}" class="menu-link {% if 'employee_list' in request.resolver_match.url_name %}active{% endif %}">
+                        <i class="bi bi-people-fill text-primary"></i>
+                        <span>All Employee</span>
                     </a>
                 </li>
-
-                <li class="menu-category">HR Administration</li>
+                {% endif %}
                 <li class="menu-item">
                     <a href="#attendanceSubmenuHR" class="menu-link d-flex align-items-center justify-content-between {% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}active{% endif %}" data-bs-toggle="collapse" role="button" aria-expanded="{% if 'admin_register' in request.resolver_match.url_name or 'corrections' in request.resolver_match.url_name or 'attendance_detail' in request.resolver_match.url_name %}true{% else %}false{% endif %}" aria-controls="attendanceSubmenuHR">
                         <div class="d-flex align-items-center gap-2">
@@ -237,7 +241,7 @@
                                 <a href="{% url 'attendance:corrections_list' %}" class="menu-link py-1.5 px-3 d-flex align-items-center justify-content-between {% if 'corrections' in request.resolver_match.url_name %}active text-white fw-bold{% else %}text-white-50{% endif %}" style="font-size: 0.82rem;">
                                     <div class="d-flex align-items-center">
                                         <i class="bi bi-clock-history me-2" style="font-size: 0.85rem;"></i>
-                                        <span>Attendance Corrections</span>
+                                        <span>Att. Correction</span>
                                     </div>
                                     {% if pending_corrections_count > 0 %}
                                         <span class="badge bg-warning text-dark menu-badge">{{ pending_corrections_count }}</span>
@@ -250,7 +254,7 @@
                  <li class="menu-item">
                     <a href="{% url 'leave_management:admin_queue' %}" class="menu-link">
                         <i class="bi bi-calendar2-week"></i>
-                        <span>Leave Management</span>
+                        <span>Leave Mgmt</span>
                         {% if pending_leaves_count > 0 %}
                             <span class="badge bg-danger menu-badge">{{ pending_leaves_count }}</span>
                         {% endif %}
@@ -259,7 +263,7 @@
                 <li class="menu-item">
                     <a href="{% url 'payroll:dashboard' %}" class="menu-link">
                         <i class="bi bi-receipt"></i>
-                        <span>Payroll Operations</span>
+                        <span>Salary Operations</span>
                     </a>
                 </li>
                 <!-- <li class="menu-item">
@@ -273,7 +277,7 @@
                         <i class="bi bi-people"></i>
                         <span> All Employee</span>
                     </a>
-                </li>
+                </li> -->
                 
                 <li class="menu-item">
                     <a href="{% url 'employees:profile_corrections_list' %}" class="menu-link">
@@ -299,7 +303,7 @@
                         <i class="bi bi-file-earmark-check"></i>
                         <span>Document Requests</span>
                     </a>
-                </li> -->
+                </li>
                 <li class="menu-item">
                     <a href="{% url 'support:tickets_list' %}" class="menu-link">
                         <i class="bi bi-headset"></i>
@@ -418,25 +422,25 @@
 
     <!-- MAIN CONTENT AREA -->
     <div class="main-content">
-        <!-- TOPBAR -->
+        <!-- TOPBAR (FLUID MULTI-DEVICE RESPONSIVE) -->
         <header class="topbar">
-            <div class="d-flex align-items-center gap-3">
-                <button class="btn btn-sm btn-outline-secondary d-lg-none" id="sidebarToggle" aria-label="Toggle Sidebar">
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-sm btn-outline-secondary d-lg-none topbar-btn" id="sidebarToggle" aria-label="Toggle Sidebar">
                     <i class="bi bi-list fs-5"></i>
                 </button>
-                <div class="live-clock-display d-none d-sm-block fw-semibold text-secondary">
+                <div class="live-clock-display d-none d-lg-block fw-semibold text-secondary">
                     <!-- Updated by hrms.js -->
                 </div>
             </div>
 
-            <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center gap-1.5 gap-sm-2 gap-md-3">
                 <!-- DEMO 4-ROLE SWITCHER (Instant Presentation Feature) -->
                 <div class="dropdown">
-                    <button class="btn btn-sm btn-outline-success dropdown-toggle d-flex align-items-center gap-1 shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Switch Demo Authority">
+                    <button class="btn btn-sm btn-outline-success dropdown-toggle d-flex align-items-center gap-1 shadow-sm topbar-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Switch Demo Authority">
                         <i class="bi bi-person-lines-fill"></i>
-                        <span class="d-none d-md-inline fw-semibold">Switch Authority</span>
+                        <span class="d-none d-lg-inline fw-semibold">Switch Authority</span>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                    <ul class="dropdown-menu dropdown-menu-end shadow" style="max-width: 92vw;">
                         <li class="dropdown-header text-uppercase" style="font-size: 0.72rem;">Four Authority Test Switcher</li>
                         <li>
                             <a class="dropdown-item d-flex align-items-center gap-2 {% if request.user.username == 'admin' %}active{% endif %}" href="{% url 'accounts:quick_switch_role' username='admin' %}">
@@ -477,25 +481,25 @@
                     </ul>
                 </div>
 
-                <!-- DYNAMIC QR SCANNER ATTENDANCE ACTION IN TOPBAR -->
+                <!-- DYNAMIC QR SCANNER ATTENDANCE ACTION IN TOPBAR (TOUCH-READY FOR ALL DEVICES) -->
                 {% if request.user.employee_profile %}
                     {% with today_att=user_today_attendance %}
-                    <div class="d-none d-md-flex align-items-center gap-2">
-                        <a href="{% url 'attendance:qr_scanner' %}" class="btn btn-sm btn-primary d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 36px; height: 36px; border-radius: 8px;" title="Scan QR to Punch" aria-label="Scan QR to Punch">
+                    <div class="d-flex align-items-center gap-1.5 gap-md-2">
+                        <a href="{% url 'attendance:qr_scanner' %}" class="btn btn-sm btn-primary d-inline-flex align-items-center justify-content-center shadow-sm topbar-btn" title="Scan QR to Punch" aria-label="Scan QR to Punch">
                             <i class="bi bi-qr-code-scan fs-6"></i>
                         </a>
                         {% if today_att and today_att.punch_in %}
                             {% if today_att.punch_out %}
-                                <span class="badge bg-secondary-subtle text-secondary border px-2 py-1 small" title="Attendance completed for today">
+                                <span class="badge bg-secondary-subtle text-secondary border px-2 py-1 small d-none d-md-inline-flex align-items-center gap-1" title="Attendance completed for today">
                                     <i class="bi bi-check2-all text-success"></i> Done ({{ today_att.working_hours }}h)
                                 </span>
                             {% else %}
-                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 small" title="Currently Punched In">
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 small d-none d-md-inline-flex align-items-center gap-1" title="Currently Punched In">
                                     <i class="bi bi-clock-history"></i> In: {{ today_att.punch_in|time:"h:i A" }}
                                 </span>
                             {% endif %}
                         {% else %}
-                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 small" title="Not Checked In Today">
+                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 small d-none d-md-inline-flex align-items-center gap-1" title="Not Checked In Today">
                                 <i class="bi bi-exclamation-circle"></i> Not Punched In
                             </span>
                         {% endif %}
@@ -504,13 +508,13 @@
                 {% endif %}
 
                 <!-- THEME TOGGLE (LIGHT / DARK) -->
-                <button class="btn btn-sm btn-light border" id="themeToggleBtn" title="Toggle Light/Dark Theme" aria-label="Toggle Theme">
+                <button class="btn btn-sm btn-light border topbar-btn" id="themeToggleBtn" title="Toggle Light/Dark Theme" aria-label="Toggle Theme">
                     <i class="bi bi-moon-stars text-secondary"></i>
                 </button>
 
                 <!-- NOTIFICATIONS DROPDOWN -->
                 <div class="dropdown">
-                    <button class="btn btn-sm btn-light border position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+                    <button class="btn btn-sm btn-light border position-relative topbar-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
                         <i class="bi bi-bell-fill text-secondary"></i>
                         {% if unread_notifications_count > 0 %}
                             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
@@ -518,7 +522,7 @@
                             </span>
                         {% endif %}
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow" style="width: 320px; max-height: 400px; overflow-y: auto;">
+                    <ul class="dropdown-menu dropdown-menu-end shadow" style="width: 320px; max-width: 90vw; max-height: 400px; overflow-y: auto;">
                         <li class="dropdown-header d-flex justify-content-between align-items-center">
                             <span class="fw-bold">Notifications</span>
                             <a href="{% url 'notifications:mark_all_read' %}" class="small text-decoration-none">Mark all read</a>
@@ -551,23 +555,23 @@
 
                 <!-- USER PROFILE MENU -->
                 <div class="dropdown">
-                    <button class="btn p-0 border-0 d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img src="{{ request.user.get_avatar_url }}" alt="{{ request.user.username }}" class="rounded-circle" width="38" height="38" style="object-fit: cover; border: 2px solid #2E7D32;">
-                        <div class="text-start d-none d-md-block lh-sm">
-                            <div class="fw-bold text-truncate" style="max-width: 130px; font-size: 0.9rem;">
+                    <button class="btn p-0 border-0 d-flex align-items-center gap-2 topbar-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="{{ request.user.get_avatar_url }}" alt="{{ request.user.username }}" class="rounded-circle" width="34" height="34" style="object-fit: cover; border: 2px solid #2E7D32;">
+                        <div class="text-start d-none d-lg-block lh-sm">
+                            <div class="fw-bold text-truncate" style="max-width: 130px; font-size: 0.88rem;">
                                 {{ request.user.get_full_name|default:request.user.username }}
                             </div>
                             <span class="badge 
                                 {% if request.user.is_head_role %}role-head
                                 {% elif request.user.is_hr_role %}role-hr
                                 {% elif request.user.is_site_manager_role %}role-manager
-                                {% else %}role-employee{% endif %} badge-role">
+                                {% else %}role-employee{% endif %} badge-role" style="font-size: 0.70rem;">
                                 {{ request.user.get_role_display }}
                             </span>
                         </div>
-                        <i class="bi bi-chevron-down text-muted small d-none d-md-inline"></i>
+                        <i class="bi bi-chevron-down text-muted small d-none d-lg-inline"></i>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                    <ul class="dropdown-menu dropdown-menu-end shadow" style="max-width: 92vw;">
                         <li class="px-3 py-2 border-bottom">
                             <div class="fw-bold">{{ request.user.get_full_name }}</div>
                             <small class="text-muted">{{ request.user.email }}</small>

@@ -58,9 +58,17 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // 3. Mobile Sidebar Toggle
+    // 3. Mobile Sidebar Toggle & Close Controls
     const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
     const sidebar = document.querySelector('.sidebar');
+
+    function closeSidebar() {
+        if (!sidebar) return;
+        sidebar.classList.remove('show');
+        const backdrop = document.querySelector('.sidebar-backdrop');
+        if (backdrop) backdrop.remove();
+    }
 
     if (sidebarToggle && sidebar) {
         sidebarToggle.addEventListener('click', function () {
@@ -71,16 +79,24 @@ document.addEventListener('DOMContentLoaded', function () {
                     backdrop = document.createElement('div');
                     backdrop.className = 'sidebar-backdrop';
                     document.body.appendChild(backdrop);
-                    backdrop.addEventListener('click', function () {
-                        sidebar.classList.remove('show');
-                        backdrop.remove();
-                    });
+                    backdrop.addEventListener('click', closeSidebar);
                 }
             } else if (backdrop) {
                 backdrop.remove();
             }
         });
     }
+
+    if (sidebarCloseBtn) {
+        sidebarCloseBtn.addEventListener('click', closeSidebar);
+    }
+
+    // Dismiss sidebar with ESC key on mobile/tablet
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && sidebar && sidebar.classList.contains('show')) {
+            closeSidebar();
+        }
+    });
 
     // 4. Auto dismiss alerts after 6 seconds
     const alerts = document.querySelectorAll('.alert-dismissible');

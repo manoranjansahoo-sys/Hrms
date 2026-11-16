@@ -46,13 +46,13 @@ def company_home_portal(request):
         today_attendance = Attendance.objects.filter(employee=emp_profile, date=today).first()
 
     # 2. Upcoming Holidays
-    upcoming_holidays = Holiday.objects.filter(date__gte=today)[:6]
+    upcoming_holidays = Holiday.objects.filter(date__gte=today)[:5]
 
     # 3. Official Events
     upcoming_events = CompanyEvent.objects.filter(is_active=True, start_datetime__gte=timezone.now())[:4]
 
     # 4. Announcements
-    announcements = Announcement.objects.select_related('created_by', 'target_site', 'target_department')[:10]
+    announcements = Announcement.objects.all()[:6]
 
     # 5. Birthdays & Anniversaries (with Privacy check!)
     # Today's birthdays

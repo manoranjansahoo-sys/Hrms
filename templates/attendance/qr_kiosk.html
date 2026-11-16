@@ -267,6 +267,45 @@
             background: rgba(255, 255, 255, 0.15);
             color: #ffffff;
         }
+
+        /* Responsive Multi-Device Adaptations (Mobile, Tablet, Smart TV) */
+        @media (max-width: 767.98px) {
+            .kiosk-nav {
+                padding: 0.65rem 1rem;
+            }
+            .clock-display {
+                font-size: 2.3rem;
+            }
+            .kiosk-card {
+                padding: 1.25rem !important;
+                border-radius: 1rem;
+            }
+            .qr-outer-wrapper {
+                padding: 0.85rem;
+            }
+            .qr-image {
+                width: 210px;
+                height: 210px;
+            }
+        }
+
+        @media (min-width: 1920px) {
+            .clock-display {
+                font-size: 4.5rem;
+            }
+            .qr-image {
+                width: 360px;
+                height: 360px;
+            }
+            .kiosk-card {
+                padding: 3.5rem !important;
+                max-width: 1200px;
+            }
+            .mode-pill {
+                padding: 0.75rem 1.35rem;
+                font-size: 1.05rem;
+            }
+        }
     </style>
 </head>
 <body>

@@ -46,13 +46,21 @@
         font-size: 1.35rem;
     }
 
-    /* NAVIGATION TABS */
+    /* NAVIGATION TABS (TOUCH-SCROLLABLE ON ALL MOBILE & TABLET DEVICES) */
     .master-nav-pills {
         background: #F1F5F9;
         padding: 0.35rem;
         border-radius: 14px;
         display: inline-flex;
         gap: 0.3rem;
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+        scrollbar-width: none;
+    }
+    .master-nav-pills::-webkit-scrollbar {
+        display: none;
     }
     .master-nav-pills .nav-link {
         font-weight: 600;
