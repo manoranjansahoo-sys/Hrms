@@ -28,7 +28,8 @@
             <div class="d-flex align-items-center gap-3.5">
                 <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm" style="width: 60px; height: 60px; font-size: 1.35rem; background: linear-gradient(135deg, #10B981 0%, #047857 100%); flex-shrink: 0;">
                     {% if employee.avatar %}
-                        <img src="{{ employee.avatar.url }}" alt="{{ employee.full_name }}" class="w-100 h-100 rounded-circle object-fit-cover">
+                        <img src="{{ employee.avatar.url }}" alt="{{ employee.full_name }}" class="w-100 h-100 rounded-circle object-fit-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <span style="display: none;">{{ employee.full_name|slice:":1"|upper }}</span>
                     {% else %}
                         {{ employee.full_name|slice:":1"|upper }}
                     {% endif %}

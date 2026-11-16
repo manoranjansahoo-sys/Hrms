@@ -218,6 +218,13 @@ class Candidate(models.Model):
                     return self.photo.url
             except Exception:
                 pass
+        photo_doc = self.documents.filter(doc_type='PHOTO').first()
+        if photo_doc and photo_doc.file and hasattr(photo_doc.file, 'url'):
+            try:
+                if photo_doc.file.storage.exists(photo_doc.file.name):
+                    return photo_doc.file.url
+            except Exception:
+                pass
         if self.google_picture_url:
             return self.google_picture_url
         char = (self.full_name[:1] if self.full_name else 'U').upper()

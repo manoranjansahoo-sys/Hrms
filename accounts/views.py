@@ -59,11 +59,24 @@ def quick_switch_role(request, username):
 def profile_view(request):
     user = request.user
     if request.method == 'POST':
+        # Quick action to remove existing avatar photograph
+        if request.POST.get('remove_avatar') == '1':
+            if user.avatar:
+                try:
+                    user.avatar.delete(save=False)
+                except Exception:
+                    pass
+                user.avatar = None
+                user.save()
+                log_audit_trail('UPDATE', 'User Profile', f"User {user.username} removed their avatar photograph.", user=user)
+                messages.success(request, "Your profile picture has been removed and reset to default initials.")
+                return redirect('accounts:profile')
+
         form = UserProfileUpdateForm(request.POST, request.FILES, instance=user)
         if form.is_valid():
             form.save()
             log_audit_trail('UPDATE', 'User Profile', f"User {user.username} updated profile information.", user=user)
-            messages.success(request, "Your profile has been updated successfully.")
+            messages.success(request, "Your profile details and picture have been updated successfully! Changes reflect across all platform sections.")
             return redirect('accounts:profile')
     else:
         form = UserProfileUpdateForm(instance=user)

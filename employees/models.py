@@ -131,6 +131,29 @@ class EmployeeProfile(models.Model):
         return self.user.phone
 
     @property
+    def avatar(self):
+        """Access user avatar directly on EmployeeProfile."""
+        return self.user.avatar if self.user else None
+
+    @property
+    def photo(self):
+        """Alias property to access user photo directly on EmployeeProfile."""
+        return self.user.avatar if self.user else None
+
+    def get_avatar_url(self):
+        """Return avatar URL for employee with initials fallback."""
+        if self.user:
+            return self.user.get_avatar_url()
+        char = (self.full_name[:1] if self.full_name else 'E').upper()
+        return (
+            f"data:image/svg+xml;utf8,"
+            f"<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128' viewBox='0 0 128 128'>"
+            f"<circle cx='64' cy='64' r='64' fill='%231B5E20'/>"
+            f"<text x='64' y='82' font-size='56' font-family='sans-serif' font-weight='bold' fill='white' text-anchor='middle'>{char}</text>"
+            f"</svg>"
+        )
+
+    @property
     def masked_account_number(self):
         if not self.bank_account_number or len(self.bank_account_number) < 4:
             return "••••••••"

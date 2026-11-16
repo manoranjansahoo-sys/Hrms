@@ -177,7 +177,7 @@
         --bs-table-bg: #FFFFFF !important;
         margin-bottom: 0 !important;
         width: 100% !important;
-        min-width: 900px !important;
+        min-width: 650px;
         table-layout: fixed !important;
         border-collapse: collapse;
     }
@@ -752,12 +752,12 @@
             <table class="table onboarding-table align-middle">
                 <thead>
                     <tr>
-                        <th class="ps-3" style="width: 13%; min-width: 95px;">Application ID</th>
-                        <th style="width: 22%; min-width: 140px;">Candidate Name</th>
-                        <th style="width: 13%; min-width: 95px;">Document Status</th>
-                        <th style="width: 10%; min-width: 75px;">Documents</th>
-                        <th style="width: 14%; min-width: 95px;">Submission Date</th>
-                        <th class="text-end pe-3" style="width: 28%; min-width: 215px;">Actions</th>
+                        <th class="ps-3" style="width: 14%; min-width: 95px;">Application ID</th>
+                        <th style="width: 24%; min-width: 135px;">Candidate Name</th>
+                        <th style="width: 14%; min-width: 90px;">Document Status</th>
+                        <th style="width: 11%; min-width: 75px;">Documents</th>
+                        <th style="width: 13%; min-width: 85px;">Submission Date</th>
+                        <th class="text-end pe-3" style="width: 24%; min-width: 175px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -776,9 +776,29 @@
                             <!-- Candidate Name (Clean, generous gap between avatar and text) -->
                             <td>
                                 <div class="d-flex align-items-center" style="gap: 8px;">
-                                    <div class="candidate-avatar flex-shrink-0" style="width: 32px; height: 32px; font-size: 0.82rem; border-radius: 8px;">
-                                        {{ app.candidate.full_name|slice:":1"|upper }}
-                                    </div>
+                                    {% if app.candidate.photo %}
+                                        <img src="{{ app.candidate.photo.url }}" 
+                                             alt="{{ app.candidate.full_name }}" 
+                                             class="flex-shrink-0" 
+                                             style="width: 32px; height: 32px; object-fit: cover; border-radius: 8px; border: 1px solid #E2E8F0;"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="candidate-avatar flex-shrink-0" style="width: 32px; height: 32px; font-size: 0.82rem; border-radius: 8px; display: none;">
+                                            {{ app.candidate.full_name|slice:":1"|upper }}
+                                        </div>
+                                    {% elif app.candidate.google_picture_url %}
+                                        <img src="{{ app.candidate.google_picture_url }}" 
+                                             alt="{{ app.candidate.full_name }}" 
+                                             class="flex-shrink-0" 
+                                             style="width: 32px; height: 32px; object-fit: cover; border-radius: 8px; border: 1px solid #E2E8F0;"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="candidate-avatar flex-shrink-0" style="width: 32px; height: 32px; font-size: 0.82rem; border-radius: 8px; display: none;">
+                                            {{ app.candidate.full_name|slice:":1"|upper }}
+                                        </div>
+                                    {% else %}
+                                        <div class="candidate-avatar flex-shrink-0" style="width: 32px; height: 32px; font-size: 0.82rem; border-radius: 8px;">
+                                            {{ app.candidate.full_name|slice:":1"|upper }}
+                                        </div>
+                                    {% endif %}
                                     <div class="overflow-hidden" style="min-width: 0;">
                                         <div class="fw-bold text-dark text-truncate" style="font-size: 0.83rem; line-height: 1.25;" title="{{ app.candidate.full_name }}">{{ app.candidate.full_name }}</div>
                                         <div class="small text-muted d-flex align-items-center gap-1 text-truncate" style="font-size: 0.72rem; line-height: 1.25; margin-top: 2px;" title="{{ app.job.title|default:'General Opening' }}">
@@ -891,9 +911,29 @@
                                 <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
                                     <div class="modal-header bg-white px-4 py-3 border-bottom d-flex align-items-center justify-content-between">
                                         <div class="d-flex align-items-center gap-3">
-                                            <div class="candidate-avatar fs-5" style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%); color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 700; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);">
-                                                {{ app.candidate.full_name|slice:":1"|upper }}
-                                            </div>
+                                            {% if app.candidate.photo %}
+                                                <img src="{{ app.candidate.photo.url }}" 
+                                                     alt="{{ app.candidate.full_name }}" 
+                                                     class="flex-shrink-0" 
+                                                     style="width: 48px; height: 48px; object-fit: cover; border-radius: 12px; border: 2px solid #E2E8F0;"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <div class="candidate-avatar fs-5" style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%); color: #ffffff; display: none; align-items: center; justify-content: center; font-weight: 700; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);">
+                                                    {{ app.candidate.full_name|slice:":1"|upper }}
+                                                </div>
+                                            {% elif app.candidate.google_picture_url %}
+                                                <img src="{{ app.candidate.google_picture_url }}" 
+                                                     alt="{{ app.candidate.full_name }}" 
+                                                     class="flex-shrink-0" 
+                                                     style="width: 48px; height: 48px; object-fit: cover; border-radius: 12px; border: 2px solid #E2E8F0;"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <div class="candidate-avatar fs-5" style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%); color: #ffffff; display: none; align-items: center; justify-content: center; font-weight: 700; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);">
+                                                    {{ app.candidate.full_name|slice:":1"|upper }}
+                                                </div>
+                                            {% else %}
+                                                <div class="candidate-avatar fs-5" style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%); color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 700; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);">
+                                                    {{ app.candidate.full_name|slice:":1"|upper }}
+                                                </div>
+                                            {% endif %}
                                             <div>
                                                 <div class="d-flex align-items-center gap-2 flex-wrap">
                                                     <h5 class="modal-title fw-bold text-dark mb-0 fs-5" id="reviewDocsModalLabel-{{ app.id }}">
@@ -1168,9 +1208,29 @@
                                     <!-- Hero Header -->
                                     <div class="modal-header bg-white px-4 py-3.5 border-bottom d-flex align-items-center justify-content-between">
                                         <div class="d-flex align-items-center gap-3">
-                                            <div class="candidate-avatar" style="width: 52px; height: 52px; font-size: 1.25rem;">
-                                                {{ app.candidate.full_name|slice:":1"|upper }}
-                                            </div>
+                                            {% if app.candidate.photo %}
+                                                <img src="{{ app.candidate.photo.url }}" 
+                                                     alt="{{ app.candidate.full_name }}" 
+                                                     class="flex-shrink-0" 
+                                                     style="width: 52px; height: 52px; object-fit: cover; border-radius: 12px; border: 2px solid #E2E8F0;"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <div class="candidate-avatar" style="width: 52px; height: 52px; font-size: 1.25rem; display: none;">
+                                                    {{ app.candidate.full_name|slice:":1"|upper }}
+                                                </div>
+                                            {% elif app.candidate.google_picture_url %}
+                                                <img src="{{ app.candidate.google_picture_url }}" 
+                                                     alt="{{ app.candidate.full_name }}" 
+                                                     class="flex-shrink-0" 
+                                                     style="width: 52px; height: 52px; object-fit: cover; border-radius: 12px; border: 2px solid #E2E8F0;"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <div class="candidate-avatar" style="width: 52px; height: 52px; font-size: 1.25rem; display: none;">
+                                                    {{ app.candidate.full_name|slice:":1"|upper }}
+                                                </div>
+                                            {% else %}
+                                                <div class="candidate-avatar" style="width: 52px; height: 52px; font-size: 1.25rem;">
+                                                    {{ app.candidate.full_name|slice:":1"|upper }}
+                                                </div>
+                                            {% endif %}
                                             <div>
                                                 <div class="d-flex align-items-center gap-2 flex-wrap">
                                                     <h4 class="fw-bold text-dark mb-0 fs-5" id="profileModalLabel-{{ app.id }}">

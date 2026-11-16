@@ -2170,6 +2170,9 @@ def candidate_onboarding(request, application_id):
                     candidate.postal_code = cd['postal_code']
                     if cd.get('photo'):
                         candidate.photo = cd['photo']
+                        existing_user = CustomUser.objects.filter(email__iexact=candidate.email).first()
+                        if existing_user:
+                            sync_candidate_photo_to_user_avatar(candidate, existing_user, force=True)
                     candidate.bank_name = cd['bank_name']
                     candidate.bank_account_number = cd['bank_account_number']
                     candidate.bank_ifsc_code = cd['bank_ifsc_code']
@@ -2421,6 +2424,69 @@ def candidate_reupload_resume(request, application_id):
     return redirect('recruitment:candidate_track_id', application_id=application_id)
 
 
+def sync_candidate_photo_to_user_avatar(candidate, user, force=False):
+    """
+    Transfers candidate's onboarding passport-size photograph (or photo document / google avatar)
+    to CustomUser avatar so it immediately becomes the official employee profile picture.
+    """
+    if not candidate or not user:
+        return False
+
+    if not force and user.avatar and user.avatar.name:
+        try:
+            if user.avatar.storage.exists(user.avatar.name):
+                return True
+        except Exception:
+            pass
+
+    from django.core.files.base import ContentFile
+
+    # 1. Direct candidate onboarding photo
+    if candidate.photo and candidate.photo.name:
+        try:
+            if candidate.photo.storage.exists(candidate.photo.name):
+                candidate.photo.open('rb')
+                content = candidate.photo.read()
+                ext = os.path.splitext(candidate.photo.name)[1] or '.jpg'
+                filename = f"user_{user.id}_avatar{ext}"
+                user.avatar.save(filename, ContentFile(content), save=True)
+                return True
+        except Exception:
+            pass
+
+    # 2. Candidate Document with doc_type == 'PHOTO'
+    photo_doc = candidate.documents.filter(doc_type='PHOTO').first()
+    if photo_doc and photo_doc.file and photo_doc.file.name:
+        try:
+            if photo_doc.file.storage.exists(photo_doc.file.name):
+                photo_doc.file.open('rb')
+                content = photo_doc.file.read()
+                ext = os.path.splitext(photo_doc.file.name)[1] or '.jpg'
+                filename = f"user_{user.id}_avatar{ext}"
+                user.avatar.save(filename, ContentFile(content), save=True)
+                return True
+        except Exception:
+            pass
+
+    # 3. Google OAuth Profile Avatar
+    if candidate.google_picture_url:
+        try:
+            import urllib.request
+            req = urllib.request.Request(
+                candidate.google_picture_url,
+                headers={'User-Agent': 'Mozilla/5.0'}
+            )
+            with urllib.request.urlopen(req, timeout=5) as response:
+                content = response.read()
+                filename = f"user_{user.id}_google_avatar.jpg"
+                user.avatar.save(filename, ContentFile(content), save=True)
+                return True
+        except Exception:
+            pass
+
+    return False
+
+
 @login_required
 @hr_required
 def convert_to_employee(request, application_id):
@@ -2464,6 +2530,9 @@ def convert_to_employee(request, application_id):
                 role=CustomUser.Role.EMPLOYEE,
                 phone=candidate.phone,
             )
+
+        # Synchronize candidate onboarding passport photo to official employee avatar
+        sync_candidate_photo_to_user_avatar(candidate, user)
 
         # Get or create designation for the job
         designation = None
@@ -2987,6 +3056,7 @@ def fetch_onboarding_candidate_ajax(request):
             'email': candidate.email,
             'phone': candidate.phone,
             'city': candidate.city,
+            'photo_url': candidate.get_photo_url(),
             'pan_number': candidate.pan_number,
             'aadhaar_number': candidate.aadhaar_number,
             'bank_name': candidate.bank_name,
@@ -3121,6 +3191,9 @@ def appoint_employee(request):
                         user.role = CustomUser.Role.EMPLOYEE
                         user.is_active = True
                         user.save()
+
+                    # Synchronize candidate onboarding passport photo to official employee avatar
+                    sync_candidate_photo_to_user_avatar(candidate, user)
 
                     # 2. Designation Setup
                     final_dept = dept or (app.job.department if app.job else None)

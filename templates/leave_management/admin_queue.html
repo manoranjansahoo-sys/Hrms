@@ -811,7 +811,10 @@
                         <td class="lq-emp-col">
                             <div class="lq-emp-wrapper">
                                 {% if req.employee.avatar %}
-                                    <img src="{{ req.employee.avatar.url }}" alt="{{ req.employee.full_name }}" class="lq-avatar-sm">
+                                    <img src="{{ req.employee.avatar.url }}" alt="{{ req.employee.full_name }}" class="lq-avatar-sm" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="lq-avatar-sm" style="display: none;">
+                                        {{ req.employee.full_name|slice:":2"|upper }}
+                                    </div>
                                 {% else %}
                                     <div class="lq-avatar-sm">
                                         {{ req.employee.full_name|slice:":2"|upper }}

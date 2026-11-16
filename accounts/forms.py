@@ -72,8 +72,22 @@ class UserProfileUpdateForm(forms.ModelForm):
                 'oninput': "this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);"
             }),
             'theme_preference': forms.Select(attrs={'class': 'form-select'}),
-            'avatar': forms.FileInput(attrs={'class': 'form-control'}),
+            'avatar': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/jpeg,image/png,image/webp,image/gif',
+                'id': 'id_avatar'
+            }),
         }
+
+    def clean_avatar(self):
+        avatar = self.cleaned_data.get('avatar')
+        if avatar and hasattr(avatar, 'size'):
+            if avatar.size > 5 * 1024 * 1024:
+                raise forms.ValidationError("Profile photograph must not exceed 5MB in size.")
+            if hasattr(avatar, 'content_type') and avatar.content_type:
+                if not avatar.content_type.startswith('image/'):
+                    raise forms.ValidationError("Uploaded file is not a valid image. Please choose a JPG, PNG, or WEBP picture.")
+        return avatar
 
     def clean_phone(self):
         phone = self.cleaned_data.get('phone', '').strip()

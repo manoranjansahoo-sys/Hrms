@@ -1,21 +1,91 @@
 {% extends 'base.html' %}
-{% block title %}Account Settings & Profile{% endblock %}
+{% block title %}Account Settings & Profile Picture{% endblock %}
 
 {% block content %}
 <div class="container-fluid p-0">
+    <!-- PAGE HEADER -->
     <div class="mb-4">
-        <h3 class="fw-bold mb-1">Account Settings</h3>
-        <p class="text-muted small mb-0">Manage your profile image, contact details, and application preferences.</p>
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+                <h3 class="fw-bold mb-1 text-dark d-flex align-items-center gap-2">
+                    <i class="bi bi-person-gear text-success"></i>
+                    Account Settings
+                </h3>
+                <p class="text-muted small mb-0">
+                    Manage your official employee profile picture, contact details, and platform preferences.
+                </p>
+            </div>
+            {% if user_obj.employee_profile %}
+            <a href="{% url 'employees:employee_detail' emp_id=user_obj.employee_profile.emp_id %}" class="btn btn-outline-success btn-sm d-inline-flex align-items-center gap-2">
+                <i class="bi bi-person-badge"></i>
+                <span>View Workforce Profile (#{{ user_obj.employee_profile.emp_id }})</span>
+            </a>
+            {% endif %}
+        </div>
     </div>
 
     <div class="row g-4">
+        <!-- LEFT: USER IDENTITY & LIVE PHOTO CARD -->
         <div class="col-lg-4">
             <div class="hrms-card text-center p-4">
-                <img src="{{ user_obj.get_avatar_url }}" class="rounded-circle border border-3 border-success mb-3 shadow" width="100" height="100" style="object-fit: cover;">
-                <h5 class="fw-bold mb-0">{{ user_obj.get_full_name|default:user_obj.username }}</h5>
-                <span class="badge bg-success bg-opacity-10 text-success mb-2">{{ user_obj.get_role_display }}</span>
-                <p class="text-muted small mb-3">{{ user_obj.email }}</p>
-                <div class="d-grid gap-2">
+                <!-- Interactive Avatar with Camera Badge -->
+                <div class="position-relative d-inline-block mb-3">
+                    <div class="avatar-ring-wrapper" style="width: 120px; height: 120px; margin: 0 auto; border-radius: 50%; padding: 4px; background: linear-gradient(135deg, #10B981 0%, #059669 100%); box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);">
+                        <img id="cardAvatarPreview" 
+                             src="{{ user_obj.get_avatar_url }}" 
+                             alt="{{ user_obj.get_full_name|default:user_obj.username }}" 
+                             class="rounded-circle w-100 h-100" 
+                             style="object-fit: cover; background-color: #F8FAFC;">
+                    </div>
+                    <label for="id_avatar" 
+                           class="btn btn-sm btn-success rounded-circle position-absolute bottom-0 end-0 shadow-sm d-flex align-items-center justify-content-center" 
+                           style="width: 36px; height: 36px; cursor: pointer; border: 2px solid #FFFFFF;" 
+                           title="Click to choose a new passport size picture">
+                        <i class="bi bi-camera-fill text-white" style="font-size: 0.95rem;"></i>
+                    </label>
+                </div>
+
+                <h5 class="fw-bold text-dark mb-1">{{ user_obj.get_full_name|default:user_obj.username }}</h5>
+                <div class="d-flex align-items-center justify-content-center gap-2 flex-wrap mb-2">
+                    <span class="badge bg-success bg-opacity-10 text-success fw-semibold px-2.5 py-1">
+                        {{ user_obj.get_role_display }}
+                    </span>
+                    {% if user_obj.employee_profile and user_obj.employee_profile.emp_id %}
+                    <span class="badge bg-light text-dark border font-monospace">
+                        {{ user_obj.employee_profile.emp_id }}
+                    </span>
+                    {% endif %}
+                </div>
+                <p class="text-muted small mb-3 text-break">{{ user_obj.email }}</p>
+
+                <!-- Avatar Status Indicator -->
+                <div class="mb-3">
+                    {% if user_obj.avatar %}
+                        <div class="p-2 rounded-3 bg-success bg-opacity-10 border border-success-subtle d-inline-flex align-items-center gap-2 text-success small">
+                            <i class="bi bi-patch-check-fill"></i>
+                            <span class="fw-semibold">Official Photo Active</span>
+                        </div>
+                    {% else %}
+                        <div class="p-2 rounded-3 bg-warning bg-opacity-10 border border-warning-subtle d-inline-flex align-items-center gap-2 text-warning-emphasis small">
+                            <i class="bi bi-info-circle-fill"></i>
+                            <span>No photo uploaded (using initials)</span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Picture Removal Form (If Avatar Exists) -->
+                {% if user_obj.avatar %}
+                <form method="POST" class="mb-3" onsubmit="return confirm('Are you sure you want to remove your profile picture? Your profile will reset to default initials.');">
+                    {% csrf_token %}
+                    <input type="hidden" name="remove_avatar" value="1">
+                    <button type="submit" class="btn btn-outline-danger btn-sm w-100 d-inline-flex align-items-center justify-content-center gap-2">
+                        <i class="bi bi-trash3"></i>
+                        <span>Remove Profile Picture</span>
+                    </button>
+                </form>
+                {% endif %}
+
+                <div class="d-grid gap-2 border-top pt-3">
                     {% if user_obj.employee_profile %}
                     <a href="{% url 'employees:employee_detail' emp_id=user_obj.employee_profile.emp_id %}" class="btn btn-hrms btn-sm">
                         <i class="bi bi-person-badge me-1"></i> View HRMS Employment Profile
@@ -26,54 +96,176 @@
                     </a>
                 </div>
             </div>
+
+            <!-- PHOTO GUIDELINE TIPS -->
+            <div class="hrms-card p-3 mt-3 bg-light border">
+                <div class="d-flex align-items-start gap-2.5">
+                    <i class="bi bi-lightbulb-fill text-warning fs-5 flex-shrink-0"></i>
+                    <div>
+                        <div class="fw-bold text-dark small mb-1">Passport Photo Guidelines</div>
+                        <ul class="text-muted small ps-3 mb-0" style="font-size: 0.78rem; line-height: 1.5;">
+                            <li>Front-facing clear portrait with good lighting.</li>
+                            <li>Square aspect ratio works best (e.g. 1:1).</li>
+                            <li>Supported formats: JPG, PNG, WEBP (Max 5MB).</li>
+                            <li>Your picture immediately reflects on the topbar, Organisation Portal, Employee Directory, and Attendance check-in.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
 
+        <!-- RIGHT: EDIT ACCOUNT DETAILS & PHOTO UPLOAD -->
         <div class="col-lg-8">
             <div class="hrms-card p-4">
-                <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Edit Account Details</h5>
-                <form method="POST" enctype="multipart/form-data">
+                <div class="border-bottom pb-3 mb-4 d-flex align-items-center justify-content-between">
+                    <div>
+                        <h5 class="fw-bold text-dark mb-1">Edit Account Details</h5>
+                        <p class="text-muted small mb-0">Update your personal photo, phone number, and account configuration.</p>
+                    </div>
+                    <span class="badge bg-light text-muted border">Live Sync Active</span>
+                </div>
+
+                <form method="POST" enctype="multipart/form-data" id="profileUpdateForm">
                     {% csrf_token %}
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">First Name</label>
-                            {{ form.first_name }}
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Last Name</label>
-                            {{ form.last_name }}
+
+                    <!-- PASSPORT PHOTO UPLOAD SECTION -->
+                    <div class="p-3 mb-4 rounded-3 border bg-light">
+                        <label class="form-label fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                            <i class="bi bi-image text-success"></i>
+                            Passport Size Profile Photograph
+                        </label>
+                        <p class="text-muted small mb-3">
+                            Upload your official photo. If you uploaded a passport picture during onboarding, it is already linked. You can replace it anytime here.
+                        </p>
+
+                        <div class="row align-items-center g-3">
+                            <!-- Small Live Square Preview -->
+                            <div class="col-auto">
+                                <div class="position-relative border rounded-3 p-1 bg-white shadow-sm" style="width: 80px; height: 80px;">
+                                    <img id="formPhotoPreview" 
+                                         src="{{ user_obj.get_avatar_url }}" 
+                                         alt="Preview" 
+                                         class="rounded-2 w-100 h-100" 
+                                         style="object-fit: cover;">
+                                </div>
+                            </div>
+                            <!-- File Input & Filename Info -->
+                            <div class="col">
+                                {{ form.avatar }}
+                                <div class="form-text small text-muted mt-1" id="photoSelectionHint">
+                                    <i class="bi bi-info-circle me-1"></i>Select a JPG, PNG, or WEBP file (up to 5MB). Changes save upon clicking "Save Changes".
+                                </div>
+                                {% if form.avatar.errors %}
+                                    <div class="text-danger small mt-1 fw-bold">
+                                        {{ form.avatar.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
+
+                    <!-- NAME FIELDS -->
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Email Address</label>
-                            {{ form.email }}
+                            <label class="form-label small fw-semibold text-dark">First Name <span class="text-danger">*</span></label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}
+                                <div class="text-danger small mt-1">{{ form.first_name.errors.0 }}</div>
+                            {% endif %}
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Phone Number</label>
+                            <label class="form-label small fw-semibold text-dark">Last Name</label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}
+                                <div class="text-danger small mt-1">{{ form.last_name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- CONTACT DETAILS -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-dark">Email Address <span class="text-danger">*</span></label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-dark">Phone Number (10 Digits)</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light fw-bold text-secondary" style="font-size: 0.88rem;">🇮🇳 +91</span>
                                 {{ form.phone }}
                             </div>
-                            {% if form.phone.errors %}<div class="text-danger small mt-1 fw-bold">{{ form.phone.errors.0 }}</div>{% endif %}
+                            {% if form.phone.errors %}
+                                <div class="text-danger small mt-1 fw-bold">{{ form.phone.errors.0 }}</div>
+                            {% endif %}
                         </div>
                     </div>
+
+                    <!-- THEME PREFERENCE -->
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Theme Mode</label>
+                            <label class="form-label small fw-semibold text-dark">Theme Mode</label>
                             {{ form.theme_preference }}
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Profile Avatar</label>
-                            {{ form.avatar }}
+                            <label class="form-label small fw-semibold text-dark">Role Authority</label>
+                            <input type="text" class="form-control bg-light" value="{{ user_obj.get_role_display }}" readonly disabled>
                         </div>
                     </div>
-                    <div class="d-flex justify-content-end">
-                        <button type="submit" class="btn btn-hrms px-4">Save Changes</button>
+
+                    <!-- FORM SUBMIT -->
+                    <div class="d-flex justify-content-end gap-2 border-top pt-3">
+                        <button type="submit" class="btn btn-hrms px-4 d-inline-flex align-items-center gap-2">
+                            <i class="bi bi-check2-circle"></i>
+                            <span>Save Changes</span>
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
 
+<!-- INSTANT CLIENT-SIDE PHOTO PREVIEW SCRIPT -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const avatarInput = document.getElementById('id_avatar');
+        const cardPreview = document.getElementById('cardAvatarPreview');
+        const formPreview = document.getElementById('formPhotoPreview');
+        const hintText = document.getElementById('photoSelectionHint');
+
+        if (avatarInput) {
+            avatarInput.addEventListener('change', function(e) {
+                const file = e.target.files && e.target.files[0];
+                if (file) {
+                    // Check file size (5MB max)
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('Selected image exceeds the 5MB file size limit. Please choose a smaller photo.');
+                        avatarInput.value = '';
+                        return;
+                    }
+                    // Validate file type
+                    if (!file.type.match('image.*')) {
+                        alert('Selected file is not an image. Please choose a JPG, PNG, or WEBP picture.');
+                        avatarInput.value = '';
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        const newUrl = evt.target.result;
+                        if (cardPreview) cardPreview.src = newUrl;
+                        if (formPreview) formPreview.src = newUrl;
+                        if (hintText) {
+                            hintText.innerHTML = '<span class="text-success fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Photo selected: "' + file.name + '" (' + (file.size / 1024).toFixed(1) + ' KB). Click "Save Changes" to apply.</span>';
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

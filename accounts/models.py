@@ -63,6 +63,11 @@ class CustomUser(AbstractUser):
     def can_access_head_modules(self):
         return self.role == self.Role.HEAD or self.is_superuser
 
+    @property
+    def photo(self):
+        """Alias property so user.photo behaves identically to user.avatar in templates."""
+        return self.avatar
+
     def get_avatar_url(self):
         if self.avatar and hasattr(self.avatar, 'url'):
             try:

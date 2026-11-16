@@ -374,9 +374,9 @@
             <div class="col-lg-8">
                 <!-- User Profile Pill & Greeting -->
                 <div class="d-flex align-items-center gap-3 mb-3">
-                    {% if request.user.photo %}
-                        <img src="{{ request.user.photo.url }}" 
-                             alt="{{ request.user.get_full_name }}" 
+                    {% if request.user.avatar %}
+                        <img src="{{ request.user.avatar.url }}" 
+                             alt="{{ request.user.get_full_name|default:request.user.username }}" 
                              class="org-avatar-badge"
                              onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
                         <div class="org-avatar-badge org-avatar-initials" style="display: none;">
@@ -715,8 +715,8 @@
                                 <div class="org-performer-card h-100 d-flex flex-column justify-content-between">
                                     <div>
                                         <div class="d-flex align-items-center gap-3 mb-2">
-                                            {% if award.employee.user.photo %}
-                                                <img src="{{ award.employee.user.photo.url }}" 
+                                            {% if award.employee.user.avatar %}
+                                                <img src="{{ award.employee.user.avatar.url }}" 
                                                      class="rounded-circle border border-warning border-2" 
                                                      width="48" height="48" style="object-fit: cover;"
                                                      onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">

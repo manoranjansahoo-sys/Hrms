@@ -228,3 +228,80 @@ class HRMSEnterpriseTests(TestCase):
         self.client.login(username='other_emp', password='password123')
         response = self.client.get(reverse('payroll:download_pdf', kwargs={'payslip_id': payslip.id}))
         self.assertEqual(response.status_code, 403)
+
+    def test_account_settings_avatar_upload_and_reflection(self):
+        """Test uploading profile picture in Account Settings, dynamic reflection, and removal."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        self.client.login(username='emp_test', password='password123')
+
+        # Create a small valid GIF image
+        small_gif = (
+            b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xff\xff\xff\x21\xf9\x04\x01\x00\x00\x00\x00\x2c\x00\x00\x00\x00'
+            b'\x01\x00\x01\x00\x00\x02\x02\x44\x01\x00\x3b'
+        )
+        avatar_file = SimpleUploadedFile("passport_photo.png", small_gif, content_type="image/png")
+
+        # Post to account profile view
+        response = self.client.post(reverse('accounts:profile'), {
+            'first_name': 'John',
+            'last_name': 'Tester',
+            'email': 'emp_test@example.com',
+            'phone': '9876543210',
+            'theme_preference': 'light',
+            'avatar': avatar_file,
+        }, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.emp_user.refresh_from_db()
+        self.emp_profile.refresh_from_db()
+
+        # Check avatar is saved
+        self.assertTrue(bool(self.emp_user.avatar))
+        self.assertIn('.png', self.emp_user.avatar.name)
+
+        # Check reflection across properties
+        self.assertEqual(self.emp_user.photo.url, self.emp_user.avatar.url)
+        self.assertEqual(self.emp_profile.avatar.url, self.emp_user.avatar.url)
+        self.assertEqual(self.emp_profile.photo.url, self.emp_user.avatar.url)
+        self.assertEqual(self.emp_profile.get_avatar_url(), self.emp_user.avatar.url)
+
+        # Test Remove Profile Picture
+        remove_response = self.client.post(reverse('accounts:profile'), {
+            'remove_avatar': '1'
+        }, follow=True)
+        self.assertEqual(remove_response.status_code, 200)
+        self.emp_user.refresh_from_db()
+        self.assertFalse(bool(self.emp_user.avatar))
+        self.assertTrue(self.emp_user.get_avatar_url().startswith('data:image/svg+xml'))
+
+    def test_candidate_onboarding_photo_syncs_to_employee_user(self):
+        """Test candidate onboarding passport photo automatically copies to CustomUser avatar upon appointment."""
+        from django.core.files.base import ContentFile
+        from recruitment.models import Candidate, RecruitmentJob, JobApplication
+        from recruitment.views import sync_candidate_photo_to_user_avatar
+
+        cand = Candidate.objects.create(
+            full_name='Onboard Candidate',
+            email='onboard.cand@example.com',
+            phone='9876543219'
+        )
+        small_gif = (
+            b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xff\xff\xff\x21\xf9\x04\x01\x00\x00\x00\x00\x2c\x00\x00\x00\x00'
+            b'\x01\x00\x01\x00\x00\x02\x02\x44\x01\x00\x3b'
+        )
+        cand.photo.save('passport_candidate.png', ContentFile(small_gif), save=True)
+
+        new_user = CustomUser.objects.create_user(
+            username='onboard_user',
+            email='onboard.cand@example.com',
+            password='password123'
+        )
+
+        synced = sync_candidate_photo_to_user_avatar(cand, new_user)
+        self.assertTrue(synced)
+        new_user.refresh_from_db()
+        self.assertTrue(bool(new_user.avatar))
+        self.assertIn('.png', new_user.avatar.name)
+        self.assertEqual(new_user.get_avatar_url(), new_user.avatar.url)

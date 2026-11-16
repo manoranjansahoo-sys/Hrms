@@ -186,8 +186,33 @@
                     <div class="candidate-preview-box {% if prefill_app and prefill_app.document_verification_status == 'REJECTED' %}error-state{% elif prefill_app and prefill_app.document_verification_status != 'VERIFIED' %}warning-state{% endif %}" id="candidateCardBox">
                         <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center fw-bold fs-4" style="width: 55px; height: 55px;" id="avatarInitial">
-                                    {{ prefill_app.candidate.full_name|slice:":1"|default:"C" }}
+                                <div class="position-relative flex-shrink-0" style="width: 55px; height: 55px;">
+                                    {% if prefill_app and prefill_app.candidate.photo %}
+                                        <img src="{{ prefill_app.candidate.photo.url }}" 
+                                             id="avatarImg" 
+                                             alt="{{ prefill_app.candidate.full_name }}" 
+                                             class="rounded-circle w-100 h-100 border border-2 border-white shadow-sm" 
+                                             style="object-fit: cover;"
+                                             onerror="this.style.display='none'; document.getElementById('avatarInitial').style.display='flex';">
+                                        <div class="rounded-circle bg-success text-white align-items-center justify-content-center fw-bold fs-4 w-100 h-100" style="display: none;" id="avatarInitial">
+                                            {{ prefill_app.candidate.full_name|slice:":1"|default:"C" }}
+                                        </div>
+                                    {% elif prefill_app and prefill_app.candidate.google_picture_url %}
+                                        <img src="{{ prefill_app.candidate.google_picture_url }}" 
+                                             id="avatarImg" 
+                                             alt="{{ prefill_app.candidate.full_name }}" 
+                                             class="rounded-circle w-100 h-100 border border-2 border-white shadow-sm" 
+                                             style="object-fit: cover;"
+                                             onerror="this.style.display='none'; document.getElementById('avatarInitial').style.display='flex';">
+                                        <div class="rounded-circle bg-success text-white align-items-center justify-content-center fw-bold fs-4 w-100 h-100" style="display: none;" id="avatarInitial">
+                                            {{ prefill_app.candidate.full_name|slice:":1"|default:"C" }}
+                                        </div>
+                                    {% else %}
+                                        <img src="" id="avatarImg" class="rounded-circle w-100 h-100 border border-2 border-white shadow-sm d-none" style="object-fit: cover;">
+                                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center fw-bold fs-4 w-100 h-100" id="avatarInitial">
+                                            {{ prefill_app.candidate.full_name|slice:":1"|default:"C" }}
+                                        </div>
+                                    {% endif %}
                                 </div>
                                 <div>
                                     <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -652,7 +677,22 @@
                         document.getElementById('cardAccount').textContent = cand.bank_account_number || 'Not Provided';
                         document.getElementById('cardIfsc').textContent = cand.bank_ifsc_code || 'Not Provided';
                         document.getElementById('cardDocsCount').textContent = cand.documents_count || 0;
-                        document.getElementById('avatarInitial').textContent = (cand.full_name || 'C').charAt(0).toUpperCase();
+                        const avatarImg = document.getElementById('avatarImg');
+                        const avatarInit = document.getElementById('avatarInitial');
+                        if (cand.photo_url && !cand.photo_url.startsWith('data:image/svg')) {
+                            if (avatarImg && avatarInit) {
+                                avatarImg.src = cand.photo_url;
+                                avatarImg.classList.remove('d-none');
+                                avatarImg.style.display = 'block';
+                                avatarInit.style.display = 'none';
+                            }
+                        } else {
+                            if (avatarImg && avatarInit) {
+                                avatarImg.style.display = 'none';
+                                avatarInit.style.display = 'flex';
+                                avatarInit.textContent = (cand.full_name || 'C').charAt(0).toUpperCase();
+                            }
+                        }
 
                         // Verification status badge
                         const docBadge = document.getElementById('cardDocStatusBadge');
