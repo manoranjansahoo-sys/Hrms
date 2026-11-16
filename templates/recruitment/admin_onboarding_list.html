@@ -177,8 +177,8 @@
         --bs-table-bg: #FFFFFF !important;
         margin-bottom: 0 !important;
         width: 100% !important;
-        min-width: 680px;
-        table-layout: auto !important;
+        min-width: 650px;
+        table-layout: fixed !important;
         border-collapse: collapse;
     }
     .table.onboarding-table thead th {
@@ -211,11 +211,10 @@
 
     /* Standardized Small & Equal-Sized Action Buttons in Table */
     .btn-table-action {
-        height: 28px !important;
+        height: 27px !important;
         width: auto !important;
-        min-width: 58px !important;
-        padding: 0 0.45rem !important;
-        font-size: 0.73rem !important;
+        padding: 0 0.42rem !important;
+        font-size: 0.72rem !important;
         font-weight: 600 !important;
         border-radius: 6px !important;
         display: inline-flex !important;
@@ -753,19 +752,19 @@
             <table class="table onboarding-table align-middle">
                 <thead>
                     <tr>
-                        <th style="width: 13%; min-width: 90px;">Application ID</th>
-                        <th style="width: 27%; min-width: 150px;">Candidate Name</th>
-                        <th style="width: 14%; min-width: 95px;">Document Status</th>
-                        <th style="width: 10%; min-width: 75px;">Documents</th>
-                        <th style="width: 14%; min-width: 95px;">Submission Date</th>
-                        <th class="text-end pe-2" style="width: 22%; min-width: 135px;">Actions</th>
+                        <th class="ps-3" style="width: 14%; min-width: 95px;">Application ID</th>
+                        <th style="width: 25%; min-width: 135px;">Candidate Name</th>
+                        <th style="width: 14%; min-width: 90px;">Document Status</th>
+                        <th style="width: 11%; min-width: 75px;">Documents</th>
+                        <th style="width: 13%; min-width: 85px;">Submission Date</th>
+                        <th class="text-end pe-3" style="width: 23%; min-width: 165px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for app in applications %}
                         <tr class="onboarding-row" data-bs-toggle="modal" data-bs-target="#profileModal-{{ app.id }}" title="Click row line to view all candidate onboarding details">
                             <!-- Application ID -->
-                            <td>
+                            <td class="ps-3">
                                 <span class="app-id-pill" title="Application ID">
                                     <span class="px-2 py-1">{{ app.application_id }}</span>
                                     <button type="button" class="copy-id-btn" onclick="event.stopPropagation(); navigator.clipboard.writeText('{{ app.application_id }}'); this.innerHTML = '<i class=\'bi bi-check2 text-success\'></i>'; setTimeout(() => this.innerHTML = '<i class=\'bi bi-copy\'></i>', 1500);" title="Copy ID">
@@ -777,12 +776,12 @@
                             <!-- Candidate Name (Clean, generous gap between avatar and text) -->
                             <td>
                                 <div class="d-flex align-items-center" style="gap: 8px;">
-                                    <div class="candidate-avatar flex-shrink-0">
+                                    <div class="candidate-avatar flex-shrink-0" style="width: 32px; height: 32px; font-size: 0.82rem; border-radius: 8px;">
                                         {{ app.candidate.full_name|slice:":1"|upper }}
                                     </div>
-                                    <div class="overflow-hidden" style="min-width: 0; max-width: 165px;">
-                                        <div class="fw-bold text-dark fs-6 lh-sm mb-0.5 text-truncate" title="{{ app.candidate.full_name }}">{{ app.candidate.full_name }}</div>
-                                        <div class="small text-muted d-flex align-items-center gap-1.5 text-truncate" style="font-size: 0.77rem;" title="{{ app.job.title|default:'General Opening' }}">
+                                    <div class="overflow-hidden" style="min-width: 0;">
+                                        <div class="fw-bold text-dark text-truncate" style="font-size: 0.83rem; line-height: 1.25;" title="{{ app.candidate.full_name }}">{{ app.candidate.full_name }}</div>
+                                        <div class="small text-muted d-flex align-items-center gap-1 text-truncate" style="font-size: 0.72rem; line-height: 1.25; margin-top: 2px;" title="{{ app.job.title|default:'General Opening' }}">
                                             <i class="bi bi-briefcase text-primary opacity-75 flex-shrink-0"></i>
                                             <span class="text-truncate">{{ app.job.title|default:"General Opening" }}</span>
                                         </div>
@@ -828,19 +827,25 @@
                             <!-- Submission Date -->
                             <td>
                                 {% if app.onboarding_completed_at %}
-                                    <div class="text-success fw-bold small text-nowrap">
+                                    <div class="text-success fw-bold text-nowrap" style="font-size: 0.78rem; line-height: 1.25;">
                                         <i class="bi bi-check2-circle me-1"></i>{{ app.onboarding_completed_at|date:"d M Y" }}
                                     </div>
-                                    <div class="text-muted small text-nowrap" style="font-size: 0.74rem;">{{ app.onboarding_completed_at|time:"h:i A" }} <span class="badge bg-success-subtle text-success py-0 px-1">Submitted</span></div>
+                                    <div class="text-muted text-nowrap" style="font-size: 0.71rem; line-height: 1.25; margin-top: 2px;">
+                                        <i class="bi bi-clock me-1 text-secondary opacity-75"></i>{{ app.onboarding_completed_at|time:"h:i A" }}
+                                    </div>
                                 {% else %}
-                                    <div class="text-dark fw-medium small text-nowrap">{{ app.applied_at|date:"d M Y" }}</div>
-                                    <div class="text-muted small text-nowrap" style="font-size: 0.74rem;">{{ app.applied_at|time:"h:i A" }} <span class="badge bg-light text-secondary border py-0 px-1">Applied</span></div>
+                                    <div class="text-dark fw-medium text-nowrap" style="font-size: 0.78rem; line-height: 1.25;">
+                                        {{ app.applied_at|date:"d M Y" }}
+                                    </div>
+                                    <div class="text-muted text-nowrap" style="font-size: 0.71rem; line-height: 1.25; margin-top: 2px;">
+                                        <i class="bi bi-clock me-1 text-secondary opacity-75"></i>{{ app.applied_at|time:"h:i A" }}
+                                    </div>
                                 {% endif %}
                             </td>
 
                             <!-- Actions (Uniform Small & Equal Size, Single Line, No Clipping) -->
-                            <td class="text-end pe-2" onclick="event.stopPropagation();">
-                                <div class="d-inline-flex align-items-center justify-content-end" style="gap: 4px;">
+                            <td class="text-end pe-3" onclick="event.stopPropagation();">
+                                <div class="d-inline-flex align-items-center justify-content-end" style="gap: 5px;">
                                     <!-- Review Documents Button (Small & Equal Size) -->
                                     <button type="button" class="btn btn-table-action btn-outline-primary text-nowrap" data-bs-toggle="modal" data-bs-target="#reviewDocsModal-{{ app.id }}" title="Review candidate verification documents only">
                                         <i class="bi bi-file-earmark-check"></i>

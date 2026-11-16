@@ -92,11 +92,36 @@ def company_home_portal(request):
     # 6. Employee of the Month / Featured Awards
     featured_awards = EmployeeAward.objects.filter(is_featured=True).select_related('employee__user', 'employee__department')[:2]
 
-    # 7. Quick stats for user
+    # 7. Quick stats for user & leave health
     leave_balances = []
+    sick_leave = None
+    paid_leave = None
     if emp_profile:
         ensure_employee_leave_balances(emp_profile, today.year)
         leave_balances = LeaveBalance.objects.filter(employee=emp_profile, year=today.year, leave_type__code__in=['SL', 'PL']).select_related('leave_type')
+        for lb in leave_balances:
+            if lb.leave_type.code == 'SL':
+                sick_leave = lb
+            elif lb.leave_type.code == 'PL':
+                paid_leave = lb
+
+    # 8. Workforce KPI Metrics
+    active_workforce_count = EmployeeProfile.objects.filter(status='ACTIVE').count()
+    total_departments_count = Department.objects.count()
+    total_sites_count = Site.objects.filter(is_active=True).count()
+
+    # Next holiday countdown
+    next_holiday = upcoming_holidays.first() if upcoming_holidays.exists() else None
+    days_to_next_holiday = (next_holiday.date - today).days if next_holiday else None
+
+    # Work anniversaries with calculated milestone years
+    anniversaries_with_years = []
+    for emp in work_anniversaries:
+        years = today.year - emp.joining_date.year if emp.joining_date else 1
+        anniversaries_with_years.append({
+            'emp': emp,
+            'years': years,
+        })
 
     return render(request, 'portal/home.html', {
         'emp_profile': emp_profile,
@@ -107,8 +132,16 @@ def company_home_portal(request):
         'today_birthdays': today_birthdays,
         'upcoming_birthdays': upcoming_birthdays,
         'work_anniversaries': work_anniversaries,
+        'anniversaries_with_years': anniversaries_with_years,
         'featured_awards': featured_awards,
         'leave_balances': leave_balances,
+        'sick_leave': sick_leave,
+        'paid_leave': paid_leave,
+        'active_workforce_count': active_workforce_count,
+        'total_departments_count': total_departments_count,
+        'total_sites_count': total_sites_count,
+        'next_holiday': next_holiday,
+        'days_to_next_holiday': days_to_next_holiday,
         'today': today,
     })
 

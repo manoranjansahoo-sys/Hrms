@@ -1,176 +1,677 @@
 {% extends 'base.html' %}
-{% block title %}Company Home Portal{% endblock %}
+{% block title %}Organisation Portal & Workspace | Company HRMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ========================================================= */
+    /* EXECUTIVE ORGANISATION PORTAL - MODERN HR HUB             */
+    /* ========================================================= */
+    :root {
+        --org-hero-gradient: linear-gradient(135deg, #0F172A 0%, #1E293B 40%, #0F766E 100%);
+        --org-card-bg: #FFFFFF;
+        --org-card-border: #E2E8F0;
+        --org-text-main: #0F172A;
+        --org-text-muted: #64748B;
+        --org-accent-green: #10B981;
+        --org-accent-emerald: #059669;
+    }
+
+    .org-portal-container {
+        padding-bottom: 2rem;
+    }
+
+    /* Hero Banner */
+    .org-hero-banner {
+        background: var(--org-hero-gradient);
+        border-radius: 16px;
+        position: relative;
+        overflow: hidden;
+        color: #FFFFFF;
+        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
+        margin-bottom: 1.5rem;
+    }
+
+    .org-hero-banner::before {
+        content: '';
+        position: absolute;
+        top: -50px;
+        right: -50px;
+        width: 320px;
+        height: 320px;
+        background: radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, rgba(16, 185, 129, 0) 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .org-hero-banner::after {
+        content: '';
+        position: absolute;
+        bottom: -60px;
+        left: 20%;
+        width: 260px;
+        height: 260px;
+        background: radial-gradient(circle, rgba(56, 189, 248, 0.18) 0%, rgba(56, 189, 248, 0) 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .org-avatar-badge {
+        width: 68px;
+        height: 68px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid rgba(255, 255, 255, 0.85);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        flex-shrink: 0;
+    }
+
+    .org-avatar-initials {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.5rem;
+        background: linear-gradient(135deg, #10B981 0%, #047857 100%);
+        color: #ffffff;
+        text-transform: uppercase;
+        border: 3px solid rgba(255, 255, 255, 0.85);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        flex-shrink: 0;
+    }
+
+    /* Live Attendance Widget */
+    .org-live-widget {
+        background: rgba(15, 23, 42, 0.55);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 14px;
+        padding: 1.25rem;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Action Chip Bar */
+    .org-quick-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.42rem 0.85rem;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 50rem;
+        color: #FFFFFF;
+        font-size: 0.80rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        backdrop-filter: blur(8px);
+    }
+
+    .org-quick-chip:hover {
+        background: rgba(255, 255, 255, 0.25);
+        border-color: rgba(255, 255, 255, 0.4);
+        color: #FFFFFF;
+        transform: translateY(-1px);
+    }
+
+    /* Vital KPI Metric Cards */
+    .org-kpi-card {
+        background: #FFFFFF;
+        border: 1px solid var(--org-card-border);
+        border-radius: 14px;
+        padding: 1.2rem;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+        transition: all 0.2s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .org-kpi-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px -2px rgba(15, 23, 42, 0.08);
+        border-color: #CBD5E1;
+    }
+
+    .org-kpi-icon-box {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    /* Standard Cards */
+    .org-content-card {
+        background: #FFFFFF;
+        border: 1px solid var(--org-card-border);
+        border-radius: 14px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+    .org-card-header {
+        padding: 1rem 1.3rem;
+        background: #FFFFFF;
+        border-bottom: 1px solid #F1F5F9;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .org-card-title {
+        font-size: 0.96rem;
+        font-weight: 700;
+        color: var(--org-text-main);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0;
+    }
+
+    /* Announcement Items */
+    .announcement-item {
+        padding: 1.15rem 1.3rem;
+        border-bottom: 1px solid #F1F5F9;
+        transition: background-color 0.15s ease;
+    }
+
+    .announcement-item:last-child {
+        border-bottom: none;
+    }
+
+    .announcement-item:hover {
+        background-color: #F8FAFC;
+    }
+
+    .announcement-pinned-bar {
+        border-left: 3.5px solid #10B981 !important;
+        background: linear-gradient(90deg, rgba(16, 185, 129, 0.03) 0%, rgba(255, 255, 255, 0) 100%);
+    }
+
+    /* Date Tile for Events & Holidays */
+    .org-date-tile {
+        width: 52px;
+        height: 54px;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        flex-shrink: 0;
+        text-align: center;
+    }
+
+    .org-date-tile .date-day {
+        font-size: 1.25rem;
+        font-weight: 800;
+        line-height: 1;
+        color: #0F172A;
+    }
+
+    .org-date-tile .date-month {
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #64748B;
+        letter-spacing: 0.05em;
+        margin-top: 2px;
+    }
+
+    /* Event Card */
+    .org-event-box {
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        padding: 1rem;
+        background: #FFFFFF;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: all 0.2s ease;
+    }
+
+    .org-event-box:hover {
+        border-color: #94A3B8;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+    }
+
+    /* Star Performer Ribbon */
+    .org-performer-card {
+        background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+        border: 1px solid #FDE68A;
+        border-radius: 14px;
+        padding: 1.15rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Quick Links Button */
+    .org-quick-link-btn {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 0.95rem;
+        border-radius: 10px;
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        color: #1E293B;
+        text-decoration: none;
+        font-size: 0.83rem;
+        font-weight: 600;
+        transition: all 0.15s ease;
+    }
+
+    .org-quick-link-btn:hover {
+        background: #FFFFFF;
+        border-color: #0F766E;
+        color: #0F766E;
+        box-shadow: 0 2px 6px rgba(15, 118, 110, 0.12);
+        transform: translateX(2px);
+    }
+
+    /* Offline Avatar Badges */
+    .user-avatar-sm {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+
+    .user-avatar-initials-sm {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.80rem;
+        background: #10B981;
+        color: #FFFFFF;
+        flex-shrink: 0;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid p-0">
-    <!-- WELCOME DASHBOARD HEADER -->
-    <div class="hrms-card mb-4 border-0" style="background: var(--hrms-hero-gradient); color: white;">
-        <div class="p-4 p-lg-5">
-            <div class="row align-items-center g-4">
-                <div class="col-lg-8">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <img src="{{ request.user.get_avatar_url }}" alt="Profile" class="rounded-circle border border-3 border-white shadow" width="70" height="70" style="object-fit: cover;">
-                        <div>
-                            <span class="badge bg-white text-success fw-bold px-3 py-1 mb-1">{{ request.user.get_role_display }}</span>
-                            <h2 class="fw-bold mb-0">Welcome, {{ request.user.get_full_name|default:request.user.username }}!</h2>
-                            <p class="mb-0 text-white-50">
-                                {% if emp_profile %}
-                                    {{ emp_profile.designation.title|default:"Team Member" }} &bull; {{ emp_profile.department.name|default:"General" }} &bull; {{ emp_profile.site.name|default:"Bengaluru HQ" }}
-                                {% else %}
-                                    System Administrator &bull; Enterprise Workspace
-                                {% endif %}
-                            </p>
+<div class="container-fluid p-0 org-portal-container">
+
+    <!-- 1. EXECUTIVE HERO BANNER -->
+    <div class="org-hero-banner p-4 p-lg-5">
+        <div class="row align-items-center g-4 position-relative" style="z-index: 2;">
+            <div class="col-lg-8">
+                <!-- User Profile Pill & Greeting -->
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    {% if request.user.photo %}
+                        <img src="{{ request.user.photo.url }}" 
+                             alt="{{ request.user.get_full_name }}" 
+                             class="org-avatar-badge"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+                        <div class="org-avatar-badge org-avatar-initials" style="display: none;">
+                            {{ request.user.first_name|slice:":1"|default:request.user.username|slice:":1"|upper }}
                         </div>
+                    {% else %}
+                        <div class="org-avatar-badge org-avatar-initials">
+                            {{ request.user.first_name|slice:":1"|default:request.user.username|slice:":1"|upper }}
+                        </div>
+                    {% endif %}
+
+                    <div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                            <span class="badge bg-white bg-opacity-20 text-white border border-white-20 fw-semibold px-2.5 py-1" style="font-size: 0.74rem;">
+                                <i class="bi bi-shield-check me-1 text-warning"></i>{{ request.user.get_role_display }}
+                            </span>
+                            {% if emp_profile and emp_profile.site %}
+                                <span class="badge bg-white bg-opacity-10 text-white-75 border border-white-10 fw-normal px-2 py-1" style="font-size: 0.74rem;">
+                                    <i class="bi bi-geo-alt-fill me-1 text-danger"></i>{{ emp_profile.site.name }}
+                                </span>
+                            {% endif %}
+                        </div>
+                        <h2 class="fw-bold mb-0 text-white" style="letter-spacing: -0.02em;">
+                            Good day, {{ request.user.first_name|default:request.user.username }}!
+                        </h2>
+                        <p class="mb-0 text-white-75 small mt-1">
+                            {% if emp_profile %}
+                                <span class="text-white fw-semibold">{{ emp_profile.designation.title|default:"Team Member" }}</span> &bull; 
+                                {{ emp_profile.department.name|default:"General Department" }} &bull; 
+                                ID: <span class="font-monospace fw-bold text-white">{{ emp_profile.emp_id }}</span>
+                            {% else %}
+                                System Administrator &bull; Enterprise HR Operations Hub
+                            {% endif %}
+                        </p>
                     </div>
-                    <p class="text-white-75 mb-0" style="max-width: 650px;">
-                        Stay updated with real-time company announcements, official holiday calendars, cultural events, work anniversaries, and manage your daily attendance punches.
-                    </p>
                 </div>
 
-                <!-- TODAY'S ATTENDANCE & PUNCH WIDGET -->
-                <div class="col-lg-4">
-                    <div class="p-3 rounded-3 bg-black bg-opacity-25 border border-white-10 text-center">
-                        <div class="small text-white-50 text-uppercase letter-spacing-1 mb-1">Today's Attendance Status</div>
-                        <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
-                            {% if today_attendance and today_attendance.punch_in %}
-                                <span class="badge bg-success px-3 py-2 fs-6"><i class="bi bi-check-circle-fill me-1"></i> PUNCHED IN</span>
-                            {% else %}
-                                <span class="badge bg-secondary px-3 py-2 fs-6"><i class="bi bi-clock me-1"></i> NOT PUNCHED IN</span>
-                            {% endif %}
-                        </div>
+                <p class="text-white-75 mb-3" style="max-width: 650px; font-size: 0.90rem; line-height: 1.5;">
+                    Welcome to the central workforce portal. Track real-time attendance punches, stay informed on corporate announcements, celebrate milestone anniversaries, and manage your workplace journey.
+                </p>
 
-                        <div class="small text-white-75 mb-3">
-                            {% if today_attendance and today_attendance.punch_in %}
-                                Punch In: <b>{{ today_attendance.punch_in|time:"h:i A" }}</b>
+                <!-- Workplace Action Chips -->
+                <div class="d-flex align-items-center gap-2 flex-wrap pt-1">
+                    <a href="{% url 'attendance:qr_scanner' %}" class="org-quick-chip">
+                        <i class="bi bi-qr-code-scan text-warning"></i>
+                        <span>Scan QR to Punch</span>
+                    </a>
+                    <a href="{% url 'leave_management:apply_leave' %}" class="org-quick-chip">
+                        <i class="bi bi-calendar-plus text-info"></i>
+                        <span>Apply Leave</span>
+                    </a>
+                    <a href="{% url 'employees:employee_list' %}" class="org-quick-chip">
+                        <i class="bi bi-people-fill text-success"></i>
+                        <span>All Employees</span>
+                    </a>
+                    <a href="{% url 'portal:policies_list' %}" class="org-quick-chip">
+                        <i class="bi bi-file-earmark-lock text-white-75"></i>
+                        <span>Corporate Policies</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- LIVE ATTENDANCE STATUS WIDGET -->
+            <div class="col-lg-4">
+                <div class="org-live-widget text-center text-lg-start">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-white-75 text-uppercase fw-bold" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                            <i class="bi bi-clock-history me-1 text-warning"></i> Live Attendance Status
+                        </span>
+                        <span class="badge bg-white bg-opacity-10 text-white-75" style="font-size: 0.70rem;">{{ today|date:"D, d M Y" }}</span>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        {% if today_attendance and today_attendance.punch_in %}
+                            <span class="badge bg-success px-3 py-1.5 fs-6 fw-bold shadow-sm d-inline-flex align-items-center gap-1.5">
+                                <span class="spinner-grow spinner-grow-sm text-white" role="status" style="width: 7px; height: 7px;"></span>
+                                PUNCHED IN
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary px-3 py-1.5 fs-6 fw-bold d-inline-flex align-items-center gap-1.5">
+                                <i class="bi bi-clock"></i> NOT PUNCHED IN
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="text-white-75 small mb-3">
+                        {% if today_attendance and today_attendance.punch_in %}
+                            <div class="d-flex align-items-center gap-3">
+                                <div>In: <strong class="text-white">{{ today_attendance.punch_in|time:"h:i A" }}</strong></div>
                                 {% if today_attendance.punch_out %}
-                                    | Punch Out: <b>{{ today_attendance.punch_out|time:"h:i A" }}</b>
-                                    <div class="fw-bold mt-1 text-warning">{{ today_attendance.working_hours }} hrs worked</div>
+                                    <div>Out: <strong class="text-white">{{ today_attendance.punch_out|time:"h:i A" }}</strong></div>
+                                    <div class="text-warning fw-bold">{{ today_attendance.working_hours }} hrs</div>
+                                {% else %}
+                                    <div class="text-white-50 fst-italic">Shift in progress</div>
                                 {% endif %}
-                            {% else %}
-                                Ready to begin your workday?
-                            {% endif %}
-                        </div>
+                            </div>
+                        {% else %}
+                            Ready to commence your workday? Scan your office terminal QR.
+                        {% endif %}
+                    </div>
 
-                        <div class="d-flex justify-content-center align-items-center gap-2">
-                            <a href="{% url 'attendance:qr_scanner' %}" class="btn btn-warning btn-sm shadow-sm d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 10px;" title="Scan QR to Punch" aria-label="Scan QR to Punch">
-                                <i class="bi bi-qr-code-scan fs-5 text-dark"></i>
-                            </a>
-                        </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <a href="{% url 'attendance:qr_scanner' %}" class="btn btn-warning btn-sm fw-bold px-3 py-1.5 shadow-sm d-inline-flex align-items-center gap-2 text-dark" style="border-radius: 8px;">
+                            <i class="bi bi-camera-fill"></i>
+                            <span>Open Scanner</span>
+                        </a>
+                        <a href="{% url 'attendance:my_attendance' %}" class="btn btn-outline-light btn-sm px-3 py-1.5" style="border-radius: 8px;">
+                            <i class="bi bi-calendar3 me-1"></i> My Logs
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MAIN GRID SECTION -->
-    <div class="row g-4 mb-4">
-        <!-- LEFT COLUMN: ANNOUNCEMENTS & EVENTS -->
-        <div class="col-lg-8">
-            <!-- COMPANY ANNOUNCEMENTS -->
-            <div class="hrms-card mb-4">
-                <div class="hrms-card-header">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-megaphone-fill text-success fs-5"></i>
-                        <h5 class="fw-bold mb-0">Company Announcements</h5>
+    <!-- 2. VITAL KPI METRICS COUNTERS (ROW OF 4) -->
+    <div class="row g-3 mb-4">
+        <!-- Metric 1: Active Workforce -->
+        <div class="col-6 col-md-3">
+            <div class="org-kpi-card">
+                <div class="d-flex align-items-start justify-content-between mb-2">
+                    <div>
+                        <div class="text-muted text-uppercase fw-bold" style="font-size: 0.70rem; letter-spacing: 0.04em;">Active Workforce</div>
+                        <div class="h3 fw-bold text-dark mb-0 mt-1">{{ active_workforce_count }}</div>
                     </div>
-                    <span class="badge bg-success bg-opacity-10 text-success">Official Notices</span>
+                    <div class="org-kpi-icon-box bg-primary bg-opacity-10 text-primary">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
                 </div>
-                <div class="hrms-card-body p-0">
-                    <div class="list-group list-group-flush">
-                        {% for a in announcements %}
-                            <div class="list-group-item p-3 border-0 border-bottom">
-                                <div class="d-flex justify-content-between align-items-start mb-1">
-                                    <div class="d-flex align-items-center gap-2">
-                                        {% if a.priority == 'URGENT' %}
-                                            <span class="badge bg-danger">URGENT</span>
-                                        {% elif a.priority == 'HIGH' %}
-                                            <span class="badge bg-warning text-dark">HIGH</span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">{{ a.get_category_display }}</span>
-                                        {% endif %}
-                                        <h6 class="fw-bold mb-0 text-dark">{{ a.title }}</h6>
-                                        {% if a.is_pinned %}
-                                            <i class="bi bi-pin-angle-fill text-success" title="Pinned Announcement"></i>
-                                        {% endif %}
-                                    </div>
-                                    <small class="text-muted">{{ a.created_at|date:"M d, Y" }}</small>
-                                </div>
-                                <p class="text-muted small mb-2">{{ a.content }}</p>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small class="text-muted">
-                                        Posted by <b>{{ a.created_by.get_full_name|default:"Management" }}</b>
-                                        {% if a.target_site %} &bull; Site: {{ a.target_site.name }}{% endif %}
-                                    </small>
-                                    {% if a.attachment %}
-                                        <a href="{{ a.attachment.url }}" target="_blank" class="badge bg-light text-primary text-decoration-none border">
-                                            <i class="bi bi-paperclip"></i> Attachment
-                                        </a>
+                <div class="small text-muted" style="font-size: 0.75rem;">
+                    Across <strong>{{ total_departments_count }}</strong> departments &amp; <strong>{{ total_sites_count }}</strong> locations
+                </div>
+            </div>
+        </div>
+
+        <!-- Metric 2: Next Official Holiday -->
+        <div class="col-6 col-md-3">
+            <div class="org-kpi-card">
+                <div class="d-flex align-items-start justify-content-between mb-2">
+                    <div>
+                        <div class="text-muted text-uppercase fw-bold" style="font-size: 0.70rem; letter-spacing: 0.04em;">Next Holiday</div>
+                        <div class="fw-bold text-dark text-truncate mt-1" style="font-size: 1.05rem;" title="{{ next_holiday.title|default:'None upcoming' }}">
+                            {{ next_holiday.title|default:"No Holiday Soon"|truncatechars:18 }}
+                        </div>
+                    </div>
+                    <div class="org-kpi-icon-box bg-danger bg-opacity-10 text-danger">
+                        <i class="bi bi-calendar2-heart-fill"></i>
+                    </div>
+                </div>
+                <div class="small text-muted d-flex align-items-center justify-content-between" style="font-size: 0.75rem;">
+                    {% if next_holiday %}
+                        <span>{{ next_holiday.date|date:"d M Y" }}</span>
+                        {% if days_to_next_holiday == 0 %}
+                            <span class="badge bg-success-subtle text-success fw-bold">Today!</span>
+                        {% elif days_to_next_holiday > 0 %}
+                            <span class="badge bg-danger-subtle text-danger fw-bold">In {{ days_to_next_holiday }} days</span>
+                        {% endif %}
+                    {% else %}
+                        <span>Up to date</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Metric 3: My Leave Health -->
+        <div class="col-6 col-md-3">
+            <div class="org-kpi-card">
+                <div class="d-flex align-items-start justify-content-between mb-2">
+                    <div>
+                        <div class="text-muted text-uppercase fw-bold" style="font-size: 0.70rem; letter-spacing: 0.04em;">My Leave Health</div>
+                        <div class="d-flex align-items-baseline gap-2 mt-1">
+                            <span class="h4 fw-bold text-dark mb-0">{% if sick_leave %}{{ sick_leave.balance|floatformat:0 }}{% else %}--{% endif %}<small class="text-muted fs-6"> SL</small></span>
+                            <span class="text-muted">&bull;</span>
+                            <span class="h4 fw-bold text-dark mb-0">{% if paid_leave %}{{ paid_leave.balance|floatformat:0 }}{% else %}--{% endif %}<small class="text-muted fs-6"> PL</small></span>
+                        </div>
+                    </div>
+                    <div class="org-kpi-icon-box bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-shield-heart-fill"></i>
+                    </div>
+                </div>
+                <div class="small text-muted d-flex align-items-center justify-content-between" style="font-size: 0.75rem;">
+                    <span>Available balance</span>
+                    <a href="{% url 'leave_management:my_leaves' %}" class="text-success text-decoration-none fw-semibold">View Detail &rarr;</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metric 4: Workplace Events -->
+        <div class="col-6 col-md-3">
+            <div class="org-kpi-card">
+                <div class="d-flex align-items-start justify-content-between mb-2">
+                    <div>
+                        <div class="text-muted text-uppercase fw-bold" style="font-size: 0.70rem; letter-spacing: 0.04em;">Official Events</div>
+                        <div class="h3 fw-bold text-dark mb-0 mt-1">{{ upcoming_events|length }}</div>
+                    </div>
+                    <div class="org-kpi-icon-box bg-warning bg-opacity-15 text-warning">
+                        <i class="bi bi-calendar-event-fill" style="color: #D97706 !important;"></i>
+                    </div>
+                </div>
+                <div class="small text-muted d-flex align-items-center justify-content-between" style="font-size: 0.75rem;">
+                    <span>Cultural &amp; Corporate</span>
+                    <a href="{% url 'portal:events_list' %}" class="text-warning text-decoration-none fw-semibold" style="color: #D97706 !important;">View Calendar &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. MAIN PORTAL BODY -->
+    <div class="row g-4">
+        <!-- LEFT COLUMN: ANNOUNCEMENTS, EVENTS, AWARDS -->
+        <div class="col-lg-8">
+
+            <!-- COMPANY ANNOUNCEMENTS -->
+            <div class="org-content-card">
+                <div class="org-card-header">
+                    <h5 class="org-card-title">
+                        <i class="bi bi-megaphone-fill text-success"></i>
+                        <span>Company Announcements</span>
+                    </h5>
+                    <span class="badge bg-success bg-opacity-10 text-success fw-bold px-2.5 py-1">Official Notices</span>
+                </div>
+                <div class="p-0">
+                    {% for a in announcements %}
+                        <div class="announcement-item {% if a.is_pinned %}announcement-pinned-bar{% endif %}">
+                            <div class="d-flex justify-content-between align-items-start mb-1.5 flex-wrap gap-2">
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    {% if a.priority == 'URGENT' %}
+                                        <span class="badge bg-danger text-white fw-bold px-2 py-0.5" style="font-size: 0.70rem;">URGENT</span>
+                                    {% elif a.priority == 'HIGH' %}
+                                        <span class="badge bg-warning text-dark fw-bold px-2 py-0.5" style="font-size: 0.70rem;">HIGH</span>
+                                    {% else %}
+                                        <span class="badge bg-light text-secondary border px-2 py-0.5" style="font-size: 0.70rem;">{{ a.get_category_display }}</span>
+                                    {% endif %}
+                                    <h6 class="fw-bold mb-0 text-dark" style="font-size: 0.92rem;">{{ a.title }}</h6>
+                                    {% if a.is_pinned %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-1.5 py-0.5" style="font-size: 0.68rem;" title="Pinned Notice">
+                                            <i class="bi bi-pin-angle-fill me-0.5"></i> Pinned
+                                        </span>
                                     {% endif %}
                                 </div>
+                                <small class="text-muted" style="font-size: 0.75rem;">
+                                    <i class="bi bi-calendar3 me-1"></i>{{ a.created_at|date:"d M Y" }}
+                                </small>
                             </div>
-                        {% empty %}
-                            <div class="p-4 text-center text-muted">No current announcements.</div>
-                        {% endfor %}
-                    </div>
+                            <p class="text-secondary small mb-2" style="font-size: 0.84rem; line-height: 1.45;">{{ a.content }}</p>
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 pt-1 border-top" style="border-color: #F1F5F9 !important;">
+                                <div class="small text-muted d-flex align-items-center gap-2" style="font-size: 0.75rem;">
+                                    <span><i class="bi bi-person-fill text-secondary opacity-75 me-1"></i>Posted by <strong>{{ a.created_by.get_full_name|default:"Management" }}</strong></span>
+                                    {% if a.target_site %}
+                                        <span>&bull;</span>
+                                        <span><i class="bi bi-geo-alt-fill text-danger opacity-75 me-1"></i>Site: {{ a.target_site.name }}</span>
+                                    {% endif %}
+                                </div>
+                                {% if a.attachment %}
+                                    <a href="{{ a.attachment.url }}" target="_blank" class="badge bg-primary bg-opacity-10 text-primary text-decoration-none border border-primary-subtle px-2 py-1" style="font-size: 0.74rem;">
+                                        <i class="bi bi-paperclip me-1"></i> View Attachment
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="p-5 text-center text-muted">
+                            <i class="bi bi-bell-slash fs-2 d-block mb-2 opacity-50"></i>
+                            <div class="fw-semibold">No announcements currently published.</div>
+                            <div class="small">Official communications from HR &amp; management will be displayed here.</div>
+                        </div>
+                    {% endfor %}
                 </div>
             </div>
 
-            <!-- OFFICIAL EVENTS & CELEBRATIONS -->
-            <div class="hrms-card mb-4">
-                <div class="hrms-card-header">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-calendar-event-fill text-warning fs-5"></i>
-                        <h5 class="fw-bold mb-0">Official Events & Celebrations</h5>
-                    </div>
-                    <a href="{% url 'portal:events_list' %}" class="small text-success text-decoration-none fw-semibold">View All</a>
+            <!-- OFFICIAL EVENTS & WORKPLACE CELEBRATIONS -->
+            <div class="org-content-card">
+                <div class="org-card-header">
+                    <h5 class="org-card-title">
+                        <i class="bi bi-calendar-event-fill text-warning" style="color: #D97706 !important;"></i>
+                        <span>Workplace Gatherings &amp; Events</span>
+                    </h5>
+                    <a href="{% url 'portal:events_list' %}" class="small text-success text-decoration-none fw-bold">View Full Schedule &rarr;</a>
                 </div>
-                <div class="hrms-card-body">
+                <div class="p-3">
                     <div class="row g-3">
                         {% for event in upcoming_events %}
                             <div class="col-md-6">
-                                <div class="border rounded p-3 h-100 bg-body">
-                                    <span class="badge bg-success bg-opacity-10 text-success mb-2">{{ event.get_event_type_display }}</span>
-                                    <h6 class="fw-bold mb-1">{{ event.title }}</h6>
-                                    <div class="text-muted small mb-2">
-                                        <i class="bi bi-clock me-1"></i> {{ event.start_datetime|date:"d M Y, h:i A" }}
+                                <div class="org-event-box">
+                                    <div>
+                                        <div class="d-flex align-items-center justify-content-between mb-2">
+                                            <span class="badge bg-success bg-opacity-10 text-success fw-semibold" style="font-size: 0.72rem;">{{ event.get_event_type_display }}</span>
+                                            <small class="text-muted" style="font-size: 0.73rem;">
+                                                <i class="bi bi-clock me-1"></i>{{ event.start_datetime|date:"h:i A" }}
+                                            </small>
+                                        </div>
+                                        <div class="d-flex align-items-start gap-2.5 mb-2">
+                                            <div class="org-date-tile">
+                                                <div class="date-day">{{ event.start_datetime|date:"d" }}</div>
+                                                <div class="date-month">{{ event.start_datetime|date:"M" }}</div>
+                                            </div>
+                                            <div>
+                                                <h6 class="fw-bold text-dark mb-1" style="font-size: 0.90rem;">{{ event.title }}</h6>
+                                                <div class="text-muted small" style="font-size: 0.75rem;">
+                                                    <i class="bi bi-geo-alt me-1 text-danger opacity-75"></i>{{ event.venue|default:"Main Office Auditorium" }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p class="text-secondary small mb-3 text-truncate" style="font-size: 0.80rem;">{{ event.description|default:"All active employees are invited to attend." }}</p>
                                     </div>
-                                    <div class="text-muted small mb-3">
-                                        <i class="bi bi-geo-alt me-1"></i> {{ event.venue }}
-                                    </div>
-                                    <p class="text-muted small mb-3 text-truncate">{{ event.description }}</p>
-                                    <a href="{% url 'portal:register_event' event_id=event.id %}" class="btn btn-outline-success btn-sm w-100">
-                                        <i class="bi bi-check2-circle"></i> Register / Attend
+                                    <a href="{% url 'portal:register_event' event_id=event.id %}" class="btn btn-outline-success btn-sm w-100 fw-semibold" style="font-size: 0.78rem;">
+                                        <i class="bi bi-check2-circle me-1"></i> Register / Attend
                                     </a>
                                 </div>
                             </div>
                         {% empty %}
-                            <div class="col-12 text-center text-muted py-3">No upcoming events scheduled right now.</div>
+                            <div class="col-12 text-center text-muted py-4">
+                                <i class="bi bi-calendar2-check fs-2 d-block mb-2 opacity-50"></i>
+                                <div class="fw-semibold">No upcoming events scheduled right now.</div>
+                                <div class="small">Townhalls, cultural meets, and team celebrations will show here.</div>
+                            </div>
                         {% endfor %}
                     </div>
                 </div>
             </div>
 
-            <!-- EMPLOYEE OF THE MONTH & AWARDS SECTION -->
+            <!-- STAR PERFORMERS & RECOGNITION -->
             {% if featured_awards %}
-            <div class="hrms-card">
-                <div class="hrms-card-header">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-trophy-fill text-warning fs-5"></i>
-                        <h5 class="fw-bold mb-0">Employee Recognition & Awards</h5>
-                    </div>
-                    <span class="badge bg-warning bg-opacity-25 text-warning fw-bold">Star Performers</span>
+            <div class="org-content-card">
+                <div class="org-card-header">
+                    <h5 class="org-card-title">
+                        <i class="bi bi-trophy-fill text-warning" style="color: #F59E0B !important;"></i>
+                        <span>Employee Recognition &amp; Awards</span>
+                    </h5>
+                    <span class="badge bg-warning bg-opacity-25 text-warning fw-bold px-2.5 py-1" style="color: #B45309 !important;">Star Performers</span>
                 </div>
-                <div class="hrms-card-body">
+                <div class="p-3">
                     <div class="row g-3">
                         {% for award in featured_awards %}
                             <div class="col-md-6">
-                                <div class="d-flex gap-3 align-items-center p-3 rounded border bg-light">
-                                    <img src="{{ award.employee.user.get_avatar_url }}" class="rounded-circle border border-warning border-2" width="60" height="60" style="object-fit: cover;">
+                                <div class="org-performer-card h-100 d-flex flex-column justify-content-between">
                                     <div>
-                                        <span class="badge bg-warning text-dark mb-1">{{ award.award_title }}</span>
-                                        <h6 class="fw-bold mb-0 text-dark">{{ award.employee.full_name }}</h6>
-                                        <small class="text-muted">{{ award.employee.designation.title }} &bull; {{ award.month_year }}</small>
-                                        <p class="small text-secondary mb-0 mt-1 fst-italic">"{{ award.citation }}"</p>
+                                        <div class="d-flex align-items-center gap-3 mb-2">
+                                            {% if award.employee.user.photo %}
+                                                <img src="{{ award.employee.user.photo.url }}" 
+                                                     class="rounded-circle border border-warning border-2" 
+                                                     width="48" height="48" style="object-fit: cover;"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+                                                <div class="user-avatar-initials-sm" style="width: 48px; height: 48px; font-size: 1.1rem; display: none;">
+                                                    {{ award.employee.full_name|slice:":1"|upper }}
+                                                </div>
+                                            {% else %}
+                                                <div class="user-avatar-initials-sm" style="width: 48px; height: 48px; font-size: 1.1rem; background: #D97706;">
+                                                    {{ award.employee.full_name|slice:":1"|upper }}
+                                                </div>
+                                            {% endif %}
+                                            <div>
+                                                <span class="badge bg-warning text-dark fw-bold px-2 py-0.5 mb-1" style="font-size: 0.70rem;">{{ award.award_title }}</span>
+                                                <h6 class="fw-bold mb-0 text-dark">{{ award.employee.full_name }}</h6>
+                                                <small class="text-muted" style="font-size: 0.74rem;">{{ award.employee.designation.title|default:"Team Member" }} &bull; {{ award.month_year }}</small>
+                                            </div>
+                                        </div>
+                                        <p class="small text-secondary mb-0 fst-italic" style="font-size: 0.80rem;">"{{ award.citation }}"</p>
                                     </div>
                                 </div>
                             </div>
@@ -179,141 +680,173 @@
                 </div>
             </div>
             {% endif %}
+
         </div>
 
-        <!-- RIGHT COLUMN: HOLIDAYS, BIRTHDAYS, ANNIVERSARIES -->
+        <!-- RIGHT COLUMN: HOLIDAYS, BIRTHDAYS, ANNIVERSARIES, LINKS -->
         <div class="col-lg-4">
-            <!-- COMPANY DECLARED HOLIDAYS -->
-            <div class="hrms-card mb-4">
-                <div class="hrms-card-header">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-sun-fill text-danger fs-5"></i>
-                        <h5 class="fw-bold mb-0">Upcoming Holidays</h5>
-                    </div>
-                    <a href="{% url 'portal:holidays_list' %}" class="small text-success text-decoration-none fw-semibold">Annual List</a>
+
+            <!-- UPCOMING HOLIDAYS -->
+            <div class="org-content-card">
+                <div class="org-card-header">
+                    <h5 class="org-card-title">
+                        <i class="bi bi-sun-fill text-danger"></i>
+                        <span>Upcoming Holidays</span>
+                    </h5>
+                    <a href="{% url 'portal:holidays_list' %}" class="small text-success text-decoration-none fw-bold">Annual List</a>
                 </div>
-                <div class="hrms-card-body p-0">
-                    <div class="list-group list-group-flush">
+                <div class="p-0">
+                    <ul class="list-group list-group-flush mb-0">
                         {% for h in upcoming_holidays %}
-                            <div class="list-group-item p-3 border-0 border-bottom d-flex align-items-center gap-3">
-                                <div class="text-center p-2 rounded bg-light border" style="min-width: 55px;">
-                                    <div class="fw-bold text-success fs-5 lh-1">{{ h.date|date:"d" }}</div>
-                                    <small class="text-muted text-uppercase" style="font-size: 0.68rem;">{{ h.date|date:"M" }}</small>
+                            <li class="list-group-item p-3 border-0 border-bottom d-flex align-items-center gap-3">
+                                <div class="org-date-tile" style="background: #FFF1F2; border-color: #FFE4E6;">
+                                    <div class="date-day text-danger">{{ h.date|date:"d" }}</div>
+                                    <div class="date-month text-danger">{{ h.date|date:"M" }}</div>
                                 </div>
-                                <div class="flex-grow-1">
-                                    <div class="fw-bold text-dark mb-0">{{ h.title }}</div>
-                                    <small class="text-muted">{{ h.get_holiday_type_display }} &bull; {{ h.date|date:"l" }}</small>
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <div class="fw-bold text-dark text-truncate" style="font-size: 0.85rem;" title="{{ h.title }}">{{ h.title }}</div>
+                                    <div class="small text-muted" style="font-size: 0.73rem;">
+                                        <span class="badge bg-light text-secondary border px-1.5 py-0.5">{{ h.get_holiday_type_display }}</span>
+                                        <span class="ms-1">{{ h.date|date:"l" }}</span>
+                                    </div>
                                 </div>
-                            </div>
+                            </li>
                         {% empty %}
-                            <div class="p-3 text-center text-muted small">No upcoming holidays this period.</div>
+                            <li class="p-4 text-center text-muted small">No upcoming holidays scheduled for this period.</li>
                         {% endfor %}
-                    </div>
+                    </ul>
                 </div>
             </div>
 
-            <!-- EMPLOYEE BIRTHDAYS (With Privacy Protected Filter) -->
-            <div class="hrms-card mb-4">
-                <div class="hrms-card-header">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-gift-fill text-danger fs-5"></i>
-                        <h5 class="fw-bold mb-0">Celebrations & Birthdays</h5>
-                    </div>
-                    <span class="badge bg-danger bg-opacity-10 text-danger">Wishes</span>
+            <!-- CELEBRATIONS & BIRTHDAYS (Privacy Protected) -->
+            <div class="org-content-card">
+                <div class="org-card-header">
+                    <h5 class="org-card-title">
+                        <i class="bi bi-gift-fill text-danger"></i>
+                        <span>Birthdays &amp; Wishes</span>
+                    </h5>
+                    <span class="badge bg-danger bg-opacity-10 text-danger fw-bold px-2 py-0.5" style="font-size: 0.70rem;">Celebrations</span>
                 </div>
-                <div class="hrms-card-body">
+                <div class="p-3">
                     <!-- Today's Birthdays -->
                     {% if today_birthdays %}
-                        <div class="p-3 mb-3 rounded bg-danger bg-opacity-10 border border-danger border-opacity-25 text-center">
+                        <div class="p-3 mb-3 rounded-3 text-center" style="background: linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%); border: 1px solid #FECACA;">
                             <i class="bi bi-balloon-fill text-danger fs-3"></i>
-                            <h6 class="fw-bold text-danger mb-1 mt-1">Today's Birthday!</h6>
+                            <h6 class="fw-bold text-danger mb-2 mt-1">Celebrating Today!</h6>
                             {% for b in today_birthdays %}
-                                <div class="d-flex align-items-center justify-content-center gap-2 my-2">
-                                    <img src="{{ b.user.get_avatar_url }}" class="rounded-circle" width="36" height="36" style="object-fit: cover;">
+                                <div class="d-flex align-items-center justify-content-center gap-2 my-1.5">
+                                    <div class="user-avatar-initials-sm bg-danger text-white">
+                                        {{ b.full_name|slice:":1"|upper }}
+                                    </div>
                                     <div class="text-start">
-                                        <div class="fw-bold text-dark">{{ b.full_name }}</div>
-                                        <small class="text-muted">{{ b.department.name }}</small>
+                                        <div class="fw-bold text-dark small" style="font-size: 0.85rem;">{{ b.full_name }}</div>
+                                        <small class="text-muted" style="font-size: 0.72rem;">{{ b.department.name }}</small>
                                     </div>
                                 </div>
                             {% endfor %}
-                            <div class="small text-muted mt-2">Send your warmest birthday wishes in team chat!</div>
+                            <div class="small text-secondary mt-2 fst-italic" style="font-size: 0.74rem;">Wish them a wonderful day!</div>
                         </div>
                     {% endif %}
 
                     <!-- Upcoming Birthdays -->
-                    <h6 class="fw-bold text-secondary small text-uppercase mb-2">Upcoming in next 15 days</h6>
+                    <div class="text-muted text-uppercase fw-bold mb-2" style="font-size: 0.68rem; letter-spacing: 0.05em;">Upcoming in Next 15 Days</div>
                     <ul class="list-unstyled mb-0">
                         {% for item in upcoming_birthdays %}
                             <li class="d-flex align-items-center justify-content-between py-2 border-bottom">
-                                <div class="d-flex align-items-center gap-2">
-                                    <img src="{{ item.0.user.get_avatar_url }}" class="rounded-circle" width="32" height="32" style="object-fit: cover;">
-                                    <div>
-                                        <div class="fw-semibold small text-dark">{{ item.0.full_name }}</div>
-                                        <small class="text-muted">{{ item.0.department.name }}</small>
+                                <div class="d-flex align-items-center gap-2 overflow-hidden">
+                                    <div class="user-avatar-initials-sm" style="background: #3B82F6;">
+                                        {{ item.0.full_name|slice:":1"|upper }}
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <div class="fw-semibold small text-dark text-truncate" style="font-size: 0.82rem;">{{ item.0.full_name }}</div>
+                                        <div class="text-muted text-truncate" style="font-size: 0.70rem;">{{ item.0.department.name }}</div>
                                     </div>
                                 </div>
-                                <span class="badge bg-light text-secondary border font-monospace">{{ item.2|date:"M d" }}</span>
+                                <span class="badge bg-light text-secondary border font-monospace ms-2" style="font-size: 0.72rem;">{{ item.2|date:"M d" }}</span>
                             </li>
                         {% empty %}
-                            <li class="text-muted small py-2">No other birthdays this fortnight.</li>
+                            <li class="text-muted small py-2 text-center">No other birthdays this fortnight.</li>
                         {% endfor %}
                     </ul>
                 </div>
             </div>
 
             <!-- WORK ANNIVERSARIES -->
-            <div class="hrms-card mb-4">
-                <div class="hrms-card-header">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-award-fill text-primary fs-5"></i>
-                        <h5 class="fw-bold mb-0">Work Anniversaries</h5>
-                    </div>
-                    <span class="badge bg-primary bg-opacity-10 text-primary">Milestones</span>
+            <div class="org-content-card">
+                <div class="org-card-header">
+                    <h5 class="org-card-title">
+                        <i class="bi bi-award-fill text-primary"></i>
+                        <span>Work Anniversaries</span>
+                    </h5>
+                    <span class="badge bg-primary bg-opacity-10 text-primary fw-bold px-2 py-0.5" style="font-size: 0.70rem;">Milestones</span>
                 </div>
-                <div class="hrms-card-body p-0">
-                    <ul class="list-group list-group-flush">
-                        {% for emp in work_anniversaries %}
+                <div class="p-0">
+                    <ul class="list-group list-group-flush mb-0">
+                        {% for item in anniversaries_with_years %}
                             <li class="list-group-item d-flex align-items-center justify-content-between p-3 border-0 border-bottom">
-                                <div class="d-flex align-items-center gap-2">
-                                    <img src="{{ emp.user.get_avatar_url }}" class="rounded-circle" width="32" height="32" style="object-fit: cover;">
-                                    <div>
-                                        <div class="fw-semibold small text-dark">{{ emp.full_name }}</div>
-                                        <small class="text-muted">Joined: {{ emp.joining_date|date:"d M Y" }}</small>
+                                <div class="d-flex align-items-center gap-2 overflow-hidden">
+                                    <div class="user-avatar-initials-sm" style="background: #10B981;">
+                                        {{ item.emp.full_name|slice:":1"|upper }}
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <div class="fw-semibold small text-dark text-truncate" style="font-size: 0.83rem;">{{ item.emp.full_name }}</div>
+                                        <div class="text-muted small" style="font-size: 0.71rem;">Joined: {{ item.emp.joining_date|date:"d M Y" }}</div>
                                     </div>
                                 </div>
-                                <span class="badge bg-success bg-opacity-10 text-success">Anniversary</span>
+                                <span class="badge bg-success bg-opacity-10 text-success fw-bold border border-success-subtle px-2 py-1 ms-2" style="font-size: 0.72rem;">
+                                    <i class="bi bi-patch-check-fill me-1"></i>{{ item.years }} Year{% if item.years > 1 %}s{% endif %}
+                                </span>
                             </li>
                         {% empty %}
-                            <li class="p-3 text-center text-muted small">No anniversaries this month.</li>
+                            <li class="p-4 text-center text-muted small">No work anniversaries this month.</li>
                         {% endfor %}
                     </ul>
                 </div>
             </div>
 
-            <!-- QUICK LINKS & COMPANY POLICIES -->
-            <div class="hrms-card">
-                <div class="hrms-card-header">
-                    <h6 class="fw-bold mb-0">Quick Workplace Links</h6>
+            <!-- QUICK WORKPLACE LINKS -->
+            <div class="org-content-card">
+                <div class="org-card-header">
+                    <h6 class="org-card-title">
+                        <i class="bi bi-grid-fill text-secondary"></i>
+                        <span>Quick Workplace Links</span>
+                    </h6>
                 </div>
-                <div class="hrms-card-body p-3">
-                    <div class="d-grid gap-2">
-                        <a href="{% url 'portal:policies_list' %}" class="btn btn-outline-secondary btn-sm text-start">
-                            <i class="bi bi-file-earmark-lock me-2 text-success"></i> Corporate Policies & Compliance
+                <div class="p-3">
+                    <div class="d-flex flex-column gap-2">
+                        <a href="{% url 'portal:policies_list' %}" class="org-quick-link-btn">
+                            <span class="d-flex align-items-center gap-2">
+                                <i class="bi bi-file-earmark-lock text-success fs-6"></i>
+                                <span>Corporate Policies &amp; Compliance</span>
+                            </span>
+                            <i class="bi bi-chevron-right text-muted small"></i>
                         </a>
-                        <a href="{% url 'support:tickets_list' %}" class="btn btn-outline-secondary btn-sm text-start">
-                            <i class="bi bi-headset me-2 text-info"></i> IT & Workplace Helpdesk
+                        <a href="{% url 'support:tickets_list' %}" class="org-quick-link-btn">
+                            <span class="d-flex align-items-center gap-2">
+                                <i class="bi bi-headset text-info fs-6"></i>
+                                <span>IT &amp; Workplace Helpdesk</span>
+                            </span>
+                            <i class="bi bi-chevron-right text-muted small"></i>
                         </a>
-                        <a href="{% url 'support:documents_list' %}" class="btn btn-outline-secondary btn-sm text-start">
-                            <i class="bi bi-file-text me-2 text-warning"></i> Request Certificate / ID Card
+                        <a href="{% url 'support:documents_list' %}" class="org-quick-link-btn">
+                            <span class="d-flex align-items-center gap-2">
+                                <i class="bi bi-file-text text-warning fs-6"></i>
+                                <span>Request Certificate / ID Card</span>
+                            </span>
+                            <i class="bi bi-chevron-right text-muted small"></i>
                         </a>
-                        <a href="{% url 'leave_management:apply_leave' %}" class="btn btn-outline-secondary btn-sm text-start">
-                            <i class="bi bi-calendar-plus me-2 text-danger"></i> Apply for Time Off
+                        <a href="{% url 'leave_management:apply_leave' %}" class="org-quick-link-btn">
+                            <span class="d-flex align-items-center gap-2">
+                                <i class="bi bi-calendar-plus text-danger fs-6"></i>
+                                <span>Apply for Time Off</span>
+                            </span>
+                            <i class="bi bi-chevron-right text-muted small"></i>
                         </a>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 </div>
 {% endblock %}
-
